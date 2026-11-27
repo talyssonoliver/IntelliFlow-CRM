@@ -10,11 +10,11 @@
     "files_read": [
       {
         "path": "packages/adapters/src/repositories/PrismaSubjectDataRepository.ts",
-        "sha256": "bf8888fca63a1b94fa1934faa34392b9ad0038241f95c2c4c1d8a9a66bceb299"
+        "sha256": "68c8f96b38d34dd702fcf8c0b931b87e660619ee448777f1037379ad718541ed"
       },
       {
         "path": "packages/adapters/src/repositories/subject-stored-files.ts",
-        "sha256": "926749eb28a2525fc4cd542227a8d96e21449bfed465b66f9e540d5a7ba2480d"
+        "sha256": "1259bdbefe9ac06ace94a2a2fc7b5768fbb87ab1ab56d33a696f2bd80d60dfa9"
       },
       {
         "path": "packages/application/src/services/ErasedFilesCleanupService.ts",
@@ -124,7 +124,7 @@
     {
       "kpi": "Checklist items left after an erasure for covered types",
       "target": "0",
-      "actual": "The stored files of the four sources (lead files, email, chat and ticket attachments) that the CRM owns are deleted after the commit; a failed delete stays queued on the request and is counted until a retry deletes it. Files the CRM must not delete (another host or bucket, another firm's prefix, or an object another retained record uses) are kept, resolved and read-only, with their reason (real-DB suite, including two concurrent erasures sharing one file). Email records, tickets, chats, feedback, notifications, drafts, calendar events and experiment assignments are erased in the transaction (#1361).",
+      "actual": "The email attachments the CRM owns are deleted after the commit (lead, chat and ticket files have no upload path and are kept as unmanaged); a failed delete stays queued on the request and is counted until a retry deletes it. Files the CRM must not delete (another host or bucket, another firm's prefix, or an object another retained record uses) are kept, resolved and read-only, with their reason (real-DB suite, including two concurrent erasures sharing one file). Email records, tickets, chats, feedback, notifications, drafts, calendar events and experiment assignments are erased in the transaction (#1361).",
       "met": true
     },
     {
@@ -146,7 +146,7 @@
       "met": true
     },
     {
-      "criterion": "Stored files (lead files, email, chat and ticket attachments) are deleted from object storage in a tracked follow-up step: queued in the erasure transaction, deleted after the commit with bounded retries, failures recorded on the request",
+      "criterion": "Stored files are deleted from object storage in a tracked follow-up step: queued in the erasure transaction, deleted after the commit with bounded retries, failures recorded on the request; the files the CRM does not own (lead, chat and ticket files have no upload path) are kept, read-only and resolved, with their reason",
       "met": true
     },
     {
@@ -162,5 +162,5 @@
       "met": true
     }
   ],
-  "notes": "Two PRs: #1361 (communications in the erasure transaction) and the follow-up on branch feat/ifc-316b-erase-stored-files (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are recognised by shape: a path under the firm's own prefix in CRM_FILES_BUCKET (default crm-files) or a URL of this project's storage naming one. The CRM deletes only files it alone owns (in its bucket, under the firm's prefix, used by no retained record). Everything else is kept, read-only and resolved: SHARED_KEPT (another retained record uses it) or UNMANAGED (outside the CRM's storage), with no locator stored and no delete or confirm action. An erasure from before the queue shows no claim about its files."
+  "notes": "Two PRs: #1361 (communications in the erasure transaction) and the follow-up on branch feat/ifc-316b-erase-stored-files (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are kept as unmanaged; only email attachments (the email-attachments bucket) are CRM objects. A future upload path must register its bucket. The CRM deletes only files it alone owns (in the email-attachments bucket, under the firm's prefix, used by no retained record). Everything else is kept, read-only and resolved: SHARED_KEPT (another retained record uses it) or UNMANAGED (outside the CRM's storage), with no locator stored and no delete or confirm action. An erasure from before the queue shows no claim about its files."
 }

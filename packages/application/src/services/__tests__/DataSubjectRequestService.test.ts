@@ -1467,7 +1467,7 @@ describe('stored files after an erasure (IFC-316)', () => {
   });
 
   it('lists what each completed erasure still has, and says so when it cannot know', async () => {
-    const left = { r1: { queued: 1, keptShared: 2, keptUnmanaged: 1 } };
+    const left = { r1: { queued: 1, keptShared: 2, keptUnmanaged: 1, deleted: 3 } };
     const leftFor = vi.fn().mockResolvedValue(left);
     const { withFiles } = await erasureWith({ leftFor });
     expect(await withFiles.storedFilesLeft('tenant-a', ['r1'])).toEqual(left);

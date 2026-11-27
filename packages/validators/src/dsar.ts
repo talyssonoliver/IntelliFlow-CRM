@@ -244,6 +244,8 @@ export interface DsarRequestDto {
   storedFilesLeft?: number;
   storedFilesKeptShared?: number;
   storedFilesKeptUnmanaged?: number;
+  /** Deleted from storage: "Stored files deleted" is said only when this is above 0. */
+  storedFilesDeleted?: number;
 }
 
 export interface DsarErasureResultDto {

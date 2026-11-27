@@ -51,15 +51,16 @@ export type StoredLocatorClass =
 export interface StoredObjectConfig {
   /** Host of this app's storage (the Supabase project); a URL on any other host is unmanaged. */
   storageHost: string | null;
-  /** Bucket of compose and inbound email attachments. */
+  /**
+   * Bucket of compose and inbound email attachments: the only bucket the CRM writes files to
+   * today. A bucket is added here only when a CRM upload path for it exists.
+   */
   emailBucket: string;
-  /** Bucket of lead, chat and ticket files. */
-  filesBucket: string;
 }
 
 /** The only buckets the CRM deletes from. */
 export function managedBuckets(config: StoredObjectConfig): string[] {
-  return [config.emailBucket, config.filesBucket];
+  return [config.emailBucket];
 }
 
 /** Whether a ref is a tenant's own object in a bucket the CRM owns (the delete guard). */
@@ -77,8 +78,12 @@ const PATH_TRICK = /\\|(?:^|\/)(?:\.|%2e){1,2}(?=[/?#]|$)/i;
 
 const STORAGE_URL_PATH = /^\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+)$/;
 
-function defaultBucket(source: StoredObjectSource, config: StoredObjectConfig): string {
-  return source === 'EMAIL_ATTACHMENT' ? config.emailBucket : config.filesBucket;
+/**
+ * The bucket a bare path (no URL) names. Only an email attachment's bare path is a CRM object:
+ * nothing uploads lead, chat or ticket files to storage, so a bare path from those is not ours.
+ */
+function defaultBucket(source: StoredObjectSource, config: StoredObjectConfig): string | null {
+  return source === 'EMAIL_ATTACHMENT' ? config.emailBucket : null;
 }
 
 /** Sorts one locator. Never throws. */
@@ -108,7 +113,9 @@ export function classifyStoredLocator(
     // A percent escape could become a path step later: refused (isAttachmentPathInTenant).
     ref = { bucket: match[1], path: match[2] };
   } else {
-    ref = { bucket: defaultBucket(source, config), path: value };
+    const bucket = defaultBucket(source, config);
+    if (bucket === null) return { kind: 'UNMANAGED' };
+    ref = { bucket, path: value };
   }
   return isManagedRef(ref, tenantId, config) ? { kind: 'OBJECT', ref } : { kind: 'UNMANAGED' };
 }

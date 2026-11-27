@@ -37,7 +37,6 @@ const HOUR = 3_600_000;
 const STORAGE = {
   storageHost: 'abc.supabase.example.invalid',
   emailBucket: 'email-attachments',
-  filesBucket: 'crm-files',
 };
 const FOREIGN = 'https://files.example.invalid/ada-id.pdf';
 const SHARED = `${TENANT}/mail/shared-terms.pdf`;
@@ -349,12 +348,14 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       contactReplyDrafts: 2,
       calendarEvents: 1,
     });
-    // Deleted from storage after the erasure: the lead file, the email attachment, the ticket
-    // attachment and the chat attachment. Kept, resolved and read-only: two lead files outside
-    // the CRM's storage and the upload another person's mail still uses. Only deals and tasks
-    // stay for the admin.
-    expect(preview.counts.storedFilesDeleted).toBe(4);
-    expect(preview.counts.storedFilesKept).toBe(3);
+    // Nothing uploads lead, chat or ticket files to storage, so the only object the CRM owns and
+    // deletes is the email attachment. Kept, resolved and read-only, counted by reason: the
+    // upload another person's mail still uses (shared), and five files outside the CRM's storage
+    // (three lead files and the chat and ticket files). Only deals and tasks stay for the admin.
+    expect(preview.counts.storedFilesDeleted).toBe(1);
+    expect(preview.counts.storedFilesKeptShared).toBe(1);
+    expect(preview.counts.storedFilesKeptUnmanaged).toBe(5);
+    expect(preview.counts).not.toHaveProperty('storedFilesKept');
     expect(preview.checklist).toEqual({ deals: 0, tasks: 0 });
   });
 
@@ -374,14 +375,17 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     expect(result.result.counts).toMatchObject({ emailRecords: 1, tickets: 1, chats: 1 });
     // Until the cleanup has run every object still to delete counts as left, per source; kept
     // files are resolved and not in it.
-    expect(result.result.counts.storedFilesKept).toBe(3);
+    expect(result.result.counts).toMatchObject({
+      storedFilesKeptShared: 1,
+      storedFilesKeptUnmanaged: 5,
+    });
     expect(result.result.checklist).toEqual({
       deals: 0,
       tasks: 0,
-      storedLeadFiles: 1,
+      storedLeadFiles: 0,
       storedEmailAttachments: 1,
-      storedChatAttachments: 1,
-      storedTicketAttachments: 1,
+      storedChatAttachments: 0,
+      storedTicketAttachments: 0,
     });
     // The queue committed with the erasure: the locators moved there from the rows.
     const queued = await prisma.dsarStoredObject.findMany({
@@ -395,7 +399,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         .sort((x: unknown[], y: unknown[]) => byKey(x).localeCompare(byKey(y)))
     ).toEqual(
       [
-        ['CHAT_ATTACHMENT', 'PENDING', 'crm-files', `${TENANT}/chat/ada-photo.png`, null],
+        ['CHAT_ATTACHMENT', 'KEPT', null, null, 'UNMANAGED'],
         [
           'EMAIL_ATTACHMENT',
           'PENDING',
@@ -405,11 +409,12 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         ],
         // Used by another person's retained mail: kept, with no location stored.
         ['EMAIL_ATTACHMENT', 'KEPT', null, null, 'SHARED_KEPT'],
-        ['LEAD_FILE', 'PENDING', 'crm-files', `${TENANT}/leads/ada-cv.pdf`, null],
-        // Outside the CRM's storage (another host, another firm's prefix): kept, no location.
+        // Outside the CRM's storage (no CRM upload path writes these; another host, another
+        // firm's prefix): kept, no location.
         ['LEAD_FILE', 'KEPT', null, null, 'UNMANAGED'],
         ['LEAD_FILE', 'KEPT', null, null, 'UNMANAGED'],
-        ['TICKET_ATTACHMENT', 'PENDING', 'crm-files', `${TENANT}/tickets/ada-scan.pdf`, null],
+        ['LEAD_FILE', 'KEPT', null, null, 'UNMANAGED'],
+        ['TICKET_ATTACHMENT', 'KEPT', null, null, 'UNMANAGED'],
       ].sort((x, y) => byKey(x).localeCompare(byKey(y)))
     );
     const rowsWithLocator = await Promise.all([
@@ -526,7 +531,8 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       expect(sent).not.toContain(`${RUN}_b/leads/other.pdf`);
       // The upload another person's mail still uses was never sent to storage either.
       expect(sent).not.toContain(SHARED);
-      expect(first.deleted).toBe(3);
+      // The one owned object failed on both passes: nothing was deleted yet.
+      expect(first.deleted).toBe(0);
       // What remains is exactly what the checklist shows: the failed attachment. Kept files are
       // resolved.
       expect(first.remaining).toEqual({ storedEmailAttachments: 1 });
@@ -542,7 +548,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
 
       // The admin's list shows the request with what is left.
       expect(await outbox().leftFor(TENANT, [requestId])).toEqual({
-        [requestId]: { queued: 1, keptShared: 1, keptUnmanaged: 2 },
+        [requestId]: { queued: 1, keptShared: 1, keptUnmanaged: 5, deleted: 0 },
       });
 
       // Storage recovers: a retry deletes only what was still queued.
@@ -555,7 +561,12 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       expect(
         done.filter((s: any) => s.state === 'DELETED').every((s: any) => s.locator === null)
       ).toBe(true);
-      expect(done.filter((s: any) => s.state === 'DELETED')).toHaveLength(4);
+      expect(done.filter((s: any) => s.state === 'DELETED')).toHaveLength(1);
+      // Only now is something deleted, so only now may it be said.
+      expect((await outbox().leftFor(TENANT, [requestId]))[requestId]).toMatchObject({
+        queued: 0,
+        deleted: 1,
+      });
 
       // Running it again is safe: nothing is pending, nothing is sent.
       calls.length = 0;
@@ -591,7 +602,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
           requestId,
           source: 'LEAD_FILE',
           state: 'PENDING',
-          bucket: 'crm-files',
+          bucket: 'email-attachments',
           locator: `${RUN}_b/leads/other.pdf`,
         },
       });
@@ -611,6 +622,9 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         'SHARED_KEPT',
         'UNMANAGED',
         'UNMANAGED',
+        'UNMANAGED',
+        'UNMANAGED',
+        'UNMANAGED',
       ]);
       expect(kept.every((k: any) => k.locator === null && k.bucket === null)).toBe(true);
       // Not pending, so never sent to storage; settling them changes nothing.
@@ -627,7 +641,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       const after = await prisma.dsarStoredObject.count({
         where: { tenantId: TENANT, requestId, state: 'KEPT' },
       });
-      expect(after).toBe(3);
+      expect(after).toBe(6);
     });
 
     it('tries the least-tried objects first, so failures cannot starve the rest', async () => {
@@ -637,7 +651,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
           requestId,
           source: 'LEAD_FILE',
           state: 'PENDING',
-          bucket: 'crm-files',
+          bucket: 'email-attachments',
           locator: `${TENANT}/leads/stuck.pdf`,
           attempts: 9,
           createdAt: new Date(Date.now() - 86_400_000),
@@ -649,7 +663,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
           requestId,
           source: 'LEAD_FILE',
           state: 'PENDING',
-          bucket: 'crm-files',
+          bucket: 'email-attachments',
           locator: `${TENANT}/leads/new.pdf`,
         },
       });

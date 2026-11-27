@@ -660,17 +660,18 @@ so a double click or two admins cannot run it twice. It anonymises in place:
   `DELETED` and loses its locator; a failed one stays `PENDING` with an attempt
   count and an error code, so it survives a restart and an admin's **Retry file
   deletion** runs only what is left (idempotent). The adapter deletes only a
-  path under `<tenantId>/` in a bucket the CRM owns (email attachments,
-  `CRM_FILES_BUCKET`), and only an object no retained record still uses (decided
-  on the full bucket and path, under a transaction advisory lock on the object,
-  so two erasures sharing a file cannot both keep it). Anything else is queued
-  `KEPT` (reason `SHARED_KEPT` or `UNMANAGED`): never sent to storage, no
-  locator stored, read-only and resolved, with no delete or confirm action.
-  Other people's data is not erased; only the erased person's link to it is
-  removed. Failed deletes are retried least-tried first, so a stuck object
-  cannot starve the rest. A request with no queue rows (an erasure from before
-  the queue) is shown without any claim about its files. The cleanup never fails
-  the erasure.
+  path under `<tenantId>/` in the one bucket the CRM writes files to (email
+  attachments, `EMAIL_ATTACHMENTS_BUCKET`; lead, chat and ticket files have no
+  upload path, so they are kept as unmanaged until one registers its bucket),
+  and only an object no retained record still uses (decided on the full bucket
+  and path, under a transaction advisory lock on the object, so two erasures
+  sharing a file cannot both keep it). Anything else is queued `KEPT` (reason
+  `SHARED_KEPT` or `UNMANAGED`): never sent to storage, no locator stored,
+  read-only and resolved, with no delete or confirm action. Other people's data
+  is not erased; only the erased person's link to it is removed. Failed deletes
+  are retried least-tried first, so a stuck object cannot starve the rest. A
+  request with no queue rows (an erasure from before the queue) is shown without
+  any claim about its files. The cleanup never fails the erasure.
 - **Left on a counted checklist.** Deals and tasks (Q23) and, per source, the
   stored files the CRM owns and has not yet deleted (failed): the result and the
   request list count exactly what remains, 0 when all are gone. Kept files are

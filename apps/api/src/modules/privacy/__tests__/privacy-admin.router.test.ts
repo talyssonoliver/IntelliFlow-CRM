@@ -154,25 +154,30 @@ describe('list', () => {
       record({ id: 'clhaccess0000000000', type: 'ACCESS', status: 'COMPLETED', completedAt: NOW }),
     ]);
     service.storedFilesLeft.mockResolvedValue({
-      clherased0000000000: { queued: 1, keptShared: 4, keptUnmanaged: 2 },
+      clherased0000000000: { queued: 1, keptShared: 4, keptUnmanaged: 2, deleted: 5 },
       // Queued before, all deleted since: a real 0.
-      clherasedok00000000: { queued: 0, keptShared: 0, keptUnmanaged: 0 },
+      clherasedok00000000: { queued: 0, keptShared: 0, keptUnmanaged: 0, deleted: 2 },
     });
     const rows = await adminCaller().list({});
     const byId = Object.fromEntries(
       rows.map((r) => [
         r.id,
-        [r.storedFilesLeft, r.storedFilesKeptShared, r.storedFilesKeptUnmanaged],
+        [
+          r.storedFilesLeft,
+          r.storedFilesKeptShared,
+          r.storedFilesKeptUnmanaged,
+          r.storedFilesDeleted,
+        ],
       ])
     );
     expect(byId).toEqual({
       // 1 left; the kept ones are resolved and counted apart, by reason.
-      clherased0000000000: [1, 4, 2],
-      clherasedok00000000: [0, 0, 0],
+      clherased0000000000: [1, 4, 2, 5],
+      clherasedok00000000: [0, 0, 0, 2],
       // No queue rows (an erasure from before the queue): no claim that anything was deleted.
-      clhlegacy0000000000: [undefined, undefined, undefined],
-      clhopen000000000000: [undefined, undefined, undefined],
-      clhaccess0000000000: [undefined, undefined, undefined],
+      clhlegacy0000000000: [undefined, undefined, undefined, undefined],
+      clhopen000000000000: [undefined, undefined, undefined, undefined],
+      clhaccess0000000000: [undefined, undefined, undefined, undefined],
     });
     expect(service.storedFilesLeft).toHaveBeenCalledWith(TENANT, [
       'clherased0000000000',

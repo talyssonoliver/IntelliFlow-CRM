@@ -246,13 +246,21 @@ ticket attachments are deleted from storage, in four steps:
    record.
 
 The CRM deletes only a file **it alone owns**: a path under `<firm id>/` (no
-`..`, escapes, backslashes or empty parts) in one of the two buckets the CRM
-owns (email attachments, and `CRM_FILES_BUCKET`, default `crm-files`, for lead,
-chat and ticket files), or a URL of this project's own storage that names such a
-path, and that **no retained record still uses**. Whether a retained record uses
-it is decided on the full storage identity (bucket and path), under a
-transaction lock on that object, so two erasures that share a file cannot both
-keep it: the erasure that removes the last reference queues the delete.
+`..`, escapes, backslashes or empty parts) in the one bucket the CRM writes
+files to today, the email-attachments bucket (`EMAIL_ATTACHMENTS_BUCKET`), or a
+URL of this project's own storage that names such a path, and that **no retained
+record still uses**. Whether a retained record uses it is decided on the full
+storage identity (bucket and path), under a transaction lock on that object, so
+two erasures that share a file cannot both keep it: the erasure that removes the
+last reference queues the delete.
+
+Nothing in the CRM uploads lead files, chat attachments or ticket attachments to
+storage today (a ticket attachment keeps only a short inline `data:` URL, which
+the erasure clears and does not treat as a stored object). So any locator on
+those rows is not a CRM object and is kept as unmanaged. **When a CRM upload
+path is added for any of them, it must register its bucket here** (the
+stored-object configuration), or its files will be kept, not deleted, on an
+erasure.
 
 Every other file is **kept, read-only and resolved**. It is never sent to
 storage, no location is stored for it, and the request has no delete or confirm

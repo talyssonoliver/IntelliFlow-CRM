@@ -13,7 +13,6 @@ const FOREIGN_URL = 'https://files.example.invalid/b.pdf';
 const config: StoredObjectConfig = {
   storageHost: 'abc.supabase.example.invalid',
   emailBucket: 'email-attachments',
-  filesBucket: 'crm-files',
 };
 
 interface Rows {
@@ -60,7 +59,7 @@ const sharingQueries = (client: any) =>
   );
 
 describe('planStoredFiles (IFC-316)', () => {
-  it('queues what the CRM owns to delete; everything else is kept, with its reason and no location', async () => {
+  it('queues the email attachments the CRM owns to delete; everything else is kept, with its reason and no location', async () => {
     const client = db({
       leadFile: [
         { id: 'lf1', url: `${T}/lead/a.pdf` },
@@ -75,15 +74,18 @@ describe('planStoredFiles (IFC-316)', () => {
     });
     const plan = await planStoredFiles(client, T, 'ada@example.invalid', IDS, config);
 
+    // Only the email attachment is a CRM object (nothing uploads lead, chat or ticket files to
+    // storage); every other locator is kept as unmanaged, with no location.
+    const unmanaged = (source: string) => ({
+      source,
+      state: 'KEPT',
+      reason: 'UNMANAGED',
+      bucket: null,
+      locator: null,
+    });
     expect(plan.queue).toEqual([
-      {
-        source: 'LEAD_FILE',
-        state: 'PENDING',
-        reason: null,
-        bucket: 'crm-files',
-        locator: `${T}/lead/a.pdf`,
-      },
-      { source: 'LEAD_FILE', state: 'KEPT', reason: 'UNMANAGED', bucket: null, locator: null },
+      unmanaged('LEAD_FILE'),
+      unmanaged('LEAD_FILE'),
       {
         source: 'EMAIL_ATTACHMENT',
         state: 'PENDING',
@@ -91,13 +93,7 @@ describe('planStoredFiles (IFC-316)', () => {
         bucket: 'email-attachments',
         locator: `${T}/1-c.pdf`,
       },
-      {
-        source: 'CHAT_ATTACHMENT',
-        state: 'PENDING',
-        reason: null,
-        bucket: 'crm-files',
-        locator: `${T}/d.png`,
-      },
+      unmanaged('CHAT_ATTACHMENT'),
     ]);
     // Every row with a locator or an attachment list is cleared, including inline content.
     expect(plan).toMatchObject({
@@ -108,13 +104,13 @@ describe('planStoredFiles (IFC-316)', () => {
     });
     // Kept files are resolved: only what is still to delete is "left".
     expect(storedFileCounts(plan)).toEqual({
-      toDelete: 3,
+      toDelete: 1,
       keptShared: 0,
-      keptUnmanaged: 1,
+      keptUnmanaged: 3,
       left: {
-        storedLeadFiles: 1,
+        storedLeadFiles: 0,
         storedEmailAttachments: 1,
-        storedChatAttachments: 1,
+        storedChatAttachments: 0,
         storedTicketAttachments: 0,
       },
     });
@@ -195,11 +191,12 @@ describe('planStoredFiles (IFC-316)', () => {
   });
 
   it('reads a retained chat message that names the object', async () => {
-    const client = db({ leadFile: [{ id: 'lf1', url: `${T}/c.png` }] }, [
+    const named = `https://${config.storageHost}/storage/v1/object/sign/email-attachments/${T}/c.png?token=x`;
+    const client = db({ emailAttachment: [{ id: 'ea1', fileUrl: `${T}/c.png` }] }, [
       {
         source: 'CHAT_ATTACHMENT',
         locator: null,
-        attachments: JSON.stringify([{ name: 'c.png', url: `${T}/c.png` }]),
+        attachments: JSON.stringify([{ name: 'c.png', url: named }]),
       },
     ]);
     expect((await planStoredFiles(client, T, 'a', IDS, config)).queue[0]).toMatchObject({
@@ -207,7 +204,7 @@ describe('planStoredFiles (IFC-316)', () => {
       reason: 'SHARED_KEPT',
     });
     // An unreadable attachment list names nothing.
-    const broken = db({ leadFile: [{ id: 'lf1', url: `${T}/c.png` }] }, [
+    const broken = db({ emailAttachment: [{ id: 'ea1', fileUrl: `${T}/c.png` }] }, [
       { source: 'CHAT_ATTACHMENT', locator: null, attachments: '{not json' },
     ]);
     expect((await planStoredFiles(broken, T, 'a', IDS, config)).queue[0]!.state).toBe('PENDING');
@@ -312,25 +309,25 @@ describe('planStoredFiles (IFC-316)', () => {
 
 describe('queueStoredFiles', () => {
   it('queues the objects and takes the locators off the rows, all scoped to the tenant', async () => {
-    const client = db({ leadFile: [{ id: 'lf1', url: `${T}/a.pdf` }] });
+    const client = db({ emailAttachment: [{ id: 'ea1', fileUrl: `${T}/a.pdf` }] });
     const plan = await planStoredFiles(client, T, 'a', IDS, config);
     await queueStoredFiles(client, T, 'req-1', plan);
     expect(client.dsarStoredObject.createMany.mock.calls[0][0].data).toEqual([
       {
         tenantId: T,
         requestId: 'req-1',
-        source: 'LEAD_FILE',
+        source: 'EMAIL_ATTACHMENT',
         state: 'PENDING',
         reason: null,
-        bucket: 'crm-files',
+        bucket: 'email-attachments',
         locator: `${T}/a.pdf`,
       },
     ]);
-    expect(client.leadFile.updateMany.mock.calls[0][0]).toEqual({
-      where: { tenantId: T, id: { in: ['lf1'] } },
-      data: { url: null },
+    expect(client.emailAttachment.updateMany.mock.calls[0][0]).toEqual({
+      where: { tenantId: T, id: { in: ['ea1'] } },
+      data: { fileUrl: '' },
     });
-    expect(client.emailAttachment.updateMany.mock.calls[0][0].data).toEqual({ fileUrl: '' });
+    expect(client.leadFile.updateMany.mock.calls[0][0].data).toEqual({ url: null });
     expect(client.ticketAttachment.updateMany.mock.calls[0][0].data).toEqual({ url: null });
     expect(client.chatMessage.updateMany.mock.calls[0][0].where.tenantId).toBe(T);
   });

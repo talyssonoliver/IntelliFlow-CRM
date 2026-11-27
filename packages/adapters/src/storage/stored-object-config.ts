@@ -1,7 +1,7 @@
 /**
- * Where this deployment's stored files live (IFC-316): the storage host and the two buckets the
- * CRM owns. The erasure sorts locators with it and the storage adapter deletes only from these
- * buckets. Read from the environment each call, so a test can set it.
+ * Where this deployment's stored files live (IFC-316): the storage host and the one bucket the
+ * CRM writes files to (email attachments, honouring EMAIL_ATTACHMENTS_BUCKET). The erasure sorts
+ * locators with it and the storage adapter deletes only from that bucket. Read from the environment each call, so a test can set it.
  */
 import type { StoredObjectConfig } from '@intelliflow/domain';
 
@@ -17,6 +17,5 @@ export function storedObjectConfigFromEnv(
   return {
     storageHost,
     emailBucket: env.EMAIL_ATTACHMENTS_BUCKET || 'email-attachments',
-    filesBucket: env.CRM_FILES_BUCKET || 'crm-files',
   };
 }

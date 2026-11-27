@@ -85,10 +85,16 @@ export class PrismaStoredObjectRepository implements StoredObjectOutboxPort {
     // Any row (even a DELETED one) means the queue was used: 0 left is then a real answer.
     const left: Record<string, StoredObjectsLeft> = {};
     for (const g of groups) {
-      const entry = (left[g.requestId] ??= { queued: 0, keptShared: 0, keptUnmanaged: 0 });
+      const entry = (left[g.requestId] ??= {
+        queued: 0,
+        keptShared: 0,
+        keptUnmanaged: 0,
+        deleted: 0,
+      });
       if (g.state === 'PENDING') entry.queued = g._count._all;
       if (g.state === 'KEPT' && g.reason === 'SHARED_KEPT') entry.keptShared = g._count._all;
       if (g.state === 'KEPT' && g.reason === 'UNMANAGED') entry.keptUnmanaged = g._count._all;
+      if (g.state === 'DELETED') entry.deleted = g._count._all;
     }
     return left;
   }

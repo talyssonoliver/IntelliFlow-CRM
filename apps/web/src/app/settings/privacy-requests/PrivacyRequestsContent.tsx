@@ -37,6 +37,12 @@ import {
 import { LogRequestDialog, TYPE_LABELS } from './components/LogRequestDialog';
 
 const OPEN_TITLE_ID = 'open-requests-title';
+
+/** What a completed erasure says about its stored files: "deleted" only when something was. */
+function storedFilesText(left: number, deleted: number): string {
+  if (left > 0) return `${left} stored ${left === 1 ? 'file' : 'files'} not deleted yet`;
+  return deleted > 0 ? 'Stored files deleted' : 'No stored files to delete';
+}
 // The server requires a reason of at least 10 characters to lift a restriction.
 const LIFT_NOTE_MIN = 10;
 
@@ -155,9 +161,7 @@ function RequestRow({
           )}
           {request.storedFilesLeft !== undefined && (
             <Badge variant={request.storedFilesLeft > 0 ? 'destructive' : 'outline'}>
-              {request.storedFilesLeft > 0
-                ? `${request.storedFilesLeft} stored ${request.storedFilesLeft === 1 ? 'file' : 'files'} not deleted yet`
-                : 'Stored files deleted'}
+              {storedFilesText(request.storedFilesLeft, request.storedFilesDeleted ?? 0)}
             </Badge>
           )}
         </div>

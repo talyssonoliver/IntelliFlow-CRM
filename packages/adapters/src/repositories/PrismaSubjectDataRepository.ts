@@ -608,7 +608,8 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
         storedFilesDeleted: files.toDelete,
         // Kept, resolved and read-only: another retained record uses them, or they are outside
         // the CRM's storage.
-        storedFilesKept: files.keptShared + files.keptUnmanaged,
+        storedFilesKeptShared: files.keptShared,
+        storedFilesKeptUnmanaged: files.keptUnmanaged,
       },
       // What stays for the admin: deals and tasks. Stored files are deleted, or kept and resolved.
       checklist: await dealsAndTasks(this.prisma, tenantId, subjectEmail, ids),
@@ -759,7 +760,8 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
               aiInsights: leadInsights.count + contactInsights.count + insights.count,
               bookings: Number(bookings),
               ...communications,
-              storedFilesKept: left.keptShared + left.keptUnmanaged,
+              storedFilesKeptShared: left.keptShared,
+              storedFilesKeptUnmanaged: left.keptUnmanaged,
             },
             // Until the cleanup has run, every queued object still counts as left.
             checklist: { ...open, ...left.left },

@@ -27,6 +27,8 @@ export interface StoredObjectsLeft {
   keptShared: number;
   /** Kept, resolved, read-only: outside the CRM's own storage, so the CRM never deletes it. */
   keptUnmanaged: number;
+  /** Deleted from storage: what makes "stored files deleted" true. */
+  deleted: number;
 }
 
 export interface StoredObjectOutboxPort {

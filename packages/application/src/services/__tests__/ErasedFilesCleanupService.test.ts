@@ -22,7 +22,7 @@ class FakeOutbox implements StoredObjectOutboxPort {
       this.rows.set(`o${i}`, {
         id: `o${i}`,
         source: i % 2 === 0 ? 'EMAIL_ATTACHMENT' : 'LEAD_FILE',
-        bucket: 'crm-files',
+        bucket: 'email-attachments',
         path,
         attempts: 0,
         state: 'PENDING',
@@ -58,6 +58,7 @@ class FakeOutbox implements StoredObjectOutboxPort {
         queued: all.filter((r) => r.state === 'PENDING').length,
         keptShared: 1,
         keptUnmanaged: all.filter((r) => r.state === 'KEPT').length,
+        deleted: all.filter((r) => r.state === 'DELETED').length,
       },
     };
   }
@@ -213,7 +214,7 @@ describe('ErasedFilesCleanupService (IFC-316)', () => {
   it('reports what is left, and what was kept and why, for a list of requests', async () => {
     const outbox = new FakeOutbox(['t/a'], 2);
     expect(await service(outbox, null).leftFor(T, [R])).toEqual({
-      [R]: { queued: 1, keptShared: 1, keptUnmanaged: 2 },
+      [R]: { queued: 1, keptShared: 1, keptUnmanaged: 2, deleted: 0 },
     });
     // A request that never queued a file is absent: no claim is made for it.
     expect(await service(new FakeOutbox([]), null).leftFor(T, [R])).toEqual({});

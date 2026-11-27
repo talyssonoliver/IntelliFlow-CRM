@@ -189,6 +189,7 @@ describe('PrivacyRequestsContent', () => {
         id: 'clhclean000000000',
         status: 'COMPLETED',
         storedFilesLeft: 0,
+        storedFilesDeleted: 3,
       }),
       // An erasure from before the queue: nothing is claimed either way.
       request({ id: 'clhlegacy00000000', status: 'COMPLETED' }),
@@ -218,6 +219,7 @@ describe('PrivacyRequestsContent', () => {
         id: 'clhkept000000000',
         status: 'COMPLETED',
         storedFilesLeft: 0,
+        storedFilesDeleted: 0,
         storedFilesKeptShared: 2,
         storedFilesKeptUnmanaged: 1,
       }),
@@ -227,8 +229,9 @@ describe('PrivacyRequestsContent', () => {
     expect(
       screen.getByText("1 file kept: outside the CRM's storage, delete where stored")
     ).toBeTruthy();
-    // Resolved: nothing is left to delete, and there is no action at all on kept files.
-    expect(screen.getByText('Stored files deleted')).toBeTruthy();
+    // Nothing was deleted, so it is never said to be: neutral text, and no action on kept files.
+    expect(screen.queryByText('Stored files deleted')).toBeNull();
+    expect(screen.getByText('No stored files to delete')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Retry deleting stored files/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /by hand|Mark as deleted/ })).toBeNull();
   });

@@ -210,6 +210,7 @@ export const privacyAdminRouter = createTRPCRouter({
                 storedFilesLeft: entry.queued,
                 storedFilesKeptShared: entry.keptShared,
                 storedFilesKeptUnmanaged: entry.keptUnmanaged,
+                storedFilesDeleted: entry.deleted,
               }
             : dto;
         })

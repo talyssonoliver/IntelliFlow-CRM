@@ -1101,7 +1101,8 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
       const preview = await subjects.previewErasure(TENANT_A, SUBJECT);
       expect(preview.counts).toMatchObject({ leads: 1, contacts: 1, bookings: 1 });
       // Kept (outside the CRM's storage), resolved: counted apart, not on the checklist.
-      expect(preview.counts.storedFilesKept).toBe(1);
+      expect(preview.counts.storedFilesKeptUnmanaged).toBe(1);
+      expect(preview.counts.storedFilesKeptShared).toBe(0);
       expect(preview.checklist.storedLeadFiles).toBeUndefined();
       const lead = await prisma.lead.findUnique({ where: { id: leadA } });
       expect(lead.firstName).toBe('Ada');
