@@ -237,10 +237,10 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
     <>
       {/* Breadcrumb */}
       <Breadcrumbs
+        endsWithCurrentPage={false}
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Analytics', href: '/analytics' },
-          { label: config.breadcrumbLabel },
         ]}
         className="mb-4"
       />

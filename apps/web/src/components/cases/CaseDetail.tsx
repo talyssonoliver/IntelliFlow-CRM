@@ -217,10 +217,10 @@ export function CaseDetail({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <Breadcrumbs
+            endsWithCurrentPage={false}
             items={[
               { label: 'Dashboard', href: '/dashboard' },
               { label: 'Cases', href: '/cases' },
-              { label: caseNumber },
             ]}
           />
           <h1 className="text-2xl font-black text-foreground tracking-tight">{caseData.title}</h1>

@@ -117,10 +117,10 @@ export function LeadPageHeader({
     <div className="flex items-center justify-between gap-3 mb-6">
       <div className="min-w-0 flex-1">
         <Breadcrumbs
+          endsWithCurrentPage={false}
           items={[
             { label: 'Dashboard', href: '/dashboard' },
             { label: 'Leads', href: '/leads' },
-            { label: name },
           ]}
         />
         <h1 className="truncate text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">

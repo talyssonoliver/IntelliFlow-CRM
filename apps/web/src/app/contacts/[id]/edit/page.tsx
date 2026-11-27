@@ -221,11 +221,11 @@ export default function EditContactPage() {
       <div className="mx-auto max-w-3xl px-4 pt-8 pb-16">
         {/* Breadcrumb */}
         <Breadcrumbs
+          endsWithCurrentPage={false}
           items={[
             { label: 'Dashboard', href: '/dashboard' },
             { label: 'Contacts', href: '/contacts' },
             { label: contactName, href: `/contacts/${contactId}` },
-            { label: 'Edit' },
           ]}
           className="mb-6"
         />

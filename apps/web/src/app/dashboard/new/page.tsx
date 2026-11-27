@@ -295,7 +295,8 @@ export default function CreateNewRecordPage() {
         <div className="flex flex-col gap-4">
           <div>
             <Breadcrumbs
-              items={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Add New Record' }]}
+              endsWithCurrentPage={false}
+              items={[{ label: 'Dashboard', href: '/dashboard' }]}
               className="mb-2"
             />
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">

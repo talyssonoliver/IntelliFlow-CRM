@@ -512,16 +512,17 @@ describe('SavedReportView', () => {
       const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
       expect(within(nav).getByText('Dashboard')).toBeInTheDocument();
       expect(within(nav).getByText('Analytics')).toBeInTheDocument();
-      expect(within(nav).getByText('Weekly Summary')).toBeInTheDocument();
+      expect(within(nav).queryByText('Weekly Summary')).toBeNull(); // (owner 27/11: the trail holds ancestors; the title names the page)
     });
 
-    it('uses nav aria-label="Breadcrumb" with aria-current="page"', () => {
+    it('uses nav aria-label="Breadcrumb" and holds ancestors only', () => {
       mockQueries.getOverview = { data: mockOverview, isLoading: false };
       render(<SavedReportView config={weeklyConfig} />);
       const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
       expect(nav).toBeInTheDocument();
-      const current = within(nav).getByText('Weekly Summary');
-      expect(current).toHaveAttribute('aria-current', 'page');
+      // owner 27/11: the trail holds ancestors; the title names the page
+      expect(within(nav).getByText('Analytics').closest('a')).not.toBeNull();
+      expect(nav.querySelector('[aria-current="page"]')).toBeNull();
     });
   });
 

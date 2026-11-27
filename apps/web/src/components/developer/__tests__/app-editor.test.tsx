@@ -311,14 +311,15 @@ describe('AppEditor', () => {
     render(<AppEditor appId="app-001" />);
     expect(screen.getByText('Developer Apps')).toBeInTheDocument();
     expect(screen.getByText('IntelliFlow Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Edit App')).toBeInTheDocument();
+    expect(screen.getByLabelText('Breadcrumb')).not.toHaveTextContent('Edit App');
   });
 
-  // AE-027: Breadcrumb last item has aria-current="page"
-  it('AE-027: breadcrumb last item has aria-current="page"', () => {
+  // AE-027 (owner 27/11: the trail holds ancestors; the title names the page): the trail ends at the app, a link; no current-page crumb.
+  it('AE-027: breadcrumb ends at the app it edits', () => {
     render(<AppEditor appId="app-001" />);
-    const editAppBreadcrumb = screen.getByText('Edit App');
-    expect(editAppBreadcrumb).toHaveAttribute('aria-current', 'page');
+    const nav = screen.getByLabelText('Breadcrumb');
+    expect(nav.querySelector('[aria-current="page"]')).toBeNull();
+    expect(screen.getByText('IntelliFlow Dashboard').closest('a')).not.toBeNull();
   });
 
   // AE-028: Cancel link goes to /developers/apps/[id]

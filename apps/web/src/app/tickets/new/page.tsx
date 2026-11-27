@@ -50,10 +50,10 @@ function NewTicketPageContent() {
       {/* Breadcrumbs + Title */}
       <div className="flex flex-col gap-2">
         <Breadcrumbs
+          endsWithCurrentPage={false}
           items={[
             { label: 'Dashboard', href: '/dashboard' },
             { label: 'Tickets', href: '/tickets' },
-            { label: 'New Ticket' },
           ]}
         />
 

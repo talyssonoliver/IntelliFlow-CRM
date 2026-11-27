@@ -486,10 +486,10 @@ function Header({ pendingCount, onRefresh }: Readonly<HeaderProps>) {
   return (
     <div>
       <Breadcrumbs
+        endsWithCurrentPage={false}
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Agent Approvals', href: '/agent-approvals' },
-          { label: 'Agent Tools' },
         ]}
       />
       <div className="flex items-center justify-between">

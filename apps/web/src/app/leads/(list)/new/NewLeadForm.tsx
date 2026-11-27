@@ -278,10 +278,10 @@ export default function NewLeadForm() {
       <div className="flex flex-col gap-8">
         <div className="flex flex-col gap-4">
           <Breadcrumbs
+            endsWithCurrentPage={false}
             items={[
               { label: 'Dashboard', href: '/dashboard' },
               { label: 'Leads', href: '/leads' },
-              { label: 'New Lead' },
             ]}
           />
           <div className="flex flex-col gap-1">

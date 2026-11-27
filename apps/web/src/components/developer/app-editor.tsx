@@ -176,11 +176,11 @@ export function AppEditor({ appId }: Readonly<AppEditorProps>) {
     <div data-testid="app-editor">
       {/* Breadcrumb */}
       <Breadcrumbs
+        endsWithCurrentPage={false}
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Developer Apps', href: '/developers/apps' },
           { label: app.name, href: `/developers/apps/${appId}` },
-          { label: 'Edit App' },
         ]}
         className="mb-6"
       />

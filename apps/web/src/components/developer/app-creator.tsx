@@ -184,10 +184,10 @@ export function AppCreator() {
     return (
       <div data-testid="app-creator">
         <Breadcrumbs
+          endsWithCurrentPage={false}
           items={[
             { label: 'Dashboard', href: '/dashboard' },
             { label: 'Developer Apps', href: '/developers/apps' },
-            { label: 'App Created' },
           ]}
           className="mb-6"
         />
@@ -306,10 +306,10 @@ export function AppCreator() {
   return (
     <div data-testid="app-creator">
       <Breadcrumbs
+        endsWithCurrentPage={false}
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Developer Apps', href: '/developers/apps' },
-          { label: 'Create New App' },
         ]}
         className="mb-6"
       />

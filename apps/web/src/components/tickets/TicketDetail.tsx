@@ -251,18 +251,22 @@ export function TicketDetail({
           <div className="flex flex-col gap-1">
             {/* Breadcrumb */}
             <Breadcrumbs
+              endsWithCurrentPage={false}
               items={[
                 { label: 'Dashboard', href: '/dashboard' },
                 { label: 'Tickets', href: listHref },
-                { label: `#${ticket.ticketNumber}` },
               ]}
             />
 
             {/* Title */}
-            <div className="flex items-center gap-3 mt-1">
+            <div className="flex flex-wrap items-center gap-3 mt-1">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                 {ticket.subject}
               </h1>
+              {/* The number used to show only in the breadcrumb; the trail now holds ancestors. */}
+              <span className="text-sm font-medium text-muted-foreground">
+                #{ticket.ticketNumber}
+              </span>
               <span
                 className={`px-2.5 py-0.5 rounded text-xs font-bold ${statusConfig?.bg} ${statusConfig?.text}`}
               >

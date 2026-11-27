@@ -71,11 +71,11 @@ export function CanvasScreen({ workflowId }: CanvasScreenProps) {
             structured `title` prop forces a static h1 so we render the
             row by hand to keep the same density. */}
         <Breadcrumbs
+          endsWithCurrentPage={false}
           items={[
             { label: 'Dashboard', href: '/dashboard' },
             { label: 'Cases', href: '/cases' },
             { label: 'Case Workflows', href: '/cases/case-workflows' },
-            { label: displayName },
           ]}
         />
 

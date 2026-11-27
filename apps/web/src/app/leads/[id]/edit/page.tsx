@@ -147,11 +147,11 @@ export default function EditLeadPage() {
       <div className="mx-auto max-w-2xl px-4 pt-8 pb-16">
         {/* Breadcrumb */}
         <Breadcrumbs
+          endsWithCurrentPage={false}
           items={[
             { label: 'Dashboard', href: '/dashboard' },
             { label: 'Leads', href: '/leads' },
             { label: leadDisplayName(lead), href: `/leads/${leadId}` },
-            { label: 'Edit' },
           ]}
           className="mb-6"
         />

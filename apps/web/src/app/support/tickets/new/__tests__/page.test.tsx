@@ -106,12 +106,12 @@ beforeEach(async () => {
 });
 
 describe('SupportNewTicketPage', () => {
-  it('renders breadcrumbs Support > Tickets > New Ticket', () => {
+  it('renders breadcrumbs Support > Tickets, the title names the page', () => {
     render(<SupportNewTicketPage />);
     const breadcrumbs = screen.getByLabelText('Breadcrumb');
     expect(breadcrumbs.textContent).toContain('Support');
     expect(breadcrumbs.textContent).toContain('Tickets');
-    expect(breadcrumbs.textContent).toContain('New Ticket');
+    expect(breadcrumbs.textContent).not.toContain('New Ticket'); // (owner 27/11: the trail holds ancestors; the title names the page)
   });
 
   it('renders SupportTicketForm component', () => {

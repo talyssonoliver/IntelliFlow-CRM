@@ -458,10 +458,10 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
           <Breadcrumbs
+            endsWithCurrentPage={false}
             items={[
               { label: 'Dashboard', href: '/dashboard' },
               { label: 'Accounts', href: '/accounts' },
-              { label: account.name },
             ]}
           />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{account.name}</h1>

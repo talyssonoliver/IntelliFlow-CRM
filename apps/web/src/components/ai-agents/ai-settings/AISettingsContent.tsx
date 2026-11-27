@@ -246,10 +246,10 @@ export default function AISettingsContent() {
         {/* Header */}
         <div className="mb-8">
           <Breadcrumbs
+            endsWithCurrentPage={false}
             items={[
               { label: 'Dashboard', href: '/dashboard' },
               { label: 'AI & Agents', href: '/agent-approvals' },
-              { label: 'AI Chains' },
             ]}
             className="mb-4"
           />

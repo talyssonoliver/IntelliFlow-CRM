@@ -328,10 +328,10 @@ export default function CreateNewContactPage() {
         {/* Breadcrumb */}
         <div className="flex flex-col gap-4">
           <Breadcrumbs
+            endsWithCurrentPage={false}
             items={[
               { label: 'Dashboard', href: '/dashboard' },
               { label: 'Contacts', href: '/contacts' },
-              { label: 'New Contact' },
             ]}
           />
 

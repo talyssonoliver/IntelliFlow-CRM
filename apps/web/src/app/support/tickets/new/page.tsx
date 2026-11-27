@@ -112,11 +112,11 @@ export default function SupportNewTicketPage() {
       {/* Breadcrumbs + Title */}
       <div className="flex flex-col gap-2">
         <Breadcrumbs
+          endsWithCurrentPage={false}
           items={[
             { label: 'Dashboard', href: '/dashboard' },
             { label: 'Support', href: '/support' },
             { label: 'Tickets', href: '/support/tickets' },
-            { label: 'New Ticket' },
           ]}
         />
 

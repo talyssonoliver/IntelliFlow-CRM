@@ -169,11 +169,11 @@ export default function AIReviewDetailPage() {
     <div className="flex flex-col gap-6 max-w-4xl mx-auto">
       {/* Breadcrumb */}
       <Breadcrumbs
+        endsWithCurrentPage={false}
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'AI & Agents', href: '/agent-approvals' },
           { label: 'AI Review', href: '/agent-approvals/ai-review' },
-          { label: `Review #${reviewId.slice(0, 8)}` },
         ]}
       />
 

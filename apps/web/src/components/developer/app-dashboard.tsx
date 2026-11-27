@@ -236,10 +236,10 @@ export function AppDashboard({ appId }: Readonly<AppDashboardProps>) {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <Breadcrumbs
+        endsWithCurrentPage={false}
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Developer Apps', href: '/developers/apps' },
-          { label: app.name },
         ]}
       />
 

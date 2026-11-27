@@ -454,10 +454,10 @@ export default function UploadDocumentPage() {
     <div className="flex flex-col gap-6">
       {/* Breadcrumb */}
       <Breadcrumbs
+        endsWithCurrentPage={false}
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Documents', href: '/documents' },
-          { label: 'Upload Document' },
         ]}
       />
 
