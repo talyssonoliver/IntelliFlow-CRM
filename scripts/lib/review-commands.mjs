@@ -46,6 +46,20 @@ export const CLAUDE_REVIEW_ARGS = Object.freeze([
   'PowerShell',
 ]);
 
+/** The Claude fallback's model alias unless CODEX_REVIEW_CLAUDE_MODEL names another (owner ruling 27/11/2026: Sonnet). */
+export const DEFAULT_CLAUDE_REVIEW_MODEL = 'sonnet';
+
+/** The model the Claude fallback runs on: CODEX_REVIEW_CLAUDE_MODEL (alias or full id), else Sonnet. */
+export function claudeReviewModel(env = process.env) {
+  const v = String(env.CODEX_REVIEW_CLAUDE_MODEL ?? '').trim();
+  return v || DEFAULT_CLAUDE_REVIEW_MODEL;
+}
+
+/** CLAUDE_REVIEW_ARGS with `--model <model>` passed explicitly, so the account default never decides. */
+export function claudeReviewArgs(model) {
+  return [CLAUDE_REVIEW_ARGS[0], '--model', model, ...CLAUDE_REVIEW_ARGS.slice(1)];
+}
+
 /** spawnSync options for a reviewer: the prompt on stdin, a 5-minute wall clock. */
 export function reviewerSpawnOptions(input, cwd, platform = process.platform, env = process.env) {
   return {
@@ -66,8 +80,8 @@ export function runCodexReviewer(input, lastMessagePath, cwd, spawn, tier = {}) 
 }
 
 /** Runs the Claude fallback reviewer with no shell tools. spawn is child_process.spawnSync. */
-export function runClaudeReviewer(input, cwd, spawn) {
-  return spawn('claude', [...CLAUDE_REVIEW_ARGS], reviewerSpawnOptions(input, cwd));
+export function runClaudeReviewer(input, cwd, spawn, { model = claudeReviewModel() } = {}) {
+  return spawn('claude', claudeReviewArgs(model), reviewerSpawnOptions(input, cwd));
 }
 
 /**

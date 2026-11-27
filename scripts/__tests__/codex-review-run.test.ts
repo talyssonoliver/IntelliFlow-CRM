@@ -14,6 +14,7 @@ import {
   sectionStats,
   summarizeRuns,
 } from '../lib/codex-review-run.mjs';
+import { buildRecord } from '../lib/review-metrics.mjs';
 import { guardSharedGitConfig } from './shared-git-config-guard';
 import { gitEnv } from '../lib/preship-git.mjs';
 import { collectNumstat } from '../lib/codex-chunk-review.mjs';
@@ -162,6 +163,17 @@ describe('helpers', () => {
       tokens: { total: 5 },
       costUsd: 0.5,
     });
+    // the Claude fallback's model (Sonnet, owner ruling 27/11/2026) reaches the metrics `model`
+    expect(summarizeRuns([{ reviewer: 'claude', model: 'sonnet', costUsd: 0.1 }])).toMatchObject({
+      reviewer: 'claude',
+      model: 'sonnet',
+    });
+    expect(
+      buildRecord({
+        reviewer: 'claude',
+        model: summarizeRuns([{ reviewer: 'claude', model: 'sonnet' }]).model,
+      })
+    ).toMatchObject({ reviewer: 'claude', model: 'sonnet' });
   });
 
   it('sizes the change from git numstat, committed plus staged', () => {
