@@ -16,6 +16,8 @@
 import { MailboxTransportError } from './mailbox-errors';
 import { zohoAccountGet, type ZohoAccountRef } from './zoho-mailbox';
 import { decodeEntities, displayName, zohoAddresses, zohoBodyText } from './zoho-text';
+import type { MailContent } from './mail-content';
+import { readZohoContent } from './zoho-mail-content';
 
 // The address and body parsing lives in zoho-text.ts; these two stay part of this module's API.
 export { zohoAddresses, zohoBodyText } from './zoho-text';
@@ -50,6 +52,8 @@ export interface ZohoSyncedMessage {
   /** Empty: the body is read only through `loadBody()`. */
   bodyText: string;
   loadBody: () => Promise<string>;
+  /** The text, the provider's HTML and the attachments' metadata (one content read, one info read). */
+  loadContent: () => Promise<MailContent>;
 }
 
 export interface ZohoReadRound {
@@ -81,6 +85,7 @@ interface ZohoListItem {
   subject?: string;
   receivedTime?: string | number;
   status?: string | number;
+  hasAttachment?: string | number | boolean;
 }
 
 /**
@@ -176,6 +181,32 @@ function toMessage(
   // The list puts the bare address in `fromAddress` and the sender's name in `sender`.
   const sender = decodeEntities(item.sender ?? '').trim();
   const senderName = sender && !sender.includes('@') ? sender : null;
+  // One content read serves the text and the HTML; a repeat call reuses it.
+  let raw: Promise<string> | undefined;
+  const rawContent = (): Promise<string> => {
+    raw ??= (async () => {
+      const path = `/folders/${encodeURIComponent(options.folderId)}/messages/${encodeURIComponent(messageId)}/content`;
+      const body = (await zohoAccountGet(fetchImpl, accessToken, ref, path)) as {
+        data?: { content?: string };
+      };
+      return body.data?.content ?? '';
+    })();
+    return raw;
+  };
+  const hasAttachment = !['0', 'false'].includes(String(item.hasAttachment).toLowerCase());
+  const content = async (): Promise<MailContent> => {
+    const html = await rawContent();
+    const rich = await readZohoContent(
+      fetchImpl,
+      accessToken,
+      ref,
+      options.folderId,
+      messageId,
+      html,
+      hasAttachment
+    );
+    return { text: zohoBodyText(html, options.maxBodyChars), ...rich };
+  };
   return {
     providerMessageId: messageId,
     internetMessageId: null,
@@ -190,13 +221,8 @@ function toMessage(
     receivedAt: new Date(receivedTime),
     isRead: String(item.status) === '1',
     bodyText: '',
-    loadBody: async () => {
-      const path = `/folders/${encodeURIComponent(options.folderId)}/messages/${encodeURIComponent(messageId)}/content`;
-      const body = (await zohoAccountGet(fetchImpl, accessToken, ref, path)) as {
-        data?: { content?: string };
-      };
-      return zohoBodyText(body.data?.content ?? '', options.maxBodyChars);
-    },
+    loadBody: async () => zohoBodyText(await rawContent(), options.maxBodyChars),
+    loadContent: content,
   };
 }
 

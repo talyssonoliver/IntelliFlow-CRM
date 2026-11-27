@@ -8,11 +8,27 @@
  */
 import { TRPCError } from '@trpc/server';
 import { uploadEmailAttachmentInputSchema, type EmailAttachmentRef } from '@intelliflow/validators';
-import { createTRPCRouter, verifiedTenantProcedure } from '../../trpc';
+import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
+import { createTRPCRouter, tenantProcedure, verifiedTenantProcedure } from '../../trpc';
 import { assertTenantContext } from '../../security/tenant-context';
 import { emailRuntimeDeps, type EmailRouterCtx } from './email-access';
+import { fetchEmailAttachment, type ProxiedAttachment } from './email-attachment-proxy';
 
 export const emailAttachmentsRouter = createTRPCRouter({
+  /**
+   * Opens or downloads an attachment (or an inline image) of synced mail. The file is read from the
+   * mail provider now and returned; it is never stored in Aurora (email-attachment-proxy.ts).
+   */
+  fetch: tenantProcedure
+    .input(z.object({ emailId: recordIdSchema, attachmentId: recordIdSchema }))
+    .query(async ({ ctx, input }): Promise<ProxiedAttachment> => {
+      assertTenantContext(ctx);
+      const c = ctx as unknown as EmailRouterCtx;
+      const { transports } = emailRuntimeDeps(c);
+      return fetchEmailAttachment(c, transports, input);
+    }),
+
   upload: verifiedTenantProcedure
     .input(uploadEmailAttachmentInputSchema)
     .mutation(async ({ ctx, input }): Promise<EmailAttachmentRef> => {
