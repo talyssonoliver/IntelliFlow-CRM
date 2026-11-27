@@ -16,6 +16,7 @@ const mutationResults = vi.hoisted(
 const stable = vi.hoisted(() => ({
   pending: { data: [] as unknown[], isLoading: false, error: null, refetch: null as unknown },
   count: { data: { count: 0 }, refetch: null as unknown },
+  drafts: { data: { drafts: [] as unknown[] }, refetch: vi.fn() },
 }));
 
 vi.mock('next/link', () => ({
@@ -25,7 +26,7 @@ vi.mock('next/link', () => ({
 }));
 vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams() }));
 vi.mock('@/lib/auth/AuthContext', () => ({
-  useRequireAuth: () => ({ isAuthenticated: true, isLoading: false }),
+  useRequireAuth: () => ({ isAuthenticated: true, isLoading: false, user: { id: 'user-1' } }),
 }));
 
 function mutation(name: string) {
@@ -41,6 +42,11 @@ vi.mock('@/lib/trpc', () => ({
       getPendingCount: { useQuery: () => stable.count },
       approveAction: mutation('approve'),
       rejectAction: mutation('reject'),
+    },
+    autoResponse: {
+      getPendingForApprover: { useQuery: () => stable.drafts },
+      approve: mutation('draftApprove'),
+      reject: mutation('draftReject'),
     },
   },
 }));
@@ -183,5 +189,48 @@ describe('AgentApprovalsPreviewPage queue facts (PG-198)', () => {
 
     await waitFor(() => expect(mutationResults.approve!.mutateAsync).toHaveBeenCalled());
     expect(screen.queryByTestId('execution-error')).not.toBeInTheDocument();
+  });
+});
+
+describe('AgentApprovalsPreviewPage AI email drafts (owner 26/11)', () => {
+  it('lists the AI drafts waiting for this user and approves them through auto-response', async () => {
+    stable.pending.data = [];
+    stable.drafts.data = {
+      drafts: [
+        {
+          id: 'draft-1',
+          leadId: 'lead-123456789',
+          subject: 'Re: your quote request',
+          body: 'Thanks for getting in touch.',
+          recipientEmail: 'owner@example.invalid',
+          aiConfidence: 0.82,
+          triggerType: 'INBOUND_EMAIL',
+          status: 'PENDING_APPROVAL',
+          modelVersion: 'auto-response-agent',
+          createdAt: new Date('2026-11-27T09:00:00.000Z').toISOString(),
+          expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+          approvalDecision: null,
+          escalation: null,
+        },
+      ],
+    };
+    render(<AgentApprovalsPreviewPage />);
+
+    expect(await screen.findByText('Re: your quote request')).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId('metric-pending')).getByTestId('metric-value')
+    ).toHaveTextContent('1');
+    const card = within(screen.getByTestId('action-card-draft-1'));
+    fireEvent.click(card.getByRole('button', { expanded: false }));
+    fireEvent.click(card.getByRole('button', { name: 'Approve' }));
+    await vi.waitFor(() =>
+      expect(mutationResults.draftApprove.mutateAsync).toHaveBeenCalledWith({
+        draftId: 'draft-1',
+        decision: 'APPROVED',
+        decidedBy: 'user-1',
+      })
+    );
+    expect(mutationResults.approve.mutateAsync).not.toHaveBeenCalled();
+    stable.drafts.data = { drafts: [] };
   });
 });

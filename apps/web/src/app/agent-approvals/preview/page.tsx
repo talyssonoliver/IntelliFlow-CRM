@@ -16,6 +16,7 @@ import { useSearchParams } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
 import { NoActionsEmptyState } from '../components/NoActionsEmptyState';
 import { KpiCard } from '@/components/dashboard/KpiCard';
+import { mapDraftToAction, type AutoResponseDraftFromAPI } from '@/lib/agent/auto-response-draft';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import type { AgentAction, ActionStatus } from '@/lib/agent';
@@ -69,6 +70,17 @@ type PreviewAction = AgentAction & {
   escalated: boolean;
   interrupted: boolean;
 };
+
+/** An AI email draft in this queue's shape: no tool impact, escalated when its status says so. */
+function draftToPreviewAction(draft: AutoResponseDraftFromAPI): PreviewAction {
+  return {
+    ...mapDraftToAction(draft),
+    confidenceReported: true,
+    impact: null,
+    escalated: draft.status === 'ESCALATED',
+    interrupted: false,
+  };
+}
 
 function formatToolName(toolName: string): string {
   return toolName
@@ -687,7 +699,8 @@ function MetricsSection({ actions, pendingCount, isLoading }: MetricsSectionProp
 function AgentApprovalsPreviewContent() {
   const searchParams = useSearchParams();
   const actionIdFromUrl = searchParams.get('actionId');
-  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useRequireAuth();
+  const userId = user?.id;
 
   const [expandedActionId, setExpandedActionId] = useState<string | null>(actionIdFromUrl);
   const [filterStatus, setFilterStatus] = useState<ActionStatus | 'all'>('all');
@@ -708,6 +721,13 @@ function AgentApprovalsPreviewContent() {
     refetchInterval: 30000,
   });
 
+  // Owner 26/11: "Why the AI feature aren't showing them here?" The preview read only the agent
+  // tool actions; the AI email drafts waiting for this user (shown on the hub) belong here too.
+  const draftsQuery = trpc.autoResponse.getPendingForApprover.useQuery(
+    { approverId: userId ?? '' },
+    { enabled: isAuthenticated && !authLoading && !!userId, refetchInterval: 30000 }
+  );
+
   // ==========================================================================
   // tRPC Mutations — WIRED TO BACKEND
   // ==========================================================================
@@ -720,22 +740,42 @@ function AgentApprovalsPreviewContent() {
     onSuccess: () => Promise.all([pendingQuery.refetch(), countQuery.refetch()]),
   });
 
+  // An AI email draft is decided through the auto-response API, as on the hub.
+  const draftApproveMutation = trpc.autoResponse.approve.useMutation({
+    onSuccess: () => draftsQuery.refetch(),
+  });
+  const draftRejectMutation = trpc.autoResponse.reject.useMutation({
+    onSuccess: () => draftsQuery.refetch(),
+  });
+
   // ==========================================================================
   // Transform API data → AgentAction[]
   // ==========================================================================
 
   const actions = useMemo(() => {
-    if (!pendingQuery.data) return [];
-    return (pendingQuery.data as PendingActionFromAPI[]).map(mapPendingToAction);
-  }, [pendingQuery.data]);
+    const toolActions = ((pendingQuery.data ?? []) as PendingActionFromAPI[]).map(
+      mapPendingToAction
+    );
+    const draftActions = ((draftsQuery.data?.drafts ?? []) as AutoResponseDraftFromAPI[]).map(
+      draftToPreviewAction
+    );
+    return [...toolActions, ...draftActions].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
+  }, [pendingQuery.data, draftsQuery.data]);
 
   const filteredActions = useMemo(() => {
     if (filterStatus === 'all') return actions;
     return actions.filter((action) => action.status === filterStatus);
   }, [actions, filterStatus]);
 
+  const pendingDrafts = actions.filter(
+    (a) => a.actionType === 'email_draft' && a.status === 'pending'
+  ).length;
   const pendingCount =
-    countQuery.data?.count ?? actions.filter((a) => a.status === 'pending').length;
+    (countQuery.data?.count ??
+      actions.filter((a) => a.actionType !== 'email_draft' && a.status === 'pending').length) +
+    pendingDrafts;
 
   // Auto-expand action if actionId is provided in URL (from timeline navigation)
   useEffect(() => {
@@ -762,10 +802,25 @@ function AgentApprovalsPreviewContent() {
   // Handlers — WIRED TO tRPC MUTATIONS
   // ==========================================================================
 
+  const isDraft = useCallback(
+    (actionId: string) => actions.some((a) => a.id === actionId && a.actionType === 'email_draft'),
+    [actions]
+  );
+
   const handleApprove = useCallback(
     async (actionId: string) => {
       setExecutionError(null);
       try {
+        if (isDraft(actionId)) {
+          if (userId) {
+            await draftApproveMutation.mutateAsync({
+              draftId: actionId,
+              decision: 'APPROVED',
+              decidedBy: userId,
+            });
+          }
+          return;
+        }
         const result = await approveMutation.mutateAsync({ actionId });
         // PG-198 (RF-1): approval runs the action for real; surface a failed run.
         if (result && !result.success) {
@@ -775,23 +830,33 @@ function AgentApprovalsPreviewContent() {
         console.error('Failed to approve:', error);
       }
     },
-    [approveMutation]
+    [approveMutation, draftApproveMutation, isDraft, userId]
   );
 
   const handleReject = useCallback(
     async (actionId: string, feedback: string) => {
       try {
+        if (isDraft(actionId)) {
+          if (userId) {
+            await draftRejectMutation.mutateAsync({
+              draftId: actionId,
+              decidedBy: userId,
+              reason: feedback,
+            });
+          }
+          return;
+        }
         await rejectMutation.mutateAsync({ actionId, reason: feedback });
       } catch (error) {
         console.error('Failed to reject:', error);
       }
     },
-    [rejectMutation]
+    [rejectMutation, draftRejectMutation, isDraft, userId]
   );
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([pendingQuery.refetch(), countQuery.refetch()]);
-  }, [pendingQuery, countQuery]);
+    await Promise.all([pendingQuery.refetch(), countQuery.refetch(), draftsQuery.refetch()]);
+  }, [pendingQuery, countQuery, draftsQuery]);
 
   // ==========================================================================
   // Loading & Error States
