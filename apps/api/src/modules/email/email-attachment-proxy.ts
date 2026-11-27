@@ -42,6 +42,22 @@ const ITEM_EXTENSIONS: Record<string, string> = {
   'text/calendar': '.ics',
 };
 
+/** The raster image type of the first bytes (PNG, JPEG, GIF, WebP), or null. */
+export function sniffRaster(bytes: Buffer): string | null {
+  if (
+    bytes.length >= 8 &&
+    bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+  ) {
+    return 'image/png';
+  }
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff)
+    return 'image/jpeg';
+  const head = bytes.subarray(0, 12).toString('latin1');
+  if (head.startsWith('GIF87a') || head.startsWith('GIF89a')) return 'image/gif';
+  if (head.startsWith('RIFF') && head.slice(8, 12) === 'WEBP') return 'image/webp';
+  return null;
+}
+
 function withExtension(name: string, contentType: string): string {
   const extension = ITEM_EXTENSIONS[contentType];
   return extension && !name.toLowerCase().endsWith(extension) ? `${name}${extension}` : name;
@@ -202,8 +218,11 @@ async function readFromProvider(
       }
       throw error;
     }
+    const declared = file.contentType?.split(';')[0]?.trim() || row.fileType || SAFE_FALLBACK_TYPE;
+    // A provider that sends a generic type (Zoho streams files as octet-stream) still gets its
+    // raster images recognised by their first bytes, so inline images are drawn. Never SVG.
     const contentType =
-      file.contentType?.split(';')[0]?.trim() || row.fileType || SAFE_FALLBACK_TYPE;
+      declared === SAFE_FALLBACK_TYPE ? (sniffRaster(file.bytes) ?? declared) : declared;
     return {
       fileName: withExtension(row.fileName, contentType),
       contentType,
