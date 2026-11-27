@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-27T14:15:14.765Z",
+  "timestamp": "2026-11-27T15:45:08.681Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1528,7 +1528,7 @@
   },
   "database_inventory": {
     "total_tables": 221,
-    "total_fields": 3296,
+    "total_fields": 3297,
     "total_indexes": 976,
     "total_relations": 326,
     "tables_with_embeddings": 4,
@@ -2760,6 +2760,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "WaitingDismissal",
+        "fields": 9,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TenantToolEnablement",
         "fields": 8,
         "indexes": 3,
@@ -2890,13 +2897,6 @@
         "fields": 8,
         "indexes": 3,
         "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "WaitingDismissal",
-        "fields": 8,
-        "indexes": 3,
-        "relations": 1,
         "hasEmbedding": false
       },
       {

@@ -53,6 +53,7 @@ export const waitingRouter = createTRPCRouter({
       const data = {
         since: item.since,
         unanswered: item.unanswered,
+        latestAt: item.latestAt,
         dismissedById: typed.tenant.userId,
       };
       await typed.prismaWithTenant.waitingDismissal.upsert({

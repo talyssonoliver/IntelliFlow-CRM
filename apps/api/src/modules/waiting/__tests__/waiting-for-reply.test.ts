@@ -1034,12 +1034,13 @@ describe('withoutDismissed (handled without a reply)', () => {
     since: day(10),
     subject: 'Quote?',
     unanswered: 1,
+    latestAt: day(10),
     ...over,
   });
   const dismissal = (over = {}) => ({
     personKey: 'lead:lead-1',
     since: day(10),
-    unanswered: 1,
+    latestAt: day(10),
     ...over,
   });
 
@@ -1052,18 +1053,34 @@ describe('withoutDismissed (handled without a reply)', () => {
     expect(withoutDismissed(items, [])).toBe(items);
   });
 
-  it('brings the person back when another inbound email grows the unanswered count', () => {
-    expect(withoutDismissed([waiting({ unanswered: 2 })], [dismissal()])).toHaveLength(1);
+  it('brings the person back when another inbound email arrives', () => {
+    expect(
+      withoutDismissed([waiting({ unanswered: 2, latestAt: day(12) })], [dismissal()])
+    ).toHaveLength(1);
+  });
+
+  it('brings the person back on a new email even when the count fell below the dismissed one', () => {
+    // Codex 27/11: dismissed at 3, the count fell to 1 (older mail left the read window), then a
+    // new inbound email made it 2. The count never passes 3; the newer mail time does.
+    expect(
+      withoutDismissed(
+        [waiting({ unanswered: 2, latestAt: day(14) })],
+        [dismissal({ latestAt: day(12) })]
+      )
+    ).toHaveLength(1);
   });
 
   it('brings the person back when a new wait starts later (we replied, they wrote again)', () => {
     expect(withoutDismissed([waiting({ since: day(15) })], [dismissal()])).toHaveLength(1);
   });
 
-  it('still hides the wait when fewer mails count now than when it was dismissed', () => {
-    expect(withoutDismissed([waiting({ unanswered: 1 })], [dismissal({ unanswered: 3 })])).toEqual(
-      []
-    );
+  it('still hides the wait when fewer mails count now but none is newer', () => {
+    expect(
+      withoutDismissed(
+        [waiting({ unanswered: 1, latestAt: day(11) })],
+        [dismissal({ latestAt: day(12) })]
+      )
+    ).toEqual([]);
   });
 
   it("does not hide someone else's wait, or the same id of another kind", () => {
@@ -1091,7 +1108,7 @@ describe('loadWaiting with dismissals', () => {
         tenantId: 't1',
         personKey: 'lead:lead-a',
         since: lead?.since,
-        unanswered: lead?.unanswered,
+        latestAt: lead?.latestAt,
       },
     ];
     const after = await loadWaiting(fakeDb(t), viewer, scope, scope);
@@ -1112,7 +1129,7 @@ describe('loadWaiting with dismissals', () => {
   it("ignores another tenant's dismissal", async () => {
     const t = {
       ...withoutCrmReply(),
-      dismissals: [{ tenantId: 't2', personKey: 'lead:lead-a', since: day(10), unanswered: 1 }],
+      dismissals: [{ tenantId: 't2', personKey: 'lead:lead-a', since: day(10), latestAt: day(10) }],
     };
     const items = await loadWaiting(fakeDb(t), viewer, scope, scope);
     expect(items.map((i) => i.id)).toContain('lead-a');

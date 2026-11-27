@@ -309,7 +309,7 @@ export async function loadWaiting(
   // "Handled without a reply" (MVP-012): the tenant's dismissals hide the waits they were made for.
   const dismissals = await db.waitingDismissal.findMany({
     where: { tenantId: viewer.tenantId },
-    select: { personKey: true, since: true, unanswered: true },
+    select: { personKey: true, since: true, latestAt: true },
   });
   return withoutDismissed(waiting, dismissals);
 }

@@ -15,7 +15,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: routerPush }) }));
 // Mock @intelliflow/ui (partial — preserve real exports like EmptyState)
 vi.mock('@intelliflow/ui', async (importOriginal) => ({
   ...((await importOriginal()) as Record<string, unknown>),
-  DataTable: ({ columns, data, onRowClick, bulkActions, canSelectRow }: any) => (
+  DataTable: ({ columns, data, onRowClick, bulkActions, canSelectRow, getRowId }: any) => (
     <div data-testid="data-table">
       <table>
         <thead>
@@ -31,6 +31,7 @@ vi.mock('@intelliflow/ui', async (importOriginal) => ({
               key={row.id}
               data-testid={`task-row-${row.id}`}
               data-selectable={canSelectRow ? String(canSelectRow(row)) : 'true'}
+              data-row-id={getRowId ? getRowId(row) : ''}
               onClick={() => onRowClick?.(row)}
             >
               {columns.map((col: any, i: number) => (
@@ -130,6 +131,25 @@ describe('TaskList', () => {
   });
 
   describe('follow-up rows (owner 21/11: follow-ups in the same task table)', () => {
+    it("keys selection by the row's own id, so it never moves to another row", () => {
+      const owned = followUpTaskRows([
+        {
+          id: 'lead-8',
+          firstName: 'Sam',
+          lastName: 'Example',
+          company: null,
+          email: 'sam@example.invalid',
+          lastContactedAt: '2026-11-13T09:00:00.000Z',
+          owner: { id: 'user-3', email: 'owner@example.invalid', name: 'Pat Owner' },
+        },
+      ])[0];
+      render(<TaskList {...defaultProps} tasks={[...defaultProps.tasks, owned]} />);
+      const row = screen.getByTestId(`task-row-${owned.id}`);
+      expect(row).toHaveAttribute('data-row-id', owned.id);
+      // The lead's owner owns the follow-up (owner 27/11: one model).
+      expect(row).toHaveTextContent('Pat Owner');
+    });
+
     const followUp = followUpTaskRows([
       {
         id: 'lead-9',

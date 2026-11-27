@@ -7,8 +7,9 @@
 -- Why: the dashboard's to-do rows (tasks, follow-ups, replies) now share one "done" checkbox. A
 -- reply that was handled outside the CRM (a call, a chat) has no outbound email to clear the wait,
 -- so the checkbox stores a dismissal. "personKey" is `lead:<id>` or `contact:<id>`; "since" and
--- "unanswered" are the values of the wait that was dismissed, so a newer inbound email (a later
--- "since", or more unanswered mails) brings the person back.
+-- "latestAt" are the wait that was dismissed (its first and newest unanswered inbound mail), so a
+-- newer inbound email (a later "latestAt", or a later "since") brings the person back;
+-- "unanswered" records how many mails were waiting then.
 --
 -- Recovery plan: drop table "waiting_dismissals" (nothing else depends on it). Production applies
 -- only through the gated `prisma migrate deploy` workflow.
@@ -20,6 +21,7 @@ CREATE TABLE "waiting_dismissals" (
     "personKey" TEXT NOT NULL,
     "since" TIMESTAMP(3) NOT NULL,
     "unanswered" INTEGER NOT NULL,
+    "latestAt" TIMESTAMP(3) NOT NULL,
     "dismissedById" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

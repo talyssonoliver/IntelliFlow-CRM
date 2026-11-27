@@ -7368,6 +7368,7 @@ model WaitingDismissal {
   personKey     String
   since         DateTime
   unanswered    Int
+  latestAt      DateTime
   dismissedById String?
   createdAt     DateTime @default(now())
 

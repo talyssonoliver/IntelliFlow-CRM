@@ -405,6 +405,43 @@ describe('DataTable', () => {
     });
   });
 
+  describe('Selection keyed by row id (codex 27/11)', () => {
+    it('keeps a selection on its row when an earlier row leaves the list', async () => {
+      const onExecute = vi.fn();
+      const data = createTestData(3);
+      const props = {
+        columns: basicColumns,
+        enableRowSelection: true,
+        getRowId: (row: TestData) => row.id,
+        bulkActions: [{ label: 'Archive', onExecute }],
+      };
+      const { rerender } = render(<DataTable {...props} data={data} />);
+      await userEvent.click(screen.getAllByRole('checkbox', { name: /select row/i })[1]);
+      // Row 1 leaves (completed elsewhere): row 2 must stay selected, not row 3 at its index.
+      rerender(<DataTable {...props} data={data.slice(1)} />);
+      await userEvent.click(screen.getByRole('button', { name: /Archive/ }));
+      expect(onExecute).toHaveBeenCalledWith([expect.objectContaining({ id: '2' })]);
+    });
+
+    it('clears the selection once a bulk action is done', async () => {
+      const onExecute = vi.fn().mockResolvedValue(undefined);
+      render(
+        <DataTable
+          columns={basicColumns}
+          data={createTestData(2)}
+          enableRowSelection
+          getRowId={(row) => row.id}
+          bulkActions={[{ label: 'Archive', onExecute }]}
+        />
+      );
+      await userEvent.click(screen.getByRole('checkbox', { name: 'Select all' }));
+      await userEvent.click(screen.getByRole('button', { name: /Archive/ }));
+      await waitFor(() =>
+        expect(screen.queryByRole('button', { name: /Archive/ })).not.toBeInTheDocument()
+      );
+    });
+  });
+
   describe('Page size changes (codex 21/11)', () => {
     it('follows a larger pageSize after mount, so rows added later are not left on page 2', () => {
       const { rerender } = render(

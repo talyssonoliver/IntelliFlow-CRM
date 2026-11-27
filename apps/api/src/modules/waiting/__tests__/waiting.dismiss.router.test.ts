@@ -12,6 +12,7 @@ import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 
 const mocks = prismaMock as any;
 const SINCE = new Date('2026-11-17T10:00:00.000Z');
+const LATEST = new Date('2026-11-24T09:00:00.000Z');
 
 const item = (over = {}) => ({
   kind: 'lead',
@@ -22,6 +23,7 @@ const item = (over = {}) => ({
   since: SINCE,
   subject: 'Quote?',
   unanswered: 2,
+  latestAt: LATEST,
   ...over,
 });
 
@@ -33,7 +35,7 @@ describe('waiting.dismiss', () => {
 
   const caller = () => waitingRouter.createCaller(createTestContext() as any);
 
-  it("upserts a dismissal with the wait's since and unanswered for this tenant", async () => {
+  it("upserts a dismissal with the wait's since, newest mail and count for this tenant", async () => {
     await expect(caller().dismiss({ kind: 'lead', id: 'lead-1' })).resolves.toEqual({
       dismissed: true,
     });
@@ -47,8 +49,9 @@ describe('waiting.dismiss', () => {
       personKey: 'lead:lead-1',
       since: SINCE,
       unanswered: 2,
+      latestAt: LATEST,
     });
-    expect(arg.update).toMatchObject({ since: SINCE, unanswered: 2 });
+    expect(arg.update).toMatchObject({ since: SINCE, unanswered: 2, latestAt: LATEST });
   });
 
   it('refuses a person nobody is waiting on, and writes nothing', async () => {
