@@ -151,6 +151,8 @@ export async function fetchEmailAttachment(
         select: {
           id: true,
           tenantId: true,
+          userId: true,
+          mailboxId: true,
           provider: true,
           providerMessageId: true,
         },

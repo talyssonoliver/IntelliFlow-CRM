@@ -154,6 +154,20 @@ describe('emailAttachments.fetch', () => {
     });
   });
 
+  it('selects every email field the proxy reads, so the provider lookup can run', async () => {
+    setRows(row());
+    await caller().fetch(INPUT);
+    const select = (prismaMock as any).emailAttachment.findFirst.mock.calls[0][0].select;
+    expect(select.email.select).toMatchObject({
+      id: true,
+      tenantId: true,
+      userId: true,
+      mailboxId: true,
+      provider: true,
+      providerMessageId: true,
+    });
+  });
+
   it('limits how many provider reads one user has running at once', async () => {
     setRows(row());
     const release: Array<() => void> = [];
