@@ -1,0 +1,43 @@
+{
+  "task_id": "IFC-315",
+  "title": "Suppress marketing email to people with an objection (PG-203 follow-up: blocksMarketing)",
+  "sprint": 19,
+  "acknowledged_by": "Claude Code (claude-opus-5-5), pg-208 lane",
+  "acknowledged_at": "2026-11-12T20:30:00Z",
+  "files_read": [
+    "packages/adapters/src/repositories/PrismaProcessingRestrictionRepository.ts",
+    "packages/application/src/ports/repositories/ProcessingRestrictionPort.ts",
+    "packages/application/src/services/DataSubjectRequestService.ts",
+    "apps/api/src/modules/email/mailbox-sender.ts",
+    "apps/api/src/modules/email/inbound.router.ts",
+    "apps/api/src/modules/email/email-access.ts",
+    "apps/api/src/modules/email/email-send-error.ts",
+    "apps/api/src/modules/privacy/restriction-reader.ts",
+    "apps/api/src/modules/privacy/privacy-admin.router.ts",
+    "apps/api/src/modules/privacy/dsar-email.ts",
+    "apps/api/src/modules/autoresponse/autoresponse.router.ts",
+    "apps/api/src/agent/tools/draft-message.ts",
+    "apps/api/src/modules/workflow/workflow.router.ts",
+    "apps/api/src/workflow/dispatchers/custom-action-dispatcher.ts",
+    "apps/api/src/security/types.ts",
+    "apps/api/src/security/rbac.ts",
+    "apps/web/src/components/email/EmailCompose.tsx",
+    "apps/web/src/components/email/send-errors.ts",
+    "apps/web/src/app/settings/privacy-requests/components/RequestActionDialog.tsx",
+    "packages/domain/src/email/email-constants.ts",
+    "packages/validators/src/email-settings.ts",
+    "docs/compliance-and-governance/data-governance/dsar-process.md",
+    "docs/architecture/adr/ADR-007-data-governance.md",
+    "docs/security/security-claims-audit.md",
+    "docs/planning/prd-module-settings.md"
+  ],
+  "invariants_acknowledged": [
+    "SEND PATHS: dispatchUserMail (compose, reply, forward) is the only path that sends email to a lead or contact address the user chooses. Booking confirmations, calendar invites, invoice receipts and data request notices are service mail. No workflow, automation or campaign step sends email (workflow custom actions only POST to a tenant webhook). Auto-response and the agent draft tool only create drafts and already refuse any person with an active restriction; a marketing objection is one.",
+    "PURPOSE: user email may carry SERVICE or MARKETING. MARKETING skips objectors; SERVICE is not checked, since an Art 21(3) objection covers direct marketing and the person must still receive replies and notices. Mail with no purpose is refused (PURPOSE_REQUIRED) when any recipient objected, so the sender must say which it is.",
+    "GUARD: for MARKETING mail the sender drops every To/Cc/Bcc recipient with an active blocksMarketing restriction or an erased placeholder address, after suppression and before quota. One query for all recipients (marketingBlocked). Nobody left gives ALL_OBJECTED and sends nothing. A failed read fails the send (fail closed).",
+    "AUDIT: each withheld send writes an audit entry (resource email_message, event EmailMarketingObjectionApplied) with counts only; the addresses are kept on the email record's metadata, as suppressed addresses already are.",
+    "DSAR: completing a marketing objection no longer requires the admin to confirm a manual stop; the stop method is optional and records marketing stopped outside the CRM. The completion email says the firm will no longer send marketing email.",
+    "TENANCY: the objection check is per firm (tenantId + normalised email), like every restriction read.",
+    "NO MIGRATION: blocksMarketing already exists on processing_restrictions; no schema change."
+  ]
+}

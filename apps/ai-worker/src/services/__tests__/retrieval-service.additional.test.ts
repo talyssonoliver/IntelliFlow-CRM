@@ -520,6 +520,130 @@ describe('RetrievalService - Additional Coverage', () => {
       // $queryRaw should be called (for FTS fallback)
       expect(mockPrisma.$queryRaw).toHaveBeenCalled();
     });
+
+    it('logs the handled fallback as a warning, never an error (Grafana alerts on errors)', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const svc = new RetrievalService(mockPrisma as any, undefined, {
+        generateEmbedding: vi.fn().mockRejectedValue(new Error('410 end of life')),
+      } as any);
+      mockPrisma.$queryRaw.mockResolvedValue([]);
+
+      await svc.search({ ...baseConfig, sources: ['documents'], searchType: 'semantic' });
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('falling back to FTS'),
+        '410 end of life'
+      );
+      expect(error).not.toHaveBeenCalled();
+    });
+
+    it('runs the embedding inside a handled-fallback scope, so its span is not an error', async () => {
+      const { handledFallback } = await import('../../lib/handled-fallback');
+      let scope: unknown;
+      const svc = new RetrievalService(mockPrisma as any, undefined, {
+        generateEmbedding: vi.fn().mockImplementation(async () => {
+          scope = handledFallback();
+          throw new Error('410 end of life');
+        }),
+      } as any);
+      mockPrisma.$queryRaw.mockResolvedValue([]);
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+      await svc.search({ ...baseConfig, sources: ['documents'], searchType: 'semantic' });
+
+      expect(scope).toEqual({ name: 'embedding_to_fts' });
+    });
+  });
+
+  // ============================================
+  // The optional case filter is SQL text, not a nested query (42601 at $5)
+  // ============================================
+
+  describe('searchDocumentsFTS case filter', () => {
+    it('binds the case id as a plain value and never runs a nested $queryRaw', async () => {
+      mockPrisma.$queryRaw.mockResolvedValue([]);
+
+      await service.search({
+        ...baseConfig,
+        sources: ['documents'],
+        searchType: 'fulltext',
+        caseId: 'case-1',
+      });
+
+      // One query for the search itself (the audit log is a separate create): a nested template
+      // would add a second $queryRaw call and bind its promise as a parameter.
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
+      const [strings, ...values] = mockPrisma.$queryRaw.mock.calls[0] as [string[], ...unknown[]];
+      expect(strings.join('?')).toContain('cd.related_case_id = ');
+      expect(values).toContain('case-1');
+      expect(values.every((v) => typeof v !== 'object' || v === null)).toBe(true);
+    });
+
+    it('binds null when there is no case filter', async () => {
+      mockPrisma.$queryRaw.mockResolvedValue([]);
+
+      await service.search({ ...baseConfig, sources: ['documents'], searchType: 'fulltext' });
+
+      const [, ...values] = mockPrisma.$queryRaw.mock.calls[0] as [string[], ...unknown[]];
+      expect(values).toContain(null);
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ============================================
+  // case_documents has no embedding column: documents are searched by full text only
+  // ============================================
+
+  describe('documents without a vector column', () => {
+    it('skips the embedding call and the vector query, and searches by full text', async () => {
+      mockPrisma.$queryRawUnsafe = vi.fn().mockResolvedValue([{ present: false }]);
+      mockPrisma.$queryRaw.mockResolvedValue([]);
+      const generateEmbedding = vi.fn();
+      const svc = new RetrievalService(mockPrisma as any, undefined, { generateEmbedding } as any);
+
+      await svc.search({ ...baseConfig, sources: ['documents'], searchType: 'hybrid' });
+      await svc.search({ ...baseConfig, sources: ['documents'], searchType: 'semantic' });
+
+      expect(generateEmbedding).not.toHaveBeenCalled();
+      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(1); // asked once per service
+      for (const call of mockPrisma.$queryRaw.mock.calls as Array<[string[]]>) {
+        expect(call[0].join('?')).not.toContain('cd.embedding');
+      }
+    });
+
+    it('uses the vector query when the column is there', async () => {
+      mockPrisma.$queryRawUnsafe = vi.fn().mockResolvedValue([{ present: true }]);
+      mockPrisma.$queryRaw.mockResolvedValue([]);
+      const generateEmbedding = vi
+        .fn()
+        .mockResolvedValue({ vector: [0.1, 0.2], dimensions: 2, model: 'm', text: 't' });
+      const svc = new RetrievalService(mockPrisma as any, undefined, { generateEmbedding } as any);
+
+      await svc.search({ ...baseConfig, sources: ['documents'], searchType: 'semantic' });
+
+      expect(generateEmbedding).toHaveBeenCalledTimes(1);
+      const sql = (mockPrisma.$queryRaw.mock.calls as Array<[string[]]>).map((c) => c[0].join('?'));
+      expect(sql.some((q) => q.includes('cd.embedding'))).toBe(true);
+    });
+
+    it('searches by text now and asks again next time when the probe itself fails', async () => {
+      mockPrisma.$queryRawUnsafe = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('connection reset'))
+        .mockResolvedValue([{ present: true }]);
+      mockPrisma.$queryRaw.mockResolvedValue([]);
+      const generateEmbedding = vi
+        .fn()
+        .mockResolvedValue({ vector: [0.1], dimensions: 1, model: 'm', text: 't' });
+      const svc = new RetrievalService(mockPrisma as any, undefined, { generateEmbedding } as any);
+
+      await svc.search({ ...baseConfig, sources: ['documents'], searchType: 'semantic' });
+      expect(generateEmbedding).not.toHaveBeenCalled();
+
+      await svc.search({ ...baseConfig, sources: ['documents'], searchType: 'semantic' });
+      expect(generateEmbedding).toHaveBeenCalledTimes(1);
+    });
   });
 
   // ============================================

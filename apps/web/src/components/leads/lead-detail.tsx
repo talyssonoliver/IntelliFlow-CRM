@@ -4,15 +4,34 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import { AppAvatar } from '@/components/shared/app-avatar';
-import { formatEstimatedValue, leadDisplayName } from '@/lib/leads/lead-format';
-import { leadScoreDisplay } from '@/lib/leads/score-display';
+import { ContactMapPreview } from '@/components/contacts/ContactMapPreview';
+import {
+  formatEstimatedValue,
+  isSameName,
+  leadDisplayName,
+  leadWebsite,
+  openRateLabel,
+  visibleTags,
+} from '@/lib/leads/lead-format';
+import {
+  FEW_SIGNALS_LABEL,
+  FEW_SIGNALS_TITLE,
+  LOW_CONFIDENCE_LABEL,
+  LOW_CONFIDENCE_TITLE,
+  leadScoreDisplay,
+} from '@/lib/leads/score-display';
 
 /** #1218: the profile card's score, or "Not scored" when no real AI score exists. */
 function ProfileScoreValue({
   score,
   scoringStatus,
-}: Readonly<{ score: number; scoringStatus?: string | null }>) {
-  const display = leadScoreDisplay(score, scoringStatus);
+  scoreConfidence,
+}: Readonly<{
+  score: number;
+  scoringStatus?: string | null;
+  scoreConfidence?: number | null;
+}>) {
+  const display = leadScoreDisplay(score, scoringStatus, scoreConfidence);
   if (display.kind === 'not-scored') {
     return (
       <p className="text-lg font-bold text-slate-500 dark:text-slate-400" title={display.title}>
@@ -23,12 +42,21 @@ function ProfileScoreValue({
   return (
     <p className="text-lg font-bold text-slate-900 dark:text-white">
       {display.score}
-      {display.needsReview && (
+      {display.flag === 'low-confidence' && (
         <span
-          className="ml-1 text-xs font-normal text-amber-600 dark:text-amber-400"
-          title="Low confidence: needs review"
+          className="ml-1 text-xs font-normal text-red-600 dark:text-red-400"
+          title={LOW_CONFIDENCE_TITLE}
         >
-          needs review
+          {LOW_CONFIDENCE_LABEL}
+        </span>
+      )}
+      {display.flag === 'few-signals' && (
+        <span
+          className="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400"
+          title={FEW_SIGNALS_TITLE}
+        >
+          {FEW_SIGNALS_LABEL}
+          <span className="sr-only">. {FEW_SIGNALS_TITLE}</span>
         </span>
       )}
     </p>
@@ -196,6 +224,8 @@ export interface LeadProfileData {
   score: number;
   /** #1218: whether `score` is a real AI score (NONE / FAILED show as not scored). */
   scoringStatus?: string | null;
+  /** 0 to 1 when the API supplies it; decides the score flag band. */
+  scoreConfidence?: number | null;
   temperature: LeadTemperature;
   createdAt: string | Date;
   lastContactedAt: string | Date;
@@ -217,6 +247,44 @@ export interface LeadMetrics {
 
 // ─── Profile / owner cards ───────────────────────────────────────────────────
 
+/**
+ * The profile card's name, title and company. A lead named after its company shows the name once,
+ * not again as the company line; when that company is a linked account the name itself is the link
+ * to the account, so the way to the account is not lost with the duplicate line.
+ */
+function LeadProfileTitle({ lead }: Readonly<{ lead: LeadProfileData }>) {
+  const name = leadDisplayName(lead);
+  const accountHref = lead.accountId && lead.account ? `/accounts/${lead.accountId}` : null;
+  const nameIsCompany = isSameName(lead.company, name);
+  return (
+    <>
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+        {nameIsCompany && accountHref ? (
+          <Link href={accountHref} className="hover:underline">
+            {name}
+          </Link>
+        ) : (
+          name
+        )}
+      </h2>
+      <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
+      {lead.company && !nameIsCompany && (
+        <div className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1">
+          <span aria-hidden="true" className="material-symbols-outlined !text-sm">
+            domain
+          </span>
+          {accountHref ? (
+            <Link href={accountHref} className="hover:underline">
+              {lead.company}
+            </Link>
+          ) : (
+            <span>{lead.company}</span>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
 export function LeadProfileCard({
   lead,
   leadMetrics,
@@ -237,27 +305,12 @@ export function LeadProfileCard({
           />
         </div>
         <div className="mb-4">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-            {leadDisplayName(lead)}
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
-          <div className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1">
-            <span aria-hidden="true" className="material-symbols-outlined !text-sm">
-              domain
-            </span>
-            {lead.accountId && lead.account ? (
-              <Link href={`/accounts/${lead.accountId}`} className="hover:underline">
-                {lead.company}
-              </Link>
-            ) : (
-              <span>{lead.company}</span>
-            )}
-          </div>
+          <LeadProfileTitle lead={lead} />
         </div>
         <div className="flex flex-wrap gap-2 mb-6">
           <LeadStatusBadge status={lead.status} />
           <TemperatureBadge temperature={lead.temperature} />
-          {lead.tags.map((tag) => (
+          {visibleTags(lead.tags).map((tag) => (
             <span
               key={tag}
               className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium"
@@ -315,45 +368,65 @@ export function LeadProfileCard({
               <span className="text-sm text-slate-700 dark:text-slate-300">{lead.location}</span>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <span
-              aria-hidden="true"
-              className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5"
-            >
-              language
-            </span>
-            <div className="flex flex-col">
-              <span className="text-xs text-slate-400 uppercase font-semibold">Website</span>
-              <a
-                href={`https://${lead.website}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${lead.website} (opens in new tab)`}
-                className="text-sm text-[#2a78f6] hover:underline"
+          {/* #1277: the stored address can be a full ad-tracking URL with a scheme; show the
+              clean host and link without the tracking parameters, or no row at all. */}
+          {leadWebsite(lead.website) && (
+            <div className="flex items-start gap-3">
+              <span
+                aria-hidden="true"
+                className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5"
               >
-                {lead.website}
-              </a>
+                language
+              </span>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-400 uppercase font-semibold">Website</span>
+                <a
+                  href={leadWebsite(lead.website)?.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${leadWebsite(lead.website)?.label} (opens in new tab)`}
+                  className="text-sm text-[#2a78f6] hover:underline break-all"
+                >
+                  {leadWebsite(lead.website)?.label}
+                </a>
+              </div>
             </div>
-          </div>
+          )}
         </div>
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <p className="text-lg font-bold text-slate-900 dark:text-white">
-              {formatEstimatedValue(leadMetrics.estimatedValue)}
-            </p>
+            {/* 0 is the unset default, not a valuation: offer to add one instead of "£0" or a dash
+                (MVP-003). The link opens the edit form focused on the value field. */}
+            {leadMetrics.estimatedValue > 0 ? (
+              <p className="text-lg font-bold text-slate-900 dark:text-white">
+                {formatEstimatedValue(leadMetrics.estimatedValue)}
+              </p>
+            ) : (
+              <Link
+                href={`/leads/${lead.id}/edit#estimatedValue`}
+                className="block text-base font-semibold text-[#2a78f6] hover:underline leading-7"
+              >
+                Add value
+              </Link>
+            )}
             <p className="text-xs text-slate-500">Est. Value</p>
           </div>
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <ProfileScoreValue score={lead.score} scoringStatus={lead.scoringStatus} />
+            <ProfileScoreValue
+              score={lead.score}
+              scoringStatus={lead.scoringStatus}
+              scoreConfidence={lead.scoreConfidence}
+            />
             <p className="text-xs text-slate-500">Lead Score</p>
           </div>
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <p className="text-lg font-bold text-slate-900 dark:text-white">
-              {leadMetrics.emailsSent > 0
-                ? Math.round((leadMetrics.emailsOpened / leadMetrics.emailsSent) * 100)
-                : 0}
-              %
+            {/* "—" until the CRM has sent a tracked email; 0% only when sends went unopened. */}
+            <p
+              className="text-lg font-bold text-slate-900 dark:text-white"
+              data-testid="lead-open-rate"
+            >
+              {openRateLabel(leadMetrics.emailsSent, leadMetrics.emailsOpened)}
             </p>
             <p className="text-xs text-slate-500">Open Rate</p>
           </div>
@@ -365,25 +438,8 @@ export function LeadProfileCard({
           </div>
         </div>
       </div>
-      {/* Map placeholder */}
-      <div className="h-32 w-full bg-cover bg-center border-t border-slate-200 dark:border-slate-800 relative">
-        <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
-          <div className="text-center">
-            <span
-              aria-hidden="true"
-              className="material-symbols-outlined text-[#2a78f6] !text-3xl mb-1"
-            >
-              location_on
-            </span>
-            <button
-              type="button"
-              className="bg-white/90 text-slate-900 text-xs font-bold px-3 py-1.5 rounded shadow-sm hover:bg-white transition"
-            >
-              View Map
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* UI-026: the same map preview as Contact 360; disabled when there is no location. */}
+      <ContactMapPreview location={lead.location} />
     </Card>
   );
 }

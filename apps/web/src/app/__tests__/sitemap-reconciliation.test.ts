@@ -9,12 +9,13 @@ import * as path from 'node:path';
 import { findPageFiles } from './test-helpers/ia-fs-helpers';
 
 vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://test.intelliflow.com');
+import { FORGOT_PASSWORD_PATH, RESET_PASSWORD_PATH } from '@/lib/auth/auth-paths';
 
 const APP_DIR = path.resolve(__dirname, '..');
 const AUTH_FLOW_PATHS = [
-  '/forgot-password',
+  FORGOT_PASSWORD_PATH,
   '/logout',
-  '/reset-password',
+  RESET_PASSWORD_PATH,
   '/mfa',
   '/auth',
   '/verify-email',
@@ -65,7 +66,9 @@ describe('Sitemap Reconciliation', () => {
     // PG-203: +1 for the public booking page (public)/book/[handle]/[slug]/page.tsx → 216.
     const pageFiles = findPageFiles(APP_DIR);
     // PG-203 DSAR: +4 (3 public /dsar pages, /settings/privacy-requests) → 220.
-    expect(pageFiles.length).toBe(220);
+    // MVP-007: +1, the signed-in home (app/(public)/signed-in-home) → 221.
+    // Workspace business type: +1, /settings/workspace → 222.
+    expect(pageFiles.length).toBe(222);
   });
 
   // TC-26

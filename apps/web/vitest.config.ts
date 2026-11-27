@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { existsSync } from 'node:fs';
+import { nodeEnvGlobs } from './vitest.node-env';
 
 // When running from a git worktree without its own node_modules (e.g. .claude/worktrees/),
 // vite cannot resolve Next.js or UI packages via the standard node_modules walk.
@@ -25,7 +26,14 @@ const worktreeStubAliases = hasLocalNodeModules
       },
     ];
 
-export default defineConfig({
+// Test files listed in vitest.node-env-files.txt never touch a DOM. They run in a second
+// project, 'web-node' (vitest.node.config.ts), in the node environment, which saves the
+// happy-dom window built for every file (about 1.3s each). This 'web' project excludes them.
+// A file not on the list stays here, so nothing new can lose its DOM.
+const nodeEnvFiles = nodeEnvGlobs();
+const baseExclude = ['node_modules', 'dist', '.next', 'build'];
+
+const domConfig = defineConfig({
   // Type assertion needed due to vite version mismatch between
   // @vitejs/plugin-react (vite@6.x) and vitest (vite@7.x)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,7 +44,7 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'lib/**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['node_modules', 'dist', '.next', 'build'],
+    exclude: [...baseExclude, ...nodeEnvFiles],
 
     // Memory optimization
     restoreMocks: true,
@@ -146,3 +154,20 @@ export default defineConfig({
     ],
   },
 });
+
+/** The web project in its DOM ('web') or DOM-free ('web-node') form. */
+export function webConfig(variant: 'dom' | 'node') {
+  if (variant === 'dom') return domConfig;
+  return {
+    ...domConfig,
+    test: {
+      ...domConfig.test,
+      name: 'web-node',
+      environment: 'node',
+      include: nodeEnvFiles,
+      exclude: baseExclude,
+    },
+  };
+}
+
+export default domConfig;

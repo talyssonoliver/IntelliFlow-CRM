@@ -28,6 +28,9 @@ import {
   LEAD_SORTABLE_FIELDS,
 } from '../src/lead';
 
+// A column that exists but must never be sortable.
+const PASSWORD_COLUMN = 'password';
+
 describe('Lead Validators', () => {
   describe('leadSourceSchema', () => {
     it('should validate valid lead sources', () => {
@@ -684,7 +687,14 @@ describe('Lead Validators', () => {
     });
 
     it('should reject invalid sortBy values', () => {
-      const invalidValues = ['tenantId', 'ownerId', '__proto__', 'password', 'nonExistent', ''];
+      const invalidValues = [
+        'tenantId',
+        'ownerId',
+        '__proto__',
+        PASSWORD_COLUMN,
+        'nonExistent',
+        '',
+      ];
       for (const sortBy of invalidValues) {
         const result = leadQuerySchema.safeParse({ sortBy });
         expect(result.success).toBe(false);

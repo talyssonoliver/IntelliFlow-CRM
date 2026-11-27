@@ -1,11 +1,11 @@
 /**
  * Decides whether a prompt from the version loader may replace a chain's own prompt.
  *
- * Nothing calls configureVersionLoader() in production, so getChainConfig() always returns the
- * loader's fallback (DEFAULT_CONFIGS in version-loader.ts). Those fallback prompts have no input
- * slots, and several belong to another chain type (churn risk reads SCORING, sentiment reads
- * EMAIL_WRITER, ticket routing reads FOLLOWUP). Used as a template they sent the model
- * instructions with none of the data: lead scoring never saw the lead.
+ * The loader returns a tenant's saved, active chain version, or its built-in fallback when there is
+ * none (DEFAULT_CONFIGS in version-loader.ts). The fallback prompts have no input slots, and several
+ * chains read another chain type's version (churn risk reads SCORING, sentiment reads EMAIL_WRITER,
+ * ticket routing reads FOLLOWUP). Used as a template, such a prompt sends the model instructions
+ * with none of the data: lead scoring never saw the lead.
  *
  * A loader prompt is used only when it places every input slot the chain fills; otherwise the
  * chain keeps its own prompt. Appending the data to a prompt written for another chain would

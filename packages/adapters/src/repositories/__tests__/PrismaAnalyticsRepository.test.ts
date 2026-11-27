@@ -272,6 +272,46 @@ describe('PrismaAnalyticsRepository', () => {
     });
   });
 
+  describe('countOpenOpportunities()', () => {
+    it('counts deals that are not won, not lost and not archived', async () => {
+      mockPrisma.opportunity.count.mockResolvedValue(14);
+
+      const result = await repository.countOpenOpportunities(tenantId);
+
+      expect(result).toBe(14);
+      expect(mockPrisma.opportunity.count).toHaveBeenCalledWith({
+        where: {
+          tenantId,
+          deletedAt: null,
+          stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] },
+        },
+      });
+    });
+  });
+
+  describe('countOpenOpportunitiesAsOf()', () => {
+    it('counts deals created by then that were not yet won, lost or archived', async () => {
+      const asOf = new Date('2025-05-31T23:59:59.999Z');
+      mockPrisma.opportunity.count.mockResolvedValue(9);
+
+      const result = await repository.countOpenOpportunitiesAsOf(tenantId, asOf);
+
+      expect(result).toBe(9);
+      expect(mockPrisma.opportunity.count).toHaveBeenCalledWith({
+        where: {
+          tenantId,
+          createdAt: { lte: asOf },
+          AND: [
+            { OR: [{ deletedAt: null }, { deletedAt: { gt: asOf } }] },
+            {
+              OR: [{ stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } }, { closedAt: { gt: asOf } }],
+            },
+          ],
+        },
+      });
+    });
+  });
+
   describe('countContactsInRange()', () => {
     it('should count contacts within date range', async () => {
       const dateRange = {
@@ -530,16 +570,40 @@ describe('PrismaAnalyticsRepository', () => {
         );
       });
 
-      it('should format CREATE with default resourceType and name', async () => {
-        await testDescription('CREATE', {}, 'New item: Unknown');
+      it('should format CREATE without a name or record', async () => {
+        await testDescription('CREATE', {}, 'New item');
+      });
+
+      it('never writes "Unknown": a row without a name names the record by type and id', async () => {
+        mockPrisma.auditLogEntry.findMany.mockResolvedValue([
+          createMockAuditEntry({
+            action: 'UPDATE',
+            metadata: {},
+            resourceType: 'lead',
+            resourceId: 'lead-123',
+          }),
+          createMockAuditEntry({
+            id: 'audit-2',
+            action: 'CREATE',
+            metadata: {},
+            resourceType: 'contact',
+            resourceId: 'contact-9',
+          }),
+        ]);
+        const result = await repository.getRecentAuditLogs(tenantId, 10);
+        expect(result.map((r) => r.description)).toEqual([
+          'Updated: lead lead-123',
+          'New contact: contact contact-9',
+        ]);
+        expect(result.some((r) => /unknown/i.test(r.description))).toBe(false);
       });
 
       it('should format QUALIFY', async () => {
         await testDescription('QUALIFY', { name: 'Hot Lead' }, 'Qualified: Hot Lead');
       });
 
-      it('should format QUALIFY with fallback name', async () => {
-        await testDescription('QUALIFY', {}, 'Qualified: Unknown');
+      it('should format QUALIFY without a name or record', async () => {
+        await testDescription('QUALIFY', {}, 'Qualified');
       });
 
       it('should format CONVERT', async () => {
@@ -578,12 +642,12 @@ describe('PrismaAnalyticsRepository', () => {
         await testDescription(
           'opportunity.won',
           { name: 'Won Deal', value: 5000 },
-          'Deal won: Won Deal ($5000)'
+          'Deal won: Won Deal (£5,000)'
         );
       });
 
       it('should format opportunity.won with default value', async () => {
-        await testDescription('opportunity.won', { name: 'Won Deal' }, 'Deal won: Won Deal ($0)');
+        await testDescription('opportunity.won', { name: 'Won Deal' }, 'Deal won: Won Deal (£0)');
       });
 
       it('should format contact.created', async () => {
@@ -603,7 +667,7 @@ describe('PrismaAnalyticsRepository', () => {
       });
 
       it('should format task.completed with default title', async () => {
-        await testDescription('task.completed', {}, 'Task completed: Unknown');
+        await testDescription('task.completed', {}, 'Task completed');
       });
 
       it('should return action as description for unknown actions', async () => {
@@ -623,11 +687,11 @@ describe('PrismaAnalyticsRepository', () => {
       });
 
       it('should handle null metadata gracefully', async () => {
-        await testDescription('CREATE', null, 'New item: Unknown');
+        await testDescription('CREATE', null, 'New item');
       });
 
       it('should handle undefined metadata gracefully', async () => {
-        await testDescription('CREATE', undefined, 'New item: Unknown');
+        await testDescription('CREATE', undefined, 'New item');
       });
     });
   });

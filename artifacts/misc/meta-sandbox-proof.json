@@ -1,0 +1,60 @@
+{
+  "task": "IFC-035",
+  "transport": "META_CLOUD",
+  "generatedAt": "2026-11-22T12:34:35.725Z",
+  "status": "PENDING",
+  "pendingReason": "No Meta developer app, test number or token exists on this machine.",
+  "ownerStep": "Owner: log in to developers.facebook.com, create an app with the WhatsApp use case, open API Setup, add his own phone as a recipient, export the four META_WA_* variables listed in this script header, and run this script.",
+  "missingEnvNames": [
+    "META_WA_ACCESS_TOKEN",
+    "META_WA_PHONE_NUMBER_ID",
+    "META_WA_RECIPIENT_E164",
+    "META_WA_APP_SECRET"
+  ],
+  "simulated": {
+    "label": "SIMULATED, not Meta: signature algorithm self-test",
+    "checks": [
+      {
+        "label": "right signature",
+        "got": null,
+        "expected": null,
+        "pass": true
+      },
+      {
+        "label": "wrong secret",
+        "got": "SIGNATURE_MISMATCH",
+        "expected": "SIGNATURE_MISMATCH",
+        "pass": true
+      },
+      {
+        "label": "no header",
+        "got": "MISSING_SIGNATURE",
+        "expected": "MISSING_SIGNATURE",
+        "pass": true
+      },
+      {
+        "label": "no secret",
+        "got": "MISSING_SECRET",
+        "expected": "MISSING_SECRET",
+        "pass": true
+      },
+      {
+        "label": "no sha256= prefix",
+        "got": "MALFORMED_SIGNATURE",
+        "expected": "MALFORMED_SIGNATURE",
+        "pass": true
+      },
+      {
+        "label": "body changed",
+        "got": "SIGNATURE_MISMATCH",
+        "expected": "SIGNATURE_MISMATCH",
+        "pass": true
+      }
+    ]
+  },
+  "live": {
+    "readNumber": null,
+    "sendTemplate": null,
+    "webhookSignature": null
+  }
+}

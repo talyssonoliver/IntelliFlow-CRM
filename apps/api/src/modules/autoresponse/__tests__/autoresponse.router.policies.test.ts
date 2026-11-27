@@ -123,6 +123,29 @@ describe('processing restrictions (PG-203, owner Q18, sign-off 7)', () => {
     expect(repo.save).not.toHaveBeenCalled();
   });
 
+  it('refuses a draft for a person who objected to marketing (IFC-315: the objection restricts)', async () => {
+    restrictions.status.mockResolvedValue({
+      restricted: true,
+      blocksMarketing: true,
+      since: new Date(),
+    });
+    await expect(
+      autoResponseRouter.createCaller(ctx()).create({
+        tenantId: TENANT,
+        leadId: LEAD,
+        leadTenantId: TENANT,
+        leadStatus: 'NEW',
+        triggerType: 'FORM_SUBMIT',
+        subject: 'Hello',
+        body: 'Body',
+        aiConfidence: 0.8,
+        recipientEmail: 'lead@example.invalid',
+        expiryHours: 168,
+      })
+    ).rejects.toMatchObject({ code: 'PRECONDITION_FAILED' });
+    expect(repo.save).not.toHaveBeenCalled();
+  });
+
   it('refuses to regenerate a draft for a recipient restricted since', async () => {
     const original = draft();
     original.submitForApproval(USER);

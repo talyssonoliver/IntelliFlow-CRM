@@ -16,6 +16,9 @@ import {
   resolveAffected,
   runLibraryBuild,
   typecheckFilters,
+  WEB_PACKAGE,
+  WEB_SKIP_LINE,
+  webBuildScope,
 } from '../lib/preship-affected.mjs';
 
 const packages = [
@@ -86,8 +89,36 @@ describe('resolveAffected', () => {
     expect(resolve('', 'packages/ui/src/new.tsx\n').packages).toEqual(['@x/ui', '@x/web']);
   });
 
-  it('is full when a root file changes', () => {
-    expect(resolve('apps/web/src/a.tsx\nturbo.json\n').mode).toBe('full');
+  it('leaves a root-file widening to CI: only the changed packages locally', () => {
+    const r = resolve('apps/web/src/a.tsx\nturbo.json\n');
+    expect(r.mode).toBe('affected');
+    expect(r.reason).toContain('widening left to CI');
+    expect(r.packages).toContain('@x/web');
+  });
+
+  it('a root file alone typechecks nothing locally; CI covers the widening', () => {
+    const r = resolve('turbo.json\n');
+    expect(r.mode).toBe('none');
+    expect(r.packages).toEqual([]);
+    expect(r.reason).toContain('widening left to CI');
+  });
+
+  it('a shared tsconfig change still typechecks every package', () => {
+    const r = resolveAffected({
+      cwd: '.',
+      env: {},
+      packages: [
+        ...packages,
+        { name: '@x/typescript-config', dir: 'packages/typescript-config', deps: [] },
+      ],
+      git: fakeGit({
+        'merge-base': 'abc\n',
+        diff: 'packages/typescript-config/base.json\nturbo.json\n',
+        'ls-files': '',
+      }),
+    });
+    expect(r.mode).toBe('full');
+    expect(r.reason).not.toContain('widening left to CI');
   });
 
   it('is none for a docs-only diff', () => {
@@ -172,17 +203,20 @@ describe('filters', () => {
     ]);
   });
 
-  it('library-build: an affected app contributes only its dependencies', () => {
+  it('library-build: only the dependency closure of each affected package', () => {
     expect(libraryBuildFilters(full)).toBeNull();
     expect(libraryBuildFilters(none)).toEqual([]);
     expect(libraryBuildFilters(affected)).toEqual([
-      '--filter=@intelliflow/ui',
+      '--filter=@intelliflow/ui^...',
       '--filter=@intelliflow/web^...',
     ]);
   });
 
-  it('library-build: every library when a file outside the packages changed', () => {
-    expect(libraryBuildFilters({ ...affected, outsidePackages: true })).toBeNull();
+  it('library-build: a file outside the packages does not widen it', () => {
+    expect(libraryBuildFilters({ ...affected, outsidePackages: true })).toEqual([
+      '--filter=@intelliflow/ui^...',
+      '--filter=@intelliflow/web^...',
+    ]);
   });
 
   it('build: skipped for docs or tests only', () => {
@@ -242,7 +276,7 @@ describe('runLibraryBuild', () => {
         path.join('repo', 'node_modules', 'turbo', 'bin', 'turbo'),
         'run',
         'build',
-        '--filter=@intelliflow/ui',
+        '--filter=@intelliflow/ui^...',
         '--filter=@intelliflow/web^...',
       ],
       { cwd: 'repo', stdio: 'inherit' }
@@ -318,5 +352,92 @@ describe('resolveAffected against this checkout', () => {
 
   it('resolves afresh when no scope was handed down', () => {
     expect(affectedFromEnvOrResolve({ cwd: '.', env: { CI: 'true' } }).mode).toBe('full');
+  });
+});
+
+describe('web build only when web build inputs change (audit 2026-11-13, item 3)', () => {
+  const ws = [
+    { name: WEB_PACKAGE, dir: 'apps/web', deps: ['@intelliflow/ui', '@intelliflow/api'] },
+    { name: '@intelliflow/api', dir: 'apps/api', deps: ['@intelliflow/domain'] },
+    { name: '@intelliflow/ui', dir: 'packages/ui', deps: [] },
+    { name: '@intelliflow/domain', dir: 'packages/domain', deps: [] },
+    { name: '@intelliflow/ai-worker', dir: 'apps/ai-worker', deps: ['@intelliflow/domain'] },
+  ];
+  const affected = (files: string[]) => webBuildScope(files, ws).affected;
+
+  it('builds web for its own source and config, and for any package it uses, transitively', () => {
+    expect(affected(['apps/web/src/a.tsx'])).toBe(true);
+    expect(affected(['apps/web/next.config.js'])).toBe(true);
+    expect(affected(['apps/web/package.json'])).toBe(true);
+    expect(affected(['packages/ui/src/b.tsx'])).toBe(true);
+    expect(affected(['packages/domain/src/c.ts'])).toBe(true); // via api
+  });
+
+  it('builds web for the lockfile and any root file not known to be outside it', () => {
+    for (const f of [
+      'pnpm-lock.yaml',
+      'package.json',
+      'turbo.json',
+      'tsconfig.base.json',
+      'odd.file',
+    ]) {
+      expect(affected([f])).toBe(true);
+    }
+  });
+
+  it('leaves web out for tooling, CI, docs, tests and packages it does not use', () => {
+    expect(
+      affected([
+        'scripts/pre-ship.mjs',
+        'tools/scripts/x.ts',
+        '.github/workflows/ci.yml',
+        '.husky/pre-commit',
+        'docs/a.md',
+        'apps/ai-worker/src/x.ts',
+        'apps/web/src/__tests__/a.test.tsx',
+        'vitest.config.ts',
+      ])
+    ).toBe(false);
+  });
+
+  it('treats a workspace without the web package as affected', () => {
+    expect(webBuildScope(['scripts/x.mjs'], ws.slice(1)).affected).toBe(true);
+  });
+
+  it('drops web from the build filters, or excludes it from a full build', () => {
+    const skip = { affected: false, reason: 'r' };
+    const base = { reason: 'r', testsOrDocsOnly: false, outsidePackages: false };
+    expect(
+      buildFilters({
+        ...base,
+        mode: 'affected',
+        packages: ['@intelliflow/ai-worker', WEB_PACKAGE],
+        webBuild: skip,
+      })
+    ).toEqual(['--filter=@intelliflow/ai-worker']);
+    expect(buildFilters({ ...base, mode: 'full', packages: [], webBuild: skip })).toEqual([
+      `--filter=!${WEB_PACKAGE}`,
+    ]);
+    expect(
+      buildFilters({
+        ...base,
+        mode: 'affected',
+        packages: [WEB_PACKAGE],
+        webBuild: { affected: true, reason: 'r' },
+      })
+    ).toEqual([`--filter=${WEB_PACKAGE}`]);
+    expect(WEB_SKIP_LINE).toBe('web build not affected; CI build check is the guard');
+  });
+
+  it('records the decision on the resolved scope; full scopes keep web', () => {
+    const r = resolveAffected({
+      cwd: '.',
+      env: {},
+      packages: ws,
+      git: fakeGit({ 'merge-base': 'abc\n', diff: 'scripts/pre-ship.mjs\n', 'ls-files': '' }),
+    });
+    expect(r.webBuild.affected).toBe(false);
+    expect(resolveAffected({ cwd: '.', env: { CI: 'true' } }).webBuild.affected).toBe(true);
+    expect(resolveAffected({ cwd: '.', env: {}, git: fakeGit({}) }).webBuild.affected).toBe(true);
   });
 });

@@ -192,7 +192,8 @@ export type ConvertLeadInput = z.infer<typeof convertLeadSchema>;
 // Convert Lead to Deal Schema (IFC-062: Lead to Deal conversion)
 export const convertLeadToDealSchema = z.object({
   leadId: idSchema,
-  dealValue: z.number().int().positive(),
+  // MVP-003: optional; a deal converted without a value starts at £0 and shows "Add value".
+  dealValue: z.number().int().positive().optional(),
   dealName: z.string().min(1).max(200).trim().optional(),
   accountName: z.string().min(1).max(200).trim().optional(),
   createContact: z.boolean().default(true),
@@ -237,6 +238,8 @@ export const leadQuerySchema = paginationSchema.extend({
   // the shape contract. Max 50 ids enforced to keep the SQL `IN` predicate
   // reasonable.
   ids: z.array(idSchema).max(50).optional(),
+  // MVP-014 "Waiting for reply": only leads whose last email to us has had no reply.
+  waitingForReply: z.boolean().optional(),
   sortBy: z.enum(LEAD_SORTABLE_FIELDS).optional(),
 });
 

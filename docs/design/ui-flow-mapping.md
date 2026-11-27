@@ -2,8 +2,8 @@
 
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
-> Guide Components **Total Pages**: 220 implemented **Total Flows**: 42 **API
-> Routers**: 77 (461 procedures)
+> Guide Components **Total Pages**: 222 implemented **Total Flows**: 42 **API
+> Routers**: 84 (472 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -718,7 +718,10 @@ data
 | ---------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------- | ----------------- |
 | `auth`                       | 18         | `/login`, `/signup`, `/auth/*`, `/settings/account`                                                        | ✅ Active         |
 | `lead`                       | 18         | `/leads`, `/leads/new`, `/leads/[id]`                                                                      | ✅ Active         |
+| `leadConversion`             | 2          | `/deals/[id]` (MVP-003: undo a lead-to-deal conversion)                                                    | ✅ Active         |
 | `contact`                    | 17         | `/contacts`, `/contacts/new`, `/contacts/[id]`                                                             | ✅ Active         |
+| `replyDraft`                 | 4          | `/contacts/[id]`, `/leads/[id]` (MVP-012: send, edit or dismiss a reply drafted by Aurora)                 | ✅ Active         |
+| `waiting`                    | 1          | `/dashboard`, `/leads?segment=waiting` (MVP-014: who is waiting for a reply)                               | ✅ Active         |
 | `account`                    | 12         | `/accounts`, `/accounts/[id]`                                                                              | ✅ Active         |
 | `opportunity`                | 12         | `/deals`, `/deals/[id]`                                                                                    | ✅ Active         |
 | `pipelineConfig`             | 5          | `/settings/pipeline`                                                                                       | ✅ Active         |
@@ -747,9 +750,11 @@ data
 | `integrations`               | 6          | `/settings/integrations`                                                                                   | ✅ Active         |
 | `email`                      | 12         | `/email`, `/email/[id]`                                                                                    | ✅ Active         |
 | `emailMailbox`               | 7          | `/email/email-settings`, `/email/oauth/callback`                                                           | ✅ Active         |
+| `emailProviderHint`          | 1          | `/email/email-settings` (which address you send from)                                                      | ✅ Active         |
 | `emailSettings`              | 6          | `/email/email-settings` (incl. `suppression.*`)                                                            | ✅ Active         |
 | `emailSignatures`            | 6          | `/email/signatures`, `/email/compose`                                                                      | ✅ Active         |
 | `emailAttachments`           | 1          | `/email/compose`                                                                                           | ✅ Active         |
+| `emailLog`                   | 3          | `/email/[id]` (Log to contact)                                                                             | ✅ Active         |
 | `webhooks`                   | 9          | `/docs/webhooks`, webhook management                                                                       | ✅ Active         |
 | `home`                       | 7          | Authenticated home page data (IFC-182)                                                                     | ✅ Active         |
 | `notifications`              | 8          | `/notifications`, `/notifications/settings`                                                                | ✅ Active         |
@@ -773,7 +778,7 @@ data
 | `calendar.eventTypes`        | 6          | `/calendar/event-types`, `/calendar/new` (PG-203)                                                          | ✅ Active         |
 | `publicBooking`              | 3          | `/book/[handle]/[slug]` (PG-203, public)                                                                   | ✅ Active         |
 | `privacy`                    | 17         | `/dsar/[handle]/*` (public), `/settings/privacy-requests` (admin), lead and contact detail banner (PG-203) | ✅ Active         |
-| **Total**                    | **461**    | **56 routers**                                                                                             |                   |
+| **Total**                    | **472**    | **60 routers**                                                                                             |                   |
 
 ---
 

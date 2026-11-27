@@ -90,8 +90,8 @@ dead endpoint — the fix makes it serve real data instead of `[]`.
       PASS) + `context_ack.json`.
 - [x] **S15** — CSV flip `IFC-306` Status `Backlog`→`Completed`, Percent `0`→
       `100`; regen splits (`split-sprint-plan.ts`) + SESSION_CONTEXT.
-- [ ] **S16** — Commit (no Co-Authored-By, body ≤100), pre-ship at FINAL SHA
-      (no bypass), PR, rebase-before-merge, merge on `mergeStateStatus: CLEAN`.
+- [x] **S16** — Commit (no Co-Authored-By, body ≤100), pre-ship at FINAL SHA
+      (no bypass), PR, rebase-before-merge, merge on `mergeStateStatus: CLEAN`. _(Evidence: shipped as PR #662, merged 2026-07-26, squash bdb0dbb53 on main.)_
 
 ---
 

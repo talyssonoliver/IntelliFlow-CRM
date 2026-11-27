@@ -1,0 +1,144 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-320",
+  "run_id": "ifc320-whatsapp-seam-2026-11-21",
+  "attestor": "Claude Code (claude-sonnet-5-5), ifc-074 lane",
+  "attestation_timestamp": "2026-11-21T19:10:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [],
+    "invariants_acknowledged": [
+      "Shipped and merged: PR #1515 (WhatsAppTransport port, types, in-memory fake transport, E.164 normalisation, contract suite). The pre-push gate and the codex review passed on that PR.",
+      "Every artifact the row names exists on main: the port file, the domain directory packages/domain/src/communication/whatsapp/, and packages/adapters/src/messaging/whatsapp/__tests__/transport-contract.ts.",
+      "Re-checked 2026-11-22 on a fresh worktree of origin/main: adapters whatsapp tests 67 passed, domain whatsapp tests 69 passed; coverage of src/messaging/whatsapp 99% statements, 93.45% branches, 100% functions, 100% lines (target 90%). The domain directory imports no infrastructure."
+    ],
+    "acknowledged_at": "2026-11-21T19:10:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "kpis_met": 2,
+    "kpis_missed": 0
+  },
+  "artifact_hashes": {
+    "packages/application/src/ports/external/WhatsAppTransportPort.ts": "sha256:05de0ab4aaef6b25d383a1042893286ec3893047908d5c4ca20139668c933db1",
+    "packages/domain/src/communication/whatsapp/index.ts": "sha256:5af11ea7f2bdd3fcd4198f0146be1600e198c5703c42c860b208cd5e08d89c80",
+    "packages/domain/src/communication/whatsapp/e164.ts": "sha256:90ea3916a725052d22b002dd8f4bf9ceed1bedf5ab8404bcff1221627e0485b8",
+    "packages/adapters/src/messaging/whatsapp/__tests__/transport-contract.ts": "sha256:ca7fe91df9fb0c549099a2805418b971162a3d6bba319e827062e8590a3b2923",
+    "packages/adapters/src/messaging/whatsapp/fake-transport.ts": "sha256:e0935b26d7d06d3c75f256957227fac9eca7608a17127b22d83137e05651a3a7"
+  },
+  "validation_results": [
+    {
+      "name": "Adapters whatsapp tests with coverage",
+      "command": "pnpm exec vitest run src/messaging/whatsapp --coverage (packages/adapters)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T01:28:00Z"
+    },
+    {
+      "name": "Domain whatsapp tests",
+      "command": "pnpm exec vitest run src/communication/whatsapp (packages/domain)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T01:27:14Z"
+    },
+    {
+      "name": "TypeScript typecheck, domain",
+      "command": "pnpm --filter @intelliflow/domain typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:29:39Z"
+    },
+    {
+      "name": "TypeScript typecheck, application",
+      "command": "pnpm --filter @intelliflow/application typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:31:01Z"
+    },
+    {
+      "name": "TypeScript typecheck, adapters",
+      "command": "pnpm --filter @intelliflow/adapters typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:32:03Z"
+    },
+    {
+      "name": "Lint, domain",
+      "command": "pnpm --filter @intelliflow/domain lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:29:52Z"
+    },
+    {
+      "name": "Lint, application",
+      "command": "pnpm --filter @intelliflow/application lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:29:57Z"
+    },
+    {
+      "name": "Lint, adapters",
+      "command": "pnpm --filter @intelliflow/adapters lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:30:03Z"
+    },
+    {
+      "name": "Build, domain",
+      "command": "pnpm --filter @intelliflow/domain build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:30:08Z"
+    },
+    {
+      "name": "Build, application",
+      "command": "pnpm --filter @intelliflow/application build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:31:07Z"
+    },
+    {
+      "name": "Build, adapters",
+      "command": "pnpm --filter @intelliflow/adapters build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:32:21Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "architecture-test-pass",
+      "passed": true
+    },
+    {
+      "gate_id": "coverage-gte-90",
+      "passed": true
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Contract suite passes on the fake",
+      "target": "pass",
+      "actual": "67 of 67 adapter tests pass",
+      "met": true
+    },
+    {
+      "kpi": "Coverage",
+      "target": ">=90%",
+      "actual": "99% statements, 100% lines (src/messaging/whatsapp)",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Port, domain types, fake transport, E.164 normalisation and contract suite merged (PR #1515)",
+      "met": true
+    },
+    {
+      "criterion": "Contract suite passes on the fake, coverage >=90%, no domain-infrastructure dependency",
+      "met": true
+    }
+  ],
+  "notes": "Architecture-test result is taken from PR #1515's gate pass, not re-run here. The 1,500-line target was not re-measured. Typecheck, lint and build of domain, application and adapters were run on 2026-11-22 on a fresh worktree of origin/main, each through the test-slot wrapper; validators, db, platform and webhooks were built first because application and adapters import them (first attempts without those builds failed with unresolved modules, then passed)."
+}

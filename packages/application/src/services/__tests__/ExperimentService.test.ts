@@ -1069,3 +1069,24 @@ describe('ExperimentService', () => {
     });
   });
 });
+
+describe('ExperimentService approximateTCritical', () => {
+  const tCritical = (alpha: number, df: number): number => {
+    const service = Object.create(ExperimentService.prototype) as unknown as {
+      approximateTCritical(a: number, d: number): number;
+    };
+    return service.approximateTCritical(alpha, df);
+  };
+
+  it('returns the standard z-values for large df, tolerating float noise in alpha', () => {
+    expect(tCritical(0.025, 100)).toBe(1.96);
+    expect(tCritical(0.025 + 1e-12, 100)).toBe(1.96);
+    expect(tCritical(0.005, 100)).toBe(2.576);
+    expect(tCritical(0.005 - 1e-12, 100)).toBe(2.576);
+    expect(tCritical(0.05, 100)).toBe(1.645);
+  });
+
+  it('interpolates for small df', () => {
+    expect(tCritical(0.025, 10)).toBeCloseTo(2.4, 10);
+  });
+});

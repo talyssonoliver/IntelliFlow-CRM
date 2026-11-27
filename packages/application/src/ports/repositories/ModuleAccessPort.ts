@@ -8,7 +8,12 @@
  * Task: IFC-209 Module Access Service
  */
 
-import type { ModuleId, PlanTier } from '@intelliflow/domain';
+import type {
+  ModuleId,
+  PlanTier,
+  TenantBusinessType,
+  TenantModuleOrigin,
+} from '@intelliflow/domain';
 
 export interface TenantModuleRecord {
   tenantId: string;
@@ -16,12 +21,14 @@ export interface TenantModuleRecord {
   enabled: boolean;
   enabledAt: Date;
   disabledAt: Date | null;
+  origin?: TenantModuleOrigin;
 }
 
 export interface ModuleAccessPort {
   /**
    * Get all enabled modules for a tenant.
-   * Merges plan-tier defaults with per-tenant overrides (TenantModule records).
+   * Single resolver: (plan modules ∩ business-type modules) ∪ explicit OVERRIDE rows,
+   * minus rows switched off (see `resolveEnabledModules` in the domain).
    */
   getEnabledModules(tenantId: string): Promise<ModuleId[]>;
 
@@ -29,6 +36,19 @@ export interface ModuleAccessPort {
    * Check if a specific module is enabled for a tenant.
    */
   isModuleEnabled(tenantId: string, moduleId: ModuleId): Promise<boolean>;
+
+  /**
+   * The tenant's business type, or null when it has not been chosen yet
+   * (gated like OTHER; the admin is prompted to choose).
+   */
+  getBusinessType(tenantId: string): Promise<TenantBusinessType | null>;
+
+  /**
+   * Set the tenant's business type (admin action; the API checks the role).
+   * Modules the workspace already holds data in (cases, documents, tickets) stay on via an
+   * EXISTING_DATA override. Returns the modules that were protected that way.
+   */
+  setBusinessType(tenantId: string, businessType: TenantBusinessType): Promise<ModuleId[]>;
 
   /**
    * Get the tenant's current plan tier.

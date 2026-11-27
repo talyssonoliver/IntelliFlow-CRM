@@ -30,6 +30,10 @@ const MESSAGES: Record<EmailSendErrorCode, string> = {
   NO_MAILBOX: 'Connect your mailbox in Email Settings to send email.',
   MAILBOX_ERROR: 'Your mailbox needs to be reconnected in Email Settings before you can send.',
   ALL_SUPPRESSED: 'Every recipient is on the suppression list, so nothing was sent.',
+  ALL_OBJECTED:
+    'Every recipient objected to marketing email or is on the suppression list, so nothing was sent.',
+  PURPOSE_REQUIRED:
+    'Some recipients objected to marketing email. Send it as a service email if it is about their matter, or as marketing to leave them out.',
   SEND_FAILED: 'Your mailbox could not send this email.',
 };
 

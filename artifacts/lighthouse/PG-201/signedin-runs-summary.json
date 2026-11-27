@@ -1,0 +1,30 @@
+{
+  "task": "PG-201",
+  "command": "lhci collect (desktop preset, onlyCategories performance+accessibility, 3 runs, puppeteerScript tools/lighthouse/lhci-auth.js)",
+  "startedAt": "2026-11-22T15:22:21Z",
+  "finishedAt": "2026-11-22T15:23:09Z",
+  "exitCode": 0,
+  "target": "http://localhost:3400 (local production build, local Supabase, ephemeral DB)",
+  "runs": {
+    "http://localhost:3400/analytics/scheduled-reports": [
+      {
+        "performance": 0.92,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:22:42.211Z"
+      },
+      {
+        "performance": 0.93,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:22:26.373Z"
+      },
+      {
+        "performance": 0.93,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:22:57.233Z"
+      }
+    ]
+  },
+  "median_reports": [
+    "analytics-scheduled-reports-auth.report.json"
+  ]
+}

@@ -42,14 +42,18 @@ export const REGENERATE_COMMANDS = [
 
 /**
  * Set the driver in git config when it is missing or different.
+ * `--local` writes the repository's own .git/config (never --global, never
+ * core.worktree or core.bare). Linked worktrees share that file, so one install
+ * covers every worktree of the clone; the value is a constant `true`, so
+ * sharing it is harmless and a second install is a no-op.
  * `driver = true` exits 0 and leaves %A (this branch's side) as the result.
  * @param {(args: string[]) => string | null} git
  * @returns {boolean} whether anything was written
  */
 export function installMergeDrivers(git) {
   if (git(['config', '--get', `merge.${DRIVER}.driver`])?.trim() === 'true') return false;
-  git(['config', `merge.${DRIVER}.name`, 'keep this side; regenerated after the merge']);
-  git(['config', `merge.${DRIVER}.driver`, 'true']);
+  git(['config', '--local', `merge.${DRIVER}.name`, 'keep this side; regenerated after the merge']);
+  git(['config', '--local', `merge.${DRIVER}.driver`, 'true']);
   return true;
 }
 

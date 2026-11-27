@@ -189,8 +189,36 @@ There are no synthetic tests yet. The Grafana Cloud stack is being set up.
 | Ticket (Medium)  | Error budget burn rate > 3x for 2 hours  |
 | Ticket (Low)     | Error budget > 75% consumed              |
 
-All alerts go by email to the owner from Grafana Cloud alerting (being set up,
-not yet proven). There is no paging service.
+All alerts go by email to the owner from Grafana Cloud alerting. Delivery is
+proven: the api availability burn-rate alert ("Very High") fired at 2026-11-09
+21:24Z and its email arrived at 21:25Z; the "High" one fired at 21:27Z, emailed
+21:28Z. There is no paging service.
+
+### 5.4 Production SLOs and the alerts that guard them (verified 2026-11-12)
+
+The SLOs live in Grafana Cloud SLO, defined as code in
+`infra/monitoring/grafana/cloud/slos.json` and applied by `grafana-slos.yml`.
+The alert rules are `infra/monitoring/grafana/cloud/alert-rules.json` (folder
+IntelliFlow production) and `ai-alert-rules.json` (folder IntelliFlow AI
+models). Every rule emails the owner.
+
+| SLO (uuid)                                 | Objective                                  | SLI                              | Alerts that fire when it is at risk                                                                                                                                                            |
+| ------------------------------------------ | ------------------------------------------ | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| api availability (`env008apiavail`)        | 99.9% / 28 d                               | api server spans without a 5xx   | burn-rate "High" and "Very High" (from the SLO); `ifc032-api-error-rate` (> 5% for 5 min); `ifc074-error-spans-direct` (any error span, fast detection)                                        |
+| api latency (`env008apip95`)               | 95% of requests under the threshold / 28 d | api server span duration         | no burn-rate alert of its own (#1001); `ifc032-workflow-p95-latency` (lead routing p95 > 500 ms) covers the critical path; Grafana's `LatencyP95Anomaly` anomaly rule evaluates the api series |
+| ai-worker LLM success (`env008llmsuccess`) | 99.5% / 28 d                               | `llm.invoke` spans without error | no burn-rate alert of its own (#1029); `ifc117-inference-error-ratio` (AI chain errors > 5%) and `ifc117-ai-metrics-silent`                                                                    |
+| (telemetry itself)                         | spans keep arriving                        | ai-worker span rate              | `ifc032-telemetry-silent` (critical)                                                                                                                                                           |
+
+Supporting rules, not tied to one SLO: `ifc032-lead-routing-failures`,
+`ifc032-workflow-error-rate`, `ifc074-error-logs-direct` (error-level log lines
+in the combined worker), `ifc117-hallucination-rate`, `ifc117-drift-shift`,
+`ifc117-drift-stalled`, `ifc117-inference-p95-latency`. When IFC-151 merges:
+`ifc151-outbox-dead-letters` (owner-approved 2026-11-12).
+
+Recovery objectives (IFC-142, `restore-drill-report.md`): the production
+database is backed up daily at 03:30 (`runbooks/database-backup.md`), so the RPO
+is at most about 24 h; restoring that file took about 12 s on 2026-11-12 (RTO
+target: under 1 hour).
 
 ---
 

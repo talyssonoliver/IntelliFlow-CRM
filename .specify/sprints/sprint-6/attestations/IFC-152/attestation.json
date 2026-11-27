@@ -88,5 +88,5 @@
     "git_commit": "d11d95f4",
     "branch": "sprint0/codex-run"
   },
-  "notes": "IFC-152 Legal Workflows repair: All 13 plan checkboxes marked. Verified case-document.ts and documents.router.ts exist. Attestation rewritten from non-schema format."
+  "notes": "IFC-152 Legal Workflows repair: All 13 plan checkboxes marked. Verified case-document.ts and documents.router.ts exist. Attestation rewritten from non-schema format.\nMerged PR #1152: fix(api): check per-document access in case document delete, listing and grants (follow-up fix, mapped by content (low confidence); sprint-plan reconciliation 2026-11-14)"
 }

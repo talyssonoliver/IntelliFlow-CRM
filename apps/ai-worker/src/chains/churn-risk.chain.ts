@@ -15,17 +15,22 @@
  */
 
 import { PromptTemplate } from '@langchain/core/prompts';
+import type { RunnableConfig } from '@langchain/core/runnables';
+import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
+import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { aiConfig } from '../config/ai.config';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
-import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { loadVersionedPrompt, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import { usableVersionedPrompt } from '../versioning/versioned-prompt';
+import { formatPounds } from '../utils/format-pounds';
 import pino from 'pino';
 
 // Import domain constants (IFC-095: DRY pattern)
 import { CHURN_RISK_LEVELS, type ChurnRiskLevel } from '@intelliflow/domain';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 
 const logger = pino({
   name: 'churn-risk-chain',
@@ -191,7 +196,7 @@ const llmOutputSchema = z.object({
  * actionable recommendations.
  */
 export class ChurnRiskChain {
-  private structuredModel: { invoke(input: unknown): Promise<unknown> };
+  private structuredModel: { invoke(input: unknown, config?: RunnableConfig): Promise<unknown> };
   private readonly prompt: PromptTemplate;
   private readonly tenantId?: string;
 
@@ -211,58 +216,7 @@ export class ChurnRiskChain {
 
     // Define the prediction prompt
     this.prompt = new PromptTemplate({
-      template: `You are an expert customer success analyst specializing in churn prediction for a CRM system.
-Analyze the following customer data to predict their churn risk.
-
-CUSTOMER DATA:
-Entity Type: {entityType}
-Entity ID: {entityId}
-
-ENGAGEMENT METRICS:
-{engagementData}
-
-BEHAVIORAL PATTERNS:
-{behavioralData}
-
-TRANSACTION HISTORY:
-{transactionData}
-
-SUPPORT INTERACTIONS:
-{supportData}
-
-ACCOUNT ATTRIBUTES:
-{accountData}
-
-ANALYSIS INSTRUCTIONS:
-
-1. RISK SCORE (0.0 to 1.0):
-   - 0.8-1.0: Critical risk - Immediate intervention required
-   - 0.6-0.79: High risk - Urgent attention needed
-   - 0.4-0.59: Medium risk - Proactive engagement recommended
-   - 0.2-0.39: Low risk - Standard monitoring
-   - 0.0-0.19: Minimal risk - Customer is healthy
-
-2. RISK FACTORS:
-   - Identify the top 3-5 factors contributing to churn risk
-   - Classify each factor's impact as high, medium, or low
-   - Provide specific reasoning for each factor
-
-3. RECOMMENDATIONS:
-   - Provide 3-5 actionable recommendations
-   - Prioritize by impact and urgency
-   - Be specific and actionable
-
-4. PRIMARY ACTION:
-   - State the single most important action to take
-   - This should be immediately executable
-
-5. CONFIDENCE:
-   - 0.9-1.0: Very high confidence (comprehensive data)
-   - 0.7-0.89: High confidence (good data coverage)
-   - 0.5-0.69: Moderate confidence (some data gaps)
-   - Below 0.5: Low confidence (significant data missing)
-
-Respond with a structured JSON object containing riskScore, confidence, topRiskFactors, explanation, recommendations, and primaryAction.`,
+      template: BUILTIN_CHAIN_TEMPLATES.CHURN_RISK,
       inputVariables: [
         'entityType',
         'entityId',
@@ -280,13 +234,16 @@ Respond with a structured JSON object containing riskScore, confidence, topRiskF
   /**
    * Resolve tenant-versioned prompt override (falls back to default on any error).
    */
-  private async resolveVersionedPrompt(): Promise<string | null> {
+  private async resolveVersionedPrompt(): Promise<{
+    text: string;
+    versionId: string | null;
+  } | null> {
     if (!this.tenantId) return null;
     try {
-      const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.CHURN_RISK, {
-        tenantId: this.tenantId,
-      });
-      return usableVersionedPrompt('CHURN_RISK', config.prompt, this.prompt.inputVariables);
+      const chosen = await loadVersionedPrompt(CHAIN_TYPE_MAP.CHURN_RISK, this.tenantId);
+      const text = usableVersionedPrompt('CHURN_RISK', chosen.prompt, this.prompt.inputVariables);
+      // The version is kept with its prompt, so the recorded run names the version it sent.
+      return text ? { text, versionId: chosen.versionId } : null;
     } catch {
       logger.warn(
         {
@@ -337,7 +294,8 @@ Respond with a structured JSON object containing riskScore, confidence, topRiskF
       const accountData = this.formatAccountData(validatedInput);
 
       // Resolve tenant-versioned prompt override; fall back to default
-      const versionedText = await this.resolveVersionedPrompt();
+      const chosen = await this.resolveVersionedPrompt();
+      const versionedText = chosen?.text ?? null;
       const activePrompt = versionedText
         ? new PromptTemplate({
             template: versionedText,
@@ -357,7 +315,12 @@ Respond with a structured JSON object containing riskScore, confidence, topRiskF
       });
 
       // Call the LLM with structured output — returns typed object directly
-      const parsed = (await this.structuredModel.invoke(formattedPrompt)) as {
+      const parsed = (await recordedChainRun(
+        'CHURN_RISK',
+        this.tenantId,
+        chosen?.versionId ?? null,
+        (callbacks) => this.structuredModel.invoke(formattedPrompt, { callbacks })
+      )) as {
         riskScore: number;
         confidence: number;
         topRiskFactors: RiskFactor[];
@@ -402,6 +365,8 @@ Respond with a structured JSON object containing riskScore, confidence, topRiskF
 
       return result;
     } catch (error) {
+      // The plan's AI actions are used up: fail with that reason, never answer with a heuristic.
+      if (isAiActionsExhausted(error)) throw error;
       const executionTimeMs = Date.now() - startTime;
 
       logger.error(
@@ -531,7 +496,7 @@ Respond with a structured JSON object containing riskScore, confidence, topRiskF
     const parts: string[] = [];
 
     if (input.totalRevenue !== undefined) {
-      parts.push(`Total revenue: $${input.totalRevenue.toLocaleString('en-US')}`);
+      parts.push(`Total revenue: ${formatPounds(input.totalRevenue)}`);
     }
     if (input.paymentConsistency !== undefined) {
       parts.push(`Payment consistency: ${(input.paymentConsistency * 100).toFixed(0)}%`);

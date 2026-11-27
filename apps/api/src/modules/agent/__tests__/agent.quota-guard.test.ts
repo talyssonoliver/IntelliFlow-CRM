@@ -1,5 +1,5 @@
 /**
- * Per-tenant metering: agent.executeTool must respect the `aiSpendCentsPerMonth` budget.
+ * Per-tenant metering: agent.executeTool must respect the `aiActionsPerMonth` budget.
  * The guard only asserts; spend is recorded where the cost becomes known (not here).
  */
 
@@ -36,19 +36,19 @@ import { agentRouter } from '../agent.router';
 const input = { toolName: 'search_leads', input: {} };
 
 describe('agent.executeTool quota guard', () => {
-  it('rejects before resolving the tool when the AI budget is exhausted', async () => {
+  it('rejects before resolving the tool when the AI actions allowance is exhausted', async () => {
     getForTenantMock.mockReset();
     const ctx = createTestContext({
-      services: { ...mockServices, quota: overQuota('aiSpendCentsPerMonth', 0, 0) as never },
+      services: { ...mockServices, quota: overQuota('aiActionsPerMonth', 0, 0) as never },
     });
 
     await expect(agentRouter.createCaller(ctx).executeTool(input)).rejects.toMatchObject(
-      quotaRejection('aiSpendCentsPerMonth', 0, 0)
+      quotaRejection('aiActionsPerMonth', 0, 0)
     );
     expect(getForTenantMock).not.toHaveBeenCalled();
   });
 
-  it('continues into tool resolution when the budget has headroom', async () => {
+  it('continues into tool resolution when the allowance has headroom', async () => {
     getForTenantMock.mockReset();
     getForTenantMock.mockResolvedValue(null);
     const quota = underQuota();
@@ -57,11 +57,7 @@ describe('agent.executeTool quota guard', () => {
     await expect(agentRouter.createCaller(ctx).executeTool(input)).rejects.toMatchObject({
       code: 'NOT_FOUND',
     });
-    expect(quota.assertWithinQuota).toHaveBeenCalledWith(
-      TEST_UUIDS.tenant,
-      'aiSpendCentsPerMonth',
-      1
-    );
+    expect(quota.assertWithinQuota).toHaveBeenCalledWith(TEST_UUIDS.tenant, 'aiActionsPerMonth', 1);
     expect(getForTenantMock).toHaveBeenCalledTimes(1);
   });
 });

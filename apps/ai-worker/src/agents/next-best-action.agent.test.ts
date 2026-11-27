@@ -197,6 +197,31 @@ describe('NextBestActionAgent', () => {
     });
   });
 
+  describe('Money in the prompt', () => {
+    const context: NBAContext = {
+      entityType: 'opportunity',
+      entityId: '550e8400-e29b-41d4-a716-446655440000',
+      tenantId: '550e8400-e29b-41d4-a716-446655440001',
+      userId: '550e8400-e29b-41d4-a716-446655440002',
+      stage: 'PROPOSAL_SENT',
+      value: 50000,
+    };
+
+    it('shows the entity summary value in pounds, never dollars', () => {
+      const summary = (agent as any).buildEntitySummary(context);
+
+      expect(summary).toContain('Value: £50,000');
+      expect(summary).not.toContain('$');
+    });
+
+    it('shows the recommendation prompt value in pounds, never dollars', () => {
+      const prompt = (agent as any).buildRecommendationPrompt(context, '');
+
+      expect(prompt).toContain('Value: £50,000');
+      expect(prompt).not.toContain('$50,000');
+    });
+  });
+
   describe('Recommendation Generation', () => {
     it('should generate recommendations successfully', async () => {
       const context: NBAContext = {

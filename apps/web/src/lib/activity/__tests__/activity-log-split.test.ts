@@ -1,0 +1,240 @@
+import { describe, it, expect } from 'vitest';
+import { emptyFeedMessage, isSystemFeedEntry, splitActivityLog } from '../activity-log-split';
+
+const entry = (id: string, type: string, actor: { id: string | null; name: string } | null) => ({
+  id,
+  type,
+  actor,
+});
+
+const me = { id: 'user-1', name: 'Talysson' };
+const other = { id: 'user-2', name: 'Bob Wilson' };
+const coa = { id: null, name: 'System (COA sync)' };
+
+describe('isSystemFeedEntry', () => {
+  it('is true for score updates and system events whoever the author is', () => {
+    expect(isSystemFeedEntry(entry('a', 'SCORE_UPDATE', me))).toBe(true);
+    expect(isSystemFeedEntry(entry('c', 'SYSTEM', me))).toBe(true);
+  });
+
+  it('is true for a status change with no person behind it', () => {
+    expect(isSystemFeedEntry(entry('a', 'STATUS_CHANGE', null))).toBe(true);
+    expect(isSystemFeedEntry(entry('b', 'STATUS_CHANGE', { id: null, name: 'Import' }))).toBe(true);
+  });
+
+  it('is false for a status change a person made, such as converting a lead', () => {
+    expect(isSystemFeedEntry(entry('a', 'STATUS_CHANGE', me))).toBe(false);
+  });
+
+  it('keeps a status change he made in My activity', () => {
+    const mine = [entry('1', 'STATUS_CHANGE', me), entry('2', 'STATUS_CHANGE', coa)];
+
+    const { personal } = splitActivityLog(mine, { fold: true, mine: true, userId: 'user-1' });
+
+    expect(personal.map((e) => e.id)).toEqual(['1']);
+  });
+
+  it('never folds a ticket entry, whose human replies are typed SYSTEM and carry no author id', () => {
+    const reply = { id: null, name: 'Jane Agent' };
+
+    expect(isSystemFeedEntry({ ...entry('a', 'SYSTEM', reply), source: 'TICKET_ACTIVITY' })).toBe(
+      false
+    );
+    expect(isSystemFeedEntry({ ...entry('b', 'SYSTEM', coa), source: 'TICKET_ACTIVITY' })).toBe(
+      true
+    );
+  });
+
+  it('keeps a ticket reply he wrote in My activity, now that ticket entries carry the author id (MVP-012)', () => {
+    const entries = [
+      { ...entry('1', 'SYSTEM', me), source: 'TICKET_ACTIVITY' },
+      { ...entry('2', 'SYSTEM', other), source: 'TICKET_ACTIVITY' },
+      { ...entry('3', 'SYSTEM', { id: null, name: me.name }), source: 'TICKET_ACTIVITY' },
+    ];
+
+    const { personal } = splitActivityLog(entries, { fold: true, mine: true, userId: 'user-1' });
+
+    expect(personal.map((e) => e.id)).toEqual(['1']);
+  });
+
+  it('matches My activity on the author email when the entry has no author id, never on a name', () => {
+    const entries = [
+      entry('1', 'NOTE', { id: null, name: ' Talysson@Example.invalid ' }),
+      entry('2', 'NOTE', { id: null, name: 'Talysson' }),
+      entry('3', 'NOTE', { id: null, name: 'Bob Wilson' }),
+      entry('4', 'NOTE', { id: 'user-2', name: 'talysson@example.invalid' }),
+    ];
+
+    const { personal } = splitActivityLog(entries, {
+      fold: true,
+      mine: true,
+      userId: 'user-1',
+      userEmail: 'talysson@example.invalid',
+    });
+
+    expect(personal.map((e) => e.id)).toEqual(['1']);
+  });
+
+  it('keeps mail synced from his mailbox in the feed but not in My activity', () => {
+    // The sync writes the mailbox owner's id for sent and received mail alike.
+    const synced = entry('1', 'EMAIL', { id: 'user-1', name: 'Synced from email' });
+    const written = entry('2', 'EMAIL', me);
+
+    const all = splitActivityLog([synced, written], {
+      fold: true,
+      mine: false,
+      userId: 'user-1',
+    });
+    const mineOnly = splitActivityLog([synced, written], {
+      fold: true,
+      mine: true,
+      userId: 'user-1',
+    });
+
+    expect(all.personal.map((e) => e.id)).toEqual(['1', '2']);
+    expect(mineOnly.personal.map((e) => e.id)).toEqual(['2']);
+  });
+
+  it('folds an automated AI author, but not a person whose id is attached', () => {
+    expect(isSystemFeedEntry(entry('a', 'NOTE', { id: null, name: 'AI Insights' }))).toBe(true);
+    expect(isSystemFeedEntry(entry('b', 'NOTE', { id: null, name: 'AI Scoring Agent' }))).toBe(
+      true
+    );
+    expect(isSystemFeedEntry(entry('c', 'NOTE', { id: 'user-1', name: 'AI Insights' }))).toBe(
+      false
+    );
+    expect(isSystemFeedEntry(entry('d', 'NOTE', { id: null, name: 'Aiden Smith' }))).toBe(false);
+  });
+
+  it('does not count the display name "System" when a person id is attached', () => {
+    // The opportunity feed writes { id: userId, name: agentName || 'System' } for a person's entry.
+    expect(isSystemFeedEntry(entry('a', 'NOTE', { id: 'user-1', name: 'System' }))).toBe(false);
+    expect(isSystemFeedEntry(entry('b', 'CALL', { id: 'user-1', name: 'System (portal)' }))).toBe(
+      false
+    );
+  });
+
+  it('treats a status change authored by an email as a person, not the system', () => {
+    const logged = entry('a', 'STATUS_CHANGE', { id: null, name: 'someone@example.invalid' });
+
+    expect(isSystemFeedEntry(logged)).toBe(false);
+  });
+
+  it('keeps his own system-typed entries in his feed, found by his email', () => {
+    const entries = [
+      entry('1', 'STATUS_CHANGE', { id: null, name: 'talysson@example.invalid' }),
+      entry('2', 'SCORE_UPDATE', { id: 'user-1', name: 'Talysson' }),
+      entry('3', 'SCORE_UPDATE', { id: null, name: 'AI Scoring Agent' }),
+    ];
+
+    const { personal, system } = splitActivityLog(entries, {
+      fold: true,
+      mine: false,
+      userId: 'user-1',
+      userEmail: 'talysson@example.invalid',
+    });
+
+    expect(personal.map((e) => e.id)).toEqual(['1', '2']);
+    expect(system.map((e) => e.id)).toEqual(['3']);
+  });
+
+  it('is true for a "System (...)" author on any type', () => {
+    expect(isSystemFeedEntry(entry('a', 'NOTE', coa))).toBe(true);
+    expect(isSystemFeedEntry(entry('b', 'NOTE', { id: null, name: 'System' }))).toBe(true);
+    expect(isSystemFeedEntry(entry('c', 'NOTE', { id: null, name: ' System (portal) ' }))).toBe(
+      true
+    );
+  });
+
+  it('is false for a person, even one whose name starts with System', () => {
+    expect(isSystemFeedEntry(entry('a', 'EMAIL', me))).toBe(false);
+    expect(isSystemFeedEntry(entry('b', 'NOTE', { id: 'u', name: 'System Admin' }))).toBe(false);
+    expect(isSystemFeedEntry(entry('c', 'CALL', null))).toBe(false);
+  });
+});
+
+describe('splitActivityLog', () => {
+  const all = [
+    entry('1', 'CALL', me),
+    entry('2', 'STATUS_CHANGE', coa),
+    entry('3', 'EMAIL', other),
+    entry('4', 'NOTE', coa),
+    entry('5', 'NOTE', me),
+  ];
+
+  it('puts what people did in the feed and what the system wrote in the group, in order', () => {
+    const { personal, system } = splitActivityLog(all, {
+      fold: true,
+      mine: false,
+      userId: 'user-1',
+    });
+
+    expect(personal.map((e) => e.id)).toEqual(['1', '3', '5']);
+    expect(system.map((e) => e.id)).toEqual(['2', '4']);
+  });
+
+  it('keeps only his own entries for My activity, and no system group', () => {
+    const { personal, system } = splitActivityLog(all, {
+      fold: true,
+      mine: true,
+      userId: 'user-1',
+    });
+
+    expect(personal.map((e) => e.id)).toEqual(['1', '5']);
+    expect(system).toEqual([]);
+  });
+
+  it('shows a chosen type as it is, with no group', () => {
+    const { personal, system } = splitActivityLog(all, {
+      fold: false,
+      mine: false,
+      userId: 'user-1',
+    });
+
+    expect(personal.map((e) => e.id)).toEqual(['1', '2', '3', '4', '5']);
+    expect(system).toEqual([]);
+  });
+
+  it('applies My activity to a chosen type too', () => {
+    const { personal } = splitActivityLog(all, { fold: false, mine: true, userId: 'user-1' });
+
+    expect(personal.map((e) => e.id)).toEqual(['1', '5']);
+  });
+
+  it('matches nothing for My activity until the signed-in person is known', () => {
+    const noAuthor = [entry('1', 'CALL', null), ...all];
+    const { personal } = splitActivityLog(noAuthor, { fold: true, mine: true, userId: null });
+
+    expect(personal).toEqual([]);
+  });
+
+  it('handles an empty list', () => {
+    expect(splitActivityLog([], { fold: true, mine: false, userId: null })).toEqual({
+      personal: [],
+      system: [],
+    });
+  });
+});
+
+describe('emptyFeedMessage', () => {
+  const base = { mine: false, filtered: false, searching: false, systemCount: 0 };
+
+  it('says only system updates exist when they are all there is', () => {
+    expect(emptyFeedMessage({ ...base, systemCount: 3 })).toBe(
+      'No emails, calls, notes or meetings yet. Only system updates so far.'
+    );
+  });
+
+  it('says the right thing for search, filter, My activity and a truly empty log', () => {
+    expect(emptyFeedMessage({ ...base, searching: true, systemCount: 3 })).toBe(
+      'No activity matches your search'
+    );
+    expect(emptyFeedMessage({ ...base, mine: true, systemCount: 3 })).toBe(
+      'You have no activity yet'
+    );
+    expect(emptyFeedMessage({ ...base, filtered: true })).toBe(
+      'No activity matches the selected filter'
+    );
+    expect(emptyFeedMessage(base)).toBe('No activity recorded yet');
+  });
+});

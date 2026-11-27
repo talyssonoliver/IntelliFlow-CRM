@@ -24,7 +24,7 @@ import { SearchFilterBar } from '@/components/shared';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { revalidateDealCaches } from '@/app/deals/actions';
-import { type TrashedDeal, PIPELINE_STAGE_CONFIG, formatCurrencyFull } from './types';
+import { type TrashedDeal, PIPELINE_STAGE_CONFIG, formatDealValue } from './types';
 import { type OpportunityStage } from '@intelliflow/domain';
 
 // =============================================================================
@@ -145,7 +145,7 @@ function createColumns(
       size: 120,
       cell: ({ row }) => (
         <span className="text-sm font-semibold text-foreground tabular-nums">
-          {formatCurrencyFull(row.original.value)}
+          {formatDealValue(row.original.value)}
         </span>
       ),
     },

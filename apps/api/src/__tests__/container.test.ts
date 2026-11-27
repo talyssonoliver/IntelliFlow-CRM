@@ -601,6 +601,11 @@ describe('Container', () => {
         process.env.EMAIL_OAUTH_MICROSOFT_CLIENT_SECRET &&
         process.env.EMAIL_OAUTH_REDIRECT_URI
       ),
+      ZOHO: Boolean(
+        process.env.EMAIL_OAUTH_ZOHO_CLIENT_ID &&
+        process.env.EMAIL_OAUTH_ZOHO_CLIENT_SECRET &&
+        process.env.EMAIL_OAUTH_REDIRECT_URI
+      ),
     });
   });
 

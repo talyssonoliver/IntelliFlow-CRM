@@ -30,6 +30,7 @@ import {
   AppointmentRescheduledEvent,
   AppointmentCancelledEvent,
   AppointmentId,
+  MODULE_NOT_IN_WORKSPACE_MESSAGE,
   Appointment,
   TimeSlot,
 } from '@intelliflow/domain';
@@ -233,7 +234,7 @@ async function assertLegalEntitlement(ctx: {
   if (enabled === false) {
     throw new TRPCError({
       code: 'FORBIDDEN',
-      message: 'Your plan does not include the LEGAL module.',
+      message: MODULE_NOT_IN_WORKSPACE_MESSAGE,
     });
   }
 }

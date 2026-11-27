@@ -9,6 +9,7 @@
 
 import { api } from '@/lib/api';
 import { useMemo } from 'react';
+import { normalizeROI } from './roi-utils';
 import type {
   DriftDashboardData,
   DriftFilters,
@@ -26,6 +27,13 @@ import type {
   FailedJobsParams,
   FailedJobsData,
 } from './types';
+
+// Polling cadence of the AI monitoring dashboards. The server caches each result for 2 minutes
+// and the underlying events arrive a few per minute, so polling faster than this only re-reads
+// the same figures (egress audit 1126: it was 30 s). React Query pauses it in background tabs.
+const MONITORING_POLL_MS = 60_000;
+const MONITORING_TREND_POLL_MS = 120_000;
+const MONITORING_STALE_MS = 45_000;
 
 const SEVERITY_WEIGHT: Record<string, number> = {
   critical: 4,
@@ -60,15 +68,15 @@ export function useDriftDashboard(
   filters?: DriftFilters
 ): DriftDashboardData & { available: boolean } {
   const statusQuery = api.aiMonitoring.getStatus.useQuery(undefined, {
-    staleTime: 20000,
-    refetchInterval: 30000,
+    staleTime: MONITORING_STALE_MS,
+    refetchInterval: MONITORING_POLL_MS,
   });
 
   const driftQuery = api.aiMonitoring.getDriftMetrics.useQuery(
     { limit: 20 },
     {
-      staleTime: 20000,
-      refetchInterval: 30000,
+      staleTime: MONITORING_STALE_MS,
+      refetchInterval: MONITORING_POLL_MS,
     }
   );
 
@@ -96,15 +104,8 @@ export function useDriftDashboard(
       }
     | undefined;
 
-  const roiData = roiQuery.data as
-    | {
-        totalCost: number;
-        totalValue: number;
-        netValue: number;
-        roi: number;
-        trendDirection: string;
-      }
-    | undefined;
+  const roiRaw = roiQuery.data as unknown;
+  const roiData = normalizeROI(roiRaw);
 
   const status = driftData?.status ?? {
     trackedMetrics: 0,
@@ -118,14 +119,14 @@ export function useDriftDashboard(
 
   // Check if backend reports data unavailable (multi-process isolation)
   const driftAvailable = (driftData as Record<string, unknown>)?.available !== false;
-  const roiAvailable = (roiData as Record<string, unknown>)?.available !== false;
+  const roiAvailable = (roiRaw as Record<string, unknown> | undefined)?.available !== false;
   const available = driftAvailable && roiAvailable;
 
   return {
     available,
     status,
     history,
-    roi: roiData ?? null,
+    roi: roiData,
     isLoading,
     error: error as Error | null,
     refetch: () => {
@@ -241,8 +242,9 @@ const DEFAULT_SLO: SLOCompliance = {
 export function useLatencyDashboard(
   filters?: LatencyFilters
 ): LatencyDashboardData & { available: boolean } {
+  // Floored to the minute: a start time that moves every render is a new query key every render.
   const startTime = filters?.timeRange
-    ? new Date(Date.now() - TIME_RANGE_MS[filters.timeRange])
+    ? new Date(Math.floor((Date.now() - TIME_RANGE_MS[filters.timeRange]) / 60_000) * 60_000)
     : undefined;
 
   const metricsQuery = api.aiMonitoring.getLatencyMetrics.useQuery(
@@ -251,8 +253,8 @@ export function useLatencyDashboard(
       startTime,
     },
     {
-      staleTime: 20000,
-      refetchInterval: 30000,
+      staleTime: MONITORING_STALE_MS,
+      refetchInterval: MONITORING_POLL_MS,
     }
   );
 
@@ -266,8 +268,8 @@ export function useLatencyDashboard(
       bucketMinutes: 5,
     },
     {
-      staleTime: 20000,
-      refetchInterval: 60000,
+      staleTime: MONITORING_STALE_MS,
+      refetchInterval: MONITORING_TREND_POLL_MS,
     }
   );
 

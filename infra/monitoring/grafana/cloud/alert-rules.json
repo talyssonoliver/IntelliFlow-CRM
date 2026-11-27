@@ -1,8 +1,14 @@
 {
   "_comment": "Production alert rules for the Grafana Cloud stack (IFC-032). Applied by tools/scripts/grafana/apply-alert-rules.mjs through the Grafana provisioning API (workflow: grafana-alert-rules.yml). Metrics are the span metrics Grafana Cloud generates from our OTLP traces: traces_spanmetrics_calls_total{service, span_name, span_kind, status_code} and the traces_spanmetrics_latency histogram (seconds). A rule with its own datasourceUid queries that datasource instead: grafanacloud-logs is Loki (LogQL over our OTLP logs, labelled service_name). Routed by the default notification policy to the owner's email contact point.",
-  "folder": { "uid": "intelliflow-prod", "title": "IntelliFlow production" },
+  "folder": {
+    "uid": "intelliflow-prod",
+    "title": "IntelliFlow production"
+  },
   "datasourceUid": "grafanacloud-prom",
-  "group": { "name": "intelliflow-prod", "intervalSeconds": 60 },
+  "group": {
+    "name": "intelliflow-prod",
+    "intervalSeconds": 60
+  },
   "rules": [
     {
       "uid": "ifc032-telemetry-silent",
@@ -98,6 +104,49 @@
       "noData": "OK",
       "severity": "high",
       "summary": "ai-worker (the combined worker) logged error-level lines in the last 2 minutes."
+    },
+    {
+      "uid": "ifc151-outbox-dead-letters",
+      "title": "Outbox events dead-lettered",
+      "why": "IFC-151. An outbox event that reaches the dead-letter queue never runs its remaining handlers until someone replays it (tools/scripts/outbox-dlq.ts, runbook docs/operations/runbooks/dlq-triage.md), so any dead letter needs a person. Counts both outcomes the events worker records: dead_lettered (retries used up) and poisoned (a handler rejected the event, no retry). requireSeries is false only until the first production deploy of the outbox metrics (intelliflow_outbox_events_total) shows series; then it goes back to the default.",
+      "expr": "sum by (event_type) (increase(intelliflow_outbox_events_total{outcome=~\"dead_lettered|poisoned\"}[10m]))",
+      "selector": "intelliflow_outbox_events_total",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "0s",
+      "noData": "OK",
+      "severity": "high",
+      "summary": "One or more outbox events went to the dead-letter queue in the last 10 minutes; list them with tools/scripts/outbox-dlq.ts list.",
+      "requireSeries": false
+    },
+    {
+      "uid": "ifc142-ai-budget-80pct",
+      "title": "AI spend above 80% of the monthly budget",
+      "why": "IFC-142 budgets (owner 2026-11-12): AI is the only paid, usage-billed service besides Railway, whose own usage alert covers it. The ai-worker already stops paid calls at AI_MONTHLY_BUDGET_USD (60 USD, monthly-budget.ts); this warns at 80% (48 USD over 30 days). requireSeries is false: the cost series exists only while paid calls happen.",
+      "expr": "sum(increase(intelliflow_ai_cost_usd_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[30d])) > bool 48",
+      "selector": "intelliflow_ai_cost_usd_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "1h",
+      "noData": "OK",
+      "severity": "high",
+      "requireSeries": false,
+      "summary": "AI spend over the last 30 days passed 48 USD, 80% of the 60 USD AI_MONTHLY_BUDGET_USD (IFC-142, owner budget 2026-11-12). The ai-worker stops paid calls at 60 USD (monthly-budget.ts)."
+    },
+    {
+      "uid": "ifc074-embedding-outage-1h",
+      "title": "Embedding fallback active for 1 hour",
+      "why": "A handled embedding failure is a warning plus the intelliflow_ai_fallback_handled_total counter, not an error span (PR #1561), so the error-span and error-log rules stay quiet while semantic search quietly runs on full-text search. One blip must not page: this fires only when the counter has increased in every evaluation for 1 hour, i.e. a real outage (25/11/2026: the embedding model's end of life answered HTTP 410 on every call). The counter carries only the fallback label (a closed set, handled-fallback.ts), no model label, so the summary names the fallback and the runbook says how to find the model. Low traffic can leave a 5-minute window with no failed call and restart the hour, which errs toward silence, not toward a false page. requireSeries is false: the series exists only after the first handled fallback.",
+      "expr": "sum by (fallback) (increase(intelliflow_ai_fallback_handled_total[5m]))",
+      "selector": "intelliflow_ai_fallback_handled_total",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "1h",
+      "noData": "OK",
+      "severity": "warning",
+      "requireSeries": false,
+      "runbook": "docs/operations/runbooks/embedding-outage.md",
+      "summary": "The ai-worker has been running on the {{ $labels.fallback }} fallback for over 1 hour (embedding calls fail, search answers from full-text). The failing embedding model is in the llm.embed.failed_handled span events and the ai-worker warn logs. Runbook: docs/operations/runbooks/embedding-outage.md"
     }
   ],
   "deliveryTest": {

@@ -14,6 +14,7 @@ import {
   cn,
 } from '@intelliflow/ui';
 import type { ROIData } from '@/lib/ai-monitoring/types';
+import { normalizeROI } from '@/lib/ai-monitoring/roi-utils';
 
 interface CostTrackerProps {
   roi: ROIData | null;
@@ -35,7 +36,14 @@ function getTrendIcon(direction: string): string {
   }
 }
 
-export function CostTracker({ roi, isLoading }: Readonly<CostTrackerProps>) {
+export function CostTracker({ roi: roiProp, isLoading }: Readonly<CostTrackerProps>) {
+  // Defensive: API values may be strings, nested or null; never crash the page.
+  const roi = normalizeROI(roiProp);
+  const roiPct = roi?.roi ?? null;
+  let roiTone = 'text-muted-foreground';
+  if (roiPct !== null) {
+    roiTone = roiPct >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+  }
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -67,25 +75,13 @@ export function CostTracker({ roi, isLoading }: Readonly<CostTrackerProps>) {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">ROI</span>
                 <div className="flex items-center gap-1">
-                  <span
-                    className={cn(
-                      'text-xl font-bold',
-                      roi.roi >= 0
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
-                    )}
-                    data-testid="roi-value"
-                  >
-                    {roi.roi >= 0 ? '+' : ''}
-                    {roi.roi.toFixed(1)}%
+                  <span className={cn('text-xl font-bold', roiTone)} data-testid="roi-value">
+                    {roiPct === null
+                      ? '— ROI unavailable'
+                      : `${roiPct >= 0 ? '+' : ''}${roiPct.toFixed(1)}%`}
                   </span>
                   <span
-                    className={cn(
-                      'material-symbols-outlined text-lg',
-                      roi.roi >= 0
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
-                    )}
+                    className={cn('material-symbols-outlined text-lg', roiTone)}
                     aria-hidden="true"
                     data-testid="trend-icon"
                   >

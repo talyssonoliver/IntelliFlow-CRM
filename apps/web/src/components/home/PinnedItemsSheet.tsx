@@ -3,6 +3,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@intelliflow/ui';
 import { trackQuickActionsSettingsSaved, trackPinnedNavSettingsSaved } from '@/lib/analytics';
+import { useEnabledModules } from '@/hooks/useEnabledModules';
+import { isHrefAvailable } from '@/lib/modules/module-visibility';
 
 // =============================================================================
 // All available quick actions (superset of what can appear on home)
@@ -473,6 +475,7 @@ export function EditPinnedNavigationSheet({
   pinnedItems,
   onUnpin,
 }: Readonly<EditPinnedNavigationSheetProps>) {
+  const { isModuleEnabled } = useEnabledModules();
   const [draft, setDraft] = useState<Set<string>>(() => loadPinnedGroups());
   const draftRef = useRef(draft);
   draftRef.current = draft;
@@ -530,7 +533,9 @@ export function EditPinnedNavigationSheet({
         <div className="flex-1 overflow-y-auto p-6">
           {/* Groups with star toggle */}
           <div className="space-y-2">
-            {ALL_PINNED_NAV_GROUPS.map((group) => {
+            {ALL_PINNED_NAV_GROUPS.filter((group) =>
+              isHrefAvailable(group.href, isModuleEnabled)
+            ).map((group) => {
               const isStarred = draft.has(group.id);
               return (
                 <div

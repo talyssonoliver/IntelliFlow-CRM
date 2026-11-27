@@ -7,3 +7,8 @@
 export function oauthProviderKey(state: string): string {
   return `email-oauth-provider:${state}`;
 }
+
+/** Whether the sign-in was started for sending only (Google), so a restart keeps that choice. */
+export function oauthSendOnlyKey(state: string): string {
+  return `email-oauth-send-only:${state}`;
+}

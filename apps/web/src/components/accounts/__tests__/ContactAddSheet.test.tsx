@@ -141,20 +141,23 @@ describe('ContactAddSheet', () => {
     expect(mutateFn).not.toHaveBeenCalled();
   });
 
-  it('validates lastName is required', async () => {
+  it('saves with only a first name: the last name is optional (MVP-003)', async () => {
     const user = userEvent.setup();
     render(<ContactAddSheet {...defaultProps} />);
 
-    await user.type(screen.getByLabelText(/First Name/), 'John');
-    await user.type(screen.getByLabelText(/Email/), 'john@test.com');
+    expect(screen.getByLabelText(/Last Name/)).not.toBeRequired();
+    await user.type(screen.getByLabelText(/First Name/), 'Studio Pilates Demo');
+    await user.type(screen.getByLabelText(/Email/), 'owner@pilates.example.invalid');
     await user.type(screen.getByLabelText(/Phone/), '+15551234567');
 
     fireEvent.submit(screen.getByLabelText(/First Name/).closest('form')!);
 
-    await waitFor(() => {
-      expect(screen.getByText('Last name is required')).toBeInTheDocument();
+    await waitFor(() => expect(mutateFn).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText('Last name is required')).not.toBeInTheDocument();
+    expect(mutateFn.mock.calls[0][0]).toMatchObject({
+      firstName: 'Studio Pilates Demo',
+      lastName: '',
     });
-    expect(mutateFn).not.toHaveBeenCalled();
   });
 
   it('validates email is required', async () => {

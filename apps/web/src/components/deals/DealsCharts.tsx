@@ -15,6 +15,8 @@ import {
   Legend,
 } from 'recharts';
 import { isEmptySeries } from '@/lib/charts/empty-series';
+import { formatGBP } from '@/lib/dashboard/kpi-calculator';
+import { revenueAxisTick, revenueTooltip } from '@/lib/deals/deals-chart-format';
 import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 
 interface ChartEntry {
@@ -34,7 +36,14 @@ interface DealsChartsProps {
   readonly barChartData: BarEntry[];
 }
 
+/**
+ * The donut draws only the stages that have deals, and says how many in its legend. It used to label
+ * every slice on the ring, so with deals in one stage the zero-count stages stacked their labels on top
+ * of each other (#33). The data table below still lists every stage.
+ */
 export default function DealsCharts({ pieChartData, barChartData }: Readonly<DealsChartsProps>) {
+  const slices = pieChartData.filter((entry) => entry.value > 0);
+  const countByStage = new Map(slices.map((entry) => [entry.name, entry.value]));
   return (
     <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mt-4">
       <Card className="p-4 sm:p-6 bg-card border-border">
@@ -45,22 +54,22 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
-                data={pieChartData}
+                data={slices}
                 cx="50%"
                 cy="50%"
                 innerRadius={50}
                 outerRadius={80}
                 paddingAngle={2}
                 dataKey="value"
-                label={({ name, value }) => `${name}: ${value}`}
-                labelLine={false}
               >
-                {pieChartData.map((entry) => (
+                {slices.map((entry) => (
                   <Cell key={`pie-${entry.name}`} fill={entry.color} />
                 ))}
               </Pie>
               <Tooltip />
-              <Legend />
+              <Legend
+                formatter={(name) => `${String(name)}: ${countByStage.get(String(name)) ?? 0}`}
+              />
             </PieChart>
           </ResponsiveContainer>
         )}
@@ -95,17 +104,12 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis dataKey="name" tick={{ fontSize: 10 }} className="fill-muted-foreground" />
               <YAxis
-                tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
+                tickFormatter={revenueAxisTick}
                 tick={{ fontSize: 10 }}
                 className="fill-muted-foreground"
                 width={50}
               />
-              <Tooltip
-                formatter={(value) => {
-                  const numValue = typeof value === 'number' ? value : 0;
-                  return [`$${numValue.toLocaleString('en-GB')}`, 'Revenue'];
-                }}
-              />
+              <Tooltip formatter={revenueTooltip} />
               <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
                 {barChartData.map((entry) => (
                   <Cell key={`bar-${entry.name}`} fill={entry.color} />
@@ -126,7 +130,7 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
             {barChartData.map((entry) => (
               <tr key={`bar-sr-${entry.name}`}>
                 <td>{entry.name}</td>
-                <td>${entry.revenue.toLocaleString('en-GB')}</td>
+                <td>{formatGBP(entry.revenue)}</td>
               </tr>
             ))}
           </tbody>

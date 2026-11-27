@@ -17,6 +17,7 @@ import { TRPCError } from '@trpc/server';
 import { container, containerReady, type Container, apiPrisma } from './container';
 import { isJwtShaped } from './lib/jwt-shape';
 import { supabaseAdmin, verifyToken } from './lib/supabase';
+import { verifiedTokenCache } from './lib/verified-token-cache';
 import { isAuthSessionAlive } from './security/auth-sessions';
 import {
   ACTIVE_TENANT_HEADER,
@@ -317,6 +318,8 @@ async function syncSupabaseUserRole(
         role,
       },
     });
+    // The Supabase-verified-user cache holds the old user_metadata: drop it so the change applies now.
+    verifiedTokenCache.deleteUser(userId);
   } catch (error) {
     console.warn('[Auth] Failed to sync Supabase user role metadata:', error);
   }

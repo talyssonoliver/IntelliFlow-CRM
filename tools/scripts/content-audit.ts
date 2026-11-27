@@ -525,6 +525,8 @@ export function pathToRoute(relPath: string): string {
 export function classifyAccessTier(relPath: string): AccessTier {
   const normalized = relPath.replaceAll(/\\/g, '/');
   if (normalized.startsWith('(public)/') || normalized.startsWith('(public)\\')) return 'public';
+  // The prerendered signed-out landing page at / (MVP-007) has its own group so it reads no cookie.
+  if (normalized.startsWith('(landing)/')) return 'public';
   if (normalized.startsWith('(developer)/') || normalized.startsWith('(developer)\\'))
     return 'developer';
   return 'auth-gated';

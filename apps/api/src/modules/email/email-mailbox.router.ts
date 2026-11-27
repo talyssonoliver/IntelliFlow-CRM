@@ -2,7 +2,7 @@
  * Email Mailbox Router — PG-207 (owner rulings Q1, Q6, Q7; ADR-085).
  *
  * A user connects their own mailbox (SMTP with Gmail/Outlook presets, or
- * Google / Microsoft OAuth); an admin connects the company mailbox. The owner
+ * Google / Microsoft / Zoho OAuth); an admin connects the company mailbox. The owner
  * of a USER mailbox always comes from ctx, never from input.
  *
  * Secrets: written only as plain strings through the field-encryption client
@@ -17,11 +17,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { TRPCError } from '@trpc/server';
 import { MailboxTransportError, createPkcePair } from '@intelliflow/adapters';
-import {
-  EMAIL_LIMITS,
-  type MailboxErrorCode,
-  type OAuthMailboxProvider,
-} from '@intelliflow/domain';
+import { EMAIL_LIMITS, type MailboxErrorCode } from '@intelliflow/domain';
 import {
   NO_SMTP_ACCOUNT,
   NO_SMTP_ENDPOINT,
@@ -37,13 +33,19 @@ import {
   smtpEndpointDiffers,
   type ConnectionTestResultDto,
   type MailboxDto,
-  type OAuthProvidersAvailableDto,
+  type MyMailboxDto,
   type SaveSmtpMailboxInput,
   type SendingIdentityDto,
 } from '@intelliflow/validators';
 import { createTRPCRouter, tenantProcedure, verifiedTenantProcedure } from '../../trpc';
 import { assertTenantContext } from '../../security/tenant-context';
 import { resolveSender } from './mailbox-sender';
+import {
+  assertIdentitiesAllowed,
+  assertMailboxAllowed,
+  assertPersonalConfirmed,
+  type MailboxIdentity,
+} from './mailbox-connect-policy';
 import {
   assertEmailAdmin,
   auditEmail,
@@ -54,7 +56,17 @@ import {
 } from './email-access';
 import { toMailboxDto, type MailboxRowLike } from './email-dto';
 import { requireEncryptionKey } from './encryption-guard';
-import { getOAuthAccess, type TransportMailbox } from './mailbox-transport';
+import { smtpFailure } from './smtp-check';
+import { type TransportMailbox } from './mailbox-transport';
+import { freshScanState, freshSyncState } from './mailbox-fresh-state';
+import {
+  checkOAuthMailbox,
+  connectAccount,
+  connectStartUrl,
+  googleClientId,
+  hasRequiredScopes,
+  revokeGrant,
+} from './oauth-connect';
 
 const RESOURCE: EmailAuditResource = 'email_mailbox';
 
@@ -114,15 +126,6 @@ function stateHash(state: string): string {
 }
 
 /**
- * A mailbox made ACTIVE again (new credentials or a passing test) starts bounce
- * reading afresh: an old failure streak would otherwise turn the next single
- * scan failure back into ERROR.
- */
-function freshScanState(): { failureCount: number; nextScanAt: Date } {
-  return { failureCount: 0, nextScanAt: new Date() };
-}
-
-/**
  * Creates or updates the scope's mailbox. A racing duplicate is CONFLICT, and
  * so is an update whose row changed since it was read and validated: a kept
  * password is only ever paired with the server it was checked against.
@@ -134,6 +137,10 @@ async function writeMailbox(
   written: Record<string, unknown>
 ): Promise<MailboxRow> {
   const data = written.status === 'ACTIVE' ? { ...written, ...freshScanState() } : written;
+  // The allowlist is enforced here too, the one place every connection is written.
+  if (written.status !== 'DISCONNECTED') {
+    assertIdentitiesAllowed(owner.tenantId, written as MailboxIdentity);
+  }
   try {
     if (existing) {
       // New credentials: cached access tokens of the old ones stop being valid,
@@ -144,7 +151,15 @@ async function writeMailbox(
           tenantId: existing.tenantId,
           tokenVersion: existing.tokenVersion,
         },
-        data: { ...data, tokenVersion: { increment: 1 }, lockedUntil: null },
+        data: {
+          ...data,
+          ...freshSyncState(),
+          ...(data.calendarStatus === 'NEEDS_RECONNECT'
+            ? { calendarStatus: 'NEEDS_RECONNECT' }
+            : {}),
+          tokenVersion: { increment: 1 },
+          lockedUntil: null,
+        },
       });
     }
     return await ctx.prismaWithTenant.emailMailbox.create({
@@ -165,25 +180,6 @@ async function writeMailbox(
     }
     throw err;
   }
-}
-
-/** Scopes without which a connected mailbox could not send or read its bounce reports. */
-const REQUIRED_SCOPES: Record<OAuthMailboxProvider, readonly string[]> = {
-  GMAIL: ['gmail.send', 'gmail.readonly'],
-  MICROSOFT: ['Mail.Send', 'Mail.Read'],
-};
-
-/**
- * Whether the user granted what the mailbox needs (Google lets users untick
- * scopes). Providers report scopes as bare names or full URIs, so a granted
- * scope matches on its last path segment. An empty list (scope not reported)
- * cannot be checked and is accepted; a missing scope then surfaces as a coded
- * send or scan failure.
- */
-function hasRequiredScopes(provider: OAuthMailboxProvider, granted: string[]): boolean {
-  if (granted.length === 0) return true;
-  const names = new Set(granted.map((scope) => scope.split('/').pop()?.toLowerCase()));
-  return REQUIRED_SCOPES[provider].every((scope) => names.has(scope.toLowerCase()));
 }
 
 function secretAudit(value: string | null | undefined): 'set' | 'cleared' | 'unchanged' {
@@ -252,6 +248,8 @@ function smtpMailboxData(
     accountAddress: null,
     refreshToken: null,
     grantedScopes: [],
+    oauthAccountId: null,
+    oauthApiDomain: null,
   };
   if (input.smtpPassword !== undefined) data.smtpPassword = input.smtpPassword;
   if (!input.imapHost) data.imapPassword = null;
@@ -279,20 +277,17 @@ function imapAccountChanged(existing: MailboxRow, input: SaveSmtpMailboxInput): 
 // ─── Router ─────────────────────────────────────────────────────────────────
 
 export const emailMailboxRouter = createTRPCRouter({
-  getMine: tenantProcedure.query(
-    async ({
-      ctx,
-    }): Promise<{ mailbox: MailboxDto | null; providersAvailable: OAuthProvidersAvailableDto }> => {
-      assertTenantContext(ctx);
-      const c = ctx as unknown as EmailRouterCtx;
-      const { transports } = emailRuntimeDeps(c);
-      const row = await findMailbox(c, 'USER');
-      return {
-        mailbox: row ? toMailboxDto(row, { includeConnection: true }) : null,
-        providersAvailable: { ...transports.oauthConfigured },
-      };
-    }
-  ),
+  getMine: tenantProcedure.query(async ({ ctx }): Promise<MyMailboxDto> => {
+    assertTenantContext(ctx);
+    const c = ctx as unknown as EmailRouterCtx;
+    const { transports } = emailRuntimeDeps(c);
+    const row = await findMailbox(c, 'USER');
+    return {
+      mailbox: row ? toMailboxDto(row, { includeConnection: true }) : null,
+      providersAvailable: { ...transports.oauthConfigured },
+      googleClientId: googleClientId(transports),
+    };
+  }),
 
   /** Who a new email would go out as, by the same rules as a send (no connection details). */
   sendingIdentity: tenantProcedure.query(async ({ ctx }): Promise<SendingIdentityDto> => {
@@ -325,8 +320,24 @@ export const emailMailboxRouter = createTRPCRouter({
       assertTenantContext(ctx);
       const c = ctx as unknown as EmailRouterCtx;
       assertScopeAllowed(c, input.scope, 'saveSmtp');
+      if (input.smtpPassword !== null) {
+        // The identity a mailbox sends and reads as: the from address and any address-shaped login.
+        assertIdentitiesAllowed(c.tenant.tenantId, input);
+        for (const address of [input.fromAddress, input.smtpUsername, input.imapUsername]) {
+          assertPersonalConfirmed(address, input.acceptPersonal, input.scope);
+        }
+      }
       const existing = await findMailbox(c, input.scope);
       const data = smtpMailboxData(input, existing);
+      if (data.status === 'ACTIVE') {
+        // MVP-001: saved as working only when it works; a failed sign-in is saved as ERROR
+        // with its code, so the mailbox never looks ready while it cannot send.
+        // The same per-user limit as the settings test: every sign-in is an outbound connection.
+        consumeConnectionTest(c.tenant.userId, Date.now());
+        const secret = (data.smtpPassword as string | undefined) ?? existing?.smtpPassword ?? '';
+        const code = await smtpFailure(emailRuntimeDeps(c).transports, input, secret);
+        if (code) Object.assign(data, { status: 'ERROR', lastErrorCode: code });
+      }
 
       const row = await writeMailbox(c, existing, ownerFor(c, input.scope), data);
       auditEmail(c, existing ? 'UPDATE' : 'CREATE', RESOURCE, row.id, {
@@ -363,11 +374,9 @@ export const emailMailboxRouter = createTRPCRouter({
           ? (stored?.imapPassword ?? '')
           : (input.imapPassword ?? '');
       const { transports } = emailRuntimeDeps(c);
+      const smtpCode = await smtpFailure(transports, input, smtpSecret);
+      if (smtpCode) return { ok: false, code: smtpCode };
       try {
-        await transports.smtp.verify({
-          ...smtpEndpointConfig(input),
-          ...smtpAccountConfig(smtpAccountFields(input.smtpUsername, smtpSecret)),
-        });
         if (input.imapHost) {
           await transports.imap.verify({
             host: input.imapHost,
@@ -393,6 +402,10 @@ export const emailMailboxRouter = createTRPCRouter({
       const { transports } = emailRuntimeDeps(c);
       const row = await findMailbox(c, input.scope);
       if (!row) throw mailboxNotFound();
+      // A mailbox connected before the tenant had an allowlist is not brought back by a passing test.
+      if (row.status !== 'DISCONNECTED') {
+        assertIdentitiesAllowed(c.tenant.tenantId, row);
+      }
 
       let code: MailboxErrorCode | null = null;
       // The credential version tested (an OAuth refresh may rotate it on).
@@ -412,11 +425,7 @@ export const emailMailboxRouter = createTRPCRouter({
             });
           }
         } else {
-          const client = transports.oauth(row.kind as OAuthMailboxProvider);
-          if (!client) throw new MailboxTransportError('CONNECT_FAILED');
-          const access = await getOAuthAccess(c.prismaWithTenant, row, transports, new Date());
-          testedVersion = access.tokenVersion;
-          await client.accountAddress(access.accessToken);
+          testedVersion = await checkOAuthMailbox(c.prismaWithTenant, row, transports, new Date());
         }
       } catch (error) {
         code = error instanceof MailboxTransportError ? error.code : 'CONNECT_FAILED';
@@ -441,8 +450,8 @@ export const emailMailboxRouter = createTRPCRouter({
       assertTenantContext(ctx);
       const c = ctx as unknown as EmailRouterCtx;
       assertScopeAllowed(c, input.scope, 'oauthStart');
-      const client = emailRuntimeDeps(c).transports.oauth(input.provider);
-      if (!client) {
+      const { transports } = emailRuntimeDeps(c);
+      if (!transports.oauthConfigured[input.provider]) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
           message: 'Signing in with this provider is not configured on this server.',
@@ -459,10 +468,14 @@ export const emailMailboxRouter = createTRPCRouter({
           provider: input.provider,
           stateHash: stateHash(state),
           codeVerifier: verifier,
+          acceptPersonal: input.acceptPersonal === true,
           expiresAt: new Date(Date.now() + EMAIL_LIMITS.oauthStateTtlMinutes * 60_000),
         },
       });
-      return { url: client.authorizationUrl({ state, codeChallenge: challenge }) };
+      const consent = { state, codeChallenge: challenge, sendOnly: input.sendOnly === true };
+      const url = connectStartUrl(transports, input.provider, consent);
+      if (!url) throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Not configured.' });
+      return { url };
     }),
 
   oauthComplete: verifiedTenantProcedure
@@ -486,6 +499,7 @@ export const emailMailboxRouter = createTRPCRouter({
         id: string;
         scope: MailboxScope;
         codeVerifier: string;
+        acceptPersonal: boolean;
         expiresAt: Date;
       } | null = await c.prismaWithTenant.emailOAuthState.findFirst({
         where: { stateHash: stateHash(input.state), ...where },
@@ -497,13 +511,16 @@ export const emailMailboxRouter = createTRPCRouter({
       if (consumed.count !== 1 || saved.expiresAt.getTime() <= Date.now()) throw invalid();
       assertScopeAllowed(c, saved.scope, 'oauthComplete');
 
-      const client = emailRuntimeDeps(c).transports.oauth(input.provider);
-      if (!client) throw invalid();
-      let tokens;
-      let address: string;
+      const { transports } = emailRuntimeDeps(c);
+      if (!transports.oauthConfigured[input.provider]) throw invalid();
+      let account;
       try {
-        tokens = await client.exchangeCode(input.code, saved.codeVerifier, new Date());
-        address = await client.accountAddress(tokens.accessToken);
+        const exchange = {
+          code: input.code,
+          verifier: saved.codeVerifier,
+          accountsServer: input.accountsServer ?? null,
+        };
+        account = await connectAccount(transports, input.provider, exchange, new Date());
       } catch (error) {
         const code = error instanceof MailboxTransportError ? error.code : 'AUTH_FAILED';
         throw new TRPCError({
@@ -512,8 +529,16 @@ export const emailMailboxRouter = createTRPCRouter({
         });
       }
 
-      if (!hasRequiredScopes(input.provider, tokens.scopes)) {
-        await client.revoke(tokens.refreshToken).catch(() => undefined);
+      try {
+        assertMailboxAllowed(c.tenant.tenantId, account.address);
+        assertPersonalConfirmed(account.address, saved.acceptPersonal, saved.scope);
+      } catch (refusal) {
+        await account.giveBack().catch(() => undefined);
+        throw refusal;
+      }
+
+      if (!hasRequiredScopes(input.provider, account.scopes)) {
+        await account.giveBack().catch(() => undefined);
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
@@ -523,15 +548,24 @@ export const emailMailboxRouter = createTRPCRouter({
 
       requireEncryptionKey();
       const existing = await findMailbox(c, saved.scope);
+      // MVP-013: a Gmail connection is identified for the calendar by Google's immutable id. A failed
+      // lookup keeps the mail working, but the calendar stays off (NEEDS_RECONNECT shows the reconnect
+      // card) until a connect captures it. An id is never inherited from the stored one by address: an
+      // address can be given to another account, and it is never the calendar key itself.
+      const subject = account.oauthAccountId;
+      const calendarOff = input.provider === 'GMAIL' && !subject;
       const row = await writeMailbox(c, existing, ownerFor(c, saved.scope), {
         kind: input.provider,
         status: 'ACTIVE',
         lastErrorCode: null,
-        fromAddress: address,
+        fromAddress: account.address,
         fromName: null,
-        accountAddress: address,
-        refreshToken: tokens.refreshToken,
-        grantedScopes: tokens.scopes,
+        accountAddress: account.address,
+        refreshToken: account.refreshToken,
+        grantedScopes: account.scopes,
+        oauthAccountId: subject,
+        oauthApiDomain: account.oauthApiDomain,
+        ...(calendarOff ? { calendarStatus: 'NEEDS_RECONNECT' } : {}),
         ...NO_SMTP_ENDPOINT,
         ...NO_SMTP_ACCOUNT,
         imapHost: null,
@@ -543,7 +577,7 @@ export const emailMailboxRouter = createTRPCRouter({
         scanCursorAt: null,
       }).catch(async (error: unknown) => {
         // Not stored (a racing connect or save): the new grant is given back.
-        await client.revoke(tokens.refreshToken).catch(() => undefined);
+        await account.giveBack().catch(() => undefined);
         throw error;
       });
       auditEmail(c, existing ? 'UPDATE' : 'CREATE', RESOURCE, row.id, {
@@ -591,10 +625,7 @@ export const emailMailboxRouter = createTRPCRouter({
           }
           throw err;
         });
-      if (row.kind !== 'SMTP' && row.refreshToken) {
-        const client = emailRuntimeDeps(c).transports.oauth(row.kind as OAuthMailboxProvider);
-        await client?.revoke(row.refreshToken).catch(() => undefined);
-      }
+      await revokeGrant(emailRuntimeDeps(c).transports, row);
       auditEmail(c, 'UPDATE', RESOURCE, row.id, { scope: input.scope, disconnected: true });
       return { disconnected: true };
     }),

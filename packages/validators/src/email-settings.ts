@@ -5,6 +5,7 @@
 import { z } from 'zod';
 import {
   EMAIL_LIMITS,
+  EMAIL_SEND_PURPOSES,
   HARD_BOUNCE_ACTIONS,
   SUPPRESSION_REASONS,
   hasHeaderInjection,
@@ -14,6 +15,7 @@ import { idSchema } from './common';
 import { mailboxAddressSchema } from './email-mailbox';
 
 export const hardBounceActionSchema = z.enum(HARD_BOUNCE_ACTIONS);
+export const emailSendPurposeSchema = z.enum(EMAIL_SEND_PURPOSES);
 export const suppressionReasonSchema = z.enum(SUPPRESSION_REASONS);
 
 export const updateEmailSettingsInputSchema = z
@@ -40,10 +42,16 @@ export type AddSuppressionInput = z.infer<typeof addSuppressionInputSchema>;
 export const removeSuppressionInputSchema = z.object({ id: idSchema }).strict();
 export type RemoveSuppressionInput = z.infer<typeof removeSuppressionInputSchema>;
 
+/**
+ * The suppression list page. It is read with tRPC's useInfiniteQuery, which adds `cursor` (null
+ * on the first page) and `direction` to the input itself, so both are accepted here (#1402);
+ * `direction` is ignored, the list only pages forward.
+ */
 export const listSuppressionsInputSchema = z
   .object({
-    cursor: idSchema.optional(),
+    cursor: idSchema.nullish(),
     limit: z.number().int().min(1).max(100).default(50),
+    direction: z.enum(['forward', 'backward']).optional(),
   })
   .strict()
   .optional();
@@ -145,6 +153,13 @@ export const sendUserEmailInputSchema = z
     attachments: z.array(emailAttachmentRefSchema).max(20).optional(),
     threadId: z.string().max(200).optional(),
     templateId: z.string().max(200).optional(),
+    /** MVP-012: the Compose draft being sent, so a reply drafted by Aurora can be linked. */
+    draftId: z.string().max(64).optional(),
+    /**
+     * IFC-315: MARKETING skips recipients who objected to direct marketing; SERVICE is sent to
+     * them. Absent: refused (PURPOSE_REQUIRED) when any recipient objected.
+     */
+    purpose: emailSendPurposeSchema.optional(),
   })
   .superRefine((data, ctx) => {
     const total = data.to.length + (data.cc?.length ?? 0) + (data.bcc?.length ?? 0);
@@ -197,4 +212,9 @@ export interface SendUserEmailResultDto {
   skipped: string[];
   /** Recipients the mail server refused at send time (SMTP); the rest were sent. */
   rejected?: string[];
+  /**
+   * IFC-315: recipients of a MARKETING email who objected to direct marketing (Art 21(3)),
+   * so it was not sent to them. Absent when there were none.
+   */
+  objected?: string[];
 }

@@ -28,6 +28,12 @@ export interface OutboxEvent {
     tenantId?: string;
     timestamp: string;
     version: string;
+    /**
+     * Names of the handlers that already succeeded for this event (IFC-151).
+     * A retry skips them, so a handler that succeeded is not run twice when
+     * another handler of the same event failed.
+     */
+    handledBy?: string[];
   };
   status: OutboxEventStatus;
   retryCount: number;
@@ -38,6 +44,41 @@ export interface OutboxEvent {
 }
 
 export type EventHandler = (event: OutboxEvent) => Promise<void>;
+
+/**
+ * Thrown by a handler when the event can never be processed (a malformed or
+ * impossible payload). The poller moves it straight to the dead-letter queue
+ * instead of retrying it (IFC-151 poison-message handling).
+ */
+export class PoisonMessageError extends Error {
+  readonly poison = true;
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = 'PoisonMessageError';
+  }
+}
+
+/** True for a PoisonMessageError, also across module copies (checked by shape). */
+export function isPoisonMessage(error: unknown): boolean {
+  return (
+    error instanceof PoisonMessageError ||
+    (error instanceof Error && (error as { poison?: unknown }).poison === true)
+  );
+}
+
+export interface DispatchOptions {
+  /** Handlers that already succeeded for this event; they are skipped. */
+  alreadyHandled?: ReadonlySet<string>;
+  /** Called after each handler succeeds, to record it (idempotent retries). */
+  onHandled?: (handlerName: string) => Promise<void>;
+}
+
+export interface DispatchResult {
+  /** Handlers run by this dispatch. */
+  ran: string[];
+  /** Handlers skipped because they had already succeeded. */
+  skipped: string[];
+}
 
 export interface EventHandlerConfig {
   /** Event type pattern (supports wildcards like 'lead.*') */
@@ -55,6 +96,8 @@ export interface EventHandlerConfig {
 export class EventDispatcher {
   private readonly handlers: Map<string, EventHandlerConfig[]> = new Map();
   private readonly wildcardHandlers: EventHandlerConfig[] = [];
+  /** Every name in use: handler names key the per-event idempotency record. */
+  private readonly names = new Set<string>();
   private readonly logger: pino.Logger;
 
   constructor(logger?: pino.Logger) {
@@ -83,7 +126,7 @@ export class EventDispatcher {
     const config: EventHandlerConfig = {
       pattern,
       handler,
-      name: name || `handler-${pattern}`,
+      name: this.uniqueName(name || `handler-${pattern}`),
     };
 
     if (pattern === '*') {
@@ -114,6 +157,12 @@ export class EventDispatcher {
    * Unregister handlers for a pattern
    */
   unregister(pattern: string): void {
+    const removed =
+      pattern === '*'
+        ? [...this.wildcardHandlers]
+        : (this.handlers.get(pattern.endsWith('.*') ? pattern.slice(0, -2) : pattern) ?? []);
+    for (const config of removed) this.names.delete(config.name);
+
     if (pattern === '*') {
       this.wildcardHandlers.length = 0;
     } else if (pattern.endsWith('.*')) {
@@ -129,15 +178,25 @@ export class EventDispatcher {
   /**
    * Dispatch an event to all matching handlers
    */
-  async dispatch(event: OutboxEvent): Promise<void> {
-    const matchingHandlers = this.findHandlers(event.eventType);
+  async dispatch(event: OutboxEvent, options: DispatchOptions = {}): Promise<DispatchResult> {
+    const allHandlers = this.findHandlers(event.eventType);
 
-    if (matchingHandlers.length === 0) {
+    if (allHandlers.length === 0) {
       this.logger.warn(
         { eventType: event.eventType, eventId: event.id },
         'No handlers registered for event type'
       );
-      return;
+      return { ran: [], skipped: [] };
+    }
+
+    const done = options.alreadyHandled ?? new Set<string>();
+    const skipped = allHandlers.filter((h) => done.has(h.name)).map((h) => h.name);
+    const matchingHandlers = allHandlers.filter((h) => !done.has(h.name));
+    if (skipped.length > 0) {
+      this.logger.info(
+        { eventId: event.id, skipped },
+        'Skipping handlers that already succeeded for this event'
+      );
     }
 
     this.logger.debug(
@@ -156,6 +215,13 @@ export class EventDispatcher {
           await config.handler(event);
           this.logger.debug({ eventId: event.id, handler: config.name }, 'Handler completed');
         } catch (error) {
+          if (isPoisonMessage(error)) {
+            this.logger.warn(
+              { eventId: event.id, handler: config.name, error: (error as Error).message },
+              'Handler rejected the event as unprocessable (poison message)'
+            );
+            throw error;
+          }
           this.logger.error(
             {
               eventId: event.id,
@@ -169,13 +235,23 @@ export class EventDispatcher {
       })
     );
 
-    // Check if any handler failed
+    // Record each success before reporting failures, so a retry skips it.
+    const ran = matchingHandlers.map((h) => h.name);
+    if (options.onHandled) {
+      for (const [i, r] of results.entries()) {
+        if (r.status === 'fulfilled') await options.onHandled(ran[i]!);
+      }
+    }
+
+    // Check if any handler failed; a poison message wins so it skips the retries.
     const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
 
     if (failures.length > 0) {
-      const firstError = failures[0].reason;
-      throw firstError instanceof Error ? firstError : new Error(String(firstError));
+      const chosen = failures.find((f) => isPoisonMessage(f.reason)) ?? failures[0]!;
+      const reason = chosen.reason;
+      throw reason instanceof Error ? reason : new Error(String(reason));
     }
+    return { ran, skipped };
   }
 
   /**
@@ -199,6 +275,17 @@ export class EventDispatcher {
   // ============================================================================
   // Private Methods
   // ============================================================================
+
+  /**
+   * Handler names must be unique: the idempotency record (metadata.handledBy)
+   * skips a handler by name, so two handlers sharing one would skip each other.
+   */
+  private uniqueName(base: string): string {
+    let name = base;
+    for (let n = 2; this.names.has(name); n++) name = `${base}#${n}`;
+    this.names.add(name);
+    return name;
+  }
 
   private findHandlers(eventType: string): EventHandlerConfig[] {
     const handlers: EventHandlerConfig[] = [];

@@ -14,11 +14,14 @@
  */
 
 import { PromptTemplate } from '@langchain/core/prompts';
+import type { RunnableConfig } from '@langchain/core/runnables';
+import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
+import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { resolveRateLimit } from '../lib/tenant-ai-config.js';
-import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { loadVersionedPrompt, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import { usableVersionedPrompt } from '../versioning/versioned-prompt';
 import pino from 'pino';
 
@@ -29,6 +32,7 @@ import {
   URGENCY_LEVELS,
   type SentimentLabel,
 } from '@intelliflow/domain';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 
 // Re-export for consumers
 export { SENTIMENT_LABELS, EMOTION_LABELS, URGENCY_LEVELS } from '@intelliflow/domain';
@@ -130,7 +134,7 @@ const llmOutputSchema = z.object({
  * Analyzes text for sentiment, emotions, and urgency with structured output.
  */
 export class SentimentAnalysisChain {
-  private structuredModel: { invoke(input: unknown): Promise<unknown> };
+  private structuredModel: { invoke(input: unknown, config?: RunnableConfig): Promise<unknown> };
   private readonly prompt: PromptTemplate;
   private readonly tenantId?: string;
 
@@ -147,47 +151,7 @@ export class SentimentAnalysisChain {
 
     // Define the analysis prompt
     this.prompt = new PromptTemplate({
-      template: `You are an expert sentiment analyst for a CRM system. Analyze the following text for sentiment, emotions, and business urgency.
-
-TEXT TO ANALYZE:
-{text}
-
-CONTEXT (if provided):
-{context}
-
-SOURCE TYPE: {source}
-
-ANALYSIS INSTRUCTIONS:
-
-1. SENTIMENT CLASSIFICATION:
-   - VERY_POSITIVE: Enthusiastic, delighted, highly satisfied
-   - POSITIVE: Satisfied, pleased, agreeable
-   - NEUTRAL: Factual, informational, no clear emotion
-   - NEGATIVE: Dissatisfied, concerned, unhappy
-   - VERY_NEGATIVE: Angry, frustrated, threatening to leave
-
-2. EMOTION DETECTION:
-   - Identify 1-3 primary emotions from: JOY, TRUST, ANTICIPATION, SURPRISE, SADNESS, FEAR, ANGER, DISGUST, NEUTRAL
-   - Rate intensity from 0.0 (barely detectable) to 1.0 (very strong)
-
-3. URGENCY ASSESSMENT:
-   - CRITICAL: Immediate action required, escalation threats
-   - HIGH: Same-day response needed, significant concerns
-   - MEDIUM: Response within 2-3 days acceptable
-   - LOW: No time pressure, general inquiry
-   - NONE: Purely informational, no action required
-
-4. KEY PHRASES:
-   - Extract 2-5 phrases that strongly indicate sentiment
-   - Classify each phrase as positive, neutral, or negative
-
-5. CONFIDENCE:
-   - 0.9-1.0: Very clear sentiment signals
-   - 0.7-0.9: Clear with some ambiguity
-   - 0.5-0.7: Mixed signals
-   - Below 0.5: Highly ambiguous
-
-Respond with a structured JSON object containing sentiment, sentimentScore, emotions, primaryEmotion, urgency, urgencyScore, keyPhrases, confidence, and reasoning.`,
+      template: BUILTIN_CHAIN_TEMPLATES.SENTIMENT_ANALYSIS,
       inputVariables: ['text', 'context', 'source'],
     });
 
@@ -197,13 +161,20 @@ Respond with a structured JSON object containing sentiment, sentimentScore, emot
   /**
    * Resolve tenant-versioned prompt override (falls back to default on any error).
    */
-  private async resolveVersionedPrompt(): Promise<string | null> {
+  private async resolveVersionedPrompt(): Promise<{
+    text: string;
+    versionId: string | null;
+  } | null> {
     if (!this.tenantId) return null;
     try {
-      const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.SENTIMENT_ANALYSIS, {
-        tenantId: this.tenantId,
-      });
-      return usableVersionedPrompt('SENTIMENT_ANALYSIS', config.prompt, this.prompt.inputVariables);
+      const chosen = await loadVersionedPrompt(CHAIN_TYPE_MAP.SENTIMENT_ANALYSIS, this.tenantId);
+      const text = usableVersionedPrompt(
+        'SENTIMENT_ANALYSIS',
+        chosen.prompt,
+        this.prompt.inputVariables
+      );
+      // The version is kept with its prompt, so the recorded run names the version it sent.
+      return text ? { text, versionId: chosen.versionId } : null;
     } catch {
       logger.warn(
         {
@@ -247,7 +218,8 @@ Respond with a structured JSON object containing sentiment, sentimentScore, emot
       const validatedInput = sentimentInputSchema.parse(input);
 
       // Resolve tenant-versioned prompt if tenantId is available; fall back to default
-      const versionedText = await this.resolveVersionedPrompt();
+      const chosen = await this.resolveVersionedPrompt();
+      const versionedText = chosen?.text ?? null;
       const activePrompt = versionedText
         ? new PromptTemplate({
             template: versionedText,
@@ -263,7 +235,12 @@ Respond with a structured JSON object containing sentiment, sentimentScore, emot
       });
 
       // Call the LLM with structured output — returns typed object directly
-      const parsed = (await this.structuredModel.invoke(formattedPrompt)) as {
+      const parsed = (await recordedChainRun(
+        'SENTIMENT_ANALYSIS',
+        this.tenantId,
+        chosen?.versionId ?? null,
+        (callbacks) => this.structuredModel.invoke(formattedPrompt, { callbacks })
+      )) as {
         sentiment: (typeof SENTIMENT_LABELS)[number];
         sentimentScore: number;
         emotions: Array<{ emotion: (typeof EMOTION_LABELS)[number]; intensity: number }>;
@@ -303,6 +280,8 @@ Respond with a structured JSON object containing sentiment, sentimentScore, emot
 
       return result;
     } catch (error) {
+      // The plan's AI actions are used up: fail with that reason, never answer with a heuristic.
+      if (isAiActionsExhausted(error)) throw error;
       logger.error(
         {
           textLength: input.text.length,

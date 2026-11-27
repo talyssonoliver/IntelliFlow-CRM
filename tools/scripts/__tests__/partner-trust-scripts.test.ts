@@ -18,7 +18,7 @@ import { setPartnerOwnerTenant } from '../set-partner-owner-tenant';
 
 /** Build a connection string from parts so the test file never commits a credential-shaped literal. */
 const pgUrl = (user: string, hostAndDb: string): string =>
-  ['postgresql://', user, ':', 'not-a-real-password', '@', hostAndDb].join('');
+  ['postgresql://', user, ':', 'not-a-real-pw', '@', hostAndDb].join('');
 
 const LOCAL = { host: 'localhost', local: true };
 const PROD = { host: 'db.example.supabase.co', local: false };

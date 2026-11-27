@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
@@ -71,6 +71,9 @@ describe('alert rules config', () => {
       'ifc032-api-error-rate',
       'ifc074-error-spans-direct',
       'ifc074-error-logs-direct',
+      'ifc151-outbox-dead-letters',
+      'ifc142-ai-budget-80pct',
+      'ifc074-embedding-outage-1h',
     ]);
   });
 
@@ -82,7 +85,7 @@ describe('alert rules config', () => {
   // healthy. ifc032-telemetry-silent skips the check entirely
   // (liveSeriesCheck:false): it alerts when its series are absent, so the
   // check contradicts its purpose, and a wrong name there fires at once.
-  it('the four traffic-less rules opt out of the live-series requirement; the others do not', () => {
+  it('the five traffic-less rules opt out of the live-series requirement; the others do not', () => {
     const byUid = Object.fromEntries(
       CONFIG.rules.map((r: { uid: string; requireSeries?: boolean; liveSeriesCheck?: boolean }) => [
         r.uid,
@@ -98,7 +101,32 @@ describe('alert rules config', () => {
       'ifc032-api-error-rate': traffic,
       'ifc074-error-spans-direct': { requireSeries: undefined, liveSeriesCheck: undefined },
       'ifc074-error-logs-direct': { requireSeries: undefined, liveSeriesCheck: undefined },
+      // IFC-151: its metric exists only after the first deploy of the outbox metrics.
+      'ifc151-outbox-dead-letters': traffic,
+      // IFC-142: the AI cost series exists only while paid calls happen.
+      'ifc142-ai-budget-80pct': traffic,
+      // The counter exists only after the first handled embedding fallback.
+      'ifc074-embedding-outage-1h': traffic,
     });
+  });
+
+  // PR #1561: handled embedding fallbacks are a counter, not error spans, so a long outage
+  // needs its own rule. It must wait a full hour (one blip never pages) and be a warning.
+  it('the embedding-outage rule fires on the handled-fallback counter held for 1 hour', () => {
+    const entry = CONFIG.rules.find((r: { uid: string }) => r.uid === 'ifc074-embedding-outage-1h');
+    expect(entry.expr).toBe(
+      'sum by (fallback) (increase(intelliflow_ai_fallback_handled_total[5m]))'
+    );
+    expect(entry).toMatchObject({ operator: 'gt', threshold: 0, for: '1h', severity: 'warning' });
+    expect(entry.summary).toContain('{{ $labels.fallback }}');
+    const rule = buildRule(entry, CONFIG);
+    expect(rule.for).toBe('1h');
+    // Same labels as every other rule, so the default policy routes it to the owner's contact point.
+    expect(rule.labels).toEqual({ severity: 'warning', team: 'owner', source: 'ifc-032' });
+    expect(rule.annotations.runbook_url).toMatch(
+      /\/docs\/operations\/runbooks\/embedding-outage\.md$/
+    );
+    expect(existsSync(join(__dirname, '../../..', entry.runbook))).toBe(true);
   });
 
   it('only a rule that alerts on silence skips the series check', () => {
@@ -328,11 +356,13 @@ describe('run', () => {
   it('creates missing rules, updates existing ones, sets the group interval and removes the test rule', async () => {
     const g = fakeGrafana({ existing: ['ifc032-api-error-rate'], folder: 404 });
     const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(7);
+    expect(result.applied).toBe(CONFIG.rules.length);
     const writes = g.calls.filter((c) => c.method !== 'GET').map((c) => `${c.method} ${c.path}`);
     expect(writes).toContain('POST /api/folders');
     expect(writes).toContain('PUT /api/v1/provisioning/alert-rules/ifc032-api-error-rate');
-    expect(writes.filter((w) => w === 'POST /api/v1/provisioning/alert-rules')).toHaveLength(6);
+    expect(writes.filter((w) => w === 'POST /api/v1/provisioning/alert-rules')).toHaveLength(
+      CONFIG.rules.length - 1
+    );
     expect(writes).toContain(
       'PUT /api/v1/provisioning/folder/intelliflow-prod/rule-groups/intelliflow-prod'
     );
@@ -342,7 +372,7 @@ describe('run', () => {
   it('with --send-test also applies the always-firing delivery rule and keeps it', async () => {
     const g = fakeGrafana();
     const result = await run({ env, argv: ['--send-test'], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(8);
+    expect(result.applied).toBe(CONFIG.rules.length + 1);
     const posted = g.calls
       .filter((c) => c.method === 'POST')
       .map((c) => (c.body as { uid?: string }).uid);
@@ -438,7 +468,7 @@ describe('run', () => {
   it('does not fail the run when a requireSeries:false rule has no live series (#812)', async () => {
     const g = fakeGrafana({ series: (q) => (q.includes('latency') ? 0 : 2) });
     const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(7);
+    expect(result.applied).toBe(CONFIG.rules.length);
     expect(result.empty).toEqual([]);
   });
 

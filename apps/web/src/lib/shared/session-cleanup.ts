@@ -15,6 +15,7 @@
  */
 
 import { getTokenMaxAgeSeconds } from '@/lib/auth/jwt';
+import { AUTH_STATUS_CACHE_KEY } from '@/lib/auth/auth-status-snapshot';
 import { ACTIVE_TENANT_STORAGE_KEY, clearActiveTenant } from '@/lib/tenant/active-tenant';
 
 // ============================================
@@ -57,6 +58,9 @@ const AUTH_STORAGE_KEYS = [
   'lastActivity',
   // ADR-071: the active-tenant selection belongs to the signed-in user, not the browser.
   ACTIVE_TENANT_STORAGE_KEY,
+  // MVP-007: the last confirmed auth status (user, role, workspace) is the user's too, so every
+  // logout path removes it, not only AuthContext.logout.
+  AUTH_STATUS_CACHE_KEY,
 ] as const;
 
 export const AUTH_TOKEN_CHANGED_EVENT = 'intelliflow-auth-token-changed';

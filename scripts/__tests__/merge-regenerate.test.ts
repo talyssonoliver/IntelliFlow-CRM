@@ -16,6 +16,10 @@ import {
   regenerateAfterMerge,
 } from '../lib/merge-regenerate.mjs';
 import { runGit } from '../lib/preship-git.mjs';
+import { guardSharedGitConfig } from './shared-git-config-guard';
+
+// The suite runs git in temp repos only: the shared .git/config must stay byte for byte the same.
+guardSharedGitConfig();
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const BASELINE = 'artifacts/benchmarks/baseline.json';
@@ -35,7 +39,7 @@ describe('installMergeDrivers', () => {
   it('writes the driver when it is missing', () => {
     const { git, calls } = fakeGit({ 'config --get': null });
     expect(installMergeDrivers(git)).toBe(true);
-    expect(calls).toContainEqual(['config', `merge.${DRIVER}.driver`, 'true']);
+    expect(calls).toContainEqual(['config', '--local', `merge.${DRIVER}.driver`, 'true']);
   });
 
   it('leaves an installed driver alone', () => {

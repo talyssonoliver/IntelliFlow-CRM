@@ -24,10 +24,6 @@ import {
   DialogTitle,
   DialogDescription,
   toast,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
   type ChurnRiskData,
   type NextBestActionData,
   type ChurnRiskLevel,
@@ -36,21 +32,40 @@ import {
   EmptyState,
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
+import { isSystemActivity, showPeopleFilter, splitActivityFeed } from '@/lib/leads/activity-feed';
+import { ScoreChangeRow } from '@/components/leads/ScoreChangeRow';
+import { SystemUpdatesGroup } from '@/components/leads/SystemUpdatesGroup';
+import { ActivityCountLine } from '@/components/leads/ActivityCountLine';
+import { ActivityFilterBar } from '@/components/leads/ActivityFilterBar';
+import { LeadEmailsTab } from '@/components/leads/LeadEmailsTab';
+import { leadEmailRows } from '@/lib/leads/lead-emails';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
-import { revalidateLeadCaches, revalidateLeadConversionCaches } from '../actions';
+import { revalidateLeadCaches } from '../actions';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
-import { MoreActionsButton } from '@/components/shared/more-actions-button';
-import { PinButton } from '@/components/home/PinButton';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
-import { leadScoreDisplay } from '@/lib/leads/score-display';
+import {
+  FEW_SIGNALS_LABEL,
+  FEW_SIGNALS_TITLE,
+  LOW_CONFIDENCE_LABEL,
+  LOW_CONFIDENCE_TITLE,
+  leadScoreDisplay,
+} from '@/lib/leads/score-display';
+import { QualifyLeadDialog } from '@/components/leads/QualifyLeadDialog';
+import { ConvertLeadDialog } from '@/components/leads/ConvertLeadDialog';
+import { LeadPageHeader, leadHeaderSheetActions } from '@/components/leads/LeadPageHeader';
 
 /** #1218: the lead's score, or "Not scored" when no real AI score exists. */
 function LeadScoreValue({
   score,
   scoringStatus,
-}: Readonly<{ score: number | null | undefined; scoringStatus?: string | null }>) {
-  const display = leadScoreDisplay(score, scoringStatus);
+  scoreConfidence,
+}: Readonly<{
+  score: number | null | undefined;
+  scoringStatus?: string | null;
+  scoreConfidence?: number | null;
+}>) {
+  const display = leadScoreDisplay(score, scoringStatus, scoreConfidence);
   if (display.kind === 'not-scored') {
     return (
       <span className="text-slate-500 dark:text-slate-400" title={display.title}>
@@ -61,9 +76,21 @@ function LeadScoreValue({
   return (
     <span>
       {display.score}/100
-      {display.needsReview && (
-        <span className="ml-1 text-xs font-normal text-amber-600 dark:text-amber-400">
-          (low confidence, needs review)
+      {display.flag === 'low-confidence' && (
+        <span
+          className="ml-1 text-xs font-normal text-red-600 dark:text-red-400"
+          title={LOW_CONFIDENCE_TITLE}
+        >
+          {LOW_CONFIDENCE_LABEL}
+        </span>
+      )}
+      {display.flag === 'few-signals' && (
+        <span
+          className="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400"
+          title={FEW_SIGNALS_TITLE}
+        >
+          {FEW_SIGNALS_LABEL}
+          <span className="sr-only">. {FEW_SIGNALS_TITLE}</span>
         </span>
       )}
     </span>
@@ -91,13 +118,21 @@ import {
   type ActivityType,
   getActivityIcon,
   getActivityIconBg,
+  formatEstimatedValue,
   formatRelativeTime,
+  httpUrlOrNull,
+  insightRecommendations,
+  leadActivityMetrics,
+  displayActivityText,
+  leadCompanyIfDistinct,
+  mergeEmailEngagement,
   leadDisplayName,
+  leadExportFields,
+  cleanActivityText,
 } from '@/lib/leads/lead-format';
 import { LeadTimeline } from '@/components/leads/lead-timeline';
 import { RestrictionBanner } from '@/components/privacy/RestrictionBanner';
 
-// Common nullable date type
 type DateStringNull = Date | string | null;
 
 // Tab types matching Contact360 pattern
@@ -141,6 +176,14 @@ function engagementImpact(score: number): ImpactLevel {
 }
 
 // Resolve churn factor impact level for days since last contact
+/** Whole days since a date, or null when there is none or it is unreadable. */
+function wholeDaysSince(value: string | Date | null | undefined): number | null {
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) return null;
+  return Math.max(0, Math.floor((Date.now() - time) / 86_400_000));
+}
+
 function lastContactImpact(days: number): ImpactLevel {
   if (days > 30) return 'HIGH';
   if (days > 14) return 'MEDIUM';
@@ -186,12 +229,9 @@ function buildNextBestActions(insight: {
     const icon = resolveActionIcon(insight.nextBestAction.toUpperCase());
     actions.push({ icon, label: insight.nextBestAction, primary: true });
   }
-  const recs = (insight.recommendations as string[]) || [];
+  const recs = insightRecommendations(insight.recommendations);
   if (recs.length > 0 && recs[0] !== insight.nextBestAction) {
     actions.push({ icon: 'auto_awesome', label: recs[0], primary: false });
-  }
-  if (actions.length === 0) {
-    actions.push({ icon: 'calendar_add_on', label: 'Schedule Discovery Call', primary: true });
   }
   return actions;
 }
@@ -235,15 +275,19 @@ interface Activity {
     // Web form
     source?: string;
     message?: string;
-    // Score update
+    // Score update: the API writes previousScore and newScore, the events-worker score
     oldScore?: number;
+    previousScore?: number;
     newScore?: number;
+    score?: number;
+    firstScore?: boolean;
     // Email
     subject?: string;
     preview?: string;
     opened?: boolean;
     clicked?: boolean;
     openCount?: number;
+    direction?: string;
     // Call
     duration?: string;
     outcome?: 'connected' | 'voicemail' | 'no-answer';
@@ -277,6 +321,7 @@ interface LeadWithRelations {
   source: string;
   score: number;
   scoringStatus?: string | null;
+  scoreConfidence?: number | null;
   createdAt: string | Date;
   updatedAt: string | Date;
   // New Lead 360 fields
@@ -315,6 +360,8 @@ interface LeadWithRelations {
     name: string;
     size: string;
     uploadedAt: string | Date;
+    /** Stored address of the file (LeadFile.url), when there is one. */
+    url?: string | null;
   }>;
   tasks?: Array<{
     id: string;
@@ -323,7 +370,8 @@ interface LeadWithRelations {
     priority: string | null;
     status: string;
   }>;
-  aiInsight?: {
+  /** The lead's AI insight rows (LeadAIInsight; at most one per lead). */
+  aiInsights?: Array<{
     id: string;
     conversionProbability: number;
     estimatedValue: number;
@@ -335,21 +383,10 @@ interface LeadWithRelations {
     nextBestAction: string | null;
     recommendations: unknown;
     icpMatch: string | null;
-  } | null;
+  }>;
   accountId?: string | null;
   account?: { id: string; name: string } | null;
 }
-
-// Activity type filter options
-const activityTypeFilters: { value: ActivityType | 'all'; label: string; icon: string }[] = [
-  { value: 'all', label: 'All', icon: '­ƒôï' },
-  { value: 'email', label: 'Emails', icon: '­ƒôº' },
-  { value: 'call', label: 'Calls', icon: '­ƒô×' },
-  { value: 'note', label: 'Notes', icon: '­ƒôØ' },
-  { value: 'meeting', label: 'Meetings', icon: '­ƒôà' },
-  { value: 'web_form', label: 'Web Forms', icon: '­ƒîÉ' },
-  { value: 'score_update', label: 'Scores', icon: '­ƒôè' },
-];
 
 // LeadStatusBadge + TemperatureBadge now live in
 // '@/components/leads/lead-detail' (imported above)
@@ -375,7 +412,7 @@ function matchesActivitySearch(activity: Activity, query: string): boolean {
   const q = query.toLowerCase();
   return (
     activity.title.toLowerCase().includes(q) ||
-    activity.description.toLowerCase().includes(q) ||
+    displayActivityText(activity.description).toLowerCase().includes(q) ||
     activity.user.toLowerCase().includes(q) ||
     !!activity.metadata?.subject?.toLowerCase().includes(q) ||
     !!activity.metadata?.preview?.toLowerCase().includes(q) ||
@@ -396,11 +433,10 @@ function filterActivity(
 }
 
 function getCallOutcomeBadge(outcome: string | undefined): { cls: string; label: string } {
-  if (outcome === 'connected')
-    return { cls: 'bg-green-100 text-green-700', label: 'Ô£ô Connected' };
+  if (outcome === 'connected') return { cls: 'bg-green-100 text-green-700', label: '✓ Connected' };
   if (outcome === 'voicemail')
-    return { cls: 'bg-yellow-100 text-yellow-700', label: '­ƒô× Voicemail' };
-  return { cls: 'bg-red-100 text-red-700', label: 'Ô£ù No Answer' };
+    return { cls: 'bg-yellow-100 text-yellow-700', label: '📞 Voicemail' };
+  return { cls: 'bg-red-100 text-red-700', label: '✗ No Answer' };
 }
 
 // formatRelativeTime → '@/lib/leads/lead-format'; SourceBadge →
@@ -436,18 +472,7 @@ function formatDate(dateString: string, timezone: string): string {
 // getActivityIcon + getActivityIconBg now live in
 // '@/lib/leads/lead-format' (imported above)
 
-function getSentimentTrendStyle(trend?: string): string {
-  switch (trend) {
-    case 'improving':
-      return 'text-green-600';
-    case 'declining':
-      return 'text-red-600';
-    default:
-      return 'text-slate-600';
-  }
-}
-
-// ÔöÇÔöÇÔöÇ Sub-components extracted to reduce cognitive complexity ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Sub-components extracted to reduce cognitive complexity ─────────────────
 
 function LeadLoadingSkeleton() {
   return (
@@ -566,7 +591,7 @@ function LeadErrorView({
   );
 }
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─────────────────────────────────────────────────────────────────────────────
 
 type LeadDialogsLead = {
   id: string;
@@ -576,60 +601,6 @@ type LeadDialogsLead = {
   email: string;
 };
 
-function LeadConvertButton({
-  lead,
-  convertMutation,
-  onOpenConvert,
-}: {
-  lead: LeadDialogsLead & { status: string };
-  convertMutation: { isPending: boolean };
-  onOpenConvert: () => void;
-}) {
-  if (lead.status === 'CONVERTED') return null;
-  const isConvertible = lead.status === 'QUALIFIED';
-  let convertTooltipText: string;
-  if (lead.status === 'LOST') {
-    convertTooltipText = 'Lost leads cannot be converted. Reopen the lead first.';
-  } else if (lead.status === 'UNQUALIFIED') {
-    convertTooltipText = 'Disqualified leads cannot be converted.';
-  } else if (lead.status === 'NEGOTIATING') {
-    convertTooltipText = 'Lead is in negotiation. Qualify the lead first to convert.';
-  } else {
-    convertTooltipText = 'Lead must be qualified before conversion.';
-  }
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span
-            tabIndex={isConvertible ? undefined : 0}
-            aria-label={isConvertible ? undefined : convertTooltipText}
-          >
-            <button
-              onClick={onOpenConvert}
-              disabled={!isConvertible || convertMutation.isPending}
-              aria-label={convertMutation.isPending ? 'Converting lead' : 'Convert lead'}
-              className="flex items-center gap-2 px-3 sm:px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-            >
-              <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
-                transform
-              </span>{' '}
-              <span className="hidden sm:inline">
-                {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
-              </span>
-            </button>
-          </span>
-        </TooltipTrigger>
-        {!isConvertible && (
-          <TooltipContent>
-            <p>{convertTooltipText}</p>
-          </TooltipContent>
-        )}
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
-
 function LeadDialogs({
   lead,
   deleteConfirmOpen,
@@ -638,13 +609,6 @@ function LeadDialogs({
   archiveConfirmOpen,
   setArchiveConfirmOpen,
   archiveMutation,
-  convertConfirmOpen,
-  setConvertConfirmOpen,
-  convertMutation,
-  convertCreateAccount,
-  setConvertCreateAccount,
-  convertAccountName,
-  setConvertAccountName,
   logCallOpen,
   setLogCallOpen,
   logCallTitle,
@@ -673,16 +637,6 @@ function LeadDialogs({
         | 'LOST';
     }) => void;
   };
-  convertConfirmOpen: boolean;
-  setConvertConfirmOpen: (v: boolean) => void;
-  convertMutation: {
-    isPending: boolean;
-    mutate: (args: { leadId: string; createAccount: boolean; accountName?: string }) => void;
-  };
-  convertCreateAccount: boolean;
-  setConvertCreateAccount: (v: boolean) => void;
-  convertAccountName: string;
-  setConvertAccountName: (v: string) => void;
   logCallOpen: boolean;
   setLogCallOpen: (v: boolean) => void;
   logCallTitle: string;
@@ -747,80 +701,6 @@ function LeadDialogs({
               onClick={() => archiveMutation.mutate({ id: lead.id, status: 'LOST' })}
             >
               {archiveMutation.isPending ? 'Archiving...' : 'Archive'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Convert Lead Confirmation Dialog */}
-      <AlertDialog
-        open={convertConfirmOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setConvertCreateAccount(true);
-            setConvertAccountName('');
-          }
-          setConvertConfirmOpen(open);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Convert Lead to Contact</AlertDialogTitle>
-            <AlertDialogDescription>
-              Convert {leadDisplayName(lead)} to a contact record? This action will change the lead
-              status to CONVERTED and cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex flex-col gap-3 py-2">
-            <label
-              htmlFor="convert-create-account"
-              className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300"
-            >
-              <input
-                type="checkbox"
-                checked={convertCreateAccount}
-                onChange={(e) => setConvertCreateAccount(e.target.checked)}
-                id="convert-create-account"
-                className="rounded border-slate-300 dark:border-slate-600 text-[#2a78f6] focus:ring-[#2a78f6]"
-              />{' '}
-              Also create an Account record
-            </label>
-            {convertCreateAccount && (
-              <div>
-                <label
-                  htmlFor="convert-account-name"
-                  className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-                >
-                  Account name
-                </label>
-                <input
-                  id="convert-account-name"
-                  type="text"
-                  value={convertAccountName}
-                  onChange={(e) => setConvertAccountName(e.target.value)}
-                  placeholder={lead.company || 'Company name'}
-                  maxLength={200}
-                  className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
-                />
-              </div>
-            )}
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={convertMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                convertMutation.mutate({
-                  leadId: lead.id,
-                  createAccount: convertCreateAccount,
-                  accountName:
-                    convertCreateAccount && convertAccountName.trim()
-                      ? convertAccountName.trim()
-                      : undefined,
-                });
-              }}
-              disabled={convertMutation.isPending}
-            >
-              {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -900,9 +780,9 @@ function LeadDialogs({
   );
 }
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─────────────────────────────────────────────────────────────────────────────
 
-// ÔöÇÔöÇÔöÇ Sub-components for Lead360Page tab panels and layout sections ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Sub-components for Lead360Page tab panels and layout sections ────────────
 
 // LeadProfileData + LeadMetrics now live in
 // '@/components/leads/lead-detail' (imported above)
@@ -912,7 +792,7 @@ function LeadDialogs({
 // LeadOwnerCard + LeadLeftSidebar (now LeadDetail) live in
 // '@/components/leads/lead-detail' (imported above)
 
-// ÔöÇÔöÇÔöÇ Tab panel sub-components ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Tab panel sub-components ─────────────────────────────────────────────────
 
 interface LeadOverviewTabProps {
   lead: LeadProfileData;
@@ -1010,7 +890,11 @@ function LeadOverviewTab({
           <div>
             <dt className="text-sm text-slate-500 dark:text-slate-400">Lead Score</dt>
             <dd className="text-sm font-medium text-slate-900 dark:text-white">
-              <LeadScoreValue score={lead.score} scoringStatus={lead.scoringStatus} />
+              <LeadScoreValue
+                score={lead.score}
+                scoringStatus={lead.scoringStatus}
+                scoreConfidence={lead.scoreConfidence}
+              />
             </dd>
           </div>
         </dl>
@@ -1026,7 +910,7 @@ function LeadOverviewTab({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Activity rich preview (module-level to avoid inline function) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Activity rich preview (module-level to avoid inline function) ────────────
 
 function ActivityRichPreview({ activity }: { activity: Activity }) {
   if (!activity.metadata) return null;
@@ -1040,20 +924,7 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
       </div>
     );
   }
-  if (activity.type === 'score_update') {
-    return (
-      <div className="mt-2 flex items-center gap-2">
-        <span className="text-xs text-slate-500">Score changed from</span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
-          {meta.oldScore}
-        </span>
-        <span className="material-symbols-outlined text-slate-400 !text-sm">arrow_forward</span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
-          {meta.newScore}
-        </span>
-      </div>
-    );
-  }
+  if (activity.type === 'score_update') return <ScoreChangeRow meta={meta} />;
   if (activity.type === 'email') {
     return (
       <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
@@ -1092,11 +963,18 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
             </span>
             {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
           </div>
-          {meta.recordingUrl && (
-            <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded transition-colors">
-              <span className="material-symbols-outlined !text-[16px]">play_arrow</span> Play
-              Recording
-            </button>
+          {httpUrlOrNull(meta.recordingUrl) && (
+            <a
+              href={httpUrlOrNull(meta.recordingUrl) ?? undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded transition-colors"
+            >
+              <span aria-hidden="true" className="material-symbols-outlined !text-[16px]">
+                play_arrow
+              </span>{' '}
+              Play Recording
+            </a>
           )}
         </div>
       </div>
@@ -1109,7 +987,7 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
           <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
             <span className="material-symbols-outlined !text-[16px]">location_on</span>{' '}
             {meta.location}
-            {meta.duration && <span className="text-slate-400">ÔÇó {meta.duration}</span>}
+            {meta.duration && <span className="text-slate-400">• {meta.duration}</span>}
           </div>
         )}
         {meta.attendees && meta.attendees.length > 0 && (
@@ -1124,7 +1002,7 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
   return null;
 }
 
-// ÔöÇÔöÇÔöÇ Activity timeline item ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Activity timeline item ───────────────────────────────────────────────────
 
 interface ActivityTimelineItemProps {
   activity: Activity;
@@ -1164,18 +1042,18 @@ function ActivityTimelineItem({
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
-          <div className="flex-1">
+          <div className="min-w-0 flex-1 break-words">
             <p className="text-sm font-semibold text-slate-900 dark:text-white">{activity.title}</p>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-              {activity.description}
+              {displayActivityText(activity.description)}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              {activity.user} ÔÇó {formatRelativeTime(activity.timestamp, timezone)}
+              {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
             </p>
           </div>
           <button
             onClick={() => onToggleExpand(activity.id)}
-            className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
+            className="shrink-0 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
           >
             <span
               className={`material-symbols-outlined !text-[18px] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -1211,7 +1089,7 @@ function ActivityTimelineItem({
                   >
                     <p className="text-sm text-slate-600 dark:text-slate-400">{comment.text}</p>
                     <p className="text-xs text-slate-500 mt-1">
-                      {comment.user} ÔÇó {formatRelativeTime(comment.timestamp, timezone)}
+                      {comment.user} • {formatRelativeTime(comment.timestamp, timezone)}
                     </p>
                   </div>
                 ))}
@@ -1225,107 +1103,7 @@ function ActivityTimelineItem({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Activity tab filter bar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-
-interface ActivityFilterBarProps {
-  searchQuery: string;
-  onSearchChange: (q: string) => void;
-  activityTypeFilter: ActivityType | 'all';
-  onTypeFilterChange: (f: ActivityType | 'all') => void;
-  personFilter: string;
-  onPersonFilterChange: (p: string) => void;
-  personFilters: { value: string; label: string }[];
-  aiInsightsSentimentTrend: string | null;
-  aiInsightsLastEngagementDays: number;
-  onClearFilters: () => void;
-}
-
-function ActivityFilterBar({
-  searchQuery,
-  onSearchChange,
-  activityTypeFilter,
-  onTypeFilterChange,
-  personFilter,
-  onPersonFilterChange,
-  personFilters,
-  aiInsightsSentimentTrend,
-  aiInsightsLastEngagementDays,
-  onClearFilters,
-}: ActivityFilterBarProps) {
-  return (
-    <div className="mb-6 space-y-4">
-      <div className="relative">
-        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 !text-[18px] text-slate-400">
-          search
-        </span>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search activities..."
-          className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6] placeholder:text-slate-400"
-        />
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {activityTypeFilters.map((filter) => (
-          <button
-            key={filter.value}
-            onClick={() => onTypeFilterChange(filter.value)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              activityTypeFilter === filter.value
-                ? 'bg-[#2a78f6] text-white'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            <span>{filter.icon}</span> {filter.label}
-          </button>
-        ))}
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-500 font-medium">Filter by:</span>
-        <select
-          value={personFilter}
-          onChange={(e) => onPersonFilterChange(e.target.value)}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6]"
-        >
-          {personFilters.map((filter) => (
-            <option key={filter.value} value={filter.value}>
-              {filter.label}
-            </option>
-          ))}
-        </select>
-        {(activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery) && (
-          <button onClick={onClearFilters} className="text-xs text-[#2a78f6] hover:underline">
-            Clear filters
-          </button>
-        )}
-      </div>
-      {aiInsightsSentimentTrend && (
-        <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
-          <div className="w-8 h-8 rounded-full bg-[#2a78f6]/10 flex items-center justify-center">
-            <span className="material-symbols-outlined !text-[18px] text-[#2a78f6]">
-              auto_awesome
-            </span>
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-slate-900 dark:text-white">
-              Sentiment is{' '}
-              <span className={getSentimentTrendStyle(aiInsightsSentimentTrend)}>
-                {aiInsightsSentimentTrend}
-              </span>
-            </p>
-            <p className="text-xs text-slate-500">
-              Last engagement: {aiInsightsLastEngagementDays} day
-              {aiInsightsLastEngagementDays === 1 ? '' : 's'} ago
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ÔöÇÔöÇÔöÇ Activity tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Activity tab ─────────────────────────────────────────────────────────────
 
 interface LeadActivityTabProps {
   leadId: string;
@@ -1339,7 +1117,9 @@ interface LeadActivityTabProps {
   personFilter: string;
   onPersonFilterChange: (p: string) => void;
   personFilters: { value: string; label: string }[];
+  showPeople: boolean;
   filteredActivities: Activity[];
+  systemActivities: Activity[];
   visibleActivities: Activity[];
   expandedActivities: Set<string>;
   onToggleExpand: (id: string) => void;
@@ -1365,7 +1145,9 @@ function LeadActivityTab({
   personFilter,
   onPersonFilterChange,
   personFilters,
+  showPeople,
   filteredActivities,
+  systemActivities,
   visibleActivities,
   expandedActivities,
   onToggleExpand,
@@ -1423,15 +1205,17 @@ function LeadActivityTab({
             personFilter={personFilter}
             onPersonFilterChange={onPersonFilterChange}
             personFilters={personFilters}
+            showPeople={showPeople}
             aiInsightsSentimentTrend={aiInsightsSentimentTrend}
             aiInsightsLastEngagementDays={aiInsightsLastEngagementDays}
             onClearFilters={onClearFilters}
           />
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-slate-500">
-              Showing {visibleActivities.length} of {filteredActivities.length} activities
-            </p>
-          </div>
+          <ActivityCountLine
+            shown={visibleActivities.length}
+            total={filteredActivities.length}
+            system={systemActivities.length}
+            filtered={personFilter !== 'all' || Boolean(searchQuery)}
+          />
           <div className="relative space-y-4" style={{ paddingLeft: 40 }}>
             <div
               className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700"
@@ -1448,6 +1232,26 @@ function LeadActivityTab({
                 renderActions={renderActions}
               />
             ))}
+            {/* COA sync, portal, score and status entries: one folded line (MVP-005). */}
+            <SystemUpdatesGroup
+              count={systemActivities.length}
+              deepLinkedId={
+                systemActivities.find((a) => isDeepLinkedActivity(a.id, selectedActivityId))?.id ??
+                null
+              }
+            >
+              {systemActivities.map((activity) => (
+                <ActivityTimelineItem
+                  key={activity.id}
+                  activity={activity}
+                  isExpanded={expandedActivities.has(activity.id)}
+                  isDeepLinked={isDeepLinkedActivity(activity.id, selectedActivityId)}
+                  timezone={timezone}
+                  onToggleExpand={onToggleExpand}
+                  renderActions={renderActions}
+                />
+              ))}
+            </SystemUpdatesGroup>
           </div>
           {hasMore && (
             <button
@@ -1457,7 +1261,7 @@ function LeadActivityTab({
               Load more activities ({filteredActivities.length - visibleCount} remaining)
             </button>
           )}
-          {filteredActivities.length === 0 && (
+          {filteredActivities.length === 0 && systemActivities.length === 0 && (
             <EmptyState
               entity="activity"
               variant={
@@ -1474,7 +1278,7 @@ function LeadActivityTab({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Notes tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Notes tab ────────────────────────────────────────────────────────────────
 
 interface LeadNotesTabProps {
   notes: { id: string; content: string; author: string; createdAt: string }[];
@@ -1539,7 +1343,7 @@ function LeadNotesTab({
               <p className="text-sm text-slate-600 dark:text-slate-400">{note.content}</p>
               <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                 <span>{note.author}</span>
-                <span>ÔÇó</span>
+                <span>•</span>
                 <span>{formatRelativeTime(note.createdAt, timezone)}</span>
               </div>
             </div>
@@ -1552,86 +1356,20 @@ function LeadNotesTab({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Emails tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-
-interface LeadEmailsTabProps {
-  emails: { id: string; subject: string; status: string; sentAt: string; openCount: number }[];
-  timezone: string;
-  /** The lead's address: the empty-state "Compose email" opens compose addressed to it. */
-  leadEmail?: string | null;
-}
-
-function LeadEmailsTab({ emails, timezone, leadEmail }: LeadEmailsTabProps) {
-  return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Emails</h3>
-        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
-          <span className="material-symbols-outlined !text-[18px]">send</span> Compose
-        </button>
-      </div>
-      <div className="space-y-3">
-        {emails.length > 0 ? (
-          emails.map((email) => (
-            <div
-              key={email.id}
-              className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors"
-            >
-              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined !text-[20px] text-orange-600">mail</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-slate-900 dark:text-white truncate">
-                  {email.subject}
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${email.status === 'opened' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'}`}
-                  >
-                    {email.status === 'opened' ? `Opened ${email.openCount}x` : 'Sent'}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    {formatRelativeTime(email.sentAt, timezone)}
-                  </span>
-                </div>
-              </div>
-              <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg">
-                <span className="material-symbols-outlined !text-[18px]">open_in_new</span>
-              </button>
-            </div>
-          ))
-        ) : (
-          // Compose to this lead, never a blank recipient; no address means no button.
-          <EmptyState
-            entity="emails"
-            {...(leadEmail
-              ? {
-                  ctaHref: `/email/compose?to=${encodeURIComponent(leadEmail)}`,
-                  ctaLabel: 'Compose email',
-                }
-              : { showCta: false })}
-          />
-        )}
-      </div>
-    </Card>
-  );
-}
-
-// ÔöÇÔöÇÔöÇ Files tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Files tab ────────────────────────────────────────────────────────────────
 
 interface LeadFilesTabProps {
-  files: { id: string; name: string; size: string; uploadedAt: string }[];
+  files: { id: string; name: string; size: string; uploadedAt: string; url: string | null }[];
   timezone: string;
 }
 
+// Nothing in the app stores lead files yet, so the tab has no Upload action; it lists
+// what exists, with a download link when the file has a stored address.
 function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Files</h3>
-        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
-          <span className="material-symbols-outlined !text-[18px]">upload</span> Upload
-        </button>
       </div>
       <div className="space-y-3">
         {files.length > 0 ? (
@@ -1648,12 +1386,23 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
               <div className="flex-1">
                 <p className="font-medium text-slate-900 dark:text-white">{file.name}</p>
                 <p className="text-sm text-slate-500">
-                  {file.size} ÔÇó {formatRelativeTime(file.uploadedAt, timezone)}
+                  {file.size} • {formatRelativeTime(file.uploadedAt, timezone)}
                 </p>
               </div>
-              <button className="p-2 text-slate-500 hover:text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
-                <span className="material-symbols-outlined !text-[18px]">download</span>
-              </button>
+              {httpUrlOrNull(file.url) && (
+                <a
+                  href={httpUrlOrNull(file.url) ?? undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                  aria-label={`Download ${file.name}`}
+                  className="p-2 text-slate-500 hover:text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors"
+                >
+                  <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
+                    download
+                  </span>
+                </a>
+              )}
             </div>
           ))
         ) : (
@@ -1664,10 +1413,14 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
   );
 }
 
-// ÔöÇÔöÇÔöÇ AI Insights tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── AI Insights tab ─────────────────────────────────────────────────────────
 
 interface AiInsightsData {
-  qualificationScore: number;
+  /** The lead's stored score; shown only when scoringStatus says it is a real score. */
+  leadScore: number;
+  scoringStatus: string | null;
+  /** 0 to 1; null when the score was made before the confidence was stored. */
+  scoreConfidence: number | null;
   engagementLevel: string;
   engagementScore: number;
   conversionProbability: number;
@@ -1700,6 +1453,11 @@ function LeadAIInsightsTab({
   onRunAnalysis,
   scoreWithAIMutation,
 }: LeadAIInsightsTabProps) {
+  // UI-024: scoring and full analysis are separate. The score shows whenever the lead was
+  // scored, whether or not the full analysis has run.
+  const isScored =
+    leadScoreDisplay(aiInsights.leadScore, aiInsights.scoringStatus).kind === 'score';
+  const hasDealEstimate = aiInsights.estimatedValue > 0;
   return (
     <div className="space-y-6">
       {!hasAiInsight && (
@@ -1760,10 +1518,11 @@ function LeadAIInsightsTab({
             </div>
             <div>
               <p
-                className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
+                className={`text-2xl font-bold ${hasDealEstimate ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
               >
-                <span data-testid={hasAiInsight ? 'deal-value' : 'deal-value-null-state'}>
-                  {hasAiInsight ? `$${(aiInsights.estimatedValue / 1000).toFixed(0)}k` : '--'}
+                {/* The lead's own value, in pence; none (0) shows as "--", not "£0". */}
+                <span data-testid={hasDealEstimate ? 'deal-value' : 'deal-value-null-state'}>
+                  {hasDealEstimate ? formatEstimatedValue(aiInsights.estimatedValue) : '--'}
                 </span>
               </p>
               <p className="text-xs text-slate-500">Est. Deal Value</p>
@@ -1777,10 +1536,14 @@ function LeadAIInsightsTab({
             </div>
             <div>
               <p
-                className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
+                className={`text-2xl font-bold ${isScored ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
               >
-                <span data-testid={hasAiInsight ? 'lead-score-value' : 'lead-score-null-state'}>
-                  {hasAiInsight ? aiInsights.qualificationScore : '--'}
+                <span data-testid={isScored ? 'lead-score-value' : 'lead-score-null-state'}>
+                  <LeadScoreValue
+                    score={aiInsights.leadScore}
+                    scoringStatus={aiInsights.scoringStatus}
+                    scoreConfidence={aiInsights.scoreConfidence}
+                  />
                 </span>
               </p>
               <p className="text-xs text-slate-500">Lead Score</p>
@@ -1788,21 +1551,28 @@ function LeadAIInsightsTab({
           </div>
         </Card>
       </div>
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-          AI Recommendations
-        </h3>
-        <ul className="space-y-3">
-          {aiInsights.recommendations.map((rec, index) => (
-            <li key={`rec-${index}-${rec.slice(0, 20)}`} className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-[#2a78f6]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-medium text-[#2a78f6]">{index + 1}</span>
-              </div>
-              <p className="text-slate-600 dark:text-slate-400">{rec}</p>
-            </li>
-          ))}
-        </ul>
-      </Card>
+      {hasAiInsight && (
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+            AI Recommendations
+          </h3>
+          {aiInsights.recommendations.length === 0 && (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              This analysis made no recommendations.
+            </p>
+          )}
+          <ul className="space-y-3">
+            {aiInsights.recommendations.map((rec, index) => (
+              <li key={`rec-${index}-${rec.slice(0, 20)}`} className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#2a78f6]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-medium text-[#2a78f6]">{index + 1}</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400">{rec}</p>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
       <Card className="p-6">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
           Engagement Analysis
@@ -1845,7 +1615,7 @@ function LeadAIInsightsTab({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Right sidebar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Right sidebar ────────────────────────────────────────────────────────────
 
 interface LeadRightSidebarProps {
   hasAiInsight: boolean;
@@ -1868,6 +1638,8 @@ function LeadRightSidebar({
   onViewNotes,
   onViewTasks,
 }: LeadRightSidebarProps) {
+  const isScored =
+    leadScoreDisplay(aiInsights.leadScore, aiInsights.scoringStatus).kind === 'score';
   return (
     <aside className="lg:col-span-3 flex flex-col gap-6">
       {/* Lead IQ (AI Insights) */}
@@ -1877,9 +1649,6 @@ function LeadRightSidebar({
             <span className="material-symbols-outlined text-[#2a78f6]">auto_awesome</span>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Lead IQ</h3>
           </div>
-          <span className="text-[10px] bg-[#2a78f6]/10 text-[#2a78f6] px-1.5 py-0.5 rounded font-bold">
-            BETA
-          </span>
         </div>
         {!hasAiInsight && (
           <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1">
@@ -1893,16 +1662,25 @@ function LeadRightSidebar({
               <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                 Lead Score
               </span>
-              <span className="text-sm font-bold text-green-600">
-                {aiInsights.qualificationScore}/100
+              <span
+                data-testid="sidebar-lead-score"
+                className={`text-sm font-bold ${isScored ? 'text-green-600' : ''}`}
+              >
+                <LeadScoreValue
+                  score={aiInsights.leadScore}
+                  scoringStatus={aiInsights.scoringStatus}
+                  scoreConfidence={aiInsights.scoreConfidence}
+                />
               </span>
             </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-              <div
-                className="bg-green-500 h-2 rounded-full"
-                style={{ width: `${aiInsights.qualificationScore}%` }}
-              />
-            </div>
+            {isScored && (
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+                <div
+                  className="bg-green-500 h-2 rounded-full"
+                  style={{ width: `${aiInsights.leadScore}%` }}
+                />
+              </div>
+            )}
             <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{aiInsights.icpMatch}</p>
           </div>
           <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
@@ -1944,37 +1722,44 @@ function LeadRightSidebar({
               </div>
             )}
           </div>
-          <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-              Recommended Next Steps
-            </p>
-            <div className="space-y-2">
-              {aiInsights.nextBestActions.map((action) => (
-                <button
-                  key={action.label}
-                  className={`w-full text-left p-2 rounded border transition-colors group ${
-                    action.primary
-                      ? 'bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700 hover:border-[#2a78f6]/50'
-                      : 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#2a78f6]' : 'text-slate-500'}`}
+          {hasAiInsight && aiInsights.nextBestActions.length > 0 && (
+            <>
+              <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
+              <div data-testid="sidebar-next-steps">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Recommended Next Steps
+                </p>
+                {/* UI-022: these come from the analysis and have no action of their own, so
+                    they are a list, not buttons. */}
+                <ul className="space-y-2">
+                  {aiInsights.nextBestActions.map((action) => (
+                    <li
+                      key={action.label}
+                      className={`p-2 rounded border ${
+                        action.primary
+                          ? 'bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700'
+                          : 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700'
+                      }`}
                     >
-                      {action.icon}
-                    </span>
-                    <span
-                      className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200 group-hover:text-[#2a78f6]' : 'text-slate-600 dark:text-slate-300 group-hover:text-slate-900'}`}
-                    >
-                      {action.label}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          aria-hidden="true"
+                          className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#2a78f6]' : 'text-slate-500'}`}
+                        >
+                          {action.icon}
+                        </span>
+                        <span
+                          className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}
+                        >
+                          {action.label}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
         </div>
         <button
           onClick={onViewAIInsights}
@@ -2017,7 +1802,7 @@ function LeadRightSidebar({
                 </p>
                 <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                   <span>{note.author}</span>
-                  <span>ÔÇó</span>
+                  <span>•</span>
                   <span>{formatRelativeTime(note.createdAt, timezone)}</span>
                 </div>
               </div>
@@ -2035,18 +1820,11 @@ function LeadRightSidebar({
           </button>
         )}
       </Card>
-      {/* Similar Leads */}
-      <Card className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white">Similar Leads</h3>
-        </div>
-        <EmptyState entity="leads" showCta={false} className="py-2" />
-      </Card>
     </aside>
   );
 }
 
-// ÔöÇÔöÇÔöÇ Tab bar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Tab bar (wraps on a phone: seven tabs do not fit 390px) ──────────────────
 
 interface LeadTabBarProps {
   tabs: Tab[];
@@ -2068,12 +1846,12 @@ function LeadTabBar({
 }: LeadTabBarProps) {
   return (
     <Card>
-      <div className="flex border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto">
+      <div className="flex flex-wrap border-b border-slate-200 dark:border-slate-800 px-2 sm:flex-nowrap sm:overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+            className={`px-3 py-3 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap sm:px-4 sm:py-4 ${
               activeTab === tab.id
                 ? 'text-[#2a78f6] border-[#2a78f6]'
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'
@@ -2103,82 +1881,6 @@ function LeadTabBar({
     </Card>
   );
 }
-
-// ÔöÇÔöÇÔöÇ Page header ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-
-interface LeadPageHeaderProps {
-  lead: LeadProfileData;
-  convertMutation: { isPending: boolean };
-  onOpenConvert: () => void;
-  onEdit: () => void;
-  onLogCall: () => void;
-  onOpenActionSheet: () => void;
-}
-
-function LeadPageHeader({
-  lead,
-  convertMutation,
-  onOpenConvert,
-  onEdit,
-  onLogCall,
-  onOpenActionSheet,
-}: LeadPageHeaderProps) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-      <div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-          <Link href="/leads" className="hover:text-[#2a78f6]">
-            Leads
-          </Link>
-          <span className="material-symbols-outlined !text-sm">chevron_right</span>
-          <span className="font-medium text-slate-900 dark:text-white">
-            {leadDisplayName(lead)}
-          </span>
-        </div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          {leadDisplayName(lead)}
-        </h1>
-      </div>
-      <div className="flex flex-wrap gap-2 sm:gap-3">
-        <LeadConvertButton
-          lead={lead}
-          convertMutation={convertMutation}
-          onOpenConvert={onOpenConvert}
-        />
-        <button
-          onClick={onEdit}
-          aria-label="Edit lead"
-          className="flex items-center gap-2 px-3 sm:px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-        >
-          <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
-            edit
-          </span>{' '}
-          <span className="hidden sm:inline">Edit</span>
-        </button>
-        <button
-          onClick={onLogCall}
-          className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
-        >
-          <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
-            call
-          </span>{' '}
-          Log Call
-        </button>
-        <PinButton
-          entityType="lead"
-          entityId={lead.id}
-          title={leadDisplayName(lead)}
-          subtitle={lead.company || undefined}
-          icon="person"
-          url={`/leads/${lead.id}`}
-        />
-        <MoreActionsButton onClick={onOpenActionSheet} />
-      </div>
-    </div>
-  );
-}
-
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 const LEAD_VALID_TABS: TabId[] = [
   'overview',
@@ -2228,6 +1930,7 @@ function transformLeadForUI(apiLead: LeadWithRelations) {
     source: apiLead.source as LeadSource,
     score: apiLead.score,
     scoringStatus: apiLead.scoringStatus ?? null,
+    scoreConfidence: apiLead.scoreConfidence ?? null,
     temperature: getTemperature(apiLead.score),
     createdAt: apiLead.createdAt,
     lastContactedAt: apiLead.lastContactedAt || apiLead.createdAt,
@@ -2250,14 +1953,6 @@ function transformLeadForUI(apiLead: LeadWithRelations) {
   };
 }
 
-function getConvertErrorDescription(msg: string): string {
-  if (msg.includes('Only qualified')) return 'Only leads with QUALIFIED status can be converted.';
-  if (msg.includes('already converted'))
-    return 'This lead has already been converted to a contact.';
-  if (msg.includes('not found')) return 'Lead not found. It may have been deleted.';
-  return msg;
-}
-
 function isLeadAuthError(
   error: { data?: { code?: string } | null; message?: string } | null | undefined
 ): boolean {
@@ -2273,8 +1968,21 @@ function reportCacheRevalidationError(error: unknown) {
   console.error('Failed to revalidate lead caches:', error);
 }
 
+/**
+ * The lead's stored insight, shown only once the scoring job has run on the lead (SCORED
+ * or NEEDS_REVIEW). The API returns it as `aiInsights` (LeadAIInsight rows); opening a
+ * lead used to save a row derived from heuristics, so a never-scored lead's row is not an
+ * analysis.
+ */
+function scoredLeadInsight<T>(
+  scoringStatus: string | null | undefined,
+  insights: readonly T[] | undefined
+): T | null {
+  if (scoringStatus !== 'SCORED' && scoringStatus !== 'NEEDS_REVIEW') return null;
+  return insights?.[0] ?? null;
+}
+
 export default function Lead360Page() {
-  // Get lead ID from URL params
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -2283,6 +1991,7 @@ export default function Lead360Page() {
 
   // Require authentication - redirects to login if not authenticated
   const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
+  const canLoadLead = isAuthenticated && !authLoading && !!leadId;
 
   // PG-059 Recently Viewed: record every successful detail page load.
   useEffect(() => {
@@ -2304,9 +2013,11 @@ export default function Lead360Page() {
     data: rawApiLead,
     isLoading,
     error,
-  } = api.lead.getById.useQuery(
-    { id: leadId },
-    { enabled: isAuthenticated && !authLoading && !!leadId }
+  } = api.lead.getById.useQuery({ id: leadId }, { enabled: canLoadLead });
+  // The open rate also reads the CRM's own email records for this lead's address.
+  const { data: emailEngagement } = api.emailLog.engagementForLead.useQuery(
+    { leadId },
+    { enabled: canLoadLead }
   );
 
   // Check for auth errors
@@ -2357,14 +2068,38 @@ export default function Lead360Page() {
     });
   }, [selectedActivityId, activeTab]);
 
+  // Emails tab "Open": show that activity in the timeline without changing the URL.
+  // Filters are cleared and enough rows shown so the activity is rendered, then it is
+  // expanded and scrolled to once the Activity tab has painted. Each Open scrolls again.
+  const [pendingScrollId, setPendingScrollId] = useState<string | null>(null);
+  const openActivityInTimeline = (activityId: string) => {
+    setActivityTypeFilter('all');
+    setPersonFilter('all');
+    setSearchQuery('');
+    const index = activities.findIndex((a) => a.id === activityId);
+    if (index >= 0) setVisibleCount((count) => Math.max(count, index + 1));
+    setExpandedActivities((prev) => new Set(prev).add(activityId));
+    setActiveTab('activity');
+    setPendingScrollId(activityId);
+  };
+  useEffect(() => {
+    if (!pendingScrollId || activeTab !== 'activity') return;
+    const id = pendingScrollId;
+    setPendingScrollId(null);
+    requestAnimationFrame(() => {
+      document
+        .querySelector(`[data-activity-id="${CSS.escape(id)}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, [pendingScrollId, activeTab]);
+
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [logCallOpen, setLogCallOpen] = useState(false);
   const [logCallTitle, setLogCallTitle] = useState('');
   const [logCallDescription, setLogCallDescription] = useState('');
   const [convertConfirmOpen, setConvertConfirmOpen] = useState(false);
-  const [convertCreateAccount, setConvertCreateAccount] = useState(true);
-  const [convertAccountName, setConvertAccountName] = useState('');
+  const [qualifyOpen, setQualifyOpen] = useState(false);
 
   // API utils for cache invalidation
   const utils = api.useUtils();
@@ -2391,22 +2126,6 @@ export default function Lead360Page() {
     },
     onError: (err) => {
       toast({ title: 'Archive failed', description: err.message, variant: 'destructive' });
-    },
-  });
-
-  const convertMutation = api.lead.convert.useMutation({
-    onSuccess: (data) => {
-      if (user?.id) revalidateLeadConversionCaches(user.id).catch(reportCacheRevalidationError);
-      setConvertConfirmOpen(false);
-      toast({ title: 'Lead converted', description: 'Lead has been converted to a contact.' });
-      router.push(`/contacts/${data.contactId}`);
-    },
-    onError: (err) => {
-      toast({
-        title: 'Conversion failed',
-        description: getConvertErrorDescription(err.message),
-        variant: 'destructive',
-      });
     },
   });
 
@@ -2470,8 +2189,7 @@ export default function Lead360Page() {
     return apiLead.activities.map((act) => ({
       id: act.id,
       type: mapActivityType(act.type as DBActivityType),
-      title: act.title,
-      description: act.description || '',
+      ...cleanActivityText(act),
       timestamp: typeof act.timestamp === 'string' ? act.timestamp : act.timestamp.toISOString(),
       user: act.userName,
       metadata: act.metadata as Activity['metadata'],
@@ -2499,6 +2217,7 @@ export default function Lead360Page() {
       id: file.id,
       name: file.name,
       size: file.size,
+      url: file.url ?? null,
       uploadedAt:
         typeof file.uploadedAt === 'string' ? file.uploadedAt : file.uploadedAt.toISOString(),
     }));
@@ -2508,24 +2227,18 @@ export default function Lead360Page() {
   const tasks = useMemo(() => transformLeadTasks(apiLead?.tasks), [apiLead?.tasks]);
 
   // Derive emails from email activities
-  const emails = useMemo(() => {
-    return activities
-      .filter((act) => act.type === 'email')
-      .map((act) => ({
-        id: act.id,
-        subject: act.metadata?.subject || act.title,
-        status: act.metadata?.opened ? 'opened' : 'sent',
-        sentAt: act.timestamp,
-        openCount: act.metadata?.openCount || 0,
-      }));
-  }, [activities]);
+  const emails = useMemo(() => leadEmailRows(activities), [activities]);
+
+  const apiInsight = scoredLeadInsight(apiLead?.scoringStatus, apiLead?.aiInsights);
 
   // Transform AI insights from API
   const aiInsights = useMemo(() => {
-    const insight = apiLead?.aiInsight;
+    const insight = apiInsight;
     if (!insight) {
       return {
-        qualificationScore: lead?.score || 0,
+        leadScore: lead?.score ?? 0,
+        scoringStatus: lead?.scoringStatus ?? null,
+        scoreConfidence: lead?.scoreConfidence ?? null,
         engagementLevel: 'Not analyzed',
         engagementScore: 0,
         conversionProbability: 0,
@@ -2534,12 +2247,10 @@ export default function Lead360Page() {
         sentiment: 'Not analyzed',
         sentimentTrend: null as string | null,
         lastEngagementDays: 0,
-        nextBestAction: 'Gather more information about this lead',
-        nextBestActions: [
-          { icon: 'calendar_add_on', label: 'Schedule Discovery Call', primary: true },
-          { icon: 'mail', label: 'Send Follow-up Email', primary: false },
-        ] as { icon: string; label: string; primary: boolean }[],
-        recommendations: ['No AI recommendations available yet'],
+        // UI-022: no analysis means no next steps or recommendations, not invented ones.
+        nextBestAction: '',
+        nextBestActions: [] as { icon: string; label: string; primary: boolean }[],
+        recommendations: [] as string[],
         icpMatch: 'Not analyzed yet',
       };
     }
@@ -2548,29 +2259,37 @@ export default function Lead360Page() {
     const engagementLevel = insight.engagementScore >= 70 ? 'High' : mediumOrLow;
 
     return {
-      qualificationScore: lead?.score || insight.engagementScore,
+      leadScore: lead?.score ?? 0,
+      scoringStatus: lead?.scoringStatus ?? null,
+      scoreConfidence: lead?.scoreConfidence ?? null,
       engagementLevel,
       engagementScore: insight.engagementScore,
       conversionProbability: insight.conversionProbability,
-      estimatedValue: insight.estimatedValue,
+      // The insight's estimatedValue is not a real estimate (the scoring job derives it
+      // from the score, or multiplies a value already in pence by 100), so the deal
+      // value is the lead's own, in pence, until a writer stores a real one (#1289).
+      estimatedValue: lead?.estimatedValue || 0,
       churnRisk: insight.churnRisk,
       sentiment: insight.sentiment || 'Neutral',
-      sentimentTrend: insight.sentimentTrend,
-      lastEngagementDays: insight.lastEngagementDays,
+      // Not measured by any insight writer yet: the scoring job stores the constants
+      // 'stable' and 0. Shown again once a writer marks them as measured (#1289).
+      sentimentTrend: null,
+      lastEngagementDays: 0,
       nextBestAction: insight.nextBestAction || 'No action recommended',
       nextBestActions: buildNextBestActions(insight),
-      recommendations: (insight.recommendations as string[]) || [],
+      recommendations: insightRecommendations(insight.recommendations),
       icpMatch: insight.icpMatch || 'Not analyzed',
     };
-  }, [apiLead?.aiInsight, lead?.score, lead?.estimatedValue]);
+  }, [apiInsight, lead?.score, lead?.scoringStatus, lead?.scoreConfidence, lead?.estimatedValue]);
 
   // IFC-226: Null-state detection for AI insight styling
-  const hasAiInsight = !!apiLead?.aiInsight;
+  const hasAiInsight = !!apiInsight;
 
   // Transform AI insights to ChurnRiskData format (IFC-095)
   const churnRiskData: ChurnRiskData | null = useMemo(() => {
-    const insight = apiLead?.aiInsight;
+    const insight = apiInsight;
     if (!insight) return null;
+    const daysSinceContact = wholeDaysSince(apiLead?.lastContactedAt);
 
     // Map database churn risk level to component format
     const levelMap: Record<string, ChurnRiskLevel> = {
@@ -2609,22 +2328,25 @@ export default function Lead360Page() {
       level,
       confidence: derivedConfidence,
       slaHours: slaMap[level],
-      trend: (() => {
-        if (insight.sentimentTrend === 'IMPROVING') return 'IMPROVING';
-        if (insight.sentimentTrend === 'DECLINING') return 'DECLINING';
-        return 'STABLE';
-      })(),
+      // The stored sentiment trend is a placeholder (see aiInsights), so no trend is claimed.
+      trend: 'STABLE',
       factors: [
         {
           factor: 'Engagement Score',
           impact: engagementImpact(insight.engagementScore),
           value: `${insight.engagementScore}%`,
         },
-        {
-          factor: 'Days Since Contact',
-          impact: lastContactImpact(insight.lastEngagementDays),
-          value: `${insight.lastEngagementDays} days`,
-        },
+        // From the lead's own lastContactedAt; the insight's lastEngagementDays is a
+        // stored constant. Left out when the lead was never contacted.
+        ...(daysSinceContact === null
+          ? []
+          : [
+              {
+                factor: 'Days Since Contact',
+                impact: lastContactImpact(daysSinceContact),
+                value: `${daysSinceContact} day${daysSinceContact === 1 ? '' : 's'}`,
+              },
+            ]),
         {
           factor: 'Conversion Probability',
           impact: conversionImpact(insight.conversionProbability),
@@ -2632,11 +2354,11 @@ export default function Lead360Page() {
         },
       ],
     };
-  }, [apiLead?.aiInsight]);
+  }, [apiInsight, apiLead?.lastContactedAt]);
 
   // Transform AI insights to NextBestActionData format (IFC-095)
   const nextBestActionData: NextBestActionData | null = useMemo(() => {
-    const insight = apiLead?.aiInsight;
+    const insight = apiInsight;
     if (!insight?.nextBestAction) return null;
 
     const actionType = resolveNBAActionType(insight.nextBestAction.toUpperCase());
@@ -2650,7 +2372,7 @@ export default function Lead360Page() {
       confidence: insight.engagementScore / 100,
       successProbability: insight.conversionProbability / 100,
     };
-  }, [apiLead?.aiInsight]);
+  }, [apiInsight]);
 
   // Person filter options derived from activities
   const personFilters = useMemo(() => {
@@ -2677,21 +2399,28 @@ export default function Lead360Page() {
     [activities.length, tasks, notes.length, emails.length, files.length]
   );
 
-  // Activity reactions/comments ÔÇö hooks must be before any early returns
-  const filteredActivitiesAll = useMemo(
+  // Activity reactions/comments — hooks must be before any early returns
+  // Person-written activity newest first; system entries folded into one group (MVP-005).
+  const activityFeed = useMemo(
     () =>
-      activities.filter((activity) =>
-        filterActivity(activity, activityTypeFilter, personFilter, searchQuery)
+      splitActivityFeed(
+        activities,
+        activityTypeFilter as Parameters<typeof splitActivityFeed>[1],
+        (a) => filterActivity(a, 'all', personFilter, searchQuery)
       ),
     [activities, activityTypeFilter, personFilter, searchQuery]
   );
-  const visibleActivitiesAll = useMemo(
-    () => filteredActivitiesAll.slice(0, visibleCount),
-    [filteredActivitiesAll, visibleCount]
+  const filteredActivities = activityFeed.personal;
+  const { data: workspaceMembers } = api.user.list.useQuery({ limit: 2 });
+  const showPeople = showPeopleFilter(workspaceMembers?.users.length ?? 0);
+  const visibleActivities = useMemo(
+    () => filteredActivities.slice(0, visibleCount),
+    [filteredActivities, visibleCount]
   );
+  // The folded System updates render with comments and reactions too, so load theirs.
   const activityIdsForReactions = useMemo(
-    () => visibleActivitiesAll.map((a) => a.id),
-    [visibleActivitiesAll]
+    () => [...visibleActivities, ...activityFeed.system].map((a) => a.id),
+    [visibleActivities, activityFeed.system]
   );
   const { reactions: reactionsMap, toggleReaction } = useActivityReactions(
     activityIdsForReactions,
@@ -2769,21 +2498,14 @@ export default function Lead360Page() {
     );
   }
 
-  // Compute metrics from activities
-  const emailActivities = activities.filter((act) => act.type === 'email');
-  const meetingActivities = activities.filter((act) => act.type === 'meeting');
-  const emailsOpened = emailActivities.filter((act) => act.metadata?.opened).length;
+  // The open rate counts only emails the CRM tracks opens for, and touchpoints leave out
+  // system records (score and status changes).
   const leadMetrics = {
     estimatedValue: lead.estimatedValue,
-    emailsSent: emailActivities.length,
-    emailsOpened,
-    meetings: meetingActivities.length,
-    touchpoints: activities.length,
+    ...mergeEmailEngagement(leadActivityMetrics(activities), emailEngagement),
   };
 
   // Use pre-computed filtered/visible activities (hooks moved before early returns)
-  const filteredActivities = filteredActivitiesAll;
-  const visibleActivities = visibleActivitiesAll;
   const hasMore = visibleCount < filteredActivities.length;
 
   // Toggle activity expansion
@@ -2799,28 +2521,31 @@ export default function Lead360Page() {
     });
   };
 
-  // renderActivityActions closure ÔÇö depends on hook results from Lead360Page scope
-  const renderActivityActions = (activity: Activity) => (
-    <ActivityFeedItemActions
-      activityId={activity.id}
-      activityTitle={activity.title}
-      onReply={addComment}
-      onSubmitNote={(content) => addNoteMutation.mutate({ leadId, content })}
-      onToggleReaction={toggleReaction}
-      isSubmitting={addNoteMutation.isPending || isAddingComment}
-      shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/leads/${leadId}#activity-${activity.id}`}
-      reactions={reactionsMap[activity.id] ?? []}
-      currentUserId={user?.email ?? undefined}
-      comments={commentsMap[activity.id] ?? []}
-    />
-  );
+  // renderActivityActions closure — depends on hook results from Lead360Page scope.
+  // Reply, react, note and share belong on human activity, not on system records such as a
+  // score or status change (UI-021).
+  const renderActivityActions = (activity: Activity) =>
+    isSystemActivity(activity) ? null : (
+      <ActivityFeedItemActions
+        activityId={activity.id}
+        activityTitle={activity.title}
+        onReply={addComment}
+        onSubmitNote={(content) => addNoteMutation.mutate({ leadId, content })}
+        onToggleReaction={toggleReaction}
+        isSubmitting={addNoteMutation.isPending || isAddingComment}
+        shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/leads/${leadId}#activity-${activity.id}`}
+        reactions={reactionsMap[activity.id] ?? []}
+        currentUserId={user?.email ?? undefined}
+        comments={commentsMap[activity.id] ?? []}
+      />
+    );
 
   return (
     <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
       <LeadPageHeader
         lead={lead}
-        convertMutation={convertMutation}
         onOpenConvert={() => setConvertConfirmOpen(true)}
+        onOpenQualify={() => setQualifyOpen(true)}
         onEdit={() => router.push(`/leads/${lead.id}/edit`)}
         onLogCall={() => setLogCallOpen(true)}
         onOpenActionSheet={() => setActionSheetOpen(true)}
@@ -2836,11 +2561,17 @@ export default function Lead360Page() {
           type: 'lead',
           id: lead.id,
           title: leadDisplayName(lead),
-          subtitle: lead.company || undefined,
+          subtitle: leadCompanyIfDistinct(lead),
           icon: 'person',
           url: `/leads/${lead.id}`,
         }}
+        exportFields={apiLead ? leadExportFields(apiLead) : undefined}
         extraActions={[
+          ...leadHeaderSheetActions(lead, {
+            onOpenQualify: () => setQualifyOpen(true),
+            onOpenConvert: () => setConvertConfirmOpen(true),
+          }),
+          { label: 'Edit', icon: 'edit', onClick: () => router.push(`/leads/${lead.id}/edit`) },
           { label: 'Archive', icon: 'archive', onClick: () => setArchiveConfirmOpen(true) },
           {
             label: 'Delete',
@@ -2859,13 +2590,6 @@ export default function Lead360Page() {
         archiveConfirmOpen={archiveConfirmOpen}
         setArchiveConfirmOpen={setArchiveConfirmOpen}
         archiveMutation={archiveMutation}
-        convertConfirmOpen={convertConfirmOpen}
-        setConvertConfirmOpen={setConvertConfirmOpen}
-        convertMutation={convertMutation}
-        convertCreateAccount={convertCreateAccount}
-        setConvertCreateAccount={setConvertCreateAccount}
-        convertAccountName={convertAccountName}
-        setConvertAccountName={setConvertAccountName}
         logCallOpen={logCallOpen}
         setLogCallOpen={setLogCallOpen}
         logCallTitle={logCallTitle}
@@ -2873,6 +2597,20 @@ export default function Lead360Page() {
         logCallDescription={logCallDescription}
         setLogCallDescription={setLogCallDescription}
         logActivityMutation={logActivityMutation}
+      />
+
+      <QualifyLeadDialog
+        lead={lead}
+        userId={user?.id}
+        open={qualifyOpen}
+        onOpenChange={setQualifyOpen}
+      />
+      <ConvertLeadDialog
+        lead={lead}
+        userId={user?.id}
+        open={convertConfirmOpen}
+        onOpenChange={setConvertConfirmOpen}
+        initialMode="deal"
       />
 
       {/* Main 3-column grid */}
@@ -2914,7 +2652,9 @@ export default function Lead360Page() {
               personFilter={personFilter}
               onPersonFilterChange={setPersonFilter}
               personFilters={personFilters}
+              showPeople={showPeople}
               filteredActivities={filteredActivities}
+              systemActivities={activityFeed.system}
               visibleActivities={visibleActivities}
               expandedActivities={expandedActivities}
               onToggleExpand={toggleExpand}
@@ -2954,7 +2694,13 @@ export default function Lead360Page() {
           )}
 
           {activeTab === 'emails' && (
-            <LeadEmailsTab emails={emails} timezone={timezone} leadEmail={lead.email} />
+            <LeadEmailsTab
+              leadId={leadId}
+              emails={emails}
+              timezone={timezone}
+              leadEmail={lead?.email}
+              onOpenActivity={openActivityInTimeline}
+            />
           )}
 
           {activeTab === 'files' && <LeadFilesTab files={files} timezone={timezone} />}

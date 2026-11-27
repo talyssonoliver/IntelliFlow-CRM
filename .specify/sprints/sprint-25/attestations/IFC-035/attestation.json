@@ -1,0 +1,99 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-035",
+  "run_id": "ifc035-whatsapp-research-2026-11-22",
+  "attestor": "Claude Code (claude-sonnet-5-5), ifc-074 lane",
+  "attestation_timestamp": "2026-11-22T12:43:54Z",
+  "verdict": "PARTIAL",
+  "context_acknowledgment": {
+    "files_read": [
+      "docs/architecture/adr/ADR-089-waha-tenant-isolation.md",
+      "docs/architecture/whatsapp-channel-design.md",
+      "packages/application/src/ports/external/WhatsAppTransportPort.ts",
+      "infra/waha/compose.yaml",
+      "infra/waha/isolation-spike.mjs",
+      "artifacts/misc/waha-isolation-spike.json"
+    ],
+    "invariants_acknowledged": [
+      "Facts read from official pages on 2026-11-22 (Meta pricing, Cloud API, messaging limits, templates, phone numbers, display names, webhooks, Business Messaging Policy; WhatsApp Terms of Service; WAHA site, GitHub, security and events docs). Items not read are marked NOT VERIFIED in the research doc, section 10.",
+      "WAHA transport: live local proof passed (session at SCAN_QR_CODE, two signed webhooks delivered, 9 raw-body route checks as expected). No real number was paired; no real account was touched.",
+      "Meta transport: live proof is PENDING. No Meta credentials exist on this machine (variable names checked, values never read). The one owner step is creating the Meta developer app and test number; the ready-to-run script is infra/whatsapp-meta/sandbox-proof.mjs. The simulated signature self-test is labelled SIMULATED and is not the provider.",
+      "Cost figures: UK GBP rates effective 2026-10-01 from Meta's own rate file; WAHA hosting from ADR-089 with the 200 MB per paired session assumption still unverified; Meta stays in GBP and Railway in USD with no exchange rate applied.",
+      "Nothing was purchased; no account was created; nothing was sent."
+    ],
+    "acknowledged_at": "2026-11-22T12:43:54Z"
+  },
+  "artifact_hashes": {
+    "docs/shared/whatsapp-api-research.md": "sha256:adc050fe17dad2c01222f5e33449e8c3fdd49687043a9d11d4c7d7e01af67cd1",
+    "docs/shared/integration-design.puml": "sha256:f2446d16cd3df0d148bad09ae768b7560ef149a1c06c6b5fa0914dfbb0ceebfa",
+    "artifacts/reports/cost-analysis.xlsx": "sha256:4f4fabfc42d2eb976b44c436dca240ab319717d89e4af2a2a7f3d0291c9d17d3",
+    "artifacts/misc/poc-results.json": "sha256:2d7d9071e872229e8f3f65cef95098f22b1f40ca8c25f596f283ecc54597b04f",
+    "artifacts/misc/waha-sandbox-proof.json": "sha256:243ea57a69a6e36d8573aed51ef3fdd948eb643b587989bcd958dd8402c3d381",
+    "artifacts/misc/meta-sandbox-proof.json": "sha256:cf885f18bc11dab3d94cb943eaba230995a6470b261327d7b8cbf6a3990f6cf0"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript typecheck (no TypeScript changed)",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T12:43:54Z"
+    },
+    {
+      "name": "Prettier format check, research doc, scripts, compose override, proof JSON",
+      "command": "npx prettier --check docs/shared/whatsapp-api-research.md infra/waha/sandbox-proof.mjs infra/waha/compose.proof.yaml infra/whatsapp-meta/sandbox-proof.mjs artifacts/misc/*.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T12:43:54Z"
+    },
+    {
+      "name": "Compose schema validation with the proof override (docker compose config -q)",
+      "command": "WAHA_ADMIN_KEY=<placeholder> docker compose -f infra/waha/compose.yaml -f infra/waha/compose.proof.yaml config -q",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T12:43:54Z"
+    },
+    {
+      "name": "WAHA live sandbox proof (local container, no paired number)",
+      "command": "node infra/waha/sandbox-proof.mjs",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T12:33:40Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "owner-reviews-notice-facts",
+      "passed": false
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "docs/shared/whatsapp-api-research.md, sourced and dated",
+      "met": true
+    },
+    {
+      "criterion": "docs/shared/integration-design.puml reflects the raw-body route replacing the Supabase-webhook idea",
+      "met": true
+    },
+    {
+      "criterion": "artifacts/reports/cost-analysis.xlsx for 1, 10 and 100 customers",
+      "met": true
+    },
+    {
+      "criterion": "artifacts/misc/poc-results.json",
+      "met": true
+    },
+    {
+      "criterion": "Live sandbox proof of each transport",
+      "met": false,
+      "note": "WAHA proved locally; Meta PENDING on the owner's developer login"
+    },
+    {
+      "criterion": "Owner reviews the notice facts",
+      "met": false
+    }
+  ],
+  "notes": "Verdict PARTIAL: the Meta live proof and the owner's review are open. The row must not be closed until both are done."
+}

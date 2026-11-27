@@ -17,6 +17,10 @@ import { Prisma } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { loadBullMQ } from '../../lib/load-bullmq';
 import { enqueueLeadAi } from './lead-scoring-enqueue';
+import { buildLeadListWhere, leadListOrderBy } from './lead-list-query';
+import { narrowToWaiting } from '../waiting/waiting-lead-filter';
+import { directionMetadata } from './lead-activity-direction';
+import { readScoringState, scoreUpdateActivity } from './lead-score-log';
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -32,6 +36,7 @@ import {
   bulkArchiveLeadsSchema,
   bulkDeleteLeadsSchema,
   setLeadStarredSchema,
+  cleanActivityText,
 } from '@intelliflow/validators';
 import { mapLeadToResponse } from '../../shared/mappers';
 import type { Context } from '../../context';
@@ -43,6 +48,7 @@ import {
 // IFC-240: fire-and-forget audit logging for lead mutations + single-record reads
 import { getAuditLogger } from '../../security/audit-logger';
 import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
+import { convertWithContactQuota } from './convert-to-deal-quota';
 import { detectScoreBias, type LeadScoringBiasCheck } from '@intelliflow/adapters';
 import { createNotification } from '../notifications/notifications.router';
 import { restrictionReader } from '../privacy/restriction-reader';
@@ -66,102 +72,6 @@ import { requiredProdEnv } from '@intelliflow/validators/required-url';
  */
 function logLeadAuditFailure(err: unknown): void {
   console.error('[lead.router] Audit log failed:', err);
-}
-
-function buildNumberRange(
-  min: number | undefined,
-  max: number | undefined
-): Record<string, number> | undefined {
-  if (min === undefined && max === undefined) return undefined;
-  const r: Record<string, number> = {};
-  if (min !== undefined) r.gte = min;
-  if (max !== undefined) r.lte = max;
-  return r;
-}
-
-function buildDateRange(
-  from: Date | undefined,
-  to: Date | undefined
-): Record<string, Date> | undefined {
-  if (!from && !to) return undefined;
-  const r: Record<string, Date> = {};
-  if (from) r.gte = from;
-  if (to) r.lte = to;
-  return r;
-}
-
-/**
- * Build the base WHERE clause for the leads list query.
- * Extracted to reduce cognitive complexity of the list procedure.
- */
-function buildLeadListWhere(filters: {
-  status?: string[];
-  source?: string[];
-  minScore?: number;
-  maxScore?: number;
-  search?: string;
-  ownerId?: string;
-  dateFrom?: Date;
-  dateTo?: Date;
-  lastContactedBefore?: Date;
-  isStarred?: boolean;
-  ids?: string[];
-}): Record<string, unknown> {
-  const {
-    status,
-    source,
-    minScore,
-    maxScore,
-    search,
-    ownerId,
-    dateFrom,
-    dateTo,
-    lastContactedBefore,
-    isStarred,
-    ids,
-  } = filters;
-  const baseWhere: Record<string, unknown> = {};
-
-  if (status && status.length > 0) baseWhere.status = { in: status };
-  if (source && source.length > 0) baseWhere.source = { in: source };
-
-  const scoreRange = buildNumberRange(minScore, maxScore);
-  if (scoreRange) baseWhere.score = scoreRange;
-
-  if (search) {
-    baseWhere.OR = [
-      { email: { contains: search, mode: 'insensitive' } },
-      { firstName: { contains: search, mode: 'insensitive' } },
-      { lastName: { contains: search, mode: 'insensitive' } },
-      { company: { contains: search, mode: 'insensitive' } },
-    ];
-  }
-
-  if (ownerId) baseWhere.ownerId = ownerId;
-
-  const dateRange = buildDateRange(dateFrom, dateTo);
-  if (dateRange) baseWhere.createdAt = dateRange;
-
-  // PG-059 "Needs Follow-up": include leads where lastContactedAt is NULL
-  // (never contacted) OR older than the threshold. Indexed via
-  // @@index([tenantId, lastContactedAt]) in schema.prisma:620.
-  if (lastContactedBefore) {
-    baseWhere.OR = [
-      ...((baseWhere.OR as object[] | undefined) ?? []),
-      { lastContactedAt: null },
-      { lastContactedAt: { lte: lastContactedBefore } },
-    ];
-  }
-
-  // PG-059 "Starred": covered by @@index([tenantId, ownerId, isStarred]).
-  if (typeof isStarred === 'boolean') baseWhere.isStarred = isStarred;
-
-  // PG-059 "Recently Viewed": client passes the capped recent-ids list
-  // (max 50 per validator). When empty, this intentionally yields no rows
-  // (Prisma treats `{ in: [] }` as no-match), which matches user expectation.
-  if (ids) baseWhere.id = { in: ids };
-
-  return baseWhere;
 }
 
 /**
@@ -351,6 +261,7 @@ function mapPrismaLeadToResponse(lead: {
   source: string;
   status: string;
   score: number;
+  scoreConfidence?: number | null;
   ownerId: string;
   tenantId: string;
   createdAt: Date;
@@ -367,7 +278,7 @@ function mapPrismaLeadToResponse(lead: {
     source: lead.source,
     status: lead.status,
     score: lead.score,
-    scoreConfidence: ((lead as Record<string, unknown>).scoreConfidence as number) ?? null,
+    scoreConfidence: lead.scoreConfidence ?? null,
     scoreTier: (() => {
       if (lead.score >= LEAD_SCORE_THRESHOLDS.HOT) return 'HOT';
       if (lead.score >= LEAD_SCORE_THRESHOLDS.WARM) return 'WARM';
@@ -446,6 +357,13 @@ type LeadActivityLogType =
 
 /** Clock skew tolerated on a caller-supplied activity time. */
 const ACTIVITY_CLOCK_SKEW_MS = 60_000;
+
+/**
+ * Most rows the score-band lists (getHotLeads, getReadyForQualification) return. They had no limit,
+ * so one call shipped every matching lead in full (egress audit 1126). Highest score first, so the
+ * cap drops only the lowest-scored leads of a band, and no tenant is near it today.
+ */
+const SCORE_LIST_CAP = 500;
 
 /**
  * Best-effort system activity logging for lead lifecycle actions.
@@ -637,50 +555,11 @@ export const leadRouter = createTRPCRouter({
       })
       .catch(logLeadAuditFailure);
 
-    const aiInsightRow = lead.aiInsights?.[0] ?? null;
-
-    // Derive AI insights when none exist in DB (ensures entity pages always show data)
-    if (!aiInsightRow) {
-      const derived = deriveLeadInsights({
-        score: lead.score ?? 0,
-        confidence: 0.5,
-        source: lead.source ?? 'OTHER',
-        title: lead.title,
-        company: lead.company,
-        estimatedValue: lead.estimatedValue,
-        status: lead.status,
-        lastContactedAt: lead.lastContactedAt,
-        createdAt: lead.createdAt,
-      });
-
-      const syntheticInsight = {
-        id: `derived-${lead.id}`,
-        leadId: lead.id,
-        tenantId: typedCtx.tenant.tenantId,
-        ...derived,
-        recommendations: derived.recommendations as unknown,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      // Fire-and-forget: persist so future visits read from DB
-      typedCtx.prismaWithTenant.leadAIInsight
-        ?.upsert({
-          where: { leadId_tenantId: { leadId: lead.id, tenantId: typedCtx.tenant.tenantId } },
-          create: {
-            leadId: lead.id,
-            tenantId: typedCtx.tenant.tenantId,
-            ...derived,
-            recommendations: derived.recommendations,
-          },
-          update: {},
-        })
-        ?.catch(() => {}); // Best-effort persistence — silently ignore
-
-      return { ...lead, aiInsights: [syntheticInsight] };
-    }
-
-    return lead;
+    // #1277 (UI-022): no synthetic insight. A lead without a LeadAIInsight row has had no
+    // analysis, and the page says so. getById used to derive one from heuristics and save
+    // it, which made a plain read look like an AI analysis. The response always carries an
+    // `aiInsights` array (empty when there is none), as the contract requires.
+    return { ...lead, aiInsights: lead.aiInsights ?? [] };
   }),
 
   /**
@@ -690,42 +569,13 @@ export const leadRouter = createTRPCRouter({
    */
   list: tenantProcedure.input(leadQuerySchema).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
-    const {
-      page = 1,
-      limit = 20,
-      status,
-      source,
-      minScore,
-      maxScore,
-      search,
-      ownerId,
-      dateFrom,
-      dateTo,
-      lastContactedBefore,
-      isStarred,
-      ids,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
-    } = input;
-
+    const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc', ...filters } = input;
     const skip = (page - 1) * limit;
 
-    // Apply tenant filtering
+    // Apply tenant filtering; MVP-014 "Waiting for reply" narrows `ids` to the leads waiting
     const where = createTenantWhereClause(
       typedCtx.tenant,
-      buildLeadListWhere({
-        status,
-        source,
-        minScore,
-        maxScore,
-        search,
-        ownerId,
-        dateFrom,
-        dateTo,
-        lastContactedBefore,
-        isStarred,
-        ids,
-      })
+      buildLeadListWhere({ ...filters, ids: await narrowToWaiting(typedCtx, filters) })
     );
 
     // Execute queries in parallel using tenant-scoped Prisma
@@ -734,7 +584,7 @@ export const leadRouter = createTRPCRouter({
         where,
         skip,
         take: limit,
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: leadListOrderBy(sortBy, sortOrder),
         include: {
           owner: {
             select: {
@@ -1105,7 +955,7 @@ export const leadRouter = createTRPCRouter({
   convertToDeal: tenantProcedure.input(convertLeadToDealSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
 
-    // The contact is optional here; only a conversion that creates one consumes contact quota.
+    // Contact quota is charged only when the conversion creates a contact (convert-to-deal-quota).
     const useCase = ctx.services?.convertLeadToDeal;
     if (!useCase) {
       throw new TRPCError({
@@ -1114,14 +964,10 @@ export const leadRouter = createTRPCRouter({
       });
     }
 
-    const execute = () =>
-      useCase.execute({
-        ...input,
-        convertedBy: typedCtx.tenant.userId,
-      });
-    const result = input.createContact
-      ? await withQuotaLock(ctx, typedCtx.tenant.tenantId, 'contacts', 1, execute)
-      : await execute();
+    const quotaInput = { ...input, tenantId: typedCtx.tenant.tenantId };
+    const result = await convertWithContactQuota(ctx, quotaInput, (hooks) =>
+      useCase.execute({ ...input, convertedBy: typedCtx.tenant.userId }, hooks)
+    );
 
     if (result.isFailure) {
       const msg = result.error.message;
@@ -1195,6 +1041,11 @@ export const leadRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const leadService = getLeadService(ctx);
 
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
+
+      // The lead's scoring state before the run: did it hold a real score already?
+      const before = await readScoringState(typedCtx.prismaWithTenant, input.leadId);
       const result = await leadService.scoreLead(input.leadId, typedCtx.tenant.userId);
 
       if (result.isFailure) {
@@ -1251,23 +1102,14 @@ export const leadRouter = createTRPCRouter({
         typedCtx.services?.notificationOrchestrator
       ).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
-      await writeLeadActivityLog(typedCtx, {
-        leadId: result.value.leadId,
-        tenantId: typedCtx.tenant.tenantId,
-        type: 'SCORE_UPDATE',
-        title: 'Lead Scored by AI',
-        description: `Score ${result.value.newScore} (${result.value.tier}) at ${(result.value.confidence * 100).toFixed(0)}% confidence`,
-        metadata: {
-          previousScore: result.value.previousScore,
-          newScore: result.value.newScore,
-          confidence: result.value.confidence,
-          tier: result.value.tier,
-          autoQualified: result.value.autoQualified,
-          autoDisqualified: result.value.autoDisqualified,
-        },
-        userId: typedCtx.tenant.userId,
-        userName: 'AI Scoring Agent',
-      });
+      // A re-score that left the score and status as they were is not logged as a change.
+      const scoreLog = scoreUpdateActivity(
+        before,
+        await readScoringState(typedCtx.prismaWithTenant, input.leadId),
+        result.value,
+        { tenantId: typedCtx.tenant.tenantId, userId: typedCtx.tenant.userId }
+      );
+      if (scoreLog) await writeLeadActivityLog(typedCtx, scoreLog);
 
       // Fire-and-forget: populate LeadAIInsight so Lead IQ sidebar shows real data
       (async () => {
@@ -1412,6 +1254,7 @@ export const leadRouter = createTRPCRouter({
     const leads = await typedCtx.prismaWithTenant.lead.findMany({
       where,
       orderBy: { score: 'desc' },
+      take: SCORE_LIST_CAP,
     });
     return leads.map(mapPrismaLeadToResponse);
   }),
@@ -1429,6 +1272,7 @@ export const leadRouter = createTRPCRouter({
     const leads = await typedCtx.prismaWithTenant.lead.findMany({
       where,
       orderBy: { score: 'desc' },
+      take: SCORE_LIST_CAP,
     });
     return leads.map(mapPrismaLeadToResponse);
   }),
@@ -1877,9 +1721,7 @@ export const leadRouter = createTRPCRouter({
       return note;
     }),
 
-  /**
-   * Log an activity on a lead (updates lastContactedAt)
-   */
+  /** Log an activity on a lead (updates lastContactedAt; a "Reply received" email is inbound) */
   logActivity: tenantProcedure
     .input(
       z.object({
@@ -1936,22 +1778,20 @@ export const leadRouter = createTRPCRouter({
         const created = await tx.leadActivity.create({
           data: {
             type: input.type,
-            title: input.title,
-            description: input.description ?? '',
+            ...cleanActivityText(input),
             timestamp: occurredAt,
             userName: ctx.user?.email ?? 'Unknown',
             leadId: input.leadId,
             tenantId: typedCtx.tenant.tenantId,
-            ...(input.direction ? { metadata: { direction: input.direction } } : {}),
+            ...directionMetadata(input),
           },
         });
 
         const leadWhere = { id: input.leadId, ...createTenantWhereClause(typedCtx.tenant, {}) };
         await tx.lead.update({ where: leadWhere, data: { updatedAt: now } });
-        // A back-dated activity must never move lastContactedAt backwards, even
-        // when another activity commits in between: compare in the UPDATE itself
-        // (Postgres re-checks the WHERE on the latest row version), not against
-        // the value read before the transaction.
+        // A back-dated activity must never move lastContactedAt backwards, even when another
+        // activity commits in between: compare in the UPDATE itself (Postgres re-checks the WHERE
+        // on the latest row version), not against the value read before the transaction.
         await tx.lead.updateMany({
           where: {
             ...leadWhere,

@@ -297,8 +297,8 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
           }),
           expect.objectContaining({
             email: 'jane@example.com',
-            firstName: 'Unknown',
-            lastName: 'Unknown',
+            firstName: 'jane@example.com',
+            lastName: '',
           }),
         ]),
         skipDuplicates: true,
@@ -463,7 +463,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
       });
     });
 
-    it('should use "Unknown" for null firstName and lastName', async () => {
+    it('names a contact from the email when the lead has no person name or company (never Unknown)', async () => {
       const leadNoNames = [
         { ...mockLeads[1] }, // firstName and lastName are null
       ];
@@ -488,10 +488,33 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
       expect(txClient.contact.createMany).toHaveBeenCalledWith({
         data: expect.arrayContaining([
           expect.objectContaining({
-            firstName: 'Unknown',
-            lastName: 'Unknown',
+            firstName: 'jane@example.com',
+            lastName: '',
           }),
         ]),
+        skipDuplicates: true,
+      });
+    });
+
+    it('names a contact after the company when the lead has a company but no person name', async () => {
+      const txClient = {
+        lead: {
+          findMany: vi
+            .fn()
+            .mockResolvedValue([
+              { ...mockLeads[1], company: 'Studio Pilates Demo', email: 'o@x.example.invalid' },
+            ]),
+          updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+        },
+        contact: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
+        account: { createMany: vi.fn() },
+      };
+      mockPrisma.$transaction.mockImplementation(async (cb: any) => cb(txClient));
+
+      await repo.bulkConvert(['lead-2'], false, 'user-1');
+
+      expect(txClient.contact.createMany).toHaveBeenCalledWith({
+        data: [expect.objectContaining({ firstName: 'Studio Pilates Demo', lastName: '' })],
         skipDuplicates: true,
       });
     });

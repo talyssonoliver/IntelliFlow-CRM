@@ -52,6 +52,12 @@ vi.mock('../versioning/chain-version-loader', () => ({
     getChainConfig: vi.fn().mockRejectedValue(new Error('no DB in tests')),
   })),
   configureVersionLoader: vi.fn(),
+  // The chains read prompts through loadVersionedPrompt; it delegates to the mocked loader.
+  loadVersionedPrompt: vi.fn(async (type: string, tenantId: string) => {
+    const { getVersionLoader } = await import('../versioning/chain-version-loader');
+    const config = await getVersionLoader().getChainConfig(type as never, { tenantId });
+    return { prompt: config?.prompt ?? null, versionId: null };
+  }),
   CHAIN_TYPE_MAP: {
     LEAD_SCORING: 'SCORING',
     CHURN_RISK: 'SCORING',
@@ -836,21 +842,34 @@ describe('ScoringJob', () => {
       const [strings, ...values] = leadScoreWrites().at(-1)!;
       const sql = (strings as string[]).join('?');
       expect(sql).toMatch(
-        /UPDATE leads SET score = \?,\s+"scoringStatus" = \?::"LeadScoringStatus", "scoredAt" = \?,\s+"updatedAt" = \?/
+        /UPDATE leads SET score = \?,\s+"scoringStatus" = \?::"LeadScoringStatus", "scoredAt" = \?,\s+"scoreConfidence" = \?, "updatedAt" = \?/
       );
       // Score fields only: never the status (auto-qualify stays in LeadService).
       expect(sql).not.toMatch(/"status"/);
       expect(values.slice(0, 2)).toEqual([75, 'SCORED']);
       // updatedAt moves with scoredAt, so a slower manual failure mark cannot hide this score.
-      expect(values[3]).toBe(values[2]);
-      expect(values.slice(4)).toEqual([TEST_UUIDS.lead1, TEST_UUIDS.tenant1]);
+      expect(values[4]).toBe(values[2]);
+      // The confidence the score was made with is stored beside it (register #49).
+      expect(values[3]).toBe(0.9);
+      expect(values.slice(5)).toEqual([TEST_UUIDS.lead1, TEST_UUIDS.tenant1]);
     });
 
     it('records a low-confidence automatic score as NEEDS_REVIEW (#1218)', async () => {
       mockScoreLead.mockResolvedValueOnce({ ...mockScoringResult, score: 15, confidence: 0.4 });
       await processScoringJob(job());
-      const [, score, status] = leadScoreWrites().at(-1)!;
-      expect([score, status]).toEqual([15, 'NEEDS_REVIEW']);
+      const [, score, status, , confidence] = leadScoreWrites().at(-1)!;
+      expect([score, status, confidence]).toEqual([15, 'NEEDS_REVIEW', 0.4]);
+    });
+
+    it('stores no confidence when the model gave none that is a number', async () => {
+      mockScoreLead.mockResolvedValueOnce({
+        ...mockScoringResult,
+        score: 15,
+        confidence: Number.NaN,
+      });
+      await processScoringJob(job());
+      const [, , , , confidence] = leadScoreWrites().at(-1)!;
+      expect(confidence).toBeNull();
     });
 
     it("leaves the lead's score to LeadService when it asked for the score (codex)", async () => {

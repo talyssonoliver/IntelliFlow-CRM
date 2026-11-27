@@ -71,7 +71,13 @@ import {
   type MemoryRetentionJobResult,
 } from './jobs';
 import { costTracker } from './utils/cost-tracker';
-import { createTenantAiSpendRecorder, createPurposeSpendRecorder } from './utils/tenant-ai-spend';
+import {
+  createTenantAiSpendRecorder,
+  createPurposeSpendRecorder,
+  createTenantAiActionsRecorder,
+} from './utils/tenant-ai-spend';
+import { setAiActionRecorder, setAiActionsAllowanceReader } from './lib/ai-actions-allowance';
+import { insightJobQueryBudget } from './lib/insight-query-budget';
 import { setPurposeSpendReader } from './lib/purpose-ceiling';
 import { aiConfig, loadAIConfig } from './config/ai.config';
 import { anthropicModelForTier } from './lib/anthropic-config';
@@ -349,6 +355,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       return;
     }
     await this.wireAuditLogAdapter();
+    await this.wireChainVersionLoader();
     await this.wireTenantAiSpend();
     await this.wireRetrievalService();
     await this.bootContactEmbedWorker();
@@ -357,8 +364,31 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   }
 
   /**
-   * Attribute each model call's estimated cost to the job's tenant so the API can enforce
-   * the aiSpendCentsPerMonth quota (nothing else increments that counter).
+   * Saved chain versions take effect: the shared version loader reads each tenant's active
+   * version from the database. If this fails, chains keep their built-in prompts.
+   */
+  private async wireChainVersionLoader(): Promise<void> {
+    try {
+      const { configureVersionLoaderFromPrisma } =
+        await import('./versioning/chain-version-loader.js');
+      await configureVersionLoaderFromPrisma(this.prisma);
+      // AI Chains usage: each run of a versioned chain is recorded in chain_runs.
+      const { setChainRunWriter, chainRunWriterFromPrisma } =
+        await import('./monitoring/chain-run-recorder.js');
+      setChainRunWriter(chainRunWriterFromPrisma(this.prisma as never));
+      this.logger.info("Chain version loader wired: tenants' active chain versions are in use");
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Chain version loader not wired; chains use their built-in prompts'
+      );
+    }
+  }
+
+  /**
+   * Attribute each completed model call to the job's tenant: its estimated cost (internal
+   * metric, aiSpendCentsPerMonth) and one AI action (the customer allowance,
+   * aiActionsPerMonth, enforced here before each call and in the API where AI work starts).
    */
   private async wireTenantAiSpend(): Promise<void> {
     try {
@@ -371,6 +401,13 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       );
       const getTenantId = () => tenantContextStore.getStore()?.tenantId;
       const record = createTenantAiSpendRecorder({ quota, getTenantId, logger: this.logger });
+      const recordAction = createTenantAiActionsRecorder({
+        quota,
+        getTenantId,
+        logger: this.logger,
+      });
+      setAiActionsAllowanceReader(quota);
+      setAiActionRecorder(() => recordAction());
       // PG-199: per-purpose spend feeds the purpose cost ceilings, and the same repository
       // is the spend reader of the pre-call ceiling check.
       const purposeSpend = new PrismaPurposeSpendRepository(this.prisma as never);
@@ -395,7 +432,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         });
       });
       this.logger.info(
-        'Tenant AI spend recorder wired — model cost counts toward aiSpendCentsPerMonth and the per-purpose ceilings'
+        'Tenant AI spend recorder wired — model cost counts toward aiSpendCentsPerMonth and the per-purpose ceilings; each chat call counts toward aiActionsPerMonth (tracing wrapper)'
       );
     } catch (error) {
       this.logger.error(
@@ -1050,6 +1087,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     this.logger.info('Shutting down AI Worker...');
 
     this.stopTenantAiSpend?.();
+    setAiActionRecorder(null);
 
     // IFC-117: stop drift detection before the flush, so the final flush holds the last results
     this.driftScheduler?.stop();
@@ -1142,7 +1180,11 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
               context: 'background',
               route: job.queueName ?? job.name ?? 'background-job',
               requestId: correlationId,
-              budget: resolveBackgroundBudget(),
+              budget: insightJobQueryBudget(
+                job.queueName,
+                INSIGHT_QUEUE,
+                resolveBackgroundBudget()
+              ),
             },
             () => this._processJobImpl(job)
           )

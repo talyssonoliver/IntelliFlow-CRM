@@ -7,6 +7,9 @@
  * PG-059 `lib/leads/*` extraction convention.
  */
 
+import { hasMachineId } from '@intelliflow/validators';
+import { formatGBPCompact } from '@/lib/format/gbp-compact';
+
 // Activity types matching the database enum (UI-facing variant).
 export type ActivityType =
   | 'web_form'
@@ -72,14 +75,223 @@ export function formatRelativeTime(dateString: string, timezone: string = 'Europ
 }
 
 /**
+ * Compact pound label for an amount in whole pounds (UI-017). The one shared
+ * formatter lives in `lib/format/gbp-compact`; re-exported for the lead callers.
+ */
+export { formatGBPCompact };
+
+/** Ad and campaign tracking parameters, dropped from a lead's website. */
+const TRACKING_PARAM = /^(utm_.*|gclid|fbclid|msclkid|dclid|gbraid|wbraid)$/i;
+
+/**
+ * The raw query string without tracking pairs. The pairs that stay are kept byte for
+ * byte (no re-encoding of "%20" or bare flags), and the query is unchanged when there
+ * is nothing to drop.
+ */
+function withoutTrackingParams(search: string): string {
+  if (!search) return search;
+  const segments = search.slice(1).split('&');
+  const kept = segments.filter((segment) => {
+    const rawKey = segment.split('=', 1)[0].replace(/\+/g, ' ');
+    let key = rawKey;
+    try {
+      key = decodeURIComponent(rawKey);
+    } catch {
+      // Malformed escape: compare the raw key.
+    }
+    return !TRACKING_PARAM.test(key);
+  });
+  if (kept.length === segments.length) return search;
+  return kept.length ? `?${kept.join('&')}` : '';
+}
+
+/** The host part of an address as the user typed it: no scheme, user info, port or path. */
+function typedHost(text: string): string {
+  const afterScheme = text.replace(/^[a-z][a-z\d+.-]*:\/\//i, '');
+  // A backslash ends an http(s) host for the URL parser too ("a.example\@b.example").
+  const authority = afterScheme.split(/[\\/?#]/, 1)[0];
+  const host = authority.slice(authority.lastIndexOf('@') + 1);
+  if (host.startsWith('[')) return host.slice(0, host.indexOf(']') + 1);
+  return host.replace(/:\d*$/, '');
+}
+
+/**
+ * A real address host: a bracketed IPv6 literal, a full dotted-quad IPv4 address, or
+ * a domain with a dot, no empty labels and a top-level label that has a letter.
+ */
+function isAddressHost(host: string): boolean {
+  if (/^\[[\da-f:.]+\]$/i.test(host)) return true;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return true;
+  const labels = host.split('.');
+  if (labels.length < 2 || labels.some((label) => label === '')) return false;
+  return /\p{L}/u.test(labels[labels.length - 1]);
+}
+
+/** True when the typed host is the host the parsed link opens (after IDNA and IP normalising). */
+function opensTypedHost(typed: string, url: URL): boolean {
+  try {
+    return new URL(`https://${typed}`).hostname === url.hostname;
+  } catch {
+    return false;
+  }
+}
+
+/** The path as readable text, or still encoded when decoding would show control or bidi characters. */
+function readablePath(path: string): string {
+  try {
+    const decoded = decodeURIComponent(path);
+    return /[\p{Cc}\p{Cf}]/u.test(decoded) ? path : decoded;
+  } catch {
+    return path;
+  }
+}
+
+/**
+ * A lead's website as a clean link: the href without tracking parameters, and a short
+ * label (the host without "www.", plus a path when there is one), e.g.
+ * "http://www.northfield-fitness.example.invalid/?utm_source=google" -> { label: "northfield-fitness.example.invalid" }.
+ * Null when there is no usable http(s) address, so the row is not shown.
+ */
+export function leadWebsite(
+  raw: string | null | undefined
+): { href: string; label: string } | null {
+  const text = raw?.trim();
+  if (!text) return null;
+  let url: URL;
+  try {
+    url = new URL(/^[a-z][a-z\d+.-]*:\/\//i.test(text) ? text : `https://${text}`);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+  // Placeholders ("N/A", "none", "n.a.", "0") must not become links. The URL parser
+  // rewrites hosts ("0" -> "0.0.0.0"), so the check runs on the host as typed.
+  const typed = typedHost(text);
+  if (!isAddressHost(typed)) return null;
+  // The label must name the host the link opens; anything else is not shown at all.
+  if (!opensTypedHost(typed, url)) return null;
+  url.search = withoutTrackingParams(url.search);
+  // The label reads as typed: the parser would show "café" as punycode and "menú"
+  // percent-encoded. The href keeps the parsed, encoded form.
+  const host = typed.toLowerCase().replace(/^www\./, '');
+  const path = readablePath(url.pathname === '/' ? '' : url.pathname.replace(/\/$/, ''));
+  return { href: url.toString(), label: host + path };
+}
+
+/**
  * Format a lead's estimated value — stored in CENTS per the domain contract
  * (packages/validators/src/lead.ts:36, packages/domain/src/crm/lead/Lead.ts:73) —
- * as a compact currency label: `5_000_000` cents -> `"$50k"`, `50_000` -> `"$500"`.
+ * as a compact pound label: `5_000_000` (pence) -> `"£50k"`, `50_000` -> `"£500"`.
  */
 export function formatEstimatedValue(cents: number): string {
-  const dollars = cents / 100;
-  if (dollars >= 1000) return `$${(dollars / 1000).toFixed(0)}k`;
-  return `$${dollars.toFixed(0)}`;
+  return formatGBPCompact(cents / 100);
+}
+
+/** Activity text without machine ids (register row 42); the one implementation lives in validators. */
+export { cleanActivityText, stripMachineIds } from '@intelliflow/validators';
+
+/** The tags the sync writes with a fixed name. */
+const SYSTEM_TAGS: ReadonlySet<string> = new Set([
+  'coa-pipeline',
+  'coa-won',
+  'coa-qualified',
+  'portal-discover',
+]);
+
+/**
+ * Tags the COA pipeline sync and the portal import write for their own bookkeeping
+ * (`apps/api/src/modules/inbound/inbound.router.ts`): `coa-pipeline`, `coa-won`,
+ * `coa-qualified`, `portal-discover`, `coa-lead:<id>`, and a bare id. They stay on the lead
+ * (the sync matches on them) but are not the user's tags, so they are hidden wherever tags
+ * are shown (UI-017, register row 42).
+ */
+export function isSystemTag(tag: string): boolean {
+  return (
+    SYSTEM_TAGS.has(tag) || tag.startsWith('coa-lead:') || (tag.length === 25 && hasMachineId(tag))
+  );
+}
+
+/**
+ * Activity text as a person should read it: the id the COA sync wrote into the text, "COA ledger row
+ * <record id>", is taken out (#42). Only that exact form is removed, so an id a person typed, a link
+ * or an address is never touched.
+ */
+export function displayActivityText(text: string | null | undefined): string {
+  const src = text ?? '';
+  let out = '';
+  let from = 0;
+  for (let at = findLedgerMarker(src, from); at >= 0; at = findLedgerMarker(src, from)) {
+    let end = at + LEDGER_MARKER.length;
+    while (src[end] === ' ' || src[end] === '\t') end++;
+    const idStart = end;
+    while (end < src.length && isAlphanumeric(src.charAt(end))) end++;
+    const isRecordId = end - idStart >= 21 && src.charAt(idStart).toLowerCase() === 'c';
+    if (!isRecordId) {
+      out += src.slice(from, at + LEDGER_MARKER.length);
+      from = at + LEDGER_MARKER.length;
+      continue;
+    }
+    if (src[end] === '.') end++;
+    out += src.slice(from, at).trimEnd();
+    from = end;
+  }
+  return (out + src.slice(from)).replace(/[ \t]{2,}/g, ' ').trim();
+}
+
+const LEDGER_MARKER = 'coa ledger row';
+
+/**
+ * The index of the next "COA ledger row" at or after `from`, ignoring case, that starts a word. It
+ * compares slice by slice rather than searching a lower-cased copy, so an index never shifts when a
+ * character changes length in lower case.
+ */
+function findLedgerMarker(src: string, from: number): number {
+  for (let at = from; at + LEDGER_MARKER.length <= src.length; at++) {
+    const startsWord = at === 0 || !isAlphanumeric(src.charAt(at - 1));
+    if (startsWord && src.slice(at, at + LEDGER_MARKER.length).toLowerCase() === LEDGER_MARKER) {
+      return at;
+    }
+  }
+  return -1;
+}
+
+function isAlphanumeric(ch: string): boolean {
+  return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9');
+}
+/** A lead's company, or undefined when it only repeats the lead's name (for a pin or sheet subtitle). */
+export function leadCompanyIfDistinct(lead: Readonly<LeadNameParts>): string | undefined {
+  const company = lead.company?.trim();
+  return company && !isSameName(company, leadDisplayName(lead)) ? company : undefined;
+}
+/** The tags to show a user: everything except the system tags. */
+export function visibleTags(tags: readonly string[]): string[] {
+  return tags.filter((tag) => !isSystemTag(tag));
+}
+
+/**
+ * The from/to of a score-change activity, or null when the row has no new score
+ * (a failed scoring). `from` is null for a first score or a row with no prior value.
+ * The scoring API writes `newScore` and `previousScore`; the events-worker writes the new
+ * value as `score` (with `previousScore`); older rows used `oldScore` (UI-021).
+ */
+export function describeScoreChange(
+  meta:
+    | Readonly<{
+        oldScore?: number | null;
+        previousScore?: number | null;
+        newScore?: number | null;
+        score?: number | null;
+        firstScore?: boolean;
+      }>
+    | null
+    | undefined
+): { from: number | null; to: number } | null {
+  if (!meta) return null;
+  const to = typeof meta.newScore === 'number' ? meta.newScore : meta.score;
+  if (typeof to !== 'number') return null;
+  const prior = meta.previousScore ?? meta.oldScore;
+  const from = meta.firstScore === true || typeof prior !== 'number' ? null : prior;
+  return { from, to };
 }
 
 /** The parts of a lead that can name it. */
@@ -88,6 +300,92 @@ export interface LeadNameParts {
   lastName?: string | null;
   company?: string | null;
   email?: string | null;
+}
+
+/** The part of a lead activity the profile card's metrics read. */
+export interface LeadMetricActivity {
+  type: ActivityType;
+  metadata?: { opened?: unknown; openCount?: unknown } | null;
+}
+
+/**
+ * An email the CRM tracks opens for: its activity records whether it was opened. Logged
+ * or synced emails (outreach sends, inbound replies) carry no tracking and do not count,
+ * so they cannot make an open rate of "0%".
+ */
+export function isTrackedEmailSend(activity: Readonly<LeadMetricActivity>): boolean {
+  if (activity.type !== 'email' || !activity.metadata) return false;
+  return (
+    typeof activity.metadata.opened === 'boolean' || typeof activity.metadata.openCount === 'number'
+  );
+}
+
+/**
+ * A touchpoint is something a person did with the lead. Score and status changes are
+ * system records, not touchpoints.
+ */
+export function isTouchpoint(type: ActivityType): boolean {
+  return type !== 'score_update' && type !== 'status_change';
+}
+
+/**
+ * The profile card's counts from a lead's activities: tracked email sends and how many of
+ * them were opened, meetings, and touchpoints (system records left out).
+ */
+export function leadActivityMetrics(activities: readonly Readonly<LeadMetricActivity>[]): {
+  emailsSent: number;
+  emailsOpened: number;
+  meetings: number;
+  touchpoints: number;
+} {
+  const trackedSends = activities.filter(isTrackedEmailSend);
+  const wasOpened = (act: Readonly<LeadMetricActivity>) =>
+    act.metadata?.opened === true ||
+    (typeof act.metadata?.openCount === 'number' && act.metadata.openCount > 0);
+  return {
+    emailsSent: trackedSends.length,
+    emailsOpened: trackedSends.filter(wasOpened).length,
+    meetings: activities.filter((act) => act.type === 'meeting').length,
+    touchpoints: activities.filter((act) => isTouchpoint(act.type)).length,
+  };
+}
+
+/**
+ * The second line under a lead's name in the list: its title and company, with the company left
+ * out when it is the name already (a lead named after its company), and nothing when there is neither.
+ */
+export function leadListSubtitle(
+  lead: Readonly<LeadNameParts & { title?: string | null }>
+): string {
+  const company = isSameName(lead.company, leadDisplayName(lead))
+    ? ''
+    : (lead.company?.trim() ?? '');
+  const title = lead.title?.trim() ?? '';
+  if (title && company) return `${title} @ ${company}`;
+  return title || company;
+}
+
+/**
+ * The card's counts with the CRM's email records folded in. The activity metadata and the records can
+ * describe the same mails, so each count takes the larger of the two rather than adding them: it never
+ * double counts, and opened never exceeds sent (each source already keeps opened within sent).
+ */
+export function mergeEmailEngagement<T extends { emailsSent: number; emailsOpened: number }>(
+  metrics: T,
+  records: { sent: number; opened: number } | null | undefined
+): T {
+  if (!records) return metrics;
+  return {
+    ...metrics,
+    emailsSent: Math.max(metrics.emailsSent, records.sent),
+    emailsOpened: Math.max(metrics.emailsOpened, records.opened),
+  };
+}
+
+/** The open rate of tracked sends, or "—" when there are none to measure. */
+export function openRateLabel(trackedSent: number, opened: number): string {
+  if (trackedSent <= 0) return '—';
+  return `${Math.round((opened / trackedSent) * 100)}%`;
 }
 
 /**
@@ -103,4 +401,92 @@ export function leadDisplayName(lead: Readonly<LeadNameParts>): string {
     .filter(Boolean)
     .join(' ');
   return personName || lead.company?.trim() || lead.email?.trim() || 'Unnamed lead';
+}
+
+/** True when two names are the same text ignoring case and runs of spaces (empty is never the same). */
+export function isSameName(a: string | null | undefined, b: string | null | undefined): boolean {
+  const norm = (s: string | null | undefined) =>
+    (s ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+  return norm(a) !== '' && norm(a) === norm(b);
+}
+
+/**
+ * The recommendation texts of a stored LeadAIInsight. The column is JSON with two shapes
+ * in production: a plain string[] (scoring) and, when sentiment data exists, an object
+ * `{ texts, emotions, keyPhrases, primaryEmotion }` (intelligence router). Anything else
+ * reads as no recommendations, never as a crash.
+ */
+export function insightRecommendations(raw: unknown): string[] {
+  const strings = (value: unknown): string[] =>
+    Array.isArray(value) ? value.filter((r): r is string => typeof r === 'string') : [];
+  if (Array.isArray(raw)) return strings(raw);
+  if (raw && typeof raw === 'object') return strings((raw as { texts?: unknown }).texts);
+  return [];
+}
+
+/**
+ * Returns the URL when it is an absolute http(s) address, otherwise null. Stored
+ * recording and file addresses are rendered as links only through this, so a
+ * missing, relative or javascript: value never becomes a clickable control.
+ */
+export function httpUrlOrNull(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function isoOrEmpty(value: string | Date | null | undefined): string {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+}
+
+/** The stored lead fields the lead page's Export writes. */
+export interface LeadExportSource {
+  id: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  email: string;
+  phone?: string | null;
+  company?: string | null;
+  title?: string | null;
+  location?: string | null;
+  website?: string | null;
+  status: string;
+  source: string;
+  score: number;
+  estimatedValue?: number | null;
+  owner?: { name?: string | null } | null;
+  createdAt: string | Date;
+  lastContactedAt?: string | Date | null;
+}
+
+/**
+ * A lead's fields for the action sheet's Export, as stored: no display fallbacks (a
+ * lead never contacted has an empty last contact, not its creation date), and the
+ * estimated value in pence, as the API holds it. Tags are left out: some are internal.
+ */
+export function leadExportFields(lead: LeadExportSource): Record<string, string | number> {
+  return {
+    id: lead.id,
+    firstName: lead.firstName ?? '',
+    lastName: lead.lastName ?? '',
+    email: lead.email,
+    phone: lead.phone ?? '',
+    company: lead.company ?? '',
+    title: lead.title ?? '',
+    location: lead.location ?? '',
+    website: lead.website ?? '',
+    status: lead.status,
+    source: lead.source,
+    score: lead.score,
+    estimatedValuePence: lead.estimatedValue ?? '',
+    owner: lead.owner?.name ?? '',
+    createdAt: isoOrEmpty(lead.createdAt),
+    lastContactedAt: isoOrEmpty(lead.lastContactedAt),
+  };
 }

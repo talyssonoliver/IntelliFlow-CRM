@@ -420,25 +420,31 @@ describe('billingRouter', () => {
     // Build a prisma mock where every model's `count` resolves to 0.
     // The router queries ~25 different models in parallel inside getUsageMetrics,
     // so we provide a zero-count default rather than enumerating each model.
-    const createUsageMetricsPrismaMock = () =>
+    const createUsageMetricsPrismaMock = (tenantPlan: string | null = 'PARTNER_FREE') =>
       new Proxy(
         {},
         {
-          get: () => ({ count: vi.fn().mockResolvedValue(0) }),
+          get: (_t, model) => ({
+            count: vi.fn().mockResolvedValue(0),
+            findUnique: vi
+              .fn()
+              .mockResolvedValue(model === 'tenant' && tenantPlan ? { plan: tenantPlan } : null),
+          }),
         }
       );
 
-    it('returns null when user has no stripeCustomerId', async () => {
+    it('returns real metrics against free-tier limits for an ADMIN with no stripeCustomerId', async () => {
       const mockContext = {
         user: {
           userId: 'user_123',
           email: 'test@example.com',
-          role: 'USER',
+          role: 'ADMIN',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
           emailVerified: true,
         } as UserSession,
         prisma: createUsageMetricsPrismaMock() as unknown,
+        prismaWithTenant: createUsageMetricsPrismaMock() as unknown,
       };
 
       const caller = billingRouter.createCaller(
@@ -446,7 +452,203 @@ describe('billingRouter', () => {
       );
 
       const result = await caller.getUsageMetrics();
-      expect(result).toBeNull();
+      expect(result).not.toBeNull();
+      expect(result?.effectivePlan).toBe('free');
+      expect(result?.planLimits.activeUsers.limit).toBe(5);
+      expect(result?.planLimits.contacts.limit).toBe(500);
+      expect(result?.crm).toBeDefined();
+      expect(mockStripeAdapterMethods.listSubscriptions).not.toHaveBeenCalled();
+    });
+
+    it('gives a CUSTOM contract workspace with no Stripe customer unlimited limits, not Free', async () => {
+      const caller = billingRouter.createCaller({
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'ADMIN',
+          tenantId: 'tenant_123',
+          stripeCustomerId: undefined,
+          emailVerified: true,
+        } as UserSession,
+        prisma: createUsageMetricsPrismaMock('CUSTOM') as unknown,
+        prismaWithTenant: createUsageMetricsPrismaMock('CUSTOM') as unknown,
+      } as unknown as Parameters<typeof billingRouter.createCaller>[0]);
+
+      const result = await caller.getUsageMetrics();
+      expect(result?.effectivePlan).toBe('contract');
+      expect(result?.planLimits.activeUsers.limit).toBe(-1);
+      expect(result?.planLimits.contacts.limit).toBe(-1);
+      expect(result?.planLimits.aiPredictions.limit).toBe(-1);
+      expect(result?.planLimits.storage.limit).toBe(-1);
+    });
+
+    it.each([
+      ['ENTERPRISE', { seats: null, contacts: null }, -1, -1],
+      ['PROFESSIONAL', { seats: 10, contacts: 20000 }, 10, 20000],
+      ['STARTER', { seats: 3, contacts: 2000 }, 3, 2000],
+      ['PARTNER_FREE', { seats: 2, contacts: 500 }, 2, 500],
+    ])(
+      'uses the enforced quotas for a %s tenant with no Stripe customer',
+      async (plan, quota, seats, contacts) => {
+        const getLimits = vi.fn().mockResolvedValue(quota);
+        const caller = billingRouter.createCaller({
+          user: {
+            userId: 'user_123',
+            email: 'test@example.com',
+            role: 'ADMIN',
+            tenantId: 'tenant_123',
+            stripeCustomerId: undefined,
+            emailVerified: true,
+          } as UserSession,
+          prisma: createUsageMetricsPrismaMock(plan) as unknown,
+          prismaWithTenant: createUsageMetricsPrismaMock(plan) as unknown,
+          services: { quota: { getLimits, getKeyUsage: vi.fn().mockResolvedValue(0) } },
+        } as unknown as Parameters<typeof billingRouter.createCaller>[0]);
+
+        const result = await caller.getUsageMetrics();
+        expect(getLimits).toHaveBeenCalledWith('tenant_123');
+        expect(result?.planLimits.activeUsers.limit).toBe(seats);
+        expect(result?.planLimits.contacts.limit).toBe(contacts);
+      }
+    );
+
+    describe('AI actions card (aiActionsPerMonth, shared with the pricing page and enforcement)', () => {
+      const callerFor = (
+        plan: string,
+        quota: { getLimits: unknown; getKeyUsage: unknown } | undefined,
+        stripeCustomerId?: string
+      ) =>
+        billingRouter.createCaller({
+          user: {
+            userId: 'user_123',
+            email: 'test@example.com',
+            role: 'ADMIN',
+            tenantId: 'tenant_123',
+            stripeCustomerId,
+            emailVerified: true,
+          } as UserSession,
+          prisma: createUsageMetricsPrismaMock(plan) as unknown,
+          prismaWithTenant: createUsageMetricsPrismaMock(plan) as unknown,
+          services: quota ? { quota } : undefined,
+        } as unknown as Parameters<typeof billingRouter.createCaller>[0]);
+
+      it.each([
+        ['STARTER', 1000, 1000],
+        ['PROFESSIONAL', 10000, 10000],
+        ['ENTERPRISE', null, -1],
+        ['CUSTOM', null, -1],
+      ])(
+        'reads the %s plan limit and this month counter from QuotaService',
+        async (plan, limit, shown) => {
+          const getLimits = vi
+            .fn()
+            .mockResolvedValue({ seats: 5, contacts: 5, aiActionsPerMonth: limit });
+          const getKeyUsage = vi.fn().mockResolvedValue(432);
+          const result = await callerFor(plan, { getLimits, getKeyUsage }).getUsageMetrics();
+          expect(getKeyUsage).toHaveBeenCalledWith('tenant_123', 'aiActionsPerMonth');
+          expect(result?.planLimits.aiPredictions).toEqual({ current: 432, limit: shown });
+        }
+      );
+
+      it('shows a tenant override of the allowance', async () => {
+        const getLimits = vi
+          .fn()
+          .mockResolvedValue({ seats: 3, contacts: 2000, aiActionsPerMonth: 2500 });
+        const getKeyUsage = vi.fn().mockResolvedValue(10);
+        const result = await callerFor('STARTER', { getLimits, getKeyUsage }).getUsageMetrics();
+        expect(result?.planLimits.aiPredictions).toEqual({ current: 10, limit: 2500 });
+      });
+
+      it('does not count AI score rows as the usage (that was the old duplicate table)', async () => {
+        const getLimits = vi
+          .fn()
+          .mockResolvedValue({ seats: 3, contacts: 2000, aiActionsPerMonth: 1000 });
+        const getKeyUsage = vi.fn().mockResolvedValue(0);
+        const prisma = new Proxy(
+          {},
+          {
+            get: (_t, model) => ({
+              count: vi.fn().mockResolvedValue(model === 'aIScore' ? 777 : 0),
+              findUnique: vi.fn().mockResolvedValue({ plan: 'STARTER' }),
+            }),
+          }
+        );
+        const caller = billingRouter.createCaller({
+          user: {
+            userId: 'u',
+            email: 'a@b.c',
+            role: 'ADMIN',
+            tenantId: 'tenant_123',
+            stripeCustomerId: undefined,
+            emailVerified: true,
+          } as UserSession,
+          prisma,
+          prismaWithTenant: prisma,
+          services: { quota: { getLimits, getKeyUsage } },
+        } as unknown as Parameters<typeof billingRouter.createCaller>[0]);
+        const result = await caller.getUsageMetrics();
+        expect(result?.planLimits.aiPredictions.current).toBe(0);
+        expect(result?.ai.scoresThisPeriod).toBe(777);
+      });
+
+      it('reads the enforced quota for a Stripe customer too', async () => {
+        mockStripeAdapterMethods.listSubscriptions.mockResolvedValue({
+          isSuccess: true,
+          isFailure: false,
+          value: [mockSubscription],
+        });
+        const getLimits = vi
+          .fn()
+          .mockResolvedValue({ seats: 10, contacts: 20000, aiActionsPerMonth: 10000 });
+        const getKeyUsage = vi.fn().mockResolvedValue(9000);
+        const result = await callerFor(
+          'PROFESSIONAL',
+          { getLimits, getKeyUsage },
+          'cus_123'
+        ).getUsageMetrics();
+        expect(result?.planLimits.aiPredictions).toEqual({ current: 9000, limit: 10000 });
+      });
+
+      it.each([['free', 'PARTNER_FREE', 0]])(
+        'falls back to the registry default without a quota service (%s)',
+        async (_k, plan, limit) => {
+          const result = await callerFor(plan, undefined).getUsageMetrics();
+          expect(result?.planLimits.aiPredictions).toEqual({ current: 0, limit });
+        }
+      );
+    });
+
+    it('scopes every count to the caller tenant and gives SUPER_ADMIN without Stripe enterprise limits', async () => {
+      const countSpies: Array<ReturnType<typeof vi.fn>> = [];
+      const prisma = new Proxy(
+        {},
+        {
+          get: () => {
+            const count = vi.fn().mockResolvedValue(3);
+            countSpies.push(count);
+            return { count };
+          },
+        }
+      );
+      const caller = billingRouter.createCaller({
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'SUPER_ADMIN',
+          tenantId: 'tenant_abc',
+          stripeCustomerId: undefined,
+          emailVerified: true,
+        } as UserSession,
+        prisma,
+      } as unknown as Parameters<typeof billingRouter.createCaller>[0]);
+
+      const result = await caller.getUsageMetrics();
+      expect(result?.planLimits.contacts.limit).toBe(-1);
+      expect(result?.crm.contacts).toBe(3);
+      expect(countSpies.length).toBeGreaterThan(0);
+      for (const spy of countSpies) {
+        expect(JSON.stringify(spy.mock.calls[0]?.[0])).toContain('tenant_abc');
+      }
     });
 
     it('returns usage metrics when user has subscription', async () => {

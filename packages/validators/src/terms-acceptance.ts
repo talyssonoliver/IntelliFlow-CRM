@@ -8,6 +8,14 @@
 import { z } from 'zod';
 
 /**
+ * The Terms of Service version currently published at /terms. Server-side source of truth for
+ * anything that must compare a firm's acceptances against what is published (never a client value).
+ * Must equal the `version:` line of docs/shared/terms-content.md; a test enforces this, so
+ * publishing new terms without bumping this constant fails CI.
+ */
+export const PUBLISHED_TERMS_VERSION = 'v2026.10';
+
+/**
  * Input schema for the `termsAcceptance.accept` mutation.
  *
  * NOTE: acceptedAt, ipAddress, userAgent, tenantId, and userId are ALL

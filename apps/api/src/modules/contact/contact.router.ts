@@ -16,8 +16,7 @@ import { context as otelContext, propagation } from '@opentelemetry/api';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 // IFC-312 audit fix F7: type the listReplyDrafts .map() result instead of `any`.
-import type { ContactReplyDraft } from '@intelliflow/db';
-import { tenantUserWhere } from '@intelliflow/db';
+import { tenantUserWhere, type ContactReplyDraft } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   assertCanDeleteContact,
@@ -28,6 +27,7 @@ import {
   normalizePhone,
   toContactRequiredFieldPayload,
 } from './contact-automation';
+import { buildContactInfoUpdates, type UpdateContactData } from './contact-info-updates';
 import {
   assertContactTypeOnUpdate,
   assertTypeRequiredOnCreate,
@@ -64,6 +64,7 @@ import {
   bulkEmailContactsSchema,
   bulkExportContactsSchema,
   bulkDeleteContactsSchema,
+  type ReplyDraftStatus,
 } from '@intelliflow/validators';
 import {
   performContactReassign,
@@ -83,6 +84,7 @@ import { deriveContactInsights } from '../../shared/contact-insight-deriver';
 // IFC-255: fire-and-forget audit logging for contact mutations + single-record reads
 import { getAuditLogger } from '../../security/audit-logger';
 import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
+import { isModuleEnabledForTenant } from '../../shared/module-enabled';
 
 /**
  * IFC-255: shared fire-and-forget audit-failure handler. Audit logging must
@@ -103,54 +105,7 @@ const contactSearchSchema = z.object({
   includeAccount: z.boolean().default(false),
 });
 
-type UpdateContactData = Record<string, unknown> & {
-  phone?: string | { toValue?: () => string };
-  firstName?: string;
-  lastName?: string;
-  title?: string;
-  department?: string;
-  status?: string;
-  streetAddress?: string;
-  city?: string;
-  zipCode?: string;
-  company?: string;
-  linkedInUrl?: string;
-  /** null removes the contact's type (PG-205). */
-  contactType?: string | null;
-  tags?: string[];
-  contactNotes?: string;
-};
-
-const CONTACT_INFO_FIELDS = [
-  'firstName',
-  'lastName',
-  'title',
-  'department',
-  'status',
-  'streetAddress',
-  'city',
-  'zipCode',
-  'company',
-  'linkedInUrl',
-  'contactType',
-  'tags',
-  'contactNotes',
-] as const;
-
-/**
- * Build the info-update payload from a contact update input, extracting
- * all scalar fields and resolving the phone Value Object.
- */
-function buildContactInfoUpdates(data: UpdateContactData): Record<string, unknown> {
-  const updates: Record<string, unknown> = {};
-  for (const field of CONTACT_INFO_FIELDS) {
-    if (data[field] !== undefined) updates[field] = data[field];
-  }
-  if (data.phone !== undefined) {
-    updates.phone = typeof data.phone === 'string' ? data.phone : data.phone?.toValue?.();
-  }
-  return updates;
-}
+// The update fields and their payload builder live in ./contact-info-updates (MVP-003 #28).
 
 /**
  * Build the base WHERE clause for the contacts list query.
@@ -453,7 +408,7 @@ function buildHygienedContactData(
     ...(data.lastName !== undefined
       ? { lastName: capitalizeName(data.lastName, flags) ?? data.lastName }
       : {}),
-    ...(rawPhone !== undefined ? { phone: normalizePhone(rawPhone, flags) ?? undefined } : {}),
+    ...(rawPhone !== undefined ? { phone: normalizePhone(rawPhone, flags) } : {}), // null: cleared
   };
 }
 
@@ -941,8 +896,10 @@ export const contactRouter = createTRPCRouter({
         },
       ],
     };
+    // Tickets belong to the SUPPORT module: a workspace without it gets no ticket data here either.
+    const ticketsAvailable = await isModuleEnabledForTenant(ctx, tenantId, 'SUPPORT');
     const [contactTickets, caseDocuments, ticketCount, documentCount] = await Promise.all([
-      ctx.services?.ticket
+      ctx.services?.ticket && ticketsAvailable
         ? ctx.services.ticket.listByContact({ tenantId, contactId: input.id, limit: 20 })
         : Promise.resolve([]),
       typedCtx.prismaWithTenant.caseDocument.findMany({
@@ -958,7 +915,7 @@ export const contactRouter = createTRPCRouter({
           createdAt: true,
         },
       }),
-      ctx.services?.ticket
+      ctx.services?.ticket && ticketsAvailable
         ? ctx.services.ticket.countByContact({ tenantId, contactId: input.id })
         : Promise.resolve(0),
       typedCtx.prismaWithTenant.caseDocument.count({ where: documentWhere }),
@@ -2143,6 +2100,9 @@ export const contactRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
 
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
+
       const contact = await typedCtx.prismaWithTenant.contact.findUnique({
         where: { id: input.contactId },
         select: {
@@ -2396,6 +2356,9 @@ export const contactRouter = createTRPCRouter({
       const flags = await loadContactAutomation(typedCtx);
       if (!flags.aiTagSuggestions) return [];
 
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
+
       const contact = await ctx.prismaWithTenant.contact.findUnique({
         where: { id: input.contactId },
       });
@@ -2456,6 +2419,9 @@ export const contactRouter = createTRPCRouter({
       const flags = await loadContactAutomation(typedCtx);
       if (!flags.aiInsightGeneration) return { enqueued: false };
 
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
+
       try {
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const otelCarrier: Record<string, string> = {};
@@ -2491,6 +2457,9 @@ export const contactRouter = createTRPCRouter({
           message: 'AI reply drafting is disabled for this tenant',
         });
       }
+
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
 
       const contact = await ctx.prismaWithTenant.contact.findUnique({
         where: { id: input.contactId },
@@ -2600,18 +2569,18 @@ export const contactRouter = createTRPCRouter({
     .output(contactListReplyDraftsOutputSchema)
     .query(async ({ ctx, input }) => {
       const drafts = await ctx.prismaWithTenant.contactReplyDraft.findMany({
-        where: { contactId: input.contactId },
-        orderBy: { createdAt: 'desc' },
+        where: { contactId: input.contactId, status: { not: 'DISMISSED' } }, // MVP-012: set aside
+        orderBy: [{ status: 'asc' }, { createdAt: 'desc' }], // DRAFT (waiting) sorts first
         take: input.limit,
       });
       return {
         drafts: drafts.map((d: ContactReplyDraft) => ({
           id: d.id,
-          contactId: d.contactId,
+          contactId: d.contactId ?? input.contactId, // listed by contact
           draftSubject: d.draftSubject,
           draftBody: d.draftBody,
           tone: d.tone,
-          status: d.status as 'DRAFT' | 'DISMISSED' | 'SENT',
+          status: d.status as ReplyDraftStatus,
           confidence: d.confidence,
           modelVersion: d.modelVersion,
           createdAt: d.createdAt,

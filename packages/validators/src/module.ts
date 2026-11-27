@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { CRM_MODULES, PLAN_TIERS } from '@intelliflow/domain';
+import { CRM_MODULES, PLAN_TIERS, TENANT_BUSINESS_TYPES } from '@intelliflow/domain';
 
 // =============================================================================
 // Enum Schemas (derived from domain constants)
@@ -48,3 +48,14 @@ export const planInfoSchema = z.object({
 });
 
 export const plansResponseSchema = z.array(planInfoSchema);
+
+// =============================================================================
+// Business type (owner ruling 23/11/2026: vertical modules follow the business type)
+// =============================================================================
+
+export const tenantBusinessTypeSchema = z.enum(TENANT_BUSINESS_TYPES);
+export type TenantBusinessTypeInput = z.infer<typeof tenantBusinessTypeSchema>;
+
+export const setBusinessTypeInputSchema = z.object({
+  businessType: tenantBusinessTypeSchema,
+});

@@ -21,7 +21,8 @@ export interface ROIData {
   totalCost: number;
   totalValue: number;
   netValue: number;
-  roi: number;
+  /** ROI percentage; null when the API returned no finite value */
+  roi: number | null;
   trendDirection: string;
 }
 

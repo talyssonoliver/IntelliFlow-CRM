@@ -159,6 +159,11 @@ describe('classifyAccessTier', () => {
     expect(classifyAccessTier('(public)/about/page.tsx')).toBe('public');
   });
 
+  it('returns public for the (landing)/ group (the prerendered signed-out /)', () => {
+    expect(classifyAccessTier('(landing)/page.tsx')).toBe('public');
+    expect(classifyAccessTier(String.raw`(landing)\page.tsx`)).toBe('public');
+  });
+
   it('TC-10: returns developer for (developer)/ paths', () => {
     expect(classifyAccessTier('(developer)/docs/api/page.tsx')).toBe('developer');
   });

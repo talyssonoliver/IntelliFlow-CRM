@@ -111,5 +111,32 @@ describe('TermsAcceptance domain class', () => {
       expect(ta.userId).toBe(validProps.userId);
       expect(ta.acceptedAt).toBeInstanceOf(Date);
     });
+
+    it('exposes id, ipAddress, userAgent and route getters', () => {
+      const ta = TermsAcceptance.create(validProps);
+
+      expect(ta.id).toBe(validProps.id);
+      expect(ta.ipAddress).toBe(validProps.ipAddress);
+      expect(ta.userAgent).toBe(validProps.userAgent);
+      expect(ta.route).toBe(validProps.route);
+    });
+
+    it('exposes null ipAddress and userAgent when none were captured', () => {
+      const ta = TermsAcceptance.create({ ...validProps, ipAddress: null, userAgent: null });
+
+      expect(ta.ipAddress).toBeNull();
+      expect(ta.userAgent).toBeNull();
+    });
+
+    it('returns a copy of acceptedAt so callers cannot mutate the audit timestamp', () => {
+      const ts = new Date('2026-06-29T00:00:00.000Z');
+      const ta = TermsAcceptance.fromRecord({ ...validProps, acceptedAt: ts });
+
+      ta.acceptedAt.setFullYear(1999);
+      ta.toRecord().acceptedAt.setFullYear(1999);
+      ts.setFullYear(1999);
+
+      expect(ta.acceptedAt.toISOString()).toBe('2026-06-29T00:00:00.000Z');
+    });
   });
 });

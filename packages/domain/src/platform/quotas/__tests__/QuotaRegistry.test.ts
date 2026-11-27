@@ -24,6 +24,7 @@ describe('QUOTA_PLAN_MAP', () => {
       seats: 2,
       emailsPerMonth: 0,
       aiSpendCentsPerMonth: 0,
+      aiActionsPerMonth: 0,
       workflowsActive: 0,
     });
   });
@@ -34,6 +35,7 @@ describe('QUOTA_PLAN_MAP', () => {
       seats: 3,
       emailsPerMonth: 500,
       aiSpendCentsPerMonth: 2000,
+      aiActionsPerMonth: 1000,
       workflowsActive: 3,
     });
     expect(QUOTA_PLAN_MAP.PROFESSIONAL).toEqual({
@@ -41,6 +43,7 @@ describe('QUOTA_PLAN_MAP', () => {
       seats: 10,
       emailsPerMonth: 5000,
       aiSpendCentsPerMonth: 20000,
+      aiActionsPerMonth: 10000,
       workflowsActive: 25,
     });
   });
@@ -51,6 +54,23 @@ describe('QUOTA_PLAN_MAP', () => {
         expect(QUOTA_PLAN_MAP[tier][key]).toBeNull();
       }
     }
+  });
+});
+
+describe('aiActionsPerMonth (AI allowance counts actions, matches the pricing page)', () => {
+  it('gives Starter 1,000, Professional 10,000, Enterprise and Custom unlimited', () => {
+    expect(QUOTA_PLAN_MAP.STARTER.aiActionsPerMonth).toBe(1000);
+    expect(QUOTA_PLAN_MAP.PROFESSIONAL.aiActionsPerMonth).toBe(10000);
+    expect(QUOTA_PLAN_MAP.ENTERPRISE.aiActionsPerMonth).toBeNull();
+    expect(QUOTA_PLAN_MAP.CUSTOM.aiActionsPerMonth).toBeNull();
+  });
+
+  it('keeps AI off for PARTNER_FREE, as its spend allowance and module set already do', () => {
+    expect(QUOTA_PLAN_MAP.PARTNER_FREE.aiActionsPerMonth).toBe(0);
+  });
+
+  it('resets every UTC month', () => {
+    expect(getQuotaPeriod('aiActionsPerMonth', new Date('2026-03-15T10:00:00Z'))).toBe('2026-03');
   });
 });
 
@@ -71,6 +91,7 @@ describe('helpers', () => {
   it('flags monthly keys', () => {
     expect(isMonthlyQuotaKey('emailsPerMonth')).toBe(true);
     expect(isMonthlyQuotaKey('aiSpendCentsPerMonth')).toBe(true);
+    expect(isMonthlyQuotaKey('aiActionsPerMonth')).toBe(true);
     expect(isMonthlyQuotaKey('contacts')).toBe(false);
   });
 
