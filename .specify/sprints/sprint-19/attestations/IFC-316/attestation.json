@@ -32,7 +32,7 @@
     "new_unit_tests": 58,
     "real_db_tests": 52,
     "pr_communications": 1361,
-    "pr_stored_files": "the pull request from branch feat/ifc-316b-erase-stored-files (number in the PR title link)"
+    "pr_stored_files": 1588
   },
   "validation_results": [
     {
@@ -162,5 +162,5 @@
       "met": true
     }
   ],
-  "notes": "Two PRs: #1361 (communications in the erasure transaction) and the follow-up on branch feat/ifc-316b-erase-stored-files (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are kept as unmanaged; only email attachments (the email-attachments bucket) are CRM objects. A future upload path must register its bucket. The CRM deletes only files it alone owns (in the email-attachments bucket, under the firm's prefix, used by no retained record). Everything else is kept, read-only and resolved: SHARED_KEPT (another retained record uses it) or UNMANAGED (outside the CRM's storage), with no locator stored and no delete or confirm action. An erasure from before the queue shows no claim about its files."
+  "notes": "Two PRs: #1361 (communications in the erasure transaction) and #1588 (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are kept as unmanaged; only email attachments (the email-attachments bucket) are CRM objects. A future upload path must register its bucket. The CRM deletes only files it alone owns (in the email-attachments bucket, under the firm's prefix, used by no retained record). Everything else is kept, read-only and resolved: SHARED_KEPT (another retained record uses it) or UNMANAGED (outside the CRM's storage), with no locator stored and no delete or confirm action. An erasure from before the queue shows no claim about its files."
 }
