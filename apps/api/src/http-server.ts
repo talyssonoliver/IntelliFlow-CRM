@@ -476,7 +476,16 @@ async function handleStripeWebhookRoute(
     }
   })();
 
+  // Agreement clause 5: a subscription that ends starts the customer's data export at once.
+  const { prisma } = await import('@intelliflow/db');
+  const { createEndedSubscriptionExportHook } =
+    await import('./modules/workspace-export/ended-subscription-export.js');
+
   const result = await processStripeWebhook(rawBody, headers, {
+    onSubscriptionEnded: createEndedSubscriptionExportHook(
+      prisma as unknown as import('@intelliflow/db').PrismaClient,
+      console
+    ),
     subscriptionRepository: adapters.stripeSubscriptionRepository,
     portalSync: adapters.portalDeliverySync,
     setupInstalments: adapters.setupInstalmentRepository,

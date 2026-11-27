@@ -41,7 +41,7 @@ export function isScannedFile(rel) {
  * tenant-scoped client itself (createTenantScopedPrisma) is also not an unscoped query.
  */
 export const SERVICE_FACTORY =
-  /(?:getAuditLogger|getMfaService|getSessionService|createNotification|createOutboxPortalPushEnqueuer|createTenantScopedPrisma)\(\s*ctx\.prisma\b(?!WithTenant)|new\s+RBACService\(\s*ctx\.prisma\b(?!WithTenant)/g;
+  /(?:getAuditLogger|getMfaService|getSessionService|createNotification|createOutboxPortalPushEnqueuer|createEndedSubscriptionExportHook|createTenantScopedPrisma)\(\s*ctx\.prisma\b(?!WithTenant)|new\s+RBACService\(\s*ctx\.prisma\b(?!WithTenant)/g;
 
 const UNSCOPED = /\bctx\.prisma\b(?!WithTenant)/g;
 
