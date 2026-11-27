@@ -56,7 +56,7 @@ export function claudeReviewModel(env = process.env) {
 }
 
 /** CLAUDE_REVIEW_ARGS with `--model <model>` passed explicitly, so the account default never decides. */
-export function claudeReviewArgs(model = DEFAULT_CLAUDE_REVIEW_MODEL) {
+export function claudeReviewArgs(model) {
   return [CLAUDE_REVIEW_ARGS[0], '--model', model, ...CLAUDE_REVIEW_ARGS.slice(1)];
 }
 
