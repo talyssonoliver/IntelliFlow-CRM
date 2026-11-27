@@ -57,6 +57,18 @@ pnpm run db:studio            # Open Prisma Studio
 - `tsconfig.json` rootDir is `.` (not `./src`) to include generated types in DTS
   output
 
+## Hosted-database boot guard
+
+Every DB client creation site calls `assertHostedDbAllowed`
+(`src/hosted-db-guard.ts`): a connection string naming a hosted Supabase
+database (host ending `.supabase.co` or `pooler.supabase.com`) is refused unless
+the process is a deployed runtime (`RAILWAY_ENVIRONMENT` set, or `VERCEL_ENV`
+production/preview). Deliberate ops tools set `ALLOW_HOSTED_DB=1` (logged
+loudly). The error names the variable and never prints the URL. A new
+`new PrismaClient`, `new PrismaPg` or `pg.Pool` in api, workers or this package
+must call it first. Origin: incident 2026-11-27, a local worker boot ran against
+production.
+
 ## Testing
 
 - When Prisma mock types don't support `include`/`select` relations, cast mock
