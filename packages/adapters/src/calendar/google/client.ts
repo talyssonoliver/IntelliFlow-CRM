@@ -28,6 +28,10 @@ import { IdempotencyManager, InMemoryIdempotencyStore } from '../shared/Idempote
  */
 
 // Google Calendar API Types
+/** The private extended properties an event made from an Aurora appointment carries (MVP-013). */
+export const AURORA_APPOINTMENT_PROPERTY = 'auroraAppointmentId';
+export const AURORA_IDEMPOTENCY_PROPERTY = 'auroraIdempotencyKey';
+
 interface GoogleCalendarEvent {
   id?: string;
   summary?: string;
@@ -57,6 +61,8 @@ interface GoogleCalendarEvent {
   updated?: string;
   created?: string;
   visibility?: string;
+  /** Private properties are visible to the app that wrote them only (never to guests). */
+  extendedProperties?: { private?: Record<string, string> };
 }
 
 interface GoogleAttendee {
@@ -332,6 +338,15 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
 
       const googleEvent = this.appointmentToGoogleEvent(appointment);
       if (options?.eventId) googleEvent.id = options.eventId;
+      // MVP-013: the event says which appointment and which operation made it, in a private property.
+      // The sync's link table is the first guard against a duplicate; this marker lets a link that was
+      // lost be made again from the event, instead of the event being imported as a second appointment.
+      googleEvent.extendedProperties = {
+        private: {
+          [AURORA_APPOINTMENT_PROPERTY]: appointment.id.value,
+          [AURORA_IDEMPOTENCY_PROPERTY]: idempotencyKey,
+        },
+      };
 
       try {
         this.rateLimiter.recordRequest();
@@ -1100,6 +1115,7 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
       etag: event.etag,
       lastModified: event.updated ? new Date(event.updated) : new Date(),
       visibility: this.mapGoogleVisibility(event.visibility),
+      auroraAppointmentId: event.extendedProperties?.private?.[AURORA_APPOINTMENT_PROPERTY],
     };
   }
 

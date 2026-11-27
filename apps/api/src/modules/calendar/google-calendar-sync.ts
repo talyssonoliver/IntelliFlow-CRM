@@ -1,7 +1,7 @@
 /**
  * Google Calendar sync (MVP-013). Like the inbox sync, each due mailbox (a user's own Google mailbox
- * with the calendar permission, due every five minutes) is claimed one at a time with a lease, read
- * (google-calendar-pull.ts) then written to (google-calendar-push.ts), and released with the outcome.
+ * with the calendar permission, due every four minutes so a change lands within five) is claimed one
+ * at a time with a lease, read (google-calendar-pull.ts) then written to (google-calendar-push.ts), and released with the outcome.
  * A failure backs the mailbox off and never changes its mail status. Google answering that the
  * calendar permission is gone marks it NEEDS_RECONNECT, and the sync stops until the user reconnects.
  * The shared background tick runs it (background-jobs.ts), unless GOOGLE_CALENDAR_SYNC=off.
@@ -31,7 +31,12 @@ import {
 import { pullChanges, type PullResult } from './google-calendar-pull';
 import { pushChanges, type PushResult } from './google-calendar-push';
 
-export const CALENDAR_SYNC_INTERVAL_MS = 5 * 60_000;
+/**
+ * A mailbox is due this long after its last round began. The shared tick runs every minute, so a round
+ * starts between this and a minute later: four minutes keeps a change on either side within the five
+ * the owner was promised (five would let it take up to six).
+ */
+export const CALENDAR_SYNC_INTERVAL_MS = 4 * 60_000;
 const LEASE_MS = 5 * 60_000;
 const MAILBOXES_PER_TICK = 10;
 /** A tick stops claiming mailboxes after this, so one tick always ends well inside a lease. */
@@ -306,7 +311,7 @@ export async function createCalendarSyncDeps(): Promise<CalendarSyncDeps> {
 
 /**
  * The calendar sync's part of the shared tick. It never throws, so it can follow the inbox sync in a
- * `finally`: a failure here is logged and the next tick tries again. Mailboxes are due every five
+ * `finally`: a failure here is logged and the next tick tries again. Mailboxes are due every four
  * minutes whatever the tick's interval, so a faster tick does not sync more often.
  */
 export async function runCalendarSyncTick(
