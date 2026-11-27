@@ -212,6 +212,7 @@ export const TENANT_MODELS: Readonly<Record<string, TenantModelInfo>> = {
   WebhookEndpoint: { nullable: false, defaulted: false, relation: 'tenant' },
   WorkflowDefinition: { nullable: false, defaulted: false, relation: 'tenant' },
   WorkflowExecution: { nullable: false, defaulted: false, relation: 'tenant' },
+  WorkspaceExportRequest: { nullable: false, defaulted: false, relation: 'tenant' },
   ZepEpisodeAudit: { nullable: false, defaulted: true, relation: null },
   ZepEpisodeUsage: { nullable: false, defaulted: true, relation: null },
 };

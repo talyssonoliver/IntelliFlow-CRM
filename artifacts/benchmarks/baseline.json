@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-27T01:24:03.181Z",
+  "timestamp": "2026-11-27T16:41:25.334Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1533,16 +1533,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 220,
-    "total_fields": 3291,
-    "total_indexes": 973,
+    "total_tables": 221,
+    "total_fields": 3310,
+    "total_indexes": 974,
     "total_relations": 325,
     "tables_with_embeddings": 4,
-    "enums": 84,
+    "enums": 86,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 197,
+        "fields": 198,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -1811,6 +1811,13 @@
         "fields": 19,
         "indexes": 7,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "WorkspaceExportRequest",
+        "fields": 18,
+        "indexes": 1,
+        "relations": 0,
         "hasEmbedding": false
       },
       {
