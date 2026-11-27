@@ -43,6 +43,7 @@ import { SuggestedTagsRow } from '@/components/shared/SuggestedTagsRow';
 import { isRecordId } from '@/lib/shared/record-id';
 import { websiteDisplay } from '@/lib/shared/website-display';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 interface AccountDetailProps {
   accountId: string;
   isAuthenticated: boolean;
@@ -456,13 +457,13 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
       {/* Breadcrumb + Title Row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-            <Link href="/accounts" className="hover:text-[#2a78f6] transition-colors">
-              Accounts
-            </Link>
-            <span className="material-symbols-outlined !text-sm">chevron_right</span>
-            <span className="font-medium text-slate-900 dark:text-white">{account.name}</span>
-          </div>
+          <Breadcrumbs
+            items={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Accounts', href: '/accounts' },
+              { label: account.name },
+            ]}
+          />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{account.name}</h1>
         </div>
         <div className="flex gap-3">

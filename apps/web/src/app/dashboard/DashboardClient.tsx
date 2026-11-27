@@ -162,7 +162,6 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
           phones the secondary action shows its icon only. */}
       <PageHeader
         className="mb-6"
-        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Dashboard' }]}
         title="Dashboard"
         description="Your sales, deals and tasks at a glance."
         actions={heroActions}

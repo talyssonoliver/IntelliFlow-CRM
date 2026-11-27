@@ -15,7 +15,6 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import {
@@ -49,6 +48,7 @@ import {
   VersionComparisonView,
 } from './components';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 type TabValue = 'overview' | 'versions' | 'compare' | 'memory' | 'audit';
 
 export default function AISettingsContent() {
@@ -245,13 +245,14 @@ export default function AISettingsContent() {
       <div className="max-w-5xl">
         {/* Header */}
         <div className="mb-8">
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-            <Link href="/agent-approvals" className="hover:text-primary">
-              AI & Agents
-            </Link>
-            <span>/</span>
-            <span className="text-foreground font-medium">AI Chains</span>
-          </nav>
+          <Breadcrumbs
+            items={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'AI & Agents', href: '/agent-approvals' },
+              { label: 'AI Chains' },
+            ]}
+            className="mb-4"
+          />
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">AI Chain Versions</h1>

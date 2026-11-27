@@ -160,7 +160,7 @@ export default function TerritoryMappingContent() {
     <div className="w-full">
       <PageHeader
         breadcrumbs={[
-          { label: 'Home', href: '/' },
+          { label: 'Dashboard', href: '/dashboard' },
           { label: 'Accounts', href: '/accounts' },
           { label: 'Territory Mapping' },
         ]}

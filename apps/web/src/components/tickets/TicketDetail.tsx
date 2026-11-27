@@ -50,6 +50,7 @@ import type {
   TicketAssigneeOption,
 } from './types';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type TabId = 'overview' | 'activity' | 'resolution' | 'attachments' | 'ai-insights';
@@ -249,18 +250,13 @@ export function TicketDetail({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-sm text-slate-500">
-              <Link
-                href={listHref}
-                className="hover:text-[#2a78f6] transition-colors flex items-center gap-1"
-              >
-                <span className="material-symbols-outlined text-[16px]">arrow_back</span> Tickets
-              </Link>
-              <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-              <span className="text-slate-900 dark:text-slate-200 font-medium">
-                #{ticket.ticketNumber}
-              </span>
-            </nav>
+            <Breadcrumbs
+              items={[
+                { label: 'Dashboard', href: '/dashboard' },
+                { label: 'Tickets', href: listHref },
+                { label: `#${ticket.ticketNumber}` },
+              ]}
+            />
 
             {/* Title */}
             <div className="flex items-center gap-3 mt-1">

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 const recordTypes = [
   {
     id: 'lead',
@@ -293,17 +294,10 @@ export default function CreateNewRecordPage() {
         {/* Breadcrumb */}
         <div className="flex flex-col gap-4">
           <div>
-            <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
-              <Link href="/" className="hover:text-ds-primary transition-colors">
-                Home
-              </Link>
-              <span className="material-symbols-outlined text-xs">chevron_right</span>
-              <Link href="/dashboard" className="hover:text-ds-primary transition-colors">
-                Dashboard
-              </Link>
-              <span className="material-symbols-outlined text-xs">chevron_right</span>
-              <span className="text-slate-900 dark:text-slate-100 font-medium">Add New Record</span>
-            </nav>
+            <Breadcrumbs
+              items={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Add New Record' }]}
+              className="mb-2"
+            />
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
               Create New Record
             </h1>

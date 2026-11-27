@@ -117,7 +117,7 @@ export default function ReportSettingsContent() {
   return (
     <ModuleSettingsShell
       breadcrumbs={[
-        { label: 'Home', href: '/' },
+        { label: 'Dashboard', href: '/dashboard' },
         { label: 'Analytics', href: '/analytics' },
         { label: 'Report Settings' },
       ]}

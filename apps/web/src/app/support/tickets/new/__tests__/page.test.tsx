@@ -18,6 +18,7 @@ vi.mock('next/navigation', () => ({
 // Mock @intelliflow/ui (toast + Card)
 const mockToast = vi.fn();
 vi.mock('@intelliflow/ui', () => ({
+  cn: (...a: unknown[]) => a.filter(Boolean).join(' '),
   toast: (...args: unknown[]) => mockToast(...args),
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div data-testid="card" className={className}>

@@ -20,6 +20,7 @@ import { LeadEditor } from '@/components/leads/lead-editor';
 import type { LeadUpdatePayload } from '@/lib/leads/change-tracker';
 import { leadDisplayName } from '@/lib/leads/lead-format';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 const LEAD_EDIT_SKELETON_KEYS = [
   'le-skel-0',
   'le-skel-1',
@@ -145,35 +146,15 @@ export default function EditLeadPage() {
     <ToastProvider>
       <div className="mx-auto max-w-2xl px-4 pt-8 pb-16">
         {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="flex mb-6">
-          <ol className="flex items-center space-x-2 text-sm">
-            <li>
-              <Link
-                href="/leads"
-                className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"
-              >
-                Leads
-              </Link>
-            </li>
-            <li>
-              <span className="text-slate-300 dark:text-slate-600">/</span>
-            </li>
-            <li>
-              <Link
-                href={`/leads/${leadId}`}
-                className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"
-              >
-                {leadDisplayName(lead)}
-              </Link>
-            </li>
-            <li>
-              <span className="text-slate-300 dark:text-slate-600">/</span>
-            </li>
-            <li>
-              <span className="font-medium text-slate-900 dark:text-white">Edit</span>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Leads', href: '/leads' },
+            { label: leadDisplayName(lead), href: `/leads/${leadId}` },
+            { label: 'Edit' },
+          ]}
+          className="mb-6"
+        />
 
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Edit Lead</h1>
 

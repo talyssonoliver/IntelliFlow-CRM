@@ -11,11 +11,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@intelliflow/ui';
 import { WorkflowCanvas } from './WorkflowCanvas';
 import { api } from '@/lib/api';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 export interface CanvasScreenProps {
   /** null for a new workflow; non-null for an edit */
   workflowId: string | null;
@@ -70,22 +70,14 @@ export function CanvasScreen({ workflowId }: CanvasScreenProps) {
             (matches Notion / Figma / Linear convention). PageHeader's
             structured `title` prop forces a static h1 so we render the
             row by hand to keep the same density. */}
-        <nav
-          aria-label="Breadcrumb"
-          className="flex items-center gap-2 text-sm text-muted-foreground mb-1"
-        >
-          <Link href="/cases" className="hover:text-foreground transition-colors">
-            Cases
-          </Link>
-          <span aria-hidden="true">/</span>
-          <Link href="/cases/case-workflows" className="hover:text-foreground transition-colors">
-            Case Workflows
-          </Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page" className="text-foreground font-medium truncate">
-            {displayName}
-          </span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Cases', href: '/cases' },
+            { label: 'Case Workflows', href: '/cases/case-workflows' },
+            { label: displayName },
+          ]}
+        />
 
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">

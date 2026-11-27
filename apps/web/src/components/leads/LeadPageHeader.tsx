@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@intelliflow/ui';
 import { PinButton } from '@/components/home/PinButton';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
@@ -9,6 +8,7 @@ import { QualifyLeadButton } from '@/components/leads/QualifyLeadDialog';
 import { canQualifyLead } from '@/lib/leads/lead-conversion';
 import { leadCompanyIfDistinct, leadDisplayName } from '@/lib/leads/lead-format';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 /** What the header needs of a lead: the name parts, its status and what the pin card shows. */
 export interface LeadHeaderLead {
   id: string;
@@ -116,18 +116,13 @@ export function LeadPageHeader({
   return (
     <div className="flex items-center justify-between gap-3 mb-6">
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-          <Link
-            href="/leads"
-            className="inline-flex min-h-11 -my-3 items-center hover:text-[#2a78f6]"
-          >
-            Leads
-          </Link>
-          <span className="material-symbols-outlined !text-sm hidden sm:inline">chevron_right</span>
-          <span className="font-medium text-slate-900 dark:text-white hidden sm:inline">
-            {name}
-          </span>
-        </div>
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Leads', href: '/leads' },
+            { label: name },
+          ]}
+        />
         <h1 className="truncate text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
           {name}
         </h1>

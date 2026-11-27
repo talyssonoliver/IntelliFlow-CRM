@@ -124,6 +124,7 @@ vi.mock('@/lib/trpc', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
+  cn: (...a: unknown[]) => a.filter(Boolean).join(' '),
   Card: ({ children, className }: any) => <div className={className}>{children}</div>,
   Skeleton: ({ className }: any) => <div data-testid="skeleton" className={className} />,
   ToastProvider: ({ children }: any) => <div>{children}</div>,

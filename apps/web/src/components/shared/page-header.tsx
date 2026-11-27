@@ -317,7 +317,7 @@ export function ActionButton({ action, tone = 'plain' }: Readonly<ActionButtonPr
  * ```tsx
  * <PageHeader
  *   breadcrumbs={[
- *     { label: 'Home', href: '/' },
+ *     { label: 'Dashboard', href: '/dashboard' },
  *     { label: 'Leads', href: '/leads' },
  *     { label: 'All Leads' },
  *   ]}

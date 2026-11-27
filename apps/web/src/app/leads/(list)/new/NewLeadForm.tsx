@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -30,6 +29,7 @@ import {
   type LeadFormValues,
 } from '@/components/leads/LeadForm';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 type StepId = 'basic' | 'company' | 'qualification';
 type StepStatus = 'completed' | 'current' | 'upcoming';
 
@@ -277,35 +277,13 @@ export default function NewLeadForm() {
     <ToastProvider>
       <div className="flex flex-col gap-8">
         <div className="flex flex-col gap-4">
-          <nav aria-label="Breadcrumb" className="flex">
-            <ol className="flex items-center space-x-2">
-              <li>
-                <Link
-                  href="/dashboard"
-                  className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] text-sm font-medium transition-colors"
-                >
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-              </li>
-              <li>
-                <Link
-                  href="/leads"
-                  className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] text-sm font-medium transition-colors"
-                >
-                  Leads
-                </Link>
-              </li>
-              <li>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-              </li>
-              <li>
-                <span className="text-slate-900 dark:text-white text-sm font-medium">New Lead</span>
-              </li>
-            </ol>
-          </nav>
+          <Breadcrumbs
+            items={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Leads', href: '/leads' },
+              { label: 'New Lead' },
+            ]}
+          />
           <div className="flex flex-col gap-1">
             <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Create New Lead

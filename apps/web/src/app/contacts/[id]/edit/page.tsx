@@ -28,6 +28,7 @@ import { useFormUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { invalidateContactsCache } from '@/app/contacts/(list)/actions';
 import { ContactForm, type ContactFormData } from '@/components/contacts/ContactForm';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 type ToastData = {
   open: boolean;
   variant: 'default' | 'destructive' | 'success';
@@ -219,35 +220,15 @@ export default function EditContactPage() {
     <ToastProvider>
       <div className="mx-auto max-w-3xl px-4 pt-8 pb-16">
         {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="flex mb-6">
-          <ol className="flex items-center space-x-2 text-sm">
-            <li>
-              <Link
-                href="/contacts"
-                className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"
-              >
-                Contacts
-              </Link>
-            </li>
-            <li>
-              <span className="text-slate-300 dark:text-slate-600">/</span>
-            </li>
-            <li>
-              <Link
-                href={`/contacts/${contactId}`}
-                className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"
-              >
-                {contactName}
-              </Link>
-            </li>
-            <li>
-              <span className="text-slate-300 dark:text-slate-600">/</span>
-            </li>
-            <li>
-              <span className="font-medium text-slate-900 dark:text-white">Edit</span>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Contacts', href: '/contacts' },
+            { label: contactName, href: `/contacts/${contactId}` },
+            { label: 'Edit' },
+          ]}
+          className="mb-6"
+        />
 
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Edit Contact</h1>
 

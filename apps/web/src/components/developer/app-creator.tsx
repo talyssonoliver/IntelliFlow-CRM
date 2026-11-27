@@ -20,6 +20,7 @@ import {
   type OAuthCredentials,
 } from '@/lib/developer/oauth-setup';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 export interface AppFormData {
   name: string;
   description: string;
@@ -182,23 +183,14 @@ export function AppCreator() {
   if (createdApp) {
     return (
       <div data-testid="app-creator">
-        <nav aria-label="Breadcrumb" className="mb-6">
-          <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <li>
-              <Link href="/developers/apps" className="hover:text-foreground transition-colors">
-                Developer Apps
-              </Link>
-            </li>
-            <li>
-              <span className="material-symbols-outlined text-xs" aria-hidden="true">
-                chevron_right
-              </span>
-            </li>
-            <li aria-current="page" className="text-foreground font-medium">
-              App Created
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Developer Apps', href: '/developers/apps' },
+            { label: 'App Created' },
+          ]}
+          className="mb-6"
+        />
 
         <h1 className="text-2xl font-bold text-foreground mb-6">App Created Successfully</h1>
 
@@ -313,23 +305,14 @@ export function AppCreator() {
 
   return (
     <div data-testid="app-creator">
-      <nav aria-label="Breadcrumb" className="mb-6">
-        <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <li>
-            <Link href="/developers/apps" className="hover:text-foreground transition-colors">
-              Developer Apps
-            </Link>
-          </li>
-          <li>
-            <span className="material-symbols-outlined text-xs" aria-hidden="true">
-              chevron_right
-            </span>
-          </li>
-          <li aria-current="page" className="text-foreground font-medium">
-            Create New App
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumbs
+        items={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Developer Apps', href: '/developers/apps' },
+          { label: 'Create New App' },
+        ]}
+        className="mb-6"
+      />
 
       <h1 className="text-2xl font-bold text-foreground mb-6">Create New App</h1>
 

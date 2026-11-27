@@ -13,6 +13,7 @@ import { getDocumentTypeDisplayLabel } from '@/components/documents/document-typ
 import type { AccessLevel, DocumentStatus } from '@/components/documents';
 import { mapAuditEntry, type AuditEntry, type AuditTrailRow } from '@/lib/documents/audit-trail';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 // Tab types
 type TabId = 'overview' | 'versions' | 'access-control' | 'signatures' | 'activity' | 'comments';
 
@@ -817,13 +818,13 @@ export default function DocumentDetailPage() {
       {/* Header with breadcrumb and actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-            <Link href="/documents" className="hover:text-[#2a78f6]">
-              Documents
-            </Link>
-            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-            <span className="font-medium text-slate-900 dark:text-white">{document.title}</span>
-          </div>
+          <Breadcrumbs
+            items={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Documents', href: '/documents' },
+              { label: document.title },
+            ]}
+          />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{document.title}</h1>
         </div>
         <div className="flex gap-3">
