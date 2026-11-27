@@ -30,7 +30,7 @@ import {
   type ReportExportType,
 } from './analytics-shared';
 import { AnalyticsViewTabs, PeriodComparisonNote } from './AnalyticsWorkspace';
-import { performanceChanges, usePerformanceMetrics } from './usePerformanceMetrics';
+import { performanceChanges, usePerformanceMetrics, winRateOf } from './usePerformanceMetrics';
 
 const PeriodComparisonChart = dynamic(
   () => import('./PeriodComparisonChart').then((m) => ({ default: m.PeriodComparisonChart })),
@@ -119,11 +119,21 @@ export default function AnalyticsPerformancePage() {
             framed
             label="Win rate"
             icon="emoji_events"
-            value={`${Math.round((m.now?.winRate ?? 0) * 10) / 10}%`}
+            value={
+              winRateOf(m.now) == null
+                ? 'No data'
+                : `${Math.round((m.now?.winRate ?? 0) * 10) / 10}%`
+            }
             pending={pending}
             failed={m.failed}
             labelHint={<MetricDefinition label="Win rate" definition={winRateDefinition(m.now)} />}
-            footer={<VsPrevious comparison={m.kpis.winRate} points />}
+            footer={
+              winRateOf(m.now) == null ? (
+                <p className="text-xs text-muted-foreground">no deals closed in this period</p>
+              ) : (
+                <VsPrevious comparison={m.kpis.winRate} points />
+              )
+            }
           />
           <KpiCard
             framed

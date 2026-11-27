@@ -119,4 +119,14 @@ describe('Analytics Performance view', () => {
     expect(screen.getByText(/vs the previous \d+ days/)).toBeInTheDocument();
     expect(screen.queryByRole('combobox')).toBeNull();
   });
+
+  it('says "No data" for the win rate when no deals closed, never 0% (codex 27/11)', () => {
+    state.sales = [
+      q({ ...salesNow, winRate: 0, closedWonCount: 0, closedLostCount: 0, avgSalesCycleDays: 5 }),
+      q(salesBefore),
+    ];
+    render(<AnalyticsPerformancePage />);
+    expect(screen.getByText('no deals closed in this period')).toBeInTheDocument();
+    expect(screen.queryByText('0%')).toBeNull();
+  });
 });

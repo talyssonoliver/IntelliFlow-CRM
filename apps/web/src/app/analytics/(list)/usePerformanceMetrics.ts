@@ -45,6 +45,13 @@ function pairOrNull(
   return compare(now, before, better);
 }
 
+/** The win rate, or null when the period closed no deals (the API reports 0 then). */
+export function winRateOf(figures: SalesFigures | undefined): number | null {
+  if (!figures) return null;
+  const closed = (figures.closedWonCount ?? 0) + (figures.closedLostCount ?? 0);
+  return closed > 0 ? figures.winRate : null;
+}
+
 /** The four KPI comparisons; null where either period has no figure. */
 export function performanceKpis(
   now: SalesFigures | undefined,
@@ -52,7 +59,8 @@ export function performanceKpis(
 ): PerformanceKpis {
   return {
     revenue: pairOrNull(now?.totalRevenue, before?.totalRevenue),
-    winRate: pairOrNull(now?.winRate, before?.winRate),
+    // No closed deals means no win rate, not 0% (codex 27/11): such a period is not compared.
+    winRate: pairOrNull(winRateOf(now), winRateOf(before)),
     cycle: pairOrNull(now?.avgSalesCycleDays, before?.avgSalesCycleDays, 'lower'),
     pipeline: pairOrNull(now?.pipelineValue, before?.pipelineValue),
   };

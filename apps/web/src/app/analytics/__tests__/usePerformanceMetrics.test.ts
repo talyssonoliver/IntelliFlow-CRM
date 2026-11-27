@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { alignPeriods, performanceChanges, performanceKpis } from '../(list)/usePerformanceMetrics';
+import {
+  alignPeriods,
+  performanceChanges,
+  performanceKpis,
+  winRateOf,
+} from '../(list)/usePerformanceMetrics';
 
 const figures = (over: Record<string, unknown> = {}) => ({
   pipelineValue: 10000,
@@ -17,6 +22,14 @@ describe('performanceKpis', () => {
     const k = performanceKpis(figures(), figures({ totalRevenue: 4000, avgSalesCycleDays: 25 }));
     expect(k.revenue).toMatchObject({ percent: 50, tone: 'good' });
     expect(k.cycle).toMatchObject({ direction: 'down', tone: 'good' });
+  });
+
+  it('does not compare a win rate when a period closed no deals (codex 27/11)', () => {
+    const none = figures({ winRate: 0, closedWonCount: 0, closedLostCount: 0 });
+    expect(performanceKpis(none, figures({ winRate: 50 })).winRate).toBeNull();
+    expect(performanceKpis(figures(), none).winRate).toBeNull();
+    expect(winRateOf(none)).toBeNull();
+    expect(winRateOf(figures())).toBe(30);
   });
 
   it('has no comparison where either period has no figure', () => {
