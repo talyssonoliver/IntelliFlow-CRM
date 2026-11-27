@@ -113,10 +113,14 @@ function RequestRow({
   request,
   onAction,
   onExport,
+  onRetryFiles,
+  retrying,
 }: Readonly<{
   request: DsarRequestDto;
   onAction: (action: RequestAction, request: DsarRequestDto) => void;
   onExport: (request: DsarRequestDto) => void;
+  onRetryFiles: (request: DsarRequestDto) => void;
+  retrying: boolean;
 }>) {
   const isExport = request.type === 'ACCESS' || request.type === 'PORTABILITY';
   return (
@@ -138,6 +142,13 @@ function RequestRow({
             </Badge>
           )}
           {request.clockBreached && <Badge variant="destructive">Answered late</Badge>}
+          {request.storedFilesLeft !== undefined && (
+            <Badge variant={request.storedFilesLeft > 0 ? 'destructive' : 'outline'}>
+              {request.storedFilesLeft > 0
+                ? `${request.storedFilesLeft} stored ${request.storedFilesLeft === 1 ? 'file' : 'files'} not deleted yet`
+                : 'Stored files deleted'}
+            </Badge>
+          )}
         </div>
         {request.details && (
           <p className="max-w-prose whitespace-pre-wrap text-sm text-muted-foreground">
@@ -155,6 +166,18 @@ function RequestRow({
             aria-label={`Download data: ${TYPE_LABELS[request.type]} for ${request.subjectEmail}`}
           >
             Download data
+          </Button>
+        )}
+        {(request.storedFilesLeft ?? 0) > 0 && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={retrying}
+            onClick={() => onRetryFiles(request)}
+            aria-label={`Retry deleting stored files: erasure for ${request.subjectEmail}`}
+          >
+            Retry file deletion
           </Button>
         )}
         {actionsFor(request).map((action) => (
@@ -221,6 +244,7 @@ export default function PrivacyRequestsContent() {
   const logRequest = trpc.privacy.admin.logRequest.useMutation({ onSuccess: refresh });
   const liftRestriction = trpc.privacy.admin.liftRestriction.useMutation({ onSuccess: refresh });
   const exportData = trpc.privacy.admin.exportData.useMutation();
+  const retryFiles = trpc.privacy.admin.retryFileCleanup.useMutation({ onSuccess: refresh });
 
   const pending =
     complete.isPending ||
@@ -254,7 +278,14 @@ export default function PrivacyRequestsContent() {
             note: input.note ?? '',
             ...input,
           });
-          done = result.erasure ? 'Data erased and the person told' : 'Request completed';
+          const left = Object.entries(result.erasure?.checklist ?? {})
+            .filter(([key]) => key.startsWith('stored'))
+            .reduce((sum, [, n]) => sum + n, 0);
+          const notDeleted =
+            left > 0 ? `. ${left} stored files are not deleted yet; retry from the request.` : '';
+          done = result.erasure
+            ? `Data erased and the person told${notDeleted}`
+            : 'Request completed';
           break;
         }
         case 'completeAccess':
@@ -293,6 +324,23 @@ export default function PrivacyRequestsContent() {
       setActive(null);
     } catch (error) {
       setActionError(errorMessage(error));
+    }
+  };
+
+  const runRetryFiles = async (request: DsarRequestDto) => {
+    try {
+      const result = await retryFiles.mutateAsync({ id: request.id });
+      const left = Object.values(result.checklist).reduce((sum, n) => sum + n, 0);
+      toast({
+        title: left === 0 ? 'Stored files deleted' : `${left} stored files are still not deleted`,
+        ...(left > 0 ? { description: 'Try again later, or delete what is left by hand.' } : {}),
+      });
+    } catch (error) {
+      toast({
+        title: 'Could not delete the stored files',
+        description: errorMessage(error),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -367,6 +415,8 @@ export default function PrivacyRequestsContent() {
               onExport={(row) => {
                 runExport(row).catch(() => undefined);
               }}
+              onRetryFiles={() => undefined}
+              retrying={false}
             />
           ))}
         </ul>
@@ -443,6 +493,10 @@ export default function PrivacyRequestsContent() {
                   setActive({ action, request: row });
                 }}
                 onExport={() => undefined}
+                onRetryFiles={(row) => {
+                  runRetryFiles(row).catch(() => undefined);
+                }}
+                retrying={retryFiles.isPending}
               />
             ))}
           </ul>

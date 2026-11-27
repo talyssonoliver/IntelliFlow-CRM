@@ -11,6 +11,7 @@
  */
 import {
   DSAR_LIMITS,
+  STORED_OBJECT_CHECKLIST_KEYS,
   accessCompletesAtVerify,
   accessResolutionNote,
   addCalendarMonths,
@@ -33,6 +34,7 @@ import type {
   ProcessingRestrictionPort,
   RestrictionStatus,
 } from '../ports/repositories/ProcessingRestrictionPort';
+import type { ErasedFilesPurger } from './ErasedFilesCleanupService';
 import type {
   DsarNotice,
   DsarNotificationPort,
@@ -60,6 +62,11 @@ export interface DsarServiceDeps {
   restrictions: ProcessingRestrictionPort;
   notifications: DsarNotificationPort;
   tokens: DsarTokenPort;
+  /**
+   * IFC-316: deletes the stored files an erasure queued, after its transaction commits. Without
+   * it they stay queued and on the checklist.
+   */
+  erasedFiles?: ErasedFilesPurger;
   /**
    * Public origin of the web app, for links (`${appUrl}/dsar/<handle>/...#r=<id>.<token>`).
    * Read when a link is built, so a missing production setting fails that request, not startup.
@@ -89,6 +96,13 @@ type Conflict = { outcome: 'CONFLICT' };
 type Invalid = { outcome: 'INVALID'; field?: string };
 type Refused = { outcome: 'REFUSED'; reason: string };
 type Ok<T = object> = { outcome: 'OK' } & T;
+
+/** The checklist lines for stored files: every source listed, 0 when nothing is left. */
+function fileChecklist(remaining: Record<string, number>): Record<string, number> {
+  return Object.fromEntries(
+    Object.values(STORED_OBJECT_CHECKLIST_KEYS).map((key) => [key, remaining[key] ?? 0])
+  );
+}
 
 export class DataSubjectRequestService {
   constructor(private readonly deps: DsarServiceDeps) {}
@@ -677,7 +691,59 @@ export class DataSubjectRequestService {
     });
     if (erased.outcome === 'NOT_PENDING') return { outcome: 'CONFLICT' };
     await this.notifyCompleted(record, false);
-    return { outcome: 'OK', erasure: erased.result };
+    return { outcome: 'OK', erasure: await this.withFilesPurged(record, erased.result, input.now) };
+  }
+
+  /**
+   * Deletes the stored files the erasure queued (it has already committed, so this never throws
+   * and never fails the erasure) and reports what is left, per source, 0 when all are gone.
+   */
+  private async withFilesPurged(
+    record: DsarRecord,
+    erasure: ErasureOutcome,
+    now: Date
+  ): Promise<ErasureOutcome> {
+    const purger = this.deps.erasedFiles;
+    if (!purger) return erasure;
+    try {
+      const { deleted, remaining } = await purger.purge(record.tenantId, record.id, now);
+      return {
+        counts: { ...erasure.counts, storedFilesDeleted: deleted },
+        checklist: { ...erasure.checklist, ...fileChecklist(remaining) },
+      };
+    } catch {
+      return erasure;
+    }
+  }
+
+  /** Stored files still left for each of these requests, for the admin's list. */
+  async storedFilesLeft(tenantId: string, ids: string[]): Promise<Record<string, number>> {
+    if (!this.deps.erasedFiles || ids.length === 0) return {};
+    try {
+      return await this.deps.erasedFiles.leftFor(tenantId, ids);
+    } catch {
+      return {};
+    }
+  }
+
+  /**
+   * Runs the stored-file cleanup again for an erasure that is already complete (a delete failed
+   * or storage was down): only what is still queued is touched. Returns the checklist left.
+   */
+  async retryFileCleanup(input: {
+    tenantId: string;
+    id: string;
+    now: Date;
+  }): Promise<Ok<{ deleted: number; checklist: Record<string, number> }> | NotFound | Invalid> {
+    const record = await this.deps.repo.findForTenant(input.tenantId, input.id);
+    if (!record) return { outcome: 'NOT_FOUND' };
+    if (record.type !== 'ERASURE' || record.status !== 'COMPLETED') {
+      return { outcome: 'INVALID', field: 'status' };
+    }
+    const purger = this.deps.erasedFiles;
+    if (!purger) return { outcome: 'INVALID', field: 'storage' };
+    const { deleted, remaining } = await purger.purge(input.tenantId, record.id, input.now);
+    return { outcome: 'OK', deleted, checklist: fileChecklist(remaining) };
   }
 
   /** Warn the person of a staff-logged erasure; record when the warning was accepted. */

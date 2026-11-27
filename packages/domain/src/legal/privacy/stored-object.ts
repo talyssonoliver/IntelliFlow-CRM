@@ -1,0 +1,119 @@
+/**
+ * IFC-316 — where an erased person's stored files live, and which of them the CRM may delete.
+ *
+ * Lead files, email attachments, chat attachments and ticket attachments keep a "locator" (a
+ * storage path or a URL). After an erasure each locator is sorted into one of three classes, so
+ * the storage delete is tenant-scoped by construction:
+ *   OBJECT    a path under `<tenantId>/` in a bucket this app owns: the CRM deletes it;
+ *   NONE      not a stored object (blank, an inline data: URL, this app's own download route):
+ *             nothing to delete, the locator is simply cleared;
+ *   UNMANAGED looks like a stored file the CRM cannot delete (another host, another bucket,
+ *             another tenant's path): it stays on the admin's checklist.
+ * Pure: no storage client, no environment.
+ */
+import { isAttachmentPathInTenant } from '../../email/attachment-path';
+
+export const STORED_OBJECT_SOURCES = [
+  'LEAD_FILE',
+  'EMAIL_ATTACHMENT',
+  'CHAT_ATTACHMENT',
+  'TICKET_ATTACHMENT',
+] as const;
+export type StoredObjectSource = (typeof STORED_OBJECT_SOURCES)[number];
+
+/** The admin checklist key each source is counted under. */
+export const STORED_OBJECT_CHECKLIST_KEYS: Record<StoredObjectSource, string> = {
+  LEAD_FILE: 'storedLeadFiles',
+  EMAIL_ATTACHMENT: 'storedEmailAttachments',
+  CHAT_ATTACHMENT: 'storedChatAttachments',
+  TICKET_ATTACHMENT: 'storedTicketAttachments',
+};
+
+export interface StoredObjectRef {
+  bucket: string;
+  path: string;
+}
+
+export type StoredLocatorClass =
+  | { kind: 'OBJECT'; ref: StoredObjectRef }
+  | { kind: 'NONE' }
+  | { kind: 'UNMANAGED' };
+
+export interface StoredObjectConfig {
+  /** Host of this app's storage (the Supabase project); a URL on any other host is unmanaged. */
+  storageHost: string | null;
+  /** Bucket of compose and inbound email attachments. */
+  emailBucket: string;
+  /** Bucket of lead, chat and ticket files. */
+  filesBucket: string;
+}
+
+/** The only buckets the CRM deletes from. */
+export function managedBuckets(config: StoredObjectConfig): string[] {
+  return [config.emailBucket, config.filesBucket];
+}
+
+/** Whether a ref is a tenant's own object in a bucket the CRM owns (the delete guard). */
+export function isManagedRef(ref: StoredObjectRef, tenantId: string, config: StoredObjectConfig) {
+  return (
+    managedBuckets(config).includes(ref.bucket) && isAttachmentPathInTenant(ref.path, tenantId)
+  );
+}
+
+const STORAGE_URL_PATH = /^\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+)$/;
+
+function defaultBucket(source: StoredObjectSource, config: StoredObjectConfig): string {
+  return source === 'EMAIL_ATTACHMENT' ? config.emailBucket : config.filesBucket;
+}
+
+/** Sorts one locator. Never throws. */
+export function classifyStoredLocator(
+  source: StoredObjectSource,
+  locator: string | null | undefined,
+  tenantId: string,
+  config: StoredObjectConfig
+): StoredLocatorClass {
+  const value = (locator ?? '').trim();
+  if (value === '' || /^data:/i.test(value)) return { kind: 'NONE' };
+  // This app's own download route (`/api/email/attachments/...`): no object behind it.
+  if (value.startsWith('/')) return { kind: 'NONE' };
+
+  let ref: StoredObjectRef;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(value)) {
+    let url: URL;
+    try {
+      url = new URL(value);
+    } catch {
+      return { kind: 'UNMANAGED' };
+    }
+    const sameHost = config.storageHost !== null && url.host === config.storageHost;
+    const match = sameHost ? STORAGE_URL_PATH.exec(url.pathname) : null;
+    if (!match) return { kind: 'UNMANAGED' };
+    // A percent escape could become a path step later: refused (isAttachmentPathInTenant).
+    ref = { bucket: match[1], path: match[2] };
+  } else {
+    ref = { bucket: defaultBucket(source, config), path: value };
+  }
+  return isManagedRef(ref, tenantId, config) ? { kind: 'OBJECT', ref } : { kind: 'UNMANAGED' };
+}
+
+/** The locators inside a chat message's attachments JSON: any string a producer put in a locator field. */
+const LOCATOR_FIELDS = ['url', 'fileUrl', 'storagePath', 'path', 'key'] as const;
+
+export function chatAttachmentLocators(attachments: unknown): string[] {
+  const found: string[] = [];
+  const visit = (item: unknown) => {
+    if (typeof item === 'string') {
+      // A bare file name is not a locator: it needs a path or a scheme.
+      if (/[/:]/.test(item)) found.push(item);
+    } else if (item && typeof item === 'object' && !Array.isArray(item)) {
+      for (const field of LOCATOR_FIELDS) {
+        const v = (item as Record<string, unknown>)[field];
+        if (typeof v === 'string') found.push(v);
+      }
+    }
+  };
+  if (Array.isArray(attachments)) attachments.forEach(visit);
+  else visit(attachments);
+  return found;
+}

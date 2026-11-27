@@ -87,6 +87,8 @@ beforeEach(() => {
     cancelErasure: vi.fn().mockResolvedValue({ outcome: 'OK' }),
     liftRestriction: vi.fn().mockResolvedValue({ outcome: 'OK' }),
     revokeExport: vi.fn().mockResolvedValue({ outcome: 'OK' }),
+    storedFilesLeft: vi.fn().mockResolvedValue({}),
+    retryFileCleanup: vi.fn(),
     exportData: vi.fn(),
     restrictionStatus: vi.fn(),
   };
@@ -141,6 +143,29 @@ describe('list', () => {
     expect(rows[3]!.overdue).toBe(false);
     expect(service.list).toHaveBeenCalledWith(TENANT, 'VERIFIED');
     vi.useRealTimers();
+  });
+
+  it('shows a completed erasure how many stored files are still not deleted (IFC-316)', async () => {
+    service.list.mockResolvedValue([
+      record({ id: 'clherased0000000000', status: 'COMPLETED', completedAt: NOW }),
+      record({ id: 'clherasedok00000000', status: 'COMPLETED', completedAt: NOW }),
+      record({ id: 'clhopen000000000000' }),
+      record({ id: 'clhaccess0000000000', type: 'ACCESS', status: 'COMPLETED', completedAt: NOW }),
+    ]);
+    service.storedFilesLeft.mockResolvedValue({ clherased0000000000: 2 });
+    const rows = await adminCaller().list({});
+    const byId = Object.fromEntries(rows.map((r) => [r.id, r.storedFilesLeft]));
+    // 0 when all are gone; absent for requests that are not a completed erasure.
+    expect(byId).toEqual({
+      clherased0000000000: 2,
+      clherasedok00000000: 0,
+      clhopen000000000000: undefined,
+      clhaccess0000000000: undefined,
+    });
+    expect(service.storedFilesLeft).toHaveBeenCalledWith(TENANT, [
+      'clherased0000000000',
+      'clherasedok00000000',
+    ]);
   });
 
   it('reports a download link as active only while its token is live', () => {
@@ -425,6 +450,40 @@ describe('the remaining admin actions', () => {
     await expect(
       adminCaller().extend({ id: ID, months: 1, reason: 'Need more time please' })
     ).rejects.toMatchObject({ code: 'PRECONDITION_FAILED', message: /extended once/ });
+  });
+
+  it('retries the stored-file cleanup of a completed erasure and audits the counts only', async () => {
+    const checklist = { storedLeadFiles: 1, storedEmailAttachments: 0 };
+    service.retryFileCleanup.mockResolvedValue({ outcome: 'OK', deleted: 3, checklist });
+    await expect(adminCaller().retryFileCleanup({ id: ID })).resolves.toEqual({
+      deleted: 3,
+      checklist,
+    });
+    expect(service.retryFileCleanup).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: TENANT, id: ID })
+    );
+    expect(auditLog).toHaveBeenCalledWith(
+      'UPDATE',
+      'dsar_request',
+      ID,
+      TENANT,
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          change: 'FILE_CLEANUP_RETRIED',
+          deleted: 3,
+          checklist,
+        }),
+      })
+    );
+    service.retryFileCleanup.mockResolvedValue({ outcome: 'INVALID', field: 'status' });
+    await expect(adminCaller().retryFileCleanup({ id: ID })).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+      message: /completed erasure/,
+    });
+    service.retryFileCleanup.mockResolvedValue({ outcome: 'NOT_FOUND' });
+    await expect(adminCaller().retryFileCleanup({ id: ID })).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
   });
 
   it('previews an erasure and exports staff-handled access requests', async () => {

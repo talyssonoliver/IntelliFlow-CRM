@@ -4,18 +4,23 @@
  * Seeds one person with mail (as one of several recipients), a ticket with its activity and an
  * attachment, a chat, feedback, a notification, drafts and a calendar event, and another person
  * in the same firm. After the erasure, the person's text, name and address are gone from every
- * row, other people's addresses and rows are untouched, and the checklist lists only deals,
- * tasks and stored files.
+ * row, other people's addresses and rows are untouched, and the stored files (lead files, email,
+ * chat and ticket attachments) are queued in the same transaction, deleted from storage after it
+ * commits, with a failure recorded on the request until a retry deletes it.
  *
  * Skips cleanly (with a visible reason) when DATABASE_URL is not set.
  */
 
 import { randomBytes } from 'node:crypto';
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { PrismaDsarRepository } from '../../packages/adapters/src/repositories/PrismaDsarRepository';
 import { PrismaSubjectDataRepository } from '../../packages/adapters/src/repositories/PrismaSubjectDataRepository';
+import { PrismaStoredObjectRepository } from '../../packages/adapters/src/repositories/PrismaStoredObjectRepository';
+import { SupabaseStorageAdapter } from '../../packages/adapters/src/storage/SupabaseStorageAdapter';
+import { ErasedFilesCleanupService } from '../../packages/application/src/services/ErasedFilesCleanupService';
+import type { StoredObjectDeletionPort } from '../../packages/application/src/ports/external/StorageServicePort';
 import { ensureMigrationSql } from './dsar-setup';
 
 const DB_URL = process.env.DATABASE_URL;
@@ -28,11 +33,19 @@ const ADMIN = `${RUN}_admin`;
 const SUBJECT = `${RUN}-ada@example.invalid`;
 const OTHER = `${RUN}-grace@example.invalid`;
 const HOUR = 3_600_000;
+/** Where this test's stored files live: a tenant path, or a URL the CRM cannot delete. */
+const STORAGE = {
+  storageHost: 'abc.supabase.example.invalid',
+  emailBucket: 'email-attachments',
+  filesBucket: 'crm-files',
+};
+const FOREIGN = 'https://files.example.invalid/ada-id.pdf';
 
 describeDb('IFC-316 erasure of communications (real DB)', () => {
   let prisma: any;
   let dbReady = false;
   let subjects: PrismaSubjectDataRepository;
+  let requestId = '';
   const seeded: Record<string, string> = {};
 
   beforeEach((ctx) => {
@@ -54,7 +67,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     await prisma.user.create({
       data: { id: ADMIN, tenantId: TENANT, email: `${ADMIN}@example.invalid`, role: 'ADMIN' },
     });
-    subjects = new PrismaSubjectDataRepository(prisma);
+    subjects = new PrismaSubjectDataRepository(prisma, () => STORAGE);
     await seed();
     dbReady = true;
   });
@@ -92,7 +105,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         fileName: 'ada-passport.pdf',
         fileSize: 10,
         fileType: 'application/pdf',
-        fileUrl: `${RUN}/mail/1`,
+        fileUrl: `${TENANT}/mail/1-ada-passport.pdf`,
       },
     });
     const otherMail = await prisma.emailRecord.create({
@@ -149,8 +162,39 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         authorAvatar: 'https://avatars.example.invalid/sam.png',
       },
     });
+    // An inline data: URL (what the ticket API stores): no object behind it.
     await prisma.ticketAttachment.create({
-      data: { ...t, ticketId: ticket.id, name: 'ada-id.png', size: '1 KB', url: `${RUN}/t/1` },
+      data: {
+        ...t,
+        ticketId: ticket.id,
+        name: 'ada-id.png',
+        size: '1 KB',
+        url: 'data:image/png;base64,AAAA...',
+      },
+    });
+    await prisma.ticketAttachment.create({
+      data: {
+        ...t,
+        ticketId: ticket.id,
+        name: 'ada-scan.pdf',
+        size: '1 KB',
+        url: `${TENANT}/tickets/ada-scan.pdf`,
+      },
+    });
+    // Lead files: one in the CRM's bucket, one on a host the CRM cannot delete from, one under
+    // ANOTHER tenant's prefix (never deleted: it stays for the admin).
+    await prisma.leadFile.createMany({
+      data: [
+        {
+          ...t,
+          leadId: lead.id,
+          name: 'ada-cv.pdf',
+          size: '2 KB',
+          url: `${TENANT}/leads/ada-cv.pdf`,
+        },
+        { ...t, leadId: lead.id, name: 'ada-id.pdf', size: '2 KB', url: FOREIGN },
+        { ...t, leadId: lead.id, name: 'x.pdf', size: '2 KB', url: `${RUN}_b/leads/other.pdf` },
+      ],
     });
     const chat = await prisma.chatConversation.create({
       data: { ...t, contactName: 'Ada', contactEmail: SUBJECT, subject: 'Ada asks' },
@@ -162,6 +206,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         content: 'Ada here',
         senderType: 'contact',
         senderName: 'Ada',
+        attachments: [{ name: 'ada-photo.png', url: `${TENANT}/chat/ada-photo.png` }],
       },
     });
     await prisma.feedbackSurvey.create({
@@ -282,17 +327,24 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       contactReplyDrafts: 2,
       calendarEvents: 1,
     });
-    expect(preview.checklist).toMatchObject({
-      storedEmailAttachments: 1,
+    // Deleted from storage after the erasure: the lead file, the email attachment, the ticket
+    // attachment and the chat attachment. Only the files the CRM cannot delete stay by hand.
+    expect(preview.counts.storedFilesDeleted).toBe(4);
+    expect(preview.checklist).toEqual({
       deals: 0,
       tasks: 0,
+      storedLeadFiles: 2,
+      storedEmailAttachments: 0,
+      storedChatAttachments: 0,
+      storedTicketAttachments: 0,
     });
   });
 
-  it('erases them in the same transaction and leaves only stored files, deals and tasks', async () => {
+  it('erases them in the same transaction and queues the stored files', async () => {
+    requestId = await verifiedErasure();
     const result = await subjects.erase({
       tenantId: TENANT,
-      requestId: await verifiedErasure(),
+      requestId,
       subjectEmail: SUBJECT,
       resolvedById: ADMIN,
       note: 'No hold applies',
@@ -302,18 +354,45 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     expect(result.outcome).toBe('ERASED');
     if (result.outcome !== 'ERASED') return;
     expect(result.result.counts).toMatchObject({ emailRecords: 1, tickets: 1, chats: 1 });
-    const remaining = Object.entries(result.result.checklist).filter(([, n]) => n > 0);
-    expect(remaining).toEqual([['storedEmailAttachments', 1]]);
-    // The result names the attachment row, so its stored object can still be found.
-    const attachment = await prisma.emailAttachment.findFirst({ where: { emailId: seeded.mail } });
-    expect(result.result.storedFiles).toEqual({
-      emailAttachmentIds: [attachment.id],
-      chatMessageIds: [],
-      leadFileIds: [],
+    // Until the cleanup has run every queued object still counts as left, per source.
+    expect(result.result.checklist).toEqual({
+      deals: 0,
+      tasks: 0,
+      storedLeadFiles: 3,
+      storedEmailAttachments: 1,
+      storedChatAttachments: 1,
+      storedTicketAttachments: 1,
     });
+    // The queue committed with the erasure: the locators moved there from the rows.
+    const queued = await prisma.dsarStoredObject.findMany({
+      where: { tenantId: TENANT, requestId },
+    });
+    // Sorted here: the database's collation orders URLs and paths its own way.
+    const byKey = (row: unknown[]) => JSON.stringify(row);
+    expect(
+      queued
+        .map((q: any) => [q.source, q.state, q.bucket, q.locator])
+        .sort((x: unknown[], y: unknown[]) => byKey(x).localeCompare(byKey(y)))
+    ).toEqual(
+      [
+        ['CHAT_ATTACHMENT', 'PENDING', 'crm-files', `${TENANT}/chat/ada-photo.png`],
+        ['EMAIL_ATTACHMENT', 'PENDING', 'email-attachments', `${TENANT}/mail/1-ada-passport.pdf`],
+        ['LEAD_FILE', 'PENDING', 'crm-files', `${TENANT}/leads/ada-cv.pdf`],
+        ['LEAD_FILE', 'MANUAL', null, FOREIGN],
+        ['LEAD_FILE', 'MANUAL', null, `${RUN}_b/leads/other.pdf`],
+        ['TICKET_ATTACHMENT', 'PENDING', 'crm-files', `${TENANT}/tickets/ada-scan.pdf`],
+      ].sort((x, y) => byKey(x).localeCompare(byKey(y)))
+    );
+    const rowsWithLocator = await Promise.all([
+      prisma.leadFile.count({ where: { tenantId: TENANT, url: { not: null } } }),
+      prisma.emailAttachment.count({ where: { tenantId: TENANT, fileUrl: { not: '' } } }),
+      prisma.ticketAttachment.count({ where: { tenantId: TENANT, url: { not: null } } }),
+      prisma.chatMessage.count({ where: { tenantId: TENANT, attachments: { not: null } } }),
+    ]);
+    expect(rowsWithLocator).toEqual([0, 0, 0, 0]);
     await expect(
-      prisma.ticketAttachment.findFirst({ where: { ticketId: seeded.ticket } })
-    ).resolves.toMatchObject({ name: 'erased', url: null });
+      prisma.ticketAttachment.findMany({ where: { ticketId: seeded.ticket } })
+    ).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ name: 'erased' })]));
 
     const mail = await prisma.emailRecord.findUnique({ where: { id: seeded.mail } });
     expect(mail.subject).toBe('Erased email');
@@ -323,7 +402,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     expect(mail.fromEmail).toBe(OTHER);
     expect(mail.ccEmails).toBe(OTHER);
     const file = await prisma.emailAttachment.findFirst({ where: { emailId: seeded.mail } });
-    expect(file).toMatchObject({ fileName: 'erased', fileUrl: `${RUN}/mail/1` });
+    expect(file).toMatchObject({ fileName: 'erased', fileUrl: '' });
     await expect(
       prisma.emailRecord.findUnique({ where: { id: seeded.otherMail } })
     ).resolves.toMatchObject({ subject: 'Grace only', body: 'Not about Ada' });
@@ -364,5 +443,119 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     // Previewed again, nothing about the person is left to erase.
     const after = await subjects.previewErasure(TENANT, SUBJECT);
     expect(Object.values(after.counts).every((n) => n === 0)).toBe(true);
+  });
+
+  describe('after the erasure commits: deleting the stored objects', () => {
+    const outbox = () => new PrismaStoredObjectRepository(prisma);
+
+    /** Storage that records every path it is asked to delete; `failPath` fails that one. */
+    function storage(failPath: () => string | null) {
+      const calls: string[][] = [];
+      const port: StoredObjectDeletionPort = {
+        async deleteStoredObjects(_tenant, objects) {
+          calls.push(objects.map((o) => o.path));
+          const bad = failPath();
+          return {
+            failed: objects
+              .filter((o) => o.path === bad)
+              .map((o) => ({ id: o.id, code: 'STORAGE_ERROR' as const })),
+          };
+        },
+      };
+      return { port, calls };
+    }
+
+    const states = async () =>
+      (
+        await prisma.dsarStoredObject.findMany({
+          where: { tenantId: TENANT, requestId },
+          orderBy: [{ source: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+        })
+      ).map((q: any) => ({
+        source: q.source,
+        state: q.state,
+        attempts: q.attempts,
+        error: q.lastError,
+        locator: q.locator,
+      }));
+
+    it('records a failed delete on the request and keeps the object queued with its locator', async () => {
+      let bad: string | null = `${TENANT}/mail/1-ada-passport.pdf`;
+      const { port, calls } = storage(() => bad);
+      const cleanup = new ErasedFilesCleanupService(outbox(), port, {
+        attempts: 2,
+        sleep: async () => undefined,
+      });
+      const first = await cleanup.purge(TENANT, requestId, new Date());
+      // Only this tenant's objects went to storage; the other tenant's path and the foreign URL
+      // are manual and were never sent.
+      const sent = calls.flat();
+      expect(sent.every((path) => path.startsWith(`${TENANT}/`))).toBe(true);
+      expect(sent).not.toContain(FOREIGN);
+      expect(sent).not.toContain(`${RUN}_b/leads/other.pdf`);
+      expect(first.deleted).toBe(3);
+      // What remains is exactly what the checklist shows: the failed attachment and the two
+      // files only the admin can delete.
+      expect(first.remaining).toEqual({ storedEmailAttachments: 1, storedLeadFiles: 2 });
+      const failed = (await states()).find((s: any) => s.source === 'EMAIL_ATTACHMENT');
+      expect(failed).toMatchObject({
+        state: 'PENDING',
+        attempts: 2,
+        error: 'STORAGE_ERROR',
+        locator: `${TENANT}/mail/1-ada-passport.pdf`,
+      });
+
+      // The admin's list shows the request with what is left.
+      expect(await outbox().leftFor(TENANT, [requestId])).toEqual({ [requestId]: 3 });
+
+      // Storage recovers: a retry deletes only what was still queued.
+      bad = null;
+      calls.length = 0;
+      const retried = await cleanup.purge(TENANT, requestId, new Date());
+      expect(calls).toEqual([[`${TENANT}/mail/1-ada-passport.pdf`]]);
+      expect(retried).toEqual({ deleted: 1, remaining: { storedLeadFiles: 2 } });
+      const done = await states();
+      expect(
+        done.filter((s: any) => s.state === 'DELETED').every((s: any) => s.locator === null)
+      ).toBe(true);
+      expect(done.filter((s: any) => s.state === 'DELETED')).toHaveLength(4);
+
+      // Running it again is safe: nothing is pending, nothing is sent.
+      calls.length = 0;
+      expect(await cleanup.purge(TENANT, requestId, new Date())).toEqual({
+        deleted: 0,
+        remaining: { storedLeadFiles: 2 },
+      });
+      expect(calls).toEqual([]);
+    });
+
+    it('never reads or settles another tenant’s queue', async () => {
+      expect(await outbox().pending(`${TENANT}_x`, requestId, 10)).toEqual([]);
+      expect(await outbox().remaining(`${TENANT}_x`, requestId)).toEqual({});
+      await outbox().settle(`${TENANT}_x`, requestId, [{ id: 'nope', deleted: true }], new Date());
+      expect(await outbox().leftFor(`${TENANT}_x`, [requestId])).toEqual({});
+    });
+
+    it('the real storage adapter refuses an object outside the tenant, even if the queue holds one', async () => {
+      const remove = vi.fn(async () => ({ data: [], error: null }));
+      const adapter = new SupabaseStorageAdapter('http://localhost:54321', 'k');
+      (adapter as any).client = { storage: { from: () => ({ remove }) } };
+      await prisma.dsarStoredObject.create({
+        data: {
+          tenantId: TENANT,
+          requestId,
+          source: 'LEAD_FILE',
+          state: 'PENDING',
+          bucket: 'crm-files',
+          locator: `${RUN}_b/leads/other.pdf`,
+        },
+      });
+      const result = await new ErasedFilesCleanupService(outbox(), adapter, {
+        sleep: async () => undefined,
+      }).purge(TENANT, requestId, new Date());
+      expect(remove).not.toHaveBeenCalled();
+      // Left on the checklist for the admin, with the two manual lead files.
+      expect(result.remaining).toEqual({ storedLeadFiles: 3 });
+    });
   });
 });

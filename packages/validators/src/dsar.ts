@@ -236,6 +236,8 @@ export interface DsarRequestDto {
   resolutionNote: string | null;
   clockBreached: boolean;
   createdAt: string;
+  /** A completed erasure: stored files not yet deleted from storage (IFC-316); 0 when none. */
+  storedFilesLeft?: number;
 }
 
 export interface DsarErasureResultDto {

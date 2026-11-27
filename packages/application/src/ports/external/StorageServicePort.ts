@@ -69,3 +69,17 @@ export interface EmailAttachmentStoragePort {
     expiresInSeconds: number
   ): Promise<string>;
 }
+
+/**
+ * Deletes the stored objects of an erased person (IFC-316). Never throws for a storage failure:
+ * it returns which objects it could not delete. An object already gone is a success. An object
+ * outside the tenant's prefix or outside the buckets the CRM owns is refused and never touched.
+ */
+export interface StoredObjectDeletionPort {
+  deleteStoredObjects(
+    tenantId: string,
+    objects: ReadonlyArray<{ id: string; bucket: string; path: string }>
+  ): Promise<{ failed: Array<{ id: string; code: StoredObjectDeleteFailure }> }>;
+}
+
+export type StoredObjectDeleteFailure = 'REFUSED' | 'STORAGE_ERROR';

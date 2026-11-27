@@ -16,14 +16,18 @@
  * PublicFeedback is Aurora's own product feedback (no tenant) and is out of scope.
  */
 import { Prisma, type PrismaClient } from '@intelliflow/db';
-import { DSAR_LIMITS, ERASED_EMAIL_DOMAIN, normalizeSubjectEmail } from '@intelliflow/domain';
+import {
+  DSAR_LIMITS,
+  ERASED_EMAIL_DOMAIN,
+  normalizeSubjectEmail,
+  type StoredObjectConfig,
+} from '@intelliflow/domain';
 import {
   ERASED_NAME,
   ERASED_NOTE,
   addressIds,
   communicationCounts,
   eraseCommunications,
-  storedFiles,
   subjectDealIds,
   subjectNotificationWhere,
   subjectTaskWhere,
@@ -31,6 +35,13 @@ import {
   type SubjectIds,
 } from './subject-communications';
 import { replyDraftsOf } from './subject-reply-drafts';
+import {
+  dealsAndTasks,
+  planStoredFiles,
+  queueStoredFiles,
+  storedFileCounts,
+} from './subject-stored-files';
+import { storedObjectConfigFromEnv } from '../storage/stored-object-config';
 import type {
   ErasureOutcome,
   ErasureResult,
@@ -146,7 +157,11 @@ async function upTo<T>(
 }
 
 export class PrismaSubjectDataRepository implements SubjectDataPort {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    /** Where stored files live (IFC-316); read per call so the environment can change. */
+    private readonly storedObjects: () => StoredObjectConfig = storedObjectConfigFromEnv
+  ) {}
 
   /**
    * Every read comes from one repeatable-read snapshot: the ids matched by address and the rows
@@ -580,14 +595,23 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
   async previewErasure(tenantId: string, subjectEmail: string): Promise<ErasureOutcome> {
     const ids = await subjectIds(this.prisma, tenantId, subjectEmail);
     const appointmentIds = await bookedAppointmentIds(this.prisma, tenantId, subjectEmail);
+    const files = storedFileCounts(
+      await planStoredFiles(this.prisma, tenantId, subjectEmail, ids, this.storedObjects())
+    );
     return {
       counts: {
         leads: ids.leadIds.length,
         contacts: ids.contactIds.length,
         bookings: appointmentIds.length,
         ...(await communicationCounts(this.prisma, tenantId, subjectEmail, ids)),
+        // Deleted from storage right after the erasure (IFC-316).
+        storedFilesDeleted: files.toDelete,
       },
-      checklist: (await storedFiles(this.prisma, tenantId, subjectEmail, ids)).checklist,
+      // What stays for the admin: deals and tasks, and any stored file the CRM cannot delete.
+      checklist: {
+        ...(await dealsAndTasks(this.prisma, tenantId, subjectEmail, ids)),
+        ...files.manual,
+      },
     };
   }
 
@@ -660,9 +684,8 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
           UPDATE contact_activities SET title = ${ERASED_ACTIVITY}, description = ${ERASED_ACTIVITY},
             metadata = NULL
           WHERE "tenantId" = ${tenantId} AND "contactId" = ANY(${contactIds}::text[])`;
-        // The file's name goes; its storage locator stays. The stored object itself is deleted
-        // by hand (the checklist's "Stored files"), and without the url nobody could find it
-        // again (codex HIGH).
+        // The file's name goes; its locator moves to the stored-file queue below, and the
+        // object is deleted from storage after this transaction commits (IFC-316).
         const leadFiles = await tx.leadFile.updateMany({
           where: { tenantId, leadId: { in: leadIds } },
           data: { name: 'erased' },
@@ -688,14 +711,19 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
           WHERE "tenantId" = ${tenantId} AND id = ANY(${appointmentIds}::text[])`;
 
         // Read first: the stored files are found through the person's address, which the
-        // erasure removes. Their rows and locators stay; the ids say which rows they are.
-        const left = await storedFiles(tx, tenantId, subjectEmail, ids);
+        // erasure removes. They are queued in this transaction (the queue commits with the
+        // erasure) and their locators leave the rows; the cleanup deletes the objects afterwards.
+        const files = await planStoredFiles(tx, tenantId, subjectEmail, ids, this.storedObjects());
+        const left = storedFileCounts(files);
+        const open = await dealsAndTasks(tx, tenantId, subjectEmail, ids);
         const communications = await eraseCommunications(tx, {
           tenantId,
           email: subjectEmail,
           ids,
           now: input.now,
         });
+
+        await queueStoredFiles(tx, tenantId, input.requestId, files);
 
         await tx.dsarRequest.updateMany({
           where: { id: input.requestId, tenantId, status: 'VERIFIED' },
@@ -725,8 +753,8 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
               bookings: Number(bookings),
               ...communications,
             },
-            checklist: left.checklist,
-            storedFiles: left.files,
+            // Until the cleanup has run, every queued object still counts as left.
+            checklist: { ...open, ...left.left },
           },
         };
       },

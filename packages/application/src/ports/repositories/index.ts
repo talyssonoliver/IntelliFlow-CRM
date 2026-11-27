@@ -24,6 +24,7 @@ export * from './QuotaRepositoryPort';
 export * from './PurposeSpendPort'; // PG-199
 export * from './DsarRepositoryPort'; // PG-203 DSAR
 export * from './SubjectDataPort'; // PG-203 DSAR
+export * from './StoredObjectOutboxPort'; // IFC-316
 export * from './ProcessingRestrictionPort'; // PG-203 DSAR
 
 // Feedback Survey Repository Port (IFC-068)

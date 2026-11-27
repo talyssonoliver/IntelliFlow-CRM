@@ -49,6 +49,7 @@ vi.mock('@/lib/trpc', () => {
           logRequest: m('logRequest'),
           liftRestriction: m('liftRestriction'),
           exportData: m('exportData'),
+          retryFileCleanup: m('retryFileCleanup'),
         },
       },
     },
@@ -106,6 +107,7 @@ beforeEach(() => {
       'logRequest',
       'liftRestriction',
       'exportData',
+      'retryFileCleanup',
     ].map((name) => [name, mutation()])
   );
 });
@@ -151,6 +153,53 @@ describe('PrivacyRequestsContent', () => {
       })
     );
     expect(h.toast).toHaveBeenCalledWith({ title: 'Data erased and the person told' });
+  });
+
+  it('says how many stored files are not deleted yet after an erasure (IFC-316)', async () => {
+    h.mutations.complete!.mutateAsync.mockResolvedValue({
+      erasure: {
+        counts: { leads: 1 },
+        checklist: { deals: 1, storedLeadFiles: 2, storedEmailAttachments: 1 },
+      },
+    });
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Complete: Erasure/ }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Note for the record'), {
+      target: { value: 'Checked with the partner' },
+    });
+    fireEvent.click(within(dialog).getByRole('checkbox'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Complete request' }));
+    await waitFor(() =>
+      expect(h.toast).toHaveBeenCalledWith({
+        title:
+          'Data erased and the person told. 3 stored files are not deleted yet; retry from the request.',
+      })
+    );
+  });
+
+  it('shows what a completed erasure still has in storage and retries the deletion', async () => {
+    h.list.data = [
+      request({ id: 'clhleft0000000000', status: 'COMPLETED', storedFilesLeft: 2 }),
+      request({ id: 'clhclean000000000', status: 'COMPLETED', storedFilesLeft: 0 }),
+    ];
+    h.mutations.retryFileCleanup!.mutateAsync.mockResolvedValue({
+      deleted: 2,
+      checklist: { storedLeadFiles: 0 },
+    });
+    render(<PrivacyRequestsContent />);
+    expect(screen.getByText('2 stored files not deleted yet')).toBeTruthy();
+    expect(screen.getByText('Stored files deleted')).toBeTruthy();
+    // Only the request with files left offers the retry.
+    const retry = screen.getAllByRole('button', { name: /^Retry deleting stored files/ });
+    expect(retry).toHaveLength(1);
+    fireEvent.click(retry[0]!);
+    await waitFor(() =>
+      expect(h.mutations.retryFileCleanup!.mutateAsync).toHaveBeenCalledWith({
+        id: 'clhleft0000000000',
+      })
+    );
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith({ title: 'Stored files deleted' }));
   });
 
   it('keeps a server refusal inside the dialog', async () => {

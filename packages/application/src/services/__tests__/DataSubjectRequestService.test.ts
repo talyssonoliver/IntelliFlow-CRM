@@ -1360,3 +1360,113 @@ describe('complete (D-AC-06/08)', () => {
     expect(subjectData.erase).not.toHaveBeenCalled();
   });
 });
+
+describe('stored files after an erasure (IFC-316)', () => {
+  const completeInput = (id: string) => ({
+    tenantId: 'tenant-a',
+    id,
+    actorId: 'admin-2',
+    note: 'Erased',
+    noHoldConfirmed: true as const,
+    now: NOW,
+  });
+
+  async function erasureWith(erasedFiles: {
+    purge: ReturnType<typeof vi.fn>;
+    leftFor: ReturnType<typeof vi.fn>;
+  }) {
+    const withFiles = new DataSubjectRequestService({
+      repo,
+      subjectData,
+      restrictions,
+      notifications,
+      tokens,
+      appUrl: () => 'https://app.example.invalid',
+      erasedFiles,
+    });
+    await submit({ type: 'ERASURE' });
+    const id = [...repo.rows.keys()][0];
+    await withFiles.verify({ requestId: id, token: 'token-1', now: NOW });
+    return { withFiles, id };
+  }
+
+  it('deletes the queued files after the commit and reports only what is left, 0 when none', async () => {
+    subjectData.erase.mockResolvedValueOnce({
+      outcome: 'ERASED',
+      result: {
+        counts: { leads: 1 },
+        checklist: { deals: 2, storedLeadFiles: 3, storedEmailAttachments: 1 },
+      },
+    });
+    const purge = vi.fn().mockResolvedValue({ deleted: 4, remaining: { storedLeadFiles: 1 } });
+    const { withFiles, id } = await erasureWith({ purge, leftFor: vi.fn() });
+    const done = await withFiles.complete(completeInput(id));
+    expect(purge).toHaveBeenCalledWith('tenant-a', id, NOW);
+    expect(done).toEqual({
+      outcome: 'OK',
+      erasure: {
+        counts: { leads: 1, storedFilesDeleted: 4 },
+        checklist: {
+          deals: 2,
+          storedLeadFiles: 1,
+          storedEmailAttachments: 0,
+          storedChatAttachments: 0,
+          storedTicketAttachments: 0,
+        },
+      },
+    });
+  });
+
+  it('a failing cleanup never fails the committed erasure: the queued counts stay', async () => {
+    const purge = vi.fn().mockRejectedValue(new Error('storage down'));
+    const { withFiles, id } = await erasureWith({ purge, leftFor: vi.fn() });
+    expect(await withFiles.complete(completeInput(id))).toEqual({
+      outcome: 'OK',
+      erasure: { counts: { leads: 1 }, checklist: { emailRecords: 2 } },
+    });
+  });
+
+  it('retries the cleanup only for a completed erasure, and returns what is left', async () => {
+    const purge = vi.fn().mockResolvedValue({ deleted: 2, remaining: {} });
+    const { withFiles, id } = await erasureWith({ purge, leftFor: vi.fn() });
+    // Still open: nothing to retry.
+    expect(await withFiles.retryFileCleanup({ tenantId: 'tenant-a', id, now: NOW })).toEqual({
+      outcome: 'INVALID',
+      field: 'status',
+    });
+    await withFiles.complete(completeInput(id));
+    // The real adapter completes the request inside the erasure transaction; the mock does not.
+    repo.rows.get(id)!.status = 'COMPLETED';
+    purge.mockClear();
+    const retried = await withFiles.retryFileCleanup({ tenantId: 'tenant-a', id, now: NOW });
+    expect(purge).toHaveBeenCalledWith('tenant-a', id, NOW);
+    expect(retried).toEqual({
+      outcome: 'OK',
+      deleted: 2,
+      checklist: {
+        storedLeadFiles: 0,
+        storedEmailAttachments: 0,
+        storedChatAttachments: 0,
+        storedTicketAttachments: 0,
+      },
+    });
+    // Another firm's request is not found; a service with no cleanup says so.
+    expect(await withFiles.retryFileCleanup({ tenantId: 'tenant-b', id, now: NOW })).toEqual({
+      outcome: 'NOT_FOUND',
+    });
+    expect(await service.retryFileCleanup({ tenantId: 'tenant-a', id, now: NOW })).toEqual({
+      outcome: 'INVALID',
+      field: 'storage',
+    });
+  });
+
+  it('lists how many stored files each completed erasure still has, never throwing', async () => {
+    const leftFor = vi.fn().mockResolvedValue({ r1: 2 });
+    const { withFiles } = await erasureWith({ purge: vi.fn(), leftFor });
+    expect(await withFiles.storedFilesLeft('tenant-a', ['r1'])).toEqual({ r1: 2 });
+    expect(await withFiles.storedFilesLeft('tenant-a', [])).toEqual({});
+    leftFor.mockRejectedValueOnce(new Error('db down'));
+    expect(await withFiles.storedFilesLeft('tenant-a', ['r1'])).toEqual({});
+    expect(await service.storedFilesLeft('tenant-a', ['r1'])).toEqual({});
+  });
+});

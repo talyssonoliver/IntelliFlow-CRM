@@ -1145,6 +1145,11 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
       const lead = await prisma.lead.findUnique({ where: { id: leadA } });
       expect(lead.firstName).toBe('Ada');
       expect(await prisma.aIScore.count({ where: { leadId: leadA } })).toBe(1);
+      // The stored-file queue rolls back with the erasure (IFC-316): no partial erasure.
+      expect(await prisma.dsarStoredObject.count({ where: { requestId } })).toBe(0);
+      await expect(prisma.leadFile.findFirst({ where: { leadId: leadA } })).resolves.toMatchObject({
+        url: 'https://files.example.invalid/passport.pdf',
+      });
       const request = await prisma.dsarRequest.findUnique({ where: { id: requestId } });
       expect(request.status).toBe('VERIFIED');
       await prisma.dsarRequest.update({
@@ -1227,11 +1232,18 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
       });
       expect(contactActivity.description).toBe('Erased activity');
       const file = await prisma.leadFile.findFirst({ where: { leadId: leadA } });
-      // The locator stays so the stored object can still be found and deleted by hand.
-      expect(file).toMatchObject({
-        name: 'erased',
-        url: 'https://files.example.invalid/passport.pdf',
-      });
+      // The CRM cannot delete a file on another host: its locator moves to the request's queue
+      // (MANUAL), where the admin's checklist still counts it, and leaves the row.
+      expect(file).toMatchObject({ name: 'erased', url: null });
+      await expect(
+        prisma.dsarStoredObject.findMany({ where: { tenantId: TENANT_A, source: 'LEAD_FILE' } })
+      ).resolves.toEqual([
+        expect.objectContaining({
+          state: 'MANUAL',
+          bucket: null,
+          locator: 'https://files.example.invalid/passport.pdf',
+        }),
+      ]);
       expect(await prisma.aIScore.count({ where: { leadId: leadA } })).toBe(0);
       expect(await prisma.leadAIInsight.count({ where: { leadId: leadA } })).toBe(0);
       expect(await prisma.aIInsight.count({ where: { entityId: leadA } })).toBe(0);

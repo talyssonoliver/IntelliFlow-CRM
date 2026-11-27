@@ -636,8 +636,8 @@ so a double click or two admins cannot run it twice. It anonymises in place:
 - **Booking fields.** The booker name, email, answers and consent fields on
   appointments are cleared. The slot stays.
 - **Derived AI data** (scores and lead, contact and entity insights) is deleted.
-- **Lead file rows** lose their name. The storage locator stays so the stored
-  object can be found and deleted by hand.
+- **Lead file rows** lose their name and their storage locator; the object is
+  queued for deletion (below).
 - **Communications (IFC-316)** in the same transaction
   (`subject-communications.ts`). Email records: subject and body replaced, and
   the person's address replaced in From, To, CC and BCC (other addresses kept,
@@ -645,14 +645,29 @@ so a double click or two admins cannot run it twice. It anonymises in place:
   feedback, notifications to or about the person and calendar events lose their
   text and the person's name and address; staff names stay. Auto-response and
   reply drafts, ticket AI insights and experiment assignments are deleted. Email
-  attachment rows lose their name and keep their storage locator; a ticket
-  attachment's inline content URL is cleared. Bounce reports naming the person's
-  address lose it (a stand-in address per row keeps the idempotency key); reply
-  drafts are matched by contact or lead.
-- **Left on a counted checklist.** Deals and tasks (Q23) and stored files: lead
-  files and email and chat attachments, whose objects are deleted from storage
-  by hand until a storage cleanup job exists. Legal holds: no hold register
-  exists yet, so the admin's no-hold confirmation is the check.
+  attachment, ticket attachment and chat message rows lose their name or
+  attachment list and their storage locator; the objects are queued for deletion
+  (below). Bounce reports naming the person's address lose it (a stand-in
+  address per row keeps the idempotency key); reply drafts are matched by
+  contact or lead.
+- **Stored files (IFC-316).** A storage delete cannot join the database
+  transaction, so the erasure transaction writes one queue row per object
+  (`dsar_stored_objects`, `PENDING`) and takes the locator off the lead file,
+  email attachment, ticket attachment and chat message rows; it commits with the
+  erasure. After the commit `ErasedFilesCleanupService` deletes the objects with
+  bounded retries (three passes over the failures, growing pauses) through
+  `StoredObjectDeletionPort` (`SupabaseStorageAdapter`). A deleted row becomes
+  `DELETED` and loses its locator; a failed one stays `PENDING` with an attempt
+  count and an error code, so it survives a restart and an admin's **Retry file
+  deletion** runs only what is left (idempotent). The adapter deletes only a
+  path under `<tenantId>/` in a bucket the CRM owns (email attachments,
+  `CRM_FILES_BUCKET`); a location outside that (another tenant, another host or
+  bucket) is never sent to storage and is queued `MANUAL`. The cleanup never
+  fails the erasure.
+- **Left on a counted checklist.** Deals and tasks (Q23) and, per source, the
+  stored files not yet deleted (failed or manual): the result and the request
+  list count exactly what remains, 0 when all are gone. Legal holds: no hold
+  register exists yet, so the admin's no-hold confirmation is the check.
 - **Audit logs** keep counts and the admin id, never erased values. The audit
   row is awaited.
 

@@ -12,6 +12,7 @@ export * from './common';
 // Storage Adapters
 export * from './storage/SupabaseStorageAdapter';
 export * from './storage/InMemoryStorageAdapter';
+export * from './storage/stored-object-config'; // IFC-316
 
 // Antivirus Adapters
 export * from './antivirus/ClamAVScanner';

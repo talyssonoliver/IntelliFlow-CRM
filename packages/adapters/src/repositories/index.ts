@@ -71,6 +71,7 @@ export * from './PrismaStripeSubscriptionRepository';
 export * from './PrismaDsarRepository';
 export * from './PrismaProcessingRestrictionRepository';
 export * from './PrismaSubjectDataRepository';
+export * from './PrismaStoredObjectRepository'; // IFC-316
 
 // In-memory implementations (testing)
 export * from './InMemorySetupInstalmentRepository';

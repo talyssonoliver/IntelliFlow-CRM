@@ -216,6 +216,7 @@ model Tenant {
   bookingAttempts           BookingAttempt[]          @ignore // PG-203
   dsarRequests              DsarRequest[]             @ignore // PG-203 DSAR
   processingRestrictions    ProcessingRestriction[]   @ignore // PG-203 DSAR
+  dsarStoredObjects         DsarStoredObject[]        @ignore // IFC-316
   reportSettings            ReportSettings[]          @ignore
   reportTemplates           ReportTemplate[]          @ignore
   reportScheduleTags        ReportScheduleTag[]       @ignore
@@ -2771,12 +2772,40 @@ model DsarRequest {
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 
+  storedObjects         DsarStoredObject[]
+
   @@unique([tenantId, id])
   @@index([tenantId, status, slaDeadline])
   @@index([tenantId, subjectEmail, createdAt])
   @@index([tenantId, ipHash, createdAt])
   @@index([capEmailHash, createdAt])
   @@map("dsar_requests")
+}
+
+/// IFC-316: a stored file of an erased person, queued by the erasure transaction so its object can
+/// be deleted after the commit. PENDING = delete it; MANUAL = the CRM cannot delete it (the admin
+/// does); DELETED = done (the locator is cleared). Pending and manual rows ARE the checklist.
+model DsarStoredObject {
+  id        String      @id @default(cuid())
+  tenantId  String
+  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  requestId String
+  request   DsarRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  /// LEAD_FILE | EMAIL_ATTACHMENT | CHAT_ATTACHMENT | TICKET_ATTACHMENT (CHECK)
+  source    String      @db.VarChar(20)
+  /// PENDING | MANUAL | DELETED (CHECK)
+  state     String      @default("PENDING") @db.VarChar(10)
+  bucket    String?     @db.VarChar(100)
+  /// The storage path (PENDING) or the unmanaged locator (MANUAL); null once DELETED.
+  locator   String?
+  attempts  Int         @default(0)
+  /// An error code only, never a message that could carry a name.
+  lastError String?     @db.VarChar(40)
+  createdAt DateTime    @default(now())
+  settledAt DateTime?
+
+  @@index([tenantId, requestId, state])
+  @@map("dsar_stored_objects")
 }
 
 /// One ACTIVE row per (tenantId, subjectEmail) (partial unique index WHERE "liftedAt" IS NULL, SQL-only).

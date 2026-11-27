@@ -49,6 +49,8 @@ const INVALID_MESSAGES: Record<string, string> = {
   resolutionNoteLength:
     'The note and the withholding reasons together are too long (2000 characters). Shorten them.',
   type: 'This action does not apply to this type of request.',
+  status: 'Only a completed erasure has stored files to clean up.',
+  storage: 'File storage is not available, so the stored files cannot be deleted now.',
 };
 
 const REFUSED_MESSAGES: Record<string, string> = {
@@ -190,7 +192,19 @@ export const privacyAdminRouter = createTRPCRouter({
     .query(async ({ ctx, input }): Promise<DsarRequestDto[]> => {
       const now = new Date();
       const rows = await dsarService(ctx).list(ctx.tenant.tenantId, input.status);
-      return rows.map((r) => toDsarRequestDto(r, now)).sort(byUrgency);
+      // IFC-316: a completed erasure shows how many stored files are still not deleted.
+      const erased = rows.filter((r) => r.type === 'ERASURE' && r.status === 'COMPLETED');
+      const left = await dsarService(ctx).storedFilesLeft(
+        ctx.tenant.tenantId,
+        erased.map((r) => r.id)
+      );
+      const erasedIds = new Set(erased.map((r) => r.id));
+      return rows
+        .map((r) => {
+          const dto = toDsarRequestDto(r, now);
+          return erasedIds.has(r.id) ? { ...dto, storedFilesLeft: left[r.id] ?? 0 } : dto;
+        })
+        .sort(byUrgency);
     }),
 
   restrictions: adminTenantProcedure.query(async ({ ctx }) => {
@@ -297,6 +311,27 @@ export const privacyAdminRouter = createTRPCRouter({
         externalStopMethodGiven: Boolean(input.marketingStopMethod),
       });
       return { erasure: null };
+    }),
+
+  /**
+   * IFC-316: runs the stored-file cleanup again for a completed erasure (a delete failed or
+   * storage was down). Only what is still queued is touched; returns what is left.
+   */
+  retryFileCleanup: adminTenantProcedure
+    .input(dsarIdInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const result = await dsarService(ctx).retryFileCleanup({
+        tenantId: ctx.tenant.tenantId,
+        id: input.id,
+        now: new Date(),
+      });
+      assertOk(result);
+      await audit(ctx, 'UPDATE', input.id, {
+        change: 'FILE_CLEANUP_RETRIED',
+        deleted: result.deleted,
+        checklist: result.checklist,
+      });
+      return { deleted: result.deleted, checklist: result.checklist };
     }),
 
   completeAccess: adminTenantProcedure

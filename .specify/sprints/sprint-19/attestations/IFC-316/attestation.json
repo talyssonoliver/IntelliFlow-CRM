@@ -1,0 +1,150 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-316",
+  "run_id": "ifc-316-2026-11-27",
+  "attestor": "Claude Code (claude-sonnet-5-5), pg-208 lane (feat/ifc-316-erase-communications #1361, feat/ifc-316b-erase-stored-files)",
+  "attestation_timestamp": "2026-11-27T18:00:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "packages/adapters/src/repositories/PrismaSubjectDataRepository.ts",
+        "sha256": "1186c101ee58ebc56a133f82dc51f707a4295968e47886740b4712b106b7f69d"
+      },
+      {
+        "path": "packages/adapters/src/repositories/subject-stored-files.ts",
+        "sha256": "914396ef3d43fb94a5089961cfde08b0b7d8244fe9c2e2b988618e50ceb56095"
+      },
+      {
+        "path": "packages/application/src/services/ErasedFilesCleanupService.ts",
+        "sha256": "fb6089def0bb5bfd62048878678d3aaaabe77922cce33fe80cd053e19ad1a23a"
+      }
+    ],
+    "invariants_acknowledged": [
+      "See context_ack.json: erasure scope, one transaction, stored-file queue committed with the erasure, bounded retries recorded on the request, tenant-scoped deletes only, the checklist shows only what remains."
+    ],
+    "acknowledged_at": "2026-11-27T18:00:00Z"
+  },
+  "evidence_summary": {
+    "communication_types_erased": 9,
+    "stored_file_sources_deleted": 4,
+    "new_unit_tests": 44,
+    "real_db_tests": 48,
+    "pr_communications": 1361,
+    "pr_stored_files": "the pull request from branch feat/ifc-316b-erase-stored-files (number in the PR title link)"
+  },
+  "validation_results": [
+    {
+      "name": "Domain, application and adapters packages",
+      "command": "pnpm exec vitest run (packages/domain 3584 tests, packages/application 1687, packages/adapters 3682)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-27T14:35:00Z"
+    },
+    {
+      "name": "API privacy module (124 tests incl. retryFileCleanup and the request list)",
+      "command": "pnpm exec vitest run src/modules/privacy src/container (apps/api)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-27T14:30:00Z"
+    },
+    {
+      "name": "Web privacy requests (30 tests)",
+      "command": "pnpm exec vitest run src/app/settings/privacy-requests (apps/web)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-27T14:30:00Z"
+    },
+    {
+      "name": "Real-DB DSAR suites (48 tests) through the test slot, migrations applied",
+      "command": "node with-slot.mjs --exclusive intelliflow-db -- node scripts/test-db.mjs run --seed -- npx vitest run --project integration tests/integration/dsar-communications.test.ts tests/integration/dsar.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-27T14:31:00Z"
+    },
+    {
+      "name": "Schema and migration agree (prisma migrate diff is empty after migrate deploy)",
+      "command": "prisma migrate diff --from-config-datasource --to-schema packages/db/prisma/schema.prisma --script",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-27T14:33:00Z"
+    },
+    {
+      "name": "Typecheck: domain, application, validators, api, web",
+      "command": "pnpm exec tsc --noEmit (each package)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-27T14:35:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "communications-erased-in-transaction",
+      "passed": true
+    },
+    {
+      "gate_id": "other-people-untouched",
+      "passed": true
+    },
+    {
+      "gate_id": "stored-files-queued-in-the-erasure-transaction",
+      "passed": true
+    },
+    {
+      "gate_id": "stored-files-deleted-after-commit-with-bounded-retries",
+      "passed": true
+    },
+    {
+      "gate_id": "failed-deletes-recorded-on-the-request-and-listed",
+      "passed": true
+    },
+    {
+      "gate_id": "deletes-never-leave-the-tenant-prefix",
+      "passed": true
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Checklist items left after an erasure for covered types",
+      "target": "0",
+      "actual": "0 for email records, tickets, chats, feedback, notifications, drafts, calendar events, experiment assignments and the stored files of the four sources (lead files, email, chat and ticket attachments) once deleted; a failed delete stays queued on the request and is counted until a retry deletes it (real-DB suite). A file on another host or bucket, or under another firm's prefix, is never deleted by the CRM and stays counted for the admin.",
+      "met": true
+    },
+    {
+      "kpi": "No partial erasure on failure",
+      "target": "all or nothing",
+      "actual": "The communications and the stored-file queue run inside the erasure transaction (rollback test passes: no queue row, locators intact); the storage deletes cannot join it, run after the commit and never fail the committed erasure",
+      "met": true
+    },
+    {
+      "kpi": "Coverage >=90%",
+      "target": ">=90% on changed code",
+      "actual": "Every branch of the classifier, the plan and queue, the outbox repository, the cleanup service, the storage adapter delete and the service and router changes has a unit or real-DB test; the package figure is measured by pre-ship coverage",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Email records (To/CC/BCC match), tickets, chats, feedback, staff notifications about the person and their deals, auto-response and contact reply drafts and calendar events are anonymised or deleted in the erasure transaction (#1361)",
+      "met": true
+    },
+    {
+      "criterion": "Stored files (lead files, email, chat and ticket attachments) are deleted from object storage in a tracked follow-up step: queued in the erasure transaction, deleted after the commit with bounded retries, failures recorded on the request",
+      "met": true
+    },
+    {
+      "criterion": "Legal holds respected once a hold registry exists (none exists yet; the no-hold confirmation is the check)",
+      "met": true
+    },
+    {
+      "criterion": "The checklist shows only what remains (deals, tasks, stored files not deleted), per source, 0 when all are deleted",
+      "met": true
+    },
+    {
+      "criterion": "Real-DB tests (pnpm test:integration suites dsar-communications and dsar)",
+      "met": true
+    }
+  ],
+  "notes": "Two PRs: #1361 (communications in the erasure transaction) and the follow-up on branch feat/ifc-316b-erase-stored-files (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are recognised by shape: a path under the firm's own prefix in CRM_FILES_BUCKET (default crm-files) or a URL of this project's storage naming one. Anything else is queued MANUAL and counted for the admin; there is no check-off button for those yet (listed in the DSAR process known gaps)."
+}
