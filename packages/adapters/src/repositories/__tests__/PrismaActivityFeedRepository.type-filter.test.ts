@@ -134,13 +134,15 @@ describe('PrismaActivityFeedRepository.getUnifiedFeed type filter', () => {
 
     const where = lead.mock.calls[0]![0].where;
     expect(where.OR).toHaveLength(2);
-    expect(where.AND).toHaveLength(1);
+    // the type condition and the email-entry scope (register #64)
+    expect(where.AND).toHaveLength(2);
   });
   it('applies no type clause without a type filter', async () => {
     const { repo, lead } = build();
     await repo.getUnifiedFeed('t1', 5, null, {});
 
-    expect(lead.mock.calls[0]![0].where.AND).toBeUndefined();
+    // only the email-entry scope (register #64): no viewer, no EMAIL entries
+    expect(lead.mock.calls[0]![0].where.AND).toEqual([{ type: { not: 'EMAIL' } }]);
   });
 });
 

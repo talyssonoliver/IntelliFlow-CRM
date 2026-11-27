@@ -1,10 +1,11 @@
 /**
  * Loads what pickWaiting needs for one tenant (MVP-014). Every query carries the tenant id;
  * leads and contacts also carry the caller's owner scope, so a rep sees only their own people,
- * the same as the leads list.
+ * the same as the leads list. Mail rows are read through the visibility policy (register #64): a
+ * colleague's personal-mailbox mail does not make a lead "waiting" on someone else's card.
  */
 
-import type { PrismaClient } from '@intelliflow/db';
+import { visibleEmailWhere, type MailViewer, type PrismaClient } from '@intelliflow/db';
 import {
   activityRowDirection,
   bouncedAddresses,
@@ -114,18 +115,20 @@ const RECORD_SELECT = {
  */
 async function loadRecords(
   db: PrismaClient,
-  tenantId: string,
+  viewer: MailViewer,
   cap: number
 ): Promise<{ sent: RecordRow[]; unsent: RecordRow[] }> {
+  const { tenantId } = viewer;
+  const visible = await visibleEmailWhere(db as never, viewer);
   const [sent, unsent] = await Promise.all([
     db.emailRecord.findMany({
-      where: { tenantId, sentAt: { not: null } },
+      where: { tenantId, AND: [visible], sentAt: { not: null } },
       select: RECORD_SELECT,
       orderBy: { sentAt: 'desc' },
       take: cap,
     }),
     db.emailRecord.findMany({
-      where: { tenantId, sentAt: null },
+      where: { tenantId, AND: [visible], sentAt: null },
       select: RECORD_SELECT,
       orderBy: { createdAt: 'desc' },
       take: cap,
@@ -277,15 +280,15 @@ function recordMail(records: RecordRow[], people: WaitingPerson[], floor: number
 /** Everyone waiting for our reply in the tenant, oldest first. */
 export async function loadWaiting(
   db: PrismaClient,
-  tenantId: string,
+  viewer: MailViewer,
   leadScope: Scope,
   contactScope: Scope,
   cap: number = MAIL_CAP
 ): Promise<WaitingItem[]> {
   const people = await loadPeople(db, leadScope, contactScope);
-  const { sent, unsent } = await loadRecords(db, tenantId, cap);
+  const { sent, unsent } = await loadRecords(db, viewer, cap);
   const records = [...sent, ...unsent];
-  const rows = await loadActivityRows(db, tenantId, cap);
+  const rows = await loadActivityRows(db, viewer.tenantId, cap);
   const floor = coverageFloor(
     [
       { times: sent.map(recordTime) },
