@@ -13,6 +13,7 @@
  * Every failure is a MailboxTransportError code; provider text never leaves this file.
  */
 import { MailboxTransportError } from './mailbox-errors';
+import { readCapped } from './mail-content';
 import type { MimeAttachment } from './mime';
 import type { OAuthClientConfig, OAuthTokens, RefreshedTokens } from './oauth-mailbox';
 import type { MailboxErrorCode } from '@intelliflow/domain';
@@ -149,7 +150,7 @@ async function apiError(response: Response): Promise<MailboxTransportError> {
 }
 
 /** The keys whose values are Zoho ids (about 19 digits, past what a JSON number holds exactly). */
-const ID_KEYS = new Set(['accountId', 'messageId', 'folderId', 'threadId']);
+const ID_KEYS = new Set(['accountId', 'messageId', 'folderId', 'threadId', 'attachmentId']);
 
 /**
  * JSON.parse that keeps every id as the exact digits Zoho sent (each record keeps its own id),
@@ -201,6 +202,30 @@ export async function zohoAccountGet(
   } catch {
     throw new MailboxTransportError('REJECTED');
   }
+}
+
+/**
+ * One authenticated GET of a file on a Zoho account (an attachment's content stream), read into
+ * memory up to `maxBytes` and never stored. Same host, timeout and dead-token rules as
+ * zohoAccountGet.
+ */
+export async function zohoAccountGetBytes(
+  fetchImpl: typeof fetch,
+  accessToken: string,
+  ref: ZohoAccountRef,
+  path: string,
+  maxBytes: number
+): Promise<{ bytes: Buffer; contentType: string | null }> {
+  const base = `https://${dataCentreFor(ref.mailHost).mail}/api/accounts/${encodeURIComponent(ref.accountId)}`;
+  const response = await call(fetchImpl, base + path, {
+    headers: {
+      Authorization: `Zoho-oauthtoken ${accessToken}`,
+      Accept: 'application/octet-stream',
+    },
+  });
+  if (!response.ok) throw await apiError(response);
+  const bytes = await readCapped(response, maxBytes);
+  return { bytes, contentType: response.headers.get('content-type') };
 }
 
 export class ZohoMailboxClient {

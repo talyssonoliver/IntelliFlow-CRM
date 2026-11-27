@@ -32,7 +32,8 @@ import {
   type SyncedMessage,
 } from './mail-sync-reader';
 import { learnThread, logOnLead, threadOf } from './mail-sync-links';
-import { alreadyLogged, anyoneRestricted, bodyOf, counterparty } from './mail-sync-match';
+import { alreadyLogged, anyoneRestricted, contentOf, counterparty } from './mail-sync-match';
+import { attachmentRows, richOf, type RichMail } from './mail-sync-rich';
 import { assertIdentitiesAllowed } from './mailbox-connect-policy';
 import { runLookback, type LookbackState } from './mail-sync-lookback';
 import { messageIdHeader, recordData } from './mail-sync-record';
@@ -220,14 +221,16 @@ export async function storeSyncedMessage(
   const threadId = await threadOf(deps, mailbox, message);
   // Only now, for mail that is kept: the body (a reader may load it lazily, so personal mail's
   // content is never fetched).
-  const body = await bodyOf(message);
-  if (body === null) return 'rejected';
+  const content = await contentOf(message);
+  if (content === null) return 'rejected';
+  const body = content.text;
+  const rich = richOf(content);
   if (enquiry) {
     const created = await openEnquiry(deps, mailbox, message, enquiries);
     if (created === 'capped' || created === null) return created === null ? 'unmatched' : 'capped';
     party = { ...party, leadId: created };
   }
-  return writeMail(deps, { mailbox, message, folder, provider, party, body, threadId });
+  return writeMail(deps, { mailbox, message, folder, provider, party, body, threadId, rich }, rich);
 }
 
 /** MVP-011: the new lead for an enquiry; 'capped' when this run's cap is reached; null when refused. */
@@ -252,7 +255,8 @@ async function openEnquiry(
 /** Stores the mail (and, for a lead, its timeline entry in the same transaction). */
 async function writeMail(
   deps: InboxSyncDeps,
-  args: Parameters<typeof recordData>[0]
+  args: Parameters<typeof recordData>[0],
+  rich: RichMail
 ): Promise<StoreOutcome> {
   const { mailbox, message, folder, party } = args;
   const leadId = party.leadId;
@@ -261,13 +265,20 @@ async function writeMail(
       data: recordData(args),
       select: { id: true },
     });
+    // Attachment METADATA only: the files stay with the provider and are fetched on demand.
+    if (rich.attachments.length > 0) {
+      await db.emailAttachment.createMany({
+        data: attachmentRows(record.id, mailbox.tenantId, rich.attachments),
+      });
+    }
     if (leadId) await logOnLead({ prisma: db }, mailbox, message, leadId, record.id, folder);
     return record.id;
   };
   try {
     // A lead's mail and its timeline entry land together or not at all: a retry finds no record
     // and writes both again, so the lead never misses the entry.
-    const recordId = await (leadId ? deps.prisma.$transaction(write) : write(deps.prisma));
+    const atomic = Boolean(leadId) || rich.attachments.length > 0;
+    const recordId = await (atomic ? deps.prisma.$transaction(write) : write(deps.prisma));
     // MVP-012: Aurora drafts a reply to received mail for the user to check; never sent unasked.
     if (!deps.backfill) {
       await queueReplyDraftForSyncedMail(deps, mailbox, message, folder, party, recordId);

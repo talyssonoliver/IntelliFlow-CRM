@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-27T10:12:57.057Z",
+  "timestamp": "2026-11-27T16:41:25.334Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 84,
-    "total_endpoints": 625,
-    "total_queries": 268,
-    "total_mutations": 357,
+    "total_routers": 85,
+    "total_endpoints": 628,
+    "total_queries": 270,
+    "total_mutations": 358,
     "routers": [
       {
         "name": "contact",
@@ -1321,6 +1321,12 @@
         "mutations": 3
       },
       {
+        "name": "emailLog",
+        "endpoints": 5,
+        "queries": 4,
+        "mutations": 1
+      },
+      {
         "name": "health",
         "endpoints": 5,
         "queries": 5,
@@ -1405,12 +1411,6 @@
         "mutations": 3
       },
       {
-        "name": "emailLog",
-        "endpoints": 3,
-        "queries": 2,
-        "mutations": 1
-      },
-      {
         "name": "emailMailbox",
         "endpoints": 3,
         "queries": 2,
@@ -1489,6 +1489,12 @@
         "mutations": 1
       },
       {
+        "name": "emailAttachments",
+        "endpoints": 1,
+        "queries": 0,
+        "mutations": 1
+      },
+      {
         "name": "emailProviderHint",
         "endpoints": 1,
         "queries": 1,
@@ -1528,7 +1534,7 @@
   },
   "database_inventory": {
     "total_tables": 221,
-    "total_fields": 3306,
+    "total_fields": 3310,
     "total_indexes": 974,
     "total_relations": 325,
     "tables_with_embeddings": 4,
@@ -1627,7 +1633,7 @@
       },
       {
         "name": "EmailRecord",
-        "fields": 31,
+        "fields": 32,
         "indexes": 10,
         "relations": 2,
         "hasEmbedding": false
@@ -2165,6 +2171,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "EmailAttachment",
+        "fields": 13,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "AgentAvailability",
         "fields": 13,
         "indexes": 5,
@@ -2588,13 +2601,6 @@
         "name": "RelatedTicket",
         "fields": 10,
         "indexes": 4,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "EmailAttachment",
-        "fields": 10,
-        "indexes": 3,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -5236,6 +5242,13 @@
         "description": "Get upload status"
       }
     ],
+    "emailAttachments": [
+      {
+        "name": "emailAttachments.fetch",
+        "method": "POST",
+        "description": "Fetch"
+      }
+    ],
     "emailLog": [
       {
         "name": "emailLog.status",
@@ -5246,6 +5259,16 @@
         "name": "emailLog.engagementForLead",
         "method": "GET",
         "description": "Engagement for lead"
+      },
+      {
+        "name": "emailLog.leadEmails",
+        "method": "GET",
+        "description": "Lead emails"
+      },
+      {
+        "name": "emailLog.leadEmail",
+        "method": "GET",
+        "description": "Lead email"
       },
       {
         "name": "emailLog.logToContact",

@@ -68,7 +68,6 @@ src/components/documents/__tests__/document-utils.test.ts
 src/components/email/__tests__/send-errors.test.ts
 src/components/routing/__tests__/reorder-priorities.test.ts
 src/components/shared/__tests__/landing-builder.supplementary2.test.ts
-src/components/shared/__tests__/registration-form.b11.test.ts
 src/components/shared/__tests__/search-filter-bar.supplementary2.test.ts
 src/components/sidebar/__tests__/AppSidebar.drawer.test.ts
 src/components/sidebar/__tests__/SidebarPortalContext.supplementary2.test.ts

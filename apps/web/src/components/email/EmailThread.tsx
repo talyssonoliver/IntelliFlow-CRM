@@ -16,10 +16,14 @@ interface EmailMessageData {
   to: Array<{ address: string; name?: string }>;
   receivedAt: string;
   attachments: Array<{
+    id?: string;
     filename: string;
     contentType: string;
     size: number;
     checksum: string;
+    isInline?: boolean;
+    contentId?: string | null;
+    onDemand?: boolean;
   }>;
 }
 
@@ -38,6 +42,8 @@ interface InlineComposeState {
 interface EmailThreadProps {
   thread: ThreadData | null;
   isLoading?: boolean;
+  /** The thread could not be read (an error, or it is not visible to the reader). */
+  unavailable?: boolean;
   labels?: string[];
   onLabelsChange?: (labels: string[]) => void;
   onReply: (messageId: string) => void;
@@ -53,6 +59,7 @@ interface EmailThreadProps {
 export function EmailThread({
   thread,
   isLoading,
+  unavailable,
   labels = [],
   onLabelsChange,
   onReply: _onReply,
@@ -157,6 +164,31 @@ export function EmailThread({
           ))}
         </div>
       </div>
+    );
+  }
+
+  // Not available: the mail is not the reader's to read (personal mail of someone else), was
+  // removed, or could not be loaded. Never a blank pane.
+  if (!isLoading && (unavailable || (thread && thread.emails.length === 0))) {
+    return (
+      <output
+        data-testid="email-unavailable"
+        className={cn(
+          'flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center',
+          className
+        )}
+      >
+        <span
+          className="material-symbols-outlined text-3xl text-muted-foreground"
+          aria-hidden="true"
+        >
+          lock
+        </span>
+        <p className="text-base font-medium">This email isn&apos;t available to you</p>
+        <p className="max-w-sm text-sm text-muted-foreground">
+          It may be private to someone else, or it was removed.
+        </p>
+      </output>
     );
   }
 
