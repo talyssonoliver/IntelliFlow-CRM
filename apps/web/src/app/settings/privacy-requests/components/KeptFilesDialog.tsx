@@ -26,6 +26,8 @@ const SOURCE_LABELS: Record<DsarKeptFileDto['source'], string> = {
 export interface KeptFilesDialogProps {
   request: DsarRequestDto | null;
   files: DsarKeptFileDto[] | null;
+  /** How many files the erasure kept outside the CRM in all (the list may show fewer). */
+  total: number;
   error: string | null;
   onClose: () => void;
 }
@@ -33,6 +35,7 @@ export interface KeptFilesDialogProps {
 export function KeptFilesDialog({
   request,
   files,
+  total,
   error,
   onClose,
 }: Readonly<KeptFilesDialogProps>) {
@@ -54,6 +57,11 @@ export function KeptFilesDialog({
           {files !== null && files.length === 0 && (
             <p className="text-sm text-muted-foreground">
               No locations to show: they are cleared 30 days after the erasure.
+            </p>
+          )}
+          {files !== null && files.length > 0 && total > files.length && (
+            <p className="text-sm text-foreground">
+              {`Showing ${files.length} of ${total} files. The other ${total - files.length} are not shown here, and their locations are removed 30 days after the erasure like the rest, so note them from the other records or the storage itself before then.`}
             </p>
           )}
           {files !== null && files.length > 0 && (

@@ -1,6 +1,7 @@
 /**
  * Background jobs the API process can run on timers (approval sweep, email
- * bounce scan, Outlook inbox sync with the Google Calendar sync, DSAR deadline alerts).
+ * bounce scan, Outlook inbox sync with the Google Calendar sync, DSAR deadline alerts, the daily
+ * clearing of kept file locations).
  *
  * Idle-sleep (Railway App Sleeping): a process that makes outbound traffic while
  * idle never sleeps, and these timers are the traffic. They are therefore behind
@@ -51,6 +52,13 @@ import {
   stopComplianceSnapshotScheduler,
 } from './modules/compliance/compliance-snapshot-scheduler';
 import {
+  createKeptLocationsStore,
+  keptLocationsIntervalFromEnv,
+  runKeptLocationsSweep,
+  startKeptLocationsScheduler,
+  stopKeptLocationsScheduler,
+} from './modules/privacy/dsar-kept-locations-scheduler';
+import {
   checkBackgroundJobsHeartbeat,
   closeHeartbeatStore,
   getHeartbeatStore,
@@ -98,6 +106,7 @@ export interface StartedBackgroundJobs {
   inboxSync: boolean;
   dsarSla: boolean;
   complianceSnapshot: boolean;
+  keptLocations: boolean;
 }
 
 async function defaultReady(): Promise<unknown> {
@@ -222,8 +231,19 @@ export function startBackgroundJobs({
     },
   });
 
+  // IFC-316: the daily clearing of the locations kept for files an erasure left outside the CRM's
+  // storage, 30 days after the erasure. Not a heartbeat job: a missed day is caught by the next one.
+  const keptLocations = startKeptLocationsScheduler({
+    intervalMs: keptLocationsIntervalFromEnv(env),
+    log,
+    run: async () => {
+      await ready();
+      return runKeptLocationsSweep(await createKeptLocationsStore());
+    },
+  });
+
   markJobsRunningHere(approvalSweep || bounceScan || dsarSla);
-  return { approvalSweep, bounceScan, inboxSync, dsarSla, complianceSnapshot };
+  return { approvalSweep, bounceScan, inboxSync, dsarSla, complianceSnapshot, keptLocations };
 }
 
 /**
@@ -237,6 +257,7 @@ export async function stopBackgroundJobs(): Promise<void> {
     stopInboxSync(),
     stopDsarSlaScheduler(),
     stopComplianceSnapshotScheduler(),
+    stopKeptLocationsScheduler(),
   ]);
   markJobsRunningHere(false);
   // After the ticks drained, so their final heartbeat write is not cut off.

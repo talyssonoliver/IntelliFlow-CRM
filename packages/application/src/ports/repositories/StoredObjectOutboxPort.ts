@@ -70,6 +70,12 @@ export interface StoredObjectOutboxPort {
    */
   expireLocators(tenantId: string, before: Date): Promise<number>;
 
+  /**
+   * The daily job: clears the kept locations of EVERY firm whose erasure completed before
+   * `before`. Rows younger than that are never touched. Returns how many were cleared.
+   */
+  expireAllLocators(before: Date): Promise<number>;
+
   /** What is still left, counted per checklist key (storedLeadFiles ...): PENDING rows only. */
   remaining(tenantId: string, requestId: string): Promise<Record<string, number>>;
 }

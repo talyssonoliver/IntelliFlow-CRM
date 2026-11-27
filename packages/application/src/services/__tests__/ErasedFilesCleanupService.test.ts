@@ -68,6 +68,9 @@ class FakeOutbox implements StoredObjectOutboxPort {
       .slice(0, limit)
       .map((r) => ({ id: r.id, source: r.source, locator: r.path }));
   }
+  async expireAllLocators() {
+    return 0;
+  }
   expired: Array<[string, Date]> = [];
   async expireLocators(t: string, before: Date) {
     this.expired.push([t, before]);

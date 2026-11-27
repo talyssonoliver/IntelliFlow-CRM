@@ -19,6 +19,7 @@ import { PrismaDsarRepository } from '../../packages/adapters/src/repositories/P
 import { PrismaSubjectDataRepository } from '../../packages/adapters/src/repositories/PrismaSubjectDataRepository';
 import { PrismaStoredObjectRepository } from '../../packages/adapters/src/repositories/PrismaStoredObjectRepository';
 import { SupabaseStorageAdapter } from '../../packages/adapters/src/storage/SupabaseStorageAdapter';
+import { runKeptLocationsSweep } from '../../apps/api/src/modules/privacy/dsar-kept-locations-scheduler';
 import { ErasedFilesCleanupService } from '../../packages/application/src/services/ErasedFilesCleanupService';
 import type { StoredObjectDeletionPort } from '../../packages/application/src/ports/external/StorageServicePort';
 import { ensureMigrationSql } from './dsar-setup';
@@ -789,6 +790,120 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       ).toBe(0);
     } finally {
       await prisma.tenant.deleteMany({ where: { id: tenant } });
+    }
+  });
+
+  it('the daily job clears only expired kept locations, across firms, and leaves the rest', async () => {
+    const day = 86_400_000;
+    const now = new Date();
+    const tenants = [`${RUN}_sweep1`, `${RUN}_sweep2`];
+    const made: Array<{ tenant: string; old: string; recent: string; open: string }> = [];
+    try {
+      for (const [t, tenant] of tenants.entries()) {
+        await prisma.tenant.create({ data: { id: tenant, name: `Sweep ${t}`, slug: tenant } });
+        const admin = `${tenant}_admin`;
+        await prisma.user.create({
+          data: { id: admin, tenantId: tenant, email: `${admin}@example.invalid`, role: 'ADMIN' },
+        });
+        const request = async (label: string, completedDaysAgo: number | null) => {
+          const record = await new PrismaDsarRepository(prisma).createStaff({
+            tenantId: tenant,
+            type: 'ERASURE',
+            subjectEmail: `${RUN}-${label}-${t}@example.invalid`,
+            capEmailHash: String(t + 1).repeat(64),
+            details: null,
+            objectionScope: null,
+            identityMethod: 'IN_PERSON_ID',
+            identityNote: 'Passport checked at the front desk',
+            receivedAt: new Date(),
+            receivedOnReason: null,
+            verifiedAt: new Date(),
+            slaDeadline: new Date(Date.now() + 30 * day),
+            createdById: admin,
+          });
+          if (completedDaysAgo !== null) {
+            await prisma.dsarRequest.update({
+              where: { id: record.id },
+              data: { completedAt: new Date(now.getTime() - completedDaysAgo * day) },
+            });
+          }
+          await prisma.dsarStoredObject.createMany({
+            data: [
+              {
+                tenantId: tenant,
+                requestId: record.id,
+                source: 'LEAD_FILE',
+                state: 'KEPT',
+                reason: 'UNMANAGED',
+                locator: `https://files.example.invalid/${label}-${t}.pdf`,
+              },
+              {
+                tenantId: tenant,
+                requestId: record.id,
+                source: 'EMAIL_ATTACHMENT',
+                state: 'KEPT',
+                reason: 'SHARED_KEPT',
+              },
+              {
+                tenantId: tenant,
+                requestId: record.id,
+                source: 'EMAIL_ATTACHMENT',
+                state: 'PENDING',
+                bucket: 'email-attachments',
+                locator: `${tenant}/mail/${label}.pdf`,
+              },
+            ],
+          });
+          return record.id;
+        };
+        made.push({
+          tenant,
+          old: await request('old', 31),
+          recent: await request('recent', 29),
+          open: await request('open', null),
+        });
+      }
+      const locatorOf = async (requestId: string) =>
+        (
+          await prisma.dsarStoredObject.findFirst({
+            where: { requestId, state: 'KEPT', reason: 'UNMANAGED' },
+          })
+        ).locator;
+
+      const first = await runKeptLocationsSweep(new PrismaStoredObjectRepository(prisma), now);
+      // Only the two expired ones, one per firm.
+      expect(first).toEqual({ cleared: 2 });
+      for (const m of made) {
+        expect(await locatorOf(m.old)).toBeNull();
+        // Younger than 30 days, and not completed at all: untouched.
+        expect(await locatorOf(m.recent)).toMatch(/^https:\/\/files\.example\.invalid\/recent-/);
+        expect(await locatorOf(m.open)).toMatch(/^https:\/\/files\.example\.invalid\/open-/);
+        // Rows still to delete are never touched, and an expired row stays counted (resolved).
+        const pending = await prisma.dsarStoredObject.count({
+          where: { tenantId: m.tenant, state: 'PENDING', locator: { not: null } },
+        });
+        expect(pending).toBe(3);
+        expect(
+          await prisma.dsarStoredObject.count({
+            where: { requestId: m.old, state: 'KEPT', reason: 'UNMANAGED' },
+          })
+        ).toBe(1);
+      }
+      // A second run finds nothing more.
+      expect(await runKeptLocationsSweep(new PrismaStoredObjectRepository(prisma), now)).toEqual({
+        cleared: 0,
+      });
+      // Thirty days later the recent ones expire too; the open request never does.
+      const later = new Date(now.getTime() + 2 * day);
+      expect(await runKeptLocationsSweep(new PrismaStoredObjectRepository(prisma), later)).toEqual({
+        cleared: 2,
+      });
+      for (const m of made) {
+        expect(await locatorOf(m.recent)).toBeNull();
+        expect(await locatorOf(m.open)).not.toBeNull();
+      }
+    } finally {
+      await prisma.tenant.deleteMany({ where: { id: { in: tenants } } });
     }
   });
 });

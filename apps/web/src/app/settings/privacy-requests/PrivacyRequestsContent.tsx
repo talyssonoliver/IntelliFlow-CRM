@@ -559,6 +559,7 @@ export default function PrivacyRequestsContent() {
       <KeptFilesDialog
         request={keptFor}
         files={keptFiles.data ?? null}
+        total={keptFor?.storedFilesKeptUnmanaged ?? 0}
         error={keptFiles.error ? errorMessage(keptFiles.error) : null}
         onClose={() => setKeptFor(null)}
       />

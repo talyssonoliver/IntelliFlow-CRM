@@ -271,6 +271,34 @@ describe('PrivacyRequestsContent', () => {
     expect(within(dialog).getByText(/removed 30 days after the erasure/)).toBeTruthy();
   });
 
+  it('says honestly when it lists fewer files than were kept', async () => {
+    h.list.data = [
+      request({
+        id: 'clhkept000000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 0,
+        storedFilesKeptUnmanaged: 503,
+      }),
+    ];
+    h.kept = {
+      data: Array.from({ length: 500 }, (_, i) => ({
+        id: `k${i}`,
+        source: 'LEAD_FILE',
+        locator: `https://files.example.invalid/${i}.pdf`,
+      })),
+      error: null,
+    };
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Show where the kept files are/ }));
+    const dialog = await screen.findByRole('dialog');
+    expect(
+      within(dialog).getByText(/Showing 500 of 503 files. The other 3 are not shown here/)
+    ).toBeTruthy();
+    expect(
+      within(dialog).getByText(/removed 30 days after the erasure like the rest/)
+    ).toBeTruthy();
+  });
+
   it('says there is nothing to show once the locations have expired', async () => {
     h.list.data = [
       request({

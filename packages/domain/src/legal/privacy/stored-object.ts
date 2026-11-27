@@ -24,8 +24,9 @@ export type StoredObjectSource = (typeof STORED_OBJECT_SOURCES)[number];
 /**
  * How long, after an erasure completes, the location of a file kept outside the CRM's storage
  * (reason UNMANAGED) is shown to administrators. After that it is cleared from the database:
- * exactly 30 days after the request's completion, at the next time an administrator opens the
- * privacy requests page, and it is never shown once the 30 days have passed.
+ * exactly 30 days after the request's completion, by a daily job in the combined worker (the
+ * privacy requests page clears a firm's own as a fallback), and it is never shown once the 30
+ * days have passed.
  */
 export const UNMANAGED_LOCATION_DAYS = 30;
 

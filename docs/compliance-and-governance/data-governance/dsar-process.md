@@ -279,9 +279,15 @@ described below. The request shows why, as a count per reason:
   button shows each file's source and location to administrators only,
   read-only: no delete, confirm or mark-as-done action. **The locations are
   cleared exactly 30 days after the erasure completes**: they are never shown
-  from that moment, and the stored copy is removed the next time an
-  administrator opens the privacy requests page. The row and its count stay
-  (resolved); only the location goes.
+  from that moment. A **daily job in the combined worker** (the same timers as
+  the compliance snapshots; `DSAR_KEPT_LOCATIONS_INTERVAL_MS`, default 24 hours,
+  0 turns it off) clears every firm's expired locations from the database. It
+  only ever clears a location whose erasure completed more than 30 days ago.
+  Opening the privacy requests page clears that firm's expired ones as a
+  fallback. The row and its count stay (resolved); only the location goes. When
+  a request kept more than 500 files the list shows the first 500 and says
+  "Showing 500 of N": the rest are not shown, and the rule is the same
+  time-based one for all of them.
 
 A location that is not an object (empty, an inline `data:` URL, or the app's own
 download route) is simply cleared.

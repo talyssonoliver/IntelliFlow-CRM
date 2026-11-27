@@ -126,6 +126,19 @@ export class PrismaStoredObjectRepository implements StoredObjectOutboxPort {
     return done.count;
   }
 
+  async expireAllLocators(before: Date): Promise<number> {
+    const done = await this.prisma.dsarStoredObject.updateMany({
+      where: {
+        state: 'KEPT',
+        reason: 'UNMANAGED',
+        locator: { not: null },
+        request: { completedAt: { lt: before } },
+      },
+      data: { locator: null },
+    });
+    return done.count;
+  }
+
   async remaining(tenantId: string, requestId: string): Promise<Record<string, number>> {
     const groups = await this.prisma.dsarStoredObject.groupBy({
       by: ['source'],
