@@ -2,7 +2,7 @@
  * Tests for scripts/lib/review-tier.mjs: how big a review a diff gets, decided in code.
  * No model is called anywhere here.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   DEFAULT_MODELS,
   LIGHT_MAX_LINES,
@@ -14,6 +14,8 @@ import {
   parseModelCache,
   parseNumstat,
   riskArea,
+  sizeRange,
+  sizingRanges,
 } from '../lib/review-tier.mjs';
 
 const stat = (file: string, added = 5, deleted = 0) => ({ file, added, deleted });
@@ -225,5 +227,68 @@ describe('parseModelCache and parseNumstat', () => {
       { file: 'apps/a.ts', added: 3, deleted: 1 },
       { file: 'img.png', added: 0, deleted: 0 },
     ]);
+  });
+});
+
+describe('the dry-run sizing of a revision range', () => {
+  const fakeGit = (outputs: Record<string, string>) => (args: string[]) => {
+    const key = args.includes('--numstat') ? 'numstat' : 'diff';
+    return outputs[key] ?? '';
+  };
+  const numstat = (added: number, deleted: number, file: string) =>
+    `${added}\t${deleted}\t${file}\n`;
+  const diffOf = (file: string, ...changed: string[]) =>
+    [
+      `diff --git a/${file} b/${file}`,
+      `--- a/${file}`,
+      `+++ b/${file}`,
+      '@@ -1 +1 @@',
+      ...changed,
+      '',
+    ].join('\n');
+
+  it('turns --pr=<sha> into the squash commit range', () => {
+    expect(sizingRanges(['--pr=abc', 'main...HEAD'])).toEqual(['abc^..abc', 'main...HEAD']);
+  });
+
+  it('sizes a docs-only range without asking git for a diff', () => {
+    const git = vi.fn(fakeGit({ numstat: numstat(3, 0, 'docs/a.md') }));
+    const row = sizeRange('r', git);
+    expect(row).toMatchObject({ tier: 'skip', reviewer: 'none', files: 1, kinds: '1 docs' });
+    expect(git).toHaveBeenCalledTimes(1);
+  });
+
+  it('sizes a small code range to the light model and a risky one to the strong', () => {
+    const web = 'apps/web/src/a.ts';
+    const api = 'apps/api/src/billing/a.ts';
+    const light = sizeRange(
+      'r',
+      fakeGit({ numstat: numstat(1, 1, web), diff: diffOf(web, '-a', '+const b = 1;') }),
+      {}
+    );
+    expect(light).toMatchObject({
+      tier: 'light',
+      risky: false,
+      reviewer: 'codex gpt-6-luna/medium',
+    });
+    const risky = sizeRange(
+      'r',
+      fakeGit({ numstat: numstat(1, 1, api), diff: diffOf(api, '-a', '+const b = 1;') }),
+      {}
+    );
+    expect(risky).toMatchObject({
+      tier: 'strong',
+      risky: true,
+      reviewer: 'codex gpt-6.2-sol/high',
+    });
+  });
+
+  it('sees a comment-only code range as a skip', () => {
+    const web = 'apps/web/src/a.ts';
+    const row = sizeRange(
+      'r',
+      fakeGit({ numstat: numstat(1, 1, web), diff: diffOf(web, '-// a', '+// b') })
+    );
+    expect(row).toMatchObject({ tier: 'skip' });
   });
 });

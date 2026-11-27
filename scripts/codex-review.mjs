@@ -72,36 +72,8 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import os from 'node:os';
 import { claudeReviewText, runClaudeReviewer, runCodexReviewer } from './lib/review-commands.mjs';
-import {
-  collectNumstat,
-  diffInputMessage,
-  failureArtifact,
-  isStaleReviewArtifact,
-  makeCodexRunner,
-  runChunkedReview,
-  scopeChanges,
-} from './lib/codex-chunk-review.mjs';
-import { collectScopedDiff } from './lib/codex-diff.mjs';
-import { classifyDiff, modelForTier, parseModelCache } from './lib/review-tier.mjs';
-import { deferredMessage, makeReviewer } from './lib/review-policy.mjs';
-import {
-  deltaAgainst,
-  loadBranch,
-  maxRounds,
-  nextBranchRecord,
-  previousRoundOutcome,
-  roundLimitMessage,
-  storeBranch,
-  withHunks,
-} from './lib/review-rounds.mjs';
-import {
-  appendRecord,
-  buildRecord,
-  metricsPath,
-  parseClaudeUsage,
-  parseCodexTokens,
-} from './lib/review-metrics.mjs';
-import { makeReviewIo } from './lib/codex-review-cache.mjs';
+import { createGate } from './lib/codex-review-run.mjs';
+import { parseClaudeUsage } from './lib/review-metrics.mjs';
 import {
   activeWaivers,
   checkWaivers,
@@ -366,418 +338,7 @@ function writeSchema() {
   return p;
 }
 
-// ── state, metrics ─────────────────────────────────────────────────────
-const STATE_PATH = path.join(OUT_DIR, 'round-state.json');
-const METRICS_PATH = metricsPath(OUT_DIR);
-const readState = () => (fs.existsSync(STATE_PATH) ? fs.readFileSync(STATE_PATH, 'utf8') : '');
-
-function gitOut(args) {
-  const r = spawnSync('git', args, {
-    cwd: REPO_ROOT,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    windowsHide: true,
-  });
-  return r.status === 0 ? String(r.stdout).trim() : '';
-}
-
-/** The branch the rounds are kept under; a detached HEAD keeps no rounds across pushes. */
-function branchKey() {
-  if (process.env.CODEX_REVIEW_BRANCH) return process.env.CODEX_REVIEW_BRANCH;
-  const b = gitOut(['rev-parse', '--abbrev-ref', 'HEAD']);
-  return b && b !== 'HEAD' ? b : `detached@${gitOut(['rev-parse', '--short', 'HEAD'])}`;
-}
-
-/** The model slugs the ChatGPT plan lists (codex's own cache), or null when it cannot be read. */
-function planModels() {
-  try {
-    return parseModelCache(
-      fs.readFileSync(path.join(os.homedir(), '.codex', 'models_cache.json'), 'utf8')
-    );
-  } catch {
-    return null;
-  }
-}
-
-/** Blocks the thread for ms (the gate is synchronous); used to wait for Codex's reset. */
-function sleepMs(ms) {
-  const cell = new Int32Array(new SharedArrayBuffer(4));
-  let left = ms;
-  while (left > 0) {
-    const step = Math.min(left, 30_000);
-    Atomics.wait(cell, 0, 0, step);
-    left -= step;
-  }
-}
-
-/** Added + deleted lines of a diff text, per file section. */
-function countLines(text) {
-  return text.split('\n').filter((l) => /^[+-]/.test(l) && !/^(\+\+\+|---)/.test(l)).length;
-}
-
-/** The metrics record for this run; written exactly once per run. */
-function record(ctx, fields) {
-  const rec = buildRecord({
-    branch: ctx.branch,
-    pr: process.env.CODEX_REVIEW_PR || null,
-    head: ctx.head,
-    baseRef,
-    durationMs: Date.now() - ctx.started,
-    ...fields,
-  });
-  appendRecord(fs, METRICS_PATH, rec);
-  return rec;
-}
-
-// ── main ───────────────────────────────────────────────────────────────
-function main() {
-  fs.mkdirSync(OUT_DIR, { recursive: true });
-  const ctx = {
-    started: Date.now(),
-    branch: branchKey(),
-    head: gitOut(['rev-parse', 'HEAD']),
-  };
-
-  // 1. Scope (a base that does not resolve FAILS the gate) and size of the change.
-  const scope = scopeChanges(baseRef, spawnSync, isInScope);
-  if (scope.message) stopGate(scope.message, [], []);
-  const { changed: changedFiles, scoped: scopedFiles } = scope;
-  process.stdout.write(`[codex-review] base ref : ${baseRef}\n`);
-  process.stdout.write(`[codex-review] changed  : ${changedFiles.length} files total\n`);
-  process.stdout.write(`[codex-review] in scope : ${scopedFiles.length} files\n`);
-
-  let stats;
-  let sections = [];
-  try {
-    stats = collectNumstat(baseRef, spawnSync);
-    if (scopedFiles.length > 0) {
-      sections = collectScopedDiff({
-        baseRef,
-        files: scopedFiles,
-        repoRoot: REPO_ROOT,
-        spawn: spawnSync,
-      });
-    }
-  } catch (err) {
-    stopGate(diffInputMessage(err), scopedFiles, []);
-  }
-  const sizing = classifyDiff(stats, sections, { scoped: scopedFiles });
-  process.stdout.write(
-    `[codex-review] sizing   : ${sizing.tier}${sizing.risky ? ' (risky)' : ''} - ${sizing.reason}\n`
-  );
-
-  // 2. Docs, tests, generated, comment-only: no model, and a visible record of why.
-  if (sizing.tier === 'skip') return finishSkip(ctx, sizing, scopedFiles);
-
-  // 3. The same head and the same diff was reviewed already: reuse it (no model, no round).
-  const io = makeReviewIo({
-    repoRoot: REPO_ROOT,
-    outDir: OUT_DIR,
-    baseRef,
-    isInScope,
-    spawn: spawnSync,
-    fs,
-    scope: () => scope,
-    collect: () => sections,
-  });
-  const cache = io.lookup();
-  if (cache.reuse) {
-    return finish({
-      ...cache.reuse,
-      io,
-      cache: null,
-      ctx,
-      meta: {
-        mode: 'reuse',
-        tier: sizing.tier,
-        why: 'same head and same diff already reviewed',
-        files: scopedFiles.length,
-      },
-    });
-  }
-
-  // 4. The round limit: after N failed rounds a human decides. Never an auto-waiver.
-  const prev = loadBranch(readState(), ctx.branch);
-  const limit = maxRounds();
-  if (prev.rounds >= limit) {
-    const message = roundLimitMessage({
-      branch: ctx.branch,
-      rounds: prev.rounds,
-      limit,
-      findings: prev.findings,
-    });
-    record(ctx, {
-      mode: 'round-limit',
-      round: prev.rounds,
-      tier: sizing.tier,
-      verdict: 'FAIL',
-      findings: prev.findings,
-      blocking: prev.findings.length,
-      note: message.split('\n')[0],
-    });
-    stopGate(message, scopedFiles, prev.findings);
-  }
-
-  // 5. Only the hunks unseen since the last reviewed round.
-  const delta = deltaAgainst(sections, prev);
-  const mode = prev.reviewedHunks.length > 0 ? 'delta' : 'full';
-  const deltaBytes = delta.review.reduce((n, sec) => n + Buffer.byteLength(sec.text), 0);
-  const deltaLines = delta.review.reduce((n, sec) => n + countLines(sec.text), 0);
-  const previousRound = previousRoundOutcome(prev, delta.dropped, delta.carried);
-  const common = {
-    round: prev.rounds + 1,
-    files: delta.review.length,
-    bytes: deltaBytes,
-    lines: deltaLines,
-    hunksTotal: delta.seenHunks + delta.newHunks,
-    hunksReviewed: delta.newHunks,
-    previousRound,
-  };
-  const carried = delta.carried.map((f) => ({ ...f, carried: true }));
-  process.stdout.write(
-    `[codex-review] round ${prev.rounds + 1}/${limit} (${mode}): ${delta.newHunks} new hunk(s), ` +
-      `${delta.seenHunks} already reviewed, ${carried.length} finding(s) carried forward\n`
-  );
-
-  // Nothing new to look at, or only trivial new hunks: no model, the carried findings still judge.
-  const deltaStats = delta.review.map((sec) => ({
-    file: sec.file,
-    added: sec.text.split('\n').filter((l) => /^\+(?!\+\+)/.test(l)).length,
-    deleted: sec.text.split('\n').filter((l) => /^-(?!--)/.test(l)).length,
-  }));
-  const deltaSizing =
-    delta.newHunks === 0
-      ? {
-          tier: 'skip',
-          risky: sizing.risky,
-          reason: 'every hunk was already reviewed in an earlier round',
-        }
-      : mode === 'delta' && !sizing.risky
-        ? classifyDiff(deltaStats, delta.review, { scoped: scopedFiles })
-        : sizing;
-  if (deltaSizing.tier === 'skip') {
-    process.stdout.write(
-      `[codex-review] skipped: no model needed for this round (${deltaSizing.reason}).\n`
-    );
-    return finish({
-      scopedFiles,
-      findings: carried,
-      reviewerUsed: 'none (no model needed this round)',
-      chunkCount: 0,
-      io,
-      cache,
-      ctx,
-      sections,
-      prev,
-      modelRound: false,
-      meta: {
-        ...common,
-        mode: delta.newHunks === 0 ? 'delta-empty' : 'skipped',
-        round: 0,
-        tier: 'skip',
-        why: deltaSizing.reason,
-        note: `skipped: ${deltaSizing.reason}`,
-      },
-    });
-  }
-
-  // 6. Pick the reviewer: Codex on the tier's model; Claude only for a risky diff Codex cannot review.
-  const forceFallback = process.env.CODEX_REVIEW_FORCE_FALLBACK === '1';
-  const codexUsable = !forceFallback && commandAvailable('codex') && codexLoggedIn();
-  const claudeUsable = commandAvailable('claude');
-  const available = planModels();
-  const chosen = modelForTier(deltaSizing.tier, process.env, available);
-  const strong = modelForTier('strong', process.env, available);
-  const plan = {
-    tier: deltaSizing.tier,
-    risky: sizing.risky,
-    model: chosen.model,
-    effort: chosen.effort,
-    why: `${deltaSizing.reason}; ${deltaSizing.tier} tier${chosen.note ? `; ${chosen.note}` : ''}`,
-  };
-  process.stdout.write(
-    `[codex-review] reviewer : codex ${chosen.model ?? '(config model)'} / effort ${chosen.effort}` +
-      `${sizing.risky ? '; Claude only if Codex cannot review (risky diff)' : '; no Claude for this diff'}\n`
-  );
-
-  writeSchema();
-  const log = { out: (t) => process.stdout.write(t), err: (t) => process.stderr.write(t) };
-  const runCodex = makeCodexRunner({
-    lastMsgPath: path.join(OUT_DIR, 'codex-last-message.txt'),
-    repoRoot: REPO_ROOT,
-    fs,
-    runCodexReviewer,
-    spawn: spawnSync,
-    verbose: VERBOSE,
-    log,
-  });
-  const reviewer = makeReviewer({
-    plan,
-    codexUsable,
-    claudeUsable,
-    runCodex: (prompt, tier) => {
-      const r = runCodex(prompt, tier);
-      return { ...r, tokens: parseCodexTokens(`${r.stdout}\n${r.stderr}`) };
-    },
-    runClaude: runClaudeReview,
-    extract: extractFindings,
-    log,
-    sleep: sleepMs,
-    models: { strong },
-  });
-  deltaNote =
-    mode === 'delta'
-      ? `\nNOTE: this is review round ${prev.rounds + 1}. Only hunks added or changed since the last ` +
-        'reviewed round are shown; the rest of the PR was reviewed already. Do not repeat earlier findings.\n'
-      : '';
-  process.stdout.write('[codex-review] Preparing diff + review prompt ...\n');
-  const result = runChunkedReview({
-    baseRef,
-    scopedFiles,
-    repoRoot: REPO_ROOT,
-    spawn: spawnSync,
-    buildPrompt,
-    review: reviewer,
-    write: (name, text) => fs.writeFileSync(path.join(OUT_DIR, name), text, 'utf8'),
-    clearStale: () =>
-      fs
-        .readdirSync(OUT_DIR)
-        .filter(isStaleReviewArtifact)
-        .forEach((name) => fs.rmSync(path.join(OUT_DIR, name))),
-    log,
-    sections: delta.review,
-  });
-  const used = summarizeRuns(result.runs ?? []);
-  if (result.kind === 'deferred') {
-    const d = (result.runs ?? []).find((r) => r.deferred)?.deferred ?? {
-      reason: 'codex unavailable',
-      resetAt: null,
-    };
-    const message = deferredMessage({
-      reason: d.reason,
-      resetAt: d.resetAt,
-      risky: sizing.risky,
-      claudeUsable,
-    });
-    record(ctx, {
-      ...common,
-      round: 0,
-      mode: 'deferred',
-      tier: plan.tier,
-      reviewer: used.reviewer,
-      model: plan.model,
-      effort: plan.effort,
-      why: plan.why,
-      verdict: 'DEFERRED',
-      findings: carried,
-      blocking: carried.length,
-      note: message.split('\n')[0],
-    });
-    stopGate(message, scopedFiles, carried);
-  }
-  if (result.kind === 'fail') {
-    record(ctx, {
-      ...common,
-      mode,
-      tier: plan.tier,
-      reviewer: used.reviewer,
-      model: used.model,
-      effort: plan.effort,
-      why: plan.why,
-      tokens: used.tokens,
-      costUsd: used.costUsd,
-      verdict: 'FAIL',
-      note: result.message,
-    });
-    stopGate(result.message, scopedFiles, result.findings);
-  }
-
-  process.stdout.write(`[codex-review] reviewer : ${result.reviewerUsed}\n`);
-  finish({
-    scopedFiles,
-    findings: [...carried, ...result.findings],
-    reviewerUsed: result.reviewerUsed,
-    chunkCount: result.chunkCount,
-    io,
-    cache,
-    ctx,
-    sections,
-    prev,
-    modelRound: true,
-    meta: {
-      ...common,
-      mode,
-      tier: plan.tier,
-      reviewer: used.reviewer,
-      model: used.model,
-      effort: used.effort ?? plan.effort,
-      why: plan.why,
-      tokens: used.tokens,
-      costUsd: used.costUsd,
-    },
-  });
-}
-
-let deltaNote = '';
-
-/** What the chunks' reviewers were, for the metrics: names, models, summed tokens and cost. */
-function summarizeRuns(runs) {
-  const reviewers = [...new Set(runs.map((r) => r.reviewer).filter(Boolean))];
-  const models = [...new Set(runs.map((r) => r.model).filter(Boolean))];
-  const total = runs.reduce((n, r) => n + (r.tokens?.total || 0), 0);
-  const cost = runs.reduce((n, r) => n + (typeof r.costUsd === 'number' ? r.costUsd : 0), 0);
-  return {
-    reviewer: reviewers.length ? reviewers.join('+') : 'none',
-    model: models.join('+') || null,
-    effort: runs.find((r) => r.effort)?.effort ?? null,
-    tokens: total > 0 ? { total } : null,
-    costUsd: runs.some((r) => typeof r.costUsd === 'number') ? cost : null,
-  };
-}
-
-/** A diff that needs no model: printed, written to findings.json and the metrics, exit 0. */
-function finishSkip(ctx, sizing, scopedFiles) {
-  const reason = sizing.reason;
-  const line = `[codex-review] skipped: ${reason}. No model was called; this is a recorded skip, not a review.\n`;
-  process.stdout.write(line);
-  fs.writeFileSync(
-    FINDINGS_PATH,
-    JSON.stringify(
-      {
-        findings: [],
-        scoped_files: scopedFiles,
-        base_ref: baseRef,
-        verdict: 'SKIPPED',
-        skipped_reason: reason,
-      },
-      null,
-      2
-    )
-  );
-  fs.writeFileSync(SUMMARY_PATH, `skipped: ${reason}\nNo model was called.\n`);
-  record(ctx, {
-    mode: 'skipped',
-    round: 0,
-    tier: 'skip',
-    files: sizing.files,
-    lines: sizing.lines,
-    why: reason,
-    verdict: 'SKIPPED',
-    note: `skipped: ${reason}`,
-  });
-  process.exit(0);
-}
-
-/** Writes the failure artifacts and exits 1. Never a PASS. */
-function stopGate(message, scopedFiles, findings) {
-  const artifact = failureArtifact({ baseRef, scopedFiles, findings, message });
-  fs.writeFileSync(FINDINGS_PATH, JSON.stringify(artifact, null, 2));
-  fs.writeFileSync(SUMMARY_PATH, `${message}\n`);
-  process.stdout.write(`${message}\n`);
-  process.exit(1);
-}
-
-function buildPrompt(files, part, diffText) {
+function buildPrompt(files, part, diffText, deltaNote = '') {
   const fileList = files.map((f) => `  - ${f}`).join('\n');
   const prompt = `You are an independent code auditor. Your task is to find REAL bugs in the diff below.
 
@@ -828,86 +389,48 @@ ${diffText}
 `;
 }
 
-/** Fingerprints, waivers, artifacts, round state, metrics and the exit code for a reviewed diff. */
-function finish({
-  scopedFiles,
-  findings: rawFindings,
-  reviewerUsed,
-  chunkCount,
-  io,
-  cache,
-  ctx,
-  meta,
-  sections = null,
-  prev = null,
-  modelRound = false,
-}) {
-  // 8. Stamp fingerprints (Codex computes them too, but we recompute for
-  //    consistency — our normalisation is the contract, not the model's).
-  //    The fingerprint is anchored to the SOURCE CODE at the flagged line(s), so it stays
-  //    stable across rephrasing. A finding carried from an earlier round keeps the fingerprint it
-  //    was stamped with: its line number may have moved, its code has not.
-  const waivers = loadWaivers();
-  const findings = rawFindings.map((f) => {
-    const fp =
-      f.carried && f.fingerprint ? f.fingerprint : fingerprint(f.file, f.line, f.issue, REPO_ROOT);
-    return { ...f, fingerprint: fp };
-  });
-
-  const { summary, blocking, lowLine } = io.complete({
-    rawFindings,
-    findings,
-    waivers,
-    cache,
-    scopedFiles,
-    reviewerUsed,
-    chunkCount,
+/** Everything the run needs from the outside world: git, the CLIs, files, the clock. */
+function runGate() {
+  const gate = createGate({
+    baseRef,
+    repoRoot: REPO_ROOT,
+    outDir: OUT_DIR,
+    env: process.env,
+    spawn: spawnSync,
+    fs,
+    homedir: os.homedir,
+    out: (text) => process.stdout.write(text),
+    err: (text) => process.stderr.write(text),
+    isInScope,
+    commandAvailable,
+    codexLoggedIn,
+    runCodexReviewer,
+    runClaude: runClaudeReview,
+    extract: extractFindings,
+    buildPrompt: (note) => (files, part, diffText) => buildPrompt(files, part, diffText, note),
+    writeSchema,
+    verbose: VERBOSE,
+    loadWaivers,
+    fingerprintOf: (f) => fingerprint(f.file, f.line, f.issue, REPO_ROOT),
     waivedLines: waivedFindingLines,
+    sleep: sleepMs,
   });
-  process.stdout.write(`${summary}\n${lowLine ?? ''}`);
+  process.exit(gate.run());
+}
 
-  const pass = blocking.length === 0;
-  if (sections && prev) {
-    const carried = findings.filter((f) => f.carried);
-    const fresh = withHunks(
-      findings.filter((f) => !f.carried),
-      sections
-    );
-    const next = nextBranchRecord({
-      prev,
-      head: ctx.head,
-      sections,
-      findings: [...carried, ...fresh],
-      modelRound,
-      pass,
-    });
-    fs.writeFileSync(STATE_PATH, storeBranch(readState(), ctx.branch, next));
+/** Blocks the thread for ms (the gate is synchronous); used to wait for Codex's reset. */
+function sleepMs(ms) {
+  const cell = new Int32Array(new SharedArrayBuffer(4));
+  let left = ms;
+  while (left > 0) {
+    const step = Math.min(left, 30_000);
+    Atomics.wait(cell, 0, 0, step);
+    left -= step;
   }
-  record(ctx, {
-    reviewer: 'none',
-    ...meta,
-    findings,
-    blocking: blocking.length,
-    verdict: pass ? 'PASS' : 'FAIL',
-    note: meta.note ?? '',
-  });
-
-  if (pass) {
-    process.stdout.write('[codex-review] Gate PASS — no unwaived blocking findings.\n');
-    process.exit(0);
-  }
-
-  process.stderr.write(
-    `[codex-review] Gate FAIL — ${blocking.length} unwaived blocking finding(s).\n` +
-      `  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml\n` +
-      `  (check with: node scripts/codex-review.mjs --check-waivers)\n` +
-      `  with a non-empty reason, author, and date.\n`
-  );
-  process.exit(1);
 }
 
 if (CHECK_WAIVERS_ONLY) {
   runWaiverCheck();
 } else {
-  main();
+  runGate();
 }

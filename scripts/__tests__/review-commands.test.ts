@@ -101,11 +101,16 @@ describe('starting the reviewers', () => {
     expect(script).toMatch(
       /import \{[^}]*\brunCodexReviewer\b[^}]*\} from '\.\/lib\/review-commands\.mjs'/
     );
-    expect(script).toMatch(/makeCodexRunner\(\{[^}]*\brunCodexReviewer,[^}]*spawn: spawnSync/);
+    // The script hands the gate the codex starter and spawnSync; the gate hands them to the runner.
+    const gate = readFileSync(path.join(__dirname, '..', 'lib', 'codex-review-run.mjs'), 'utf8');
+    expect(script).toMatch(/createGate\(\{[\s\S]*spawn: spawnSync[\s\S]*\brunCodexReviewer,/);
+    expect(gate).toMatch(
+      /makeCodexRunner\(\{[^}]*runCodexReviewer: d\.runCodexReviewer,[^}]*spawn: d\.spawn/
+    );
     expect(loop).toMatch(/runCodexReviewer\(prompt, lastMsgPath, repoRoot, spawn, tier\)/);
     expect(script).toMatch(/runClaudeReviewer\(fullPrompt, REPO_ROOT, spawnSync\)/);
     // No review run starts past the helper (`codex login status` is only an auth check).
-    for (const source of [script, loop]) {
+    for (const source of [script, loop, gate]) {
       expect(source).not.toMatch(/spawn(Sync)?\(\s*'codex',\s*\[\s*'exec'/);
       expect(source).not.toMatch(/spawn(Sync)?\(\s*'claude'/);
     }

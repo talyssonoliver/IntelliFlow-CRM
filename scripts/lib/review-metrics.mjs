@@ -231,3 +231,32 @@ export function formatSummary(groups) {
   );
   return `${lines.join('\n')}\n`;
 }
+
+/**
+ * The summary CLI, free of process state. Returns the exit code.
+ * @param {{args: string[], env?: object, cwd: string, readFile: (p: string) => string, out: (s: string) => void}} io
+ */
+export function runMetricsCli({ args, env = process.env, cwd, readFile, out }) {
+  const fileArg = args.find((a) => a.startsWith('--file='))?.slice('--file='.length);
+  const file = fileArg || metricsPath(path.join(cwd, 'artifacts/codex-review'), env);
+  let text;
+  try {
+    text = readFile(file);
+  } catch {
+    out(`No metrics file at ${file}.\n`);
+    return 0;
+  }
+  const groups = summarize(parseMetrics(text));
+  if (args.includes('--json')) {
+    const plain = groups.map((g) => ({
+      ...g,
+      reviewers: [...g.reviewers],
+      models: [...g.models],
+      last: undefined,
+    }));
+    out(`${JSON.stringify(plain, null, 2)}\n`);
+  } else {
+    out(formatSummary(groups));
+  }
+  return 0;
+}

@@ -196,7 +196,15 @@ export function withHunks(findings, sections) {
  * @param {boolean} p.modelRound false when no model ran (nothing new, or a skip)
  * @param {boolean} p.pass the verdict
  */
-export function nextBranchRecord({ prev, head, sections, findings, modelRound, pass }) {
+export function nextBranchRecord({
+  prev,
+  head,
+  sections,
+  findings,
+  modelRound,
+  pass,
+  now = new Date(),
+}) {
   const hashes = [...new Set(allHunks(sections).map((h) => h.hash))];
   const rounds = pass ? 0 : prev.rounds + (modelRound ? 1 : 0);
   return {
@@ -204,7 +212,7 @@ export function nextBranchRecord({ prev, head, sections, findings, modelRound, p
     lastHead: head,
     reviewedHunks: hashes,
     findings: pass ? findings.filter((f) => String(f.severity).toLowerCase() === 'low') : findings,
-    lastRound: { round: prev.rounds + (modelRound ? 1 : 0), head, at: new Date().toISOString() },
+    lastRound: { round: prev.rounds + (modelRound ? 1 : 0), head, at: now.toISOString() },
   };
 }
 

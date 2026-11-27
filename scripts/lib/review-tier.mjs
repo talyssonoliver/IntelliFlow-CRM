@@ -250,3 +250,46 @@ export function parseNumstat(text) {
     })
     .filter((s) => s.file);
 }
+
+/**
+ * One dry-run row for a revision range: the sizing the gate would pick, no model called.
+ * `git(args)` returns the stdout of `git <args>` and throws on failure.
+ */
+export function sizeRange(range, git, env = process.env) {
+  const stats = parseNumstat(git(['diff', '--numstat', '--no-renames', range]));
+  const sections = [];
+  if (classifyDiff(stats).tier !== 'skip') {
+    const text = git([
+      'diff',
+      '--no-color',
+      '--no-ext-diff',
+      '--no-renames',
+      range,
+      '--',
+      ...stats.map((s) => s.file),
+    ]);
+    for (const part of text.split(/^(?=diff --git )/m).filter(Boolean)) {
+      const m = /^\+\+\+ b\/(.+)$/m.exec(part) || /^--- a\/(.+)$/m.exec(part);
+      if (m) sections.push({ file: m[1].trimEnd(), text: part });
+    }
+  }
+  const sizing = classifyDiff(stats, sections);
+  const model = modelForTier(sizing.tier, env);
+  return {
+    range,
+    files: stats.length,
+    lines: sizing.lines,
+    kinds: Object.entries(sizing.kinds)
+      .map(([k, n]) => `${n} ${k}`)
+      .join(', '),
+    tier: sizing.tier,
+    risky: sizing.risky,
+    reviewer: sizing.tier === 'skip' ? 'none' : `codex ${model.model}/${model.effort}`,
+    reason: sizing.reason,
+  };
+}
+
+/** Revision ranges from CLI arguments: `--pr=<sha>` is the squash commit <sha>^..<sha>. */
+export function sizingRanges(args) {
+  return args.map((a) => (a.startsWith('--pr=') ? `${a.slice(5)}^..${a.slice(5)}` : a));
+}

@@ -16,6 +16,7 @@ import {
   parseClaudeUsage,
   parseCodexTokens,
   parseMetrics,
+  runMetricsCli,
   severityCounts,
   summarize,
 } from '../lib/review-metrics.mjs';
@@ -190,7 +191,37 @@ describe('summarize: rounds and cost per PR', () => {
     expect(formatSummary([])).toMatch(/No review metrics/);
   });
 
-  it('the summary script prints rounds per PR from a file', () => {
+  it('the summary CLI prints rounds per PR, as text or JSON, and copes with no file', () => {
+    const file = '/x/m.jsonl';
+    const readFile = () => records.map((r) => JSON.stringify(r)).join('\n');
+    const outText: string[] = [];
+    const code = runMetricsCli({
+      args: [`--file=${file}`],
+      cwd: '/repo',
+      readFile,
+      out: (s) => outText.push(s),
+    });
+    expect(code).toBe(0);
+    expect(outText.join('')).toMatch(/PR #7/);
+    expect(outText.join('')).toMatch(/model rounds : 2/);
+    const outJson: string[] = [];
+    runMetricsCli({
+      args: ['--json'],
+      env: { CODEX_REVIEW_METRICS_PATH: file },
+      cwd: '/repo',
+      readFile,
+      out: (s) => outJson.push(s),
+    });
+    expect(JSON.parse(outJson.join(''))).toHaveLength(2);
+    const none: string[] = [];
+    const missing = () => {
+      throw new Error('ENOENT');
+    };
+    runMetricsCli({ args: [], cwd: '/repo', readFile: missing, out: (s) => none.push(s) });
+    expect(none.join('')).toMatch(/No metrics file at/);
+  });
+
+  it('the summary script runs from the command line', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'metrics-cli-'));
     const file = path.join(dir, 'm.jsonl');
     fs.writeFileSync(file, records.map((r) => JSON.stringify(r)).join('\n'));
@@ -198,10 +229,5 @@ describe('summarize: rounds and cost per PR', () => {
     const r = spawnSync(process.execPath, [script, `--file=${file}`], { encoding: 'utf8' });
     expect(r.status).toBe(0);
     expect(r.stdout).toMatch(/PR #7/);
-    expect(r.stdout).toMatch(/model rounds : 2/);
-    const j = spawnSync(process.execPath, [script, `--file=${file}`, '--json'], {
-      encoding: 'utf8',
-    });
-    expect(JSON.parse(j.stdout)).toHaveLength(2);
   });
 });
