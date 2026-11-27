@@ -174,7 +174,7 @@ describe('TaskList', () => {
       expect(onComplete).toHaveBeenCalledWith(followUp.id);
     });
 
-    it('never sends a follow-up id to bulk complete, archive or delete', () => {
+    it('bulk Mark Complete includes follow-ups; delete never touches them (owner 27/11)', () => {
       const onBulkComplete = vi.fn();
       const onBulkDelete = vi.fn();
       render(
@@ -188,15 +188,15 @@ describe('TaskList', () => {
       // The DataTable mock hands every row to the action, as a stale selection could.
       fireEvent.click(screen.getByTestId('bulk-mark-complete'));
       fireEvent.click(screen.getByTestId('bulk-delete'));
-      expect(onBulkComplete).toHaveBeenCalledWith([defaultProps.tasks[0].id]);
+      expect(onBulkComplete).toHaveBeenCalledWith([defaultProps.tasks[0].id, followUp.id]);
       expect(onBulkDelete).toHaveBeenCalledWith([defaultProps.tasks[0].id]);
     });
 
-    it('gives follow-ups no selection checkbox, so bulk actions never touch them', () => {
+    it('gives follow-ups the same selection checkbox as tasks (owner 27/11: one model)', () => {
       render(<TaskList {...defaultProps} tasks={[...defaultProps.tasks, followUp]} />);
       expect(screen.getByTestId(`task-row-${followUp.id}`)).toHaveAttribute(
         'data-selectable',
-        'false'
+        'true'
       );
       expect(screen.getByTestId(`task-row-${defaultProps.tasks[0].id}`)).toHaveAttribute(
         'data-selectable',

@@ -14,6 +14,8 @@ export interface FollowUpLead {
   company: string | null;
   email: string;
   lastContactedAt: Date | string | null;
+  /** The lead's owner: the follow-up is theirs (Tasks page Owner column). */
+  owner?: { id: string; email: string; name: string | null } | null;
 }
 
 const toneClass: Record<FollowUpTone, string> = {

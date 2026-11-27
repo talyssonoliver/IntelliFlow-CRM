@@ -331,7 +331,8 @@ export function TaskList({
       {
         label: 'Mark Complete',
         icon: 'check_circle',
-        onExecute: (selected) => onBulkComplete(stored(selected).map((t) => t.id)),
+        // Follow-ups too: the page marks each one "Followed up" (owner 27/11: one model).
+        onExecute: (selected) => onBulkComplete(selected.map((t) => t.id)),
       },
       {
         label: 'Archive',
@@ -397,7 +398,7 @@ export function TaskList({
       }
       enableRowSelection
       // Follow-ups are not stored tasks: nothing to complete, archive or delete in bulk.
-      canSelectRow={(row) => !row.followUp}
+      canSelectRow={() => true}
       bulkActions={bulkActions}
     />
   );

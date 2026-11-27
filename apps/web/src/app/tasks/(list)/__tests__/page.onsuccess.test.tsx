@@ -58,8 +58,9 @@ const followUpsDue = {
   dueTodayIsLowerBound: false,
   isLoading: false,
 };
+const markFollowUpDone = vi.fn();
 vi.mock('@/components/dashboard/widgets/useTodoDone', () => ({
-  useFollowUpDone: () => ({ markDone: vi.fn(), pendingLeadId: undefined }),
+  useFollowUpDone: () => ({ markDone: markFollowUpDone, pendingLeadId: undefined }),
 }));
 
 vi.mock('@/components/dashboard/widgets/useFollowUpsDue', () => ({
@@ -157,6 +158,14 @@ describe('TasksListPage bulk handlers', () => {
     expect(h.mutateAsync).toHaveBeenCalledWith({ taskId: 't2' });
     expect(h.invalidate.mock.calls.map((c) => c[0])).toEqual(['task.list', 'task.stats']);
     expect(h.toast).not.toHaveBeenCalled();
+  });
+
+  it('bulk complete marks selected follow-ups "Followed up" and completes only real tasks', async () => {
+    markFollowUpDone.mockReset();
+    await h.list.onBulkComplete?.(['t1', 'follow-up:lead-7']);
+    expect(markFollowUpDone).toHaveBeenCalledWith('lead-7');
+    expect(h.mutateAsync).toHaveBeenCalledTimes(1);
+    expect(h.mutateAsync).toHaveBeenCalledWith({ taskId: 't1' });
   });
 
   it('refreshes after bulk delete', async () => {

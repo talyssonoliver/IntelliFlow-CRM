@@ -248,10 +248,13 @@ export default function TasksPage() {
 
   const handleBulkComplete = useCallback(
     async (ids: string[]) => {
-      await Promise.allSettled(ids.map((id) => completeMutation.mutateAsync({ taskId: id })));
+      const followUps = ids.filter((id) => id.startsWith(FOLLOW_UP_ROW_PREFIX));
+      followUps.forEach((id) => markFollowUpDone(id.slice(FOLLOW_UP_ROW_PREFIX.length)));
+      const taskIds = ids.filter((id) => !id.startsWith(FOLLOW_UP_ROW_PREFIX));
+      await Promise.allSettled(taskIds.map((id) => completeMutation.mutateAsync({ taskId: id })));
       await refreshTaskLists();
     },
-    [completeMutation, refreshTaskLists]
+    [completeMutation, markFollowUpDone, refreshTaskLists]
   );
 
   const handleBulkDelete = useCallback(
