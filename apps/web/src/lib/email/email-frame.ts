@@ -110,33 +110,14 @@ function csp(showRemoteImages: boolean): string {
   ].join('; ');
 }
 
-/** A pixel size from an attribute (`width="600"`, `width="600px"`), or null (percentages and the like are not a size). */
-function pixelsOf(value: string | null): number | null {
-  const match = /^\s*(\d{1,5})(?:px)?\s*$/i.exec(value ?? '');
-  return match ? Number(match[1]) : null;
-}
-
 /**
- * An image that is not shown (blocked until "Show images", or with no source to draw) is replaced
- * by a neutral, invisible spacer of the size the mail gave it: no broken-image icon, no empty
- * bordered box, and no jump in the layout when the image is later shown. With no size, it is
- * simply left out.
+ * An image that is not shown (blocked until "Show images", or with no source to draw, such as a
+ * cid: that could not be fetched) is removed and takes NO room, as Gmail does: no broken-image icon,
+ * no bordered box, and no empty gap where its height attribute would have been reserved. The
+ * layout moves a little when the image is shown.
  */
 function hideImage(image: Element): void {
-  const width = pixelsOf(image.getAttribute('width'));
-  const height = pixelsOf(image.getAttribute('height'));
-  if (width === null || height === null) {
-    image.remove();
-    return;
-  }
-  const spacer = image.ownerDocument.createElement('span');
-  spacer.setAttribute('data-hidden-image', 'true');
-  spacer.setAttribute('aria-hidden', 'true');
-  spacer.setAttribute(
-    'style',
-    `display:inline-block;width:${width}px;height:${height}px;max-width:100%;vertical-align:top`
-  );
-  image.replaceWith(spacer);
+  image.remove();
 }
 
 export function buildEmailFrame(input: EmailFrameInput): EmailFrame {
