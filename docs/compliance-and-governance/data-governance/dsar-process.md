@@ -240,17 +240,24 @@ ticket attachments are deleted from storage, in four steps:
    message), and is listed.
 4. The admin's request list shows "N stored files not deleted yet" with a
    **Retry file deletion** button. A retry touches only what is still queued, so
-   it is safe to press again; with nothing queued it does nothing.
+   it is safe to press again; with nothing queued it does nothing. The list says
+   nothing about an erasure from before the queue existed (it has no queue
+   rows), or when the count cannot be read: it never shows "deleted" without a
+   record.
 
 Deletion is tenant-scoped by construction. A location is deleted only if it is a
 path under `<firm id>/` (no `..`, escapes, backslashes or empty parts) in one of
 the two buckets the CRM owns (email attachments, and `CRM_FILES_BUCKET`, default
 `crm-files`, for lead, chat and ticket files), or a URL of this project's own
-storage that names such a path. Anything else (another firm's path, another host
-or bucket) is never sent to storage: it is queued as `MANUAL` and stays on the
-checklist for the admin to delete and check off. A location that is not an
-object (empty, an inline `data:` URL, or the app's own download route) is simply
-cleared.
+storage that names such a path. An object that a record outside the erasure
+still uses (the same upload attached to someone else's mail) is not deleted
+either. Anything else (another firm's path, another host or bucket) is never
+sent to storage. These are queued as `MANUAL` and stay on the checklist. The
+admin opens **Files to delete by hand** on the request, sees each file's source
+and location, deletes it where it lives, ticks "I deleted these files" and marks
+them as deleted; the location then leaves the database. A location that is not
+an object (empty, an inline `data:` URL, or the app's own download route) is
+simply cleared.
 
 **Counted checklist** (shown to the admin as counts, after the cleanup has run,
 so it lists only what remains; 0 when everything is deleted). It holds:
@@ -428,7 +435,6 @@ track training. The previous training record was fabricated and was removed (see
 | An access request completed at verification can later withhold data added before the download, with the wrong note.                                                                                     | #1020               |
 | AI search can return too few results when many matches are restricted (filtered after the row limit; fail-safe).                                                                                        | #1021               |
 | Email suppressions and bounce receipts are not in the export (bounce receipts of the person are anonymised by the erasure; suppressions are kept so a bounced address is never mailed again).           | #956                |
-| A stored file on another host or bucket cannot be deleted by the CRM and stays on the checklist; there is no button to check it off yet.                                                                | IFC-316 (Sprint 19) |
 | No direct transfer to another controller (Article 20(2)). CSV export is built.                                                                                                                          | IFC-317 (Sprint 19) |
 | No Article 19 notice to recipients of erased, corrected or restricted data.                                                                                                                             | IFC-318 (Sprint 19) |
 | The firm's retention period and transfer safeguards are not stated by Aurora. The export links to the firm's privacy notice, or says the firm has not published one and the person may ask it directly. | By design           |

@@ -35,6 +35,7 @@ import {
   type RequestAction,
 } from './components/RequestActionDialog';
 import { LogRequestDialog, TYPE_LABELS } from './components/LogRequestDialog';
+import { ManualFilesDialog } from './components/ManualFilesDialog';
 
 const OPEN_TITLE_ID = 'open-requests-title';
 // The server requires a reason of at least 10 characters to lift a restriction.
@@ -114,15 +115,20 @@ function RequestRow({
   onAction,
   onExport,
   onRetryFiles,
+  onManualFiles,
   retrying,
 }: Readonly<{
   request: DsarRequestDto;
   onAction: (action: RequestAction, request: DsarRequestDto) => void;
   onExport: (request: DsarRequestDto) => void;
   onRetryFiles: (request: DsarRequestDto) => void;
+  onManualFiles: (request: DsarRequestDto) => void;
   retrying: boolean;
 }>) {
   const isExport = request.type === 'ACCESS' || request.type === 'PORTABILITY';
+  const manualFiles = request.storedFilesManual ?? 0;
+  // The CRM retries only what it can delete; the files left for the admin are not its to retry.
+  const retryable = (request.storedFilesLeft ?? 0) - manualFiles;
   return (
     <li className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="space-y-1">
@@ -168,7 +174,18 @@ function RequestRow({
             Download data
           </Button>
         )}
-        {(request.storedFilesLeft ?? 0) > 0 && (
+        {manualFiles > 0 && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onManualFiles(request)}
+            aria-label={`Show files to delete by hand: erasure for ${request.subjectEmail}`}
+          >
+            Files to delete by hand
+          </Button>
+        )}
+        {retryable > 0 && (
           <Button
             type="button"
             size="sm"
@@ -245,6 +262,13 @@ export default function PrivacyRequestsContent() {
   const liftRestriction = trpc.privacy.admin.liftRestriction.useMutation({ onSuccess: refresh });
   const exportData = trpc.privacy.admin.exportData.useMutation();
   const retryFiles = trpc.privacy.admin.retryFileCleanup.useMutation({ onSuccess: refresh });
+  const confirmManual = trpc.privacy.admin.confirmManualFiles.useMutation({ onSuccess: refresh });
+  const [manualFor, setManualFor] = useState<DsarRequestDto | null>(null);
+  const [manualError, setManualError] = useState<string | null>(null);
+  const manualFiles = trpc.privacy.admin.manualFiles.useQuery(
+    { id: manualFor?.id ?? '' },
+    { enabled: manualFor !== null, retry: false }
+  );
 
   const pending =
     complete.isPending ||
@@ -344,6 +368,18 @@ export default function PrivacyRequestsContent() {
     }
   };
 
+  const runConfirmManual = async (fileIds: string[]) => {
+    if (!manualFor) return;
+    setManualError(null);
+    try {
+      const result = await confirmManual.mutateAsync({ id: manualFor.id, fileIds });
+      toast({ title: `${result.handled} stored files marked as deleted` });
+      setManualFor(null);
+    } catch (error) {
+      setManualError(errorMessage(error));
+    }
+  };
+
   const runExport = async (request: DsarRequestDto) => {
     try {
       downloadJson(await exportData.mutateAsync({ id: request.id }));
@@ -416,6 +452,7 @@ export default function PrivacyRequestsContent() {
                 runExport(row).catch(() => undefined);
               }}
               onRetryFiles={() => undefined}
+              onManualFiles={() => undefined}
               retrying={false}
             />
           ))}
@@ -496,6 +533,10 @@ export default function PrivacyRequestsContent() {
                 onRetryFiles={(row) => {
                   runRetryFiles(row).catch(() => undefined);
                 }}
+                onManualFiles={(row) => {
+                  setManualError(null);
+                  setManualFor(row);
+                }}
                 retrying={retryFiles.isPending}
               />
             ))}
@@ -514,6 +555,17 @@ export default function PrivacyRequestsContent() {
         }}
         onClose={() => setActive(null)}
         onCloseAutoFocus={onDialogCloseAutoFocus}
+      />
+
+      <ManualFilesDialog
+        request={manualFor}
+        files={manualFiles.data ?? null}
+        pending={confirmManual.isPending}
+        error={manualError ?? (manualFiles.error ? errorMessage(manualFiles.error) : null)}
+        onConfirm={(ids) => {
+          runConfirmManual(ids).catch(() => setManualError('Please try again.'));
+        }}
+        onClose={() => setManualFor(null)}
       />
 
       <LogRequestDialog

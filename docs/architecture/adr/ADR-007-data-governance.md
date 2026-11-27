@@ -662,8 +662,12 @@ so a double click or two admins cannot run it twice. It anonymises in place:
   deletion** runs only what is left (idempotent). The adapter deletes only a
   path under `<tenantId>/` in a bucket the CRM owns (email attachments,
   `CRM_FILES_BUCKET`); a location outside that (another tenant, another host or
-  bucket) is never sent to storage and is queued `MANUAL`. The cleanup never
-  fails the erasure.
+  bucket), or one that a record outside the erasure still uses, is never sent to
+  storage and is queued `MANUAL`. The admin lists those files on the request,
+  deletes them where they live and confirms; the row becomes `DELETED` and its
+  locator is cleared. A request with no queue rows (an erasure from before the
+  queue) is shown without any claim about its files. The cleanup never fails the
+  erasure.
 - **Left on a counted checklist.** Deals and tasks (Q23) and, per source, the
   stored files not yet deleted (failed or manual): the result and the request
   list count exactly what remains, 0 when all are gone. Legal holds: no hold

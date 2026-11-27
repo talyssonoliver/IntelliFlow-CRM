@@ -43,6 +43,12 @@ describe('classifyStoredLocator (IFC-316)', () => {
     expect(lead(`${T}/../tenant-b/a.pdf`)).toEqual(UNMANAGED);
     expect(lead(`${T}/%2e%2e/a.pdf`)).toEqual(UNMANAGED);
     expect(lead(url('crm-files', `${T}/%2e%2e/b.pdf`))).toEqual(UNMANAGED);
+    // A step that collapses to a path still inside the tenant must not be read as that path.
+    expect(lead(url('crm-files', `${T}/x/%2e%2e/b.pdf`))).toEqual(UNMANAGED);
+    expect(lead(url('crm-files', `${T}/x/../b.pdf`))).toEqual(UNMANAGED);
+    expect(lead(url('crm-files', `${T}/x/%2E%2e/b.pdf`))).toEqual(UNMANAGED);
+    expect(lead(url('crm-files', `${T}/x\\b.pdf`))).toEqual(UNMANAGED);
+    expect(lead(`${T}/x/./b.pdf`)).toEqual(UNMANAGED);
     expect(lead('https://files.example.invalid/a.pdf')).toEqual(UNMANAGED);
     expect(lead('not a url or path')).toEqual(UNMANAGED);
   });

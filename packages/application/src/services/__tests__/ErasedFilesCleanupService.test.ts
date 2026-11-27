@@ -50,8 +50,31 @@ class FakeOutbox implements StoredObjectOutboxPort {
       else row.attempts += 1;
     }
   }
-  async leftFor() {
-    return { [R]: [...this.rows.values()].filter((r) => r.state !== 'DELETED').length };
+  async leftFor(_t: string, requestIds: string[]) {
+    if (!requestIds.includes(R) || this.rows.size === 0) return {};
+    const all = [...this.rows.values()];
+    return {
+      [R]: {
+        queued: all.filter((r) => r.state === 'PENDING').length,
+        manual: all.filter((r) => r.state === 'MANUAL').length,
+      },
+    };
+  }
+  async manual() {
+    return [...this.rows.values()]
+      .filter((r) => r.state === 'MANUAL')
+      .map((r) => ({ id: r.id, source: r.source, locator: r.path }));
+  }
+  async markHandled(_t: string, _r: string, ids: string[]) {
+    let n = 0;
+    for (const id of ids) {
+      const row = this.rows.get(id);
+      if (row?.state === 'MANUAL') {
+        row.state = 'DELETED';
+        n += 1;
+      }
+    }
+    return n;
   }
   async remaining() {
     const keys = {
@@ -205,8 +228,26 @@ describe('ErasedFilesCleanupService (IFC-316)', () => {
     error.mockRestore();
   });
 
-  it('reports what is left for a list of requests', async () => {
-    const outbox = new FakeOutbox(['t/a']);
-    expect(await service(outbox, null).leftFor(T, [R])).toEqual({ [R]: 1 });
+  it('reports what is left for a list of requests, split into queued and manual', async () => {
+    const outbox = new FakeOutbox(['t/a'], 2);
+    expect(await service(outbox, null).leftFor(T, [R])).toEqual({ [R]: { queued: 1, manual: 2 } });
+    // A request that never queued a file is absent: no claim is made for it.
+    expect(await service(new FakeOutbox([]), null).leftFor(T, [R])).toEqual({});
+  });
+
+  it('lists the files left for the admin and records the ones the admin deleted by hand', async () => {
+    const outbox = new FakeOutbox(['t/a'], 2);
+    const cleanup = service(outbox, null);
+    const files = await cleanup.manualFiles(T, R);
+    expect(files).toEqual([
+      { id: 'm0', source: 'CHAT_ATTACHMENT', locator: 'https://files.example.invalid/x' },
+      { id: 'm1', source: 'CHAT_ATTACHMENT', locator: 'https://files.example.invalid/x' },
+    ]);
+    // A queued object is not the admin's to confirm: only manual files change.
+    expect(await cleanup.confirmManual(T, R, ['m0', 'o0'], NOW)).toBe(1);
+    expect((await cleanup.purge(T, R, NOW)).remaining).toEqual({
+      storedEmailAttachments: 1,
+      storedChatAttachments: 1,
+    });
   });
 });

@@ -179,6 +179,11 @@ export const dsarCancelErasureSchema = z
   .object({ id: idSchema, reason: cleanText(10, 500) })
   .strict();
 
+/** IFC-316: the admin deleted these stored files by hand (ids of the request's manual files). */
+export const dsarConfirmManualFilesSchema = z
+  .object({ id: idSchema, fileIds: z.array(idSchema).min(1).max(500) })
+  .strict();
+
 export const dsarLiftRestrictionSchema = z
   .object({ restrictionId: idSchema, note: cleanText(10, 500) })
   .strict();
@@ -236,8 +241,19 @@ export interface DsarRequestDto {
   resolutionNote: string | null;
   clockBreached: boolean;
   createdAt: string;
-  /** A completed erasure: stored files not yet deleted from storage (IFC-316); 0 when none. */
+  /**
+   * A completed erasure that queued stored files (IFC-316): how many are not deleted yet, and
+   * how many of those only the admin can delete. Absent when unknown or never queued.
+   */
   storedFilesLeft?: number;
+  storedFilesManual?: number;
+}
+
+/** A stored file the CRM cannot delete itself (IFC-316): where it was and where it is. */
+export interface DsarManualFileDto {
+  id: string;
+  source: 'LEAD_FILE' | 'EMAIL_ATTACHMENT' | 'CHAT_ATTACHMENT' | 'TICKET_ATTACHMENT';
+  locator: string;
 }
 
 export interface DsarErasureResultDto {

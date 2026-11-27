@@ -92,34 +92,70 @@ export async function planStoredFiles(
     }),
   ]);
 
-  const queue: QueuedObject[] = [];
-  const seen = new Set<string>();
-  const add = (source: StoredObjectSource, locator: string | null) => {
-    const found = classifyStoredLocator(source, locator, tenantId, config);
-    if (found.kind === 'NONE') return;
-    const where = found.kind === 'OBJECT' ? `${found.ref.bucket}/${found.ref.path}` : locator;
-    const key = `${source}|${where}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    queue.push(
-      found.kind === 'OBJECT'
-        ? { source, state: 'PENDING', bucket: found.ref.bucket, locator: found.ref.path }
-        : { source, state: 'MANUAL', bucket: null, locator: String(locator).trim() }
-    );
-  };
-  for (const f of leadFiles) add('LEAD_FILE', f.url);
-  for (const f of emailFiles) add('EMAIL_ATTACHMENT', f.fileUrl);
-  for (const f of ticketFiles) add('TICKET_ATTACHMENT', f.url);
-  for (const m of chatMessages) {
-    for (const locator of chatAttachmentLocators(m.attachments)) add('CHAT_ATTACHMENT', locator);
-  }
-  return {
-    queue,
+  const rowIds = {
     leadFileIds: leadFiles.map((f) => f.id),
     emailAttachmentIds: emailFiles.map((f) => f.id),
     ticketAttachmentIds: ticketFiles.map((f) => f.id),
     chatMessageIds: chatMessages.map((m) => m.id),
   };
+  const locators: Array<[StoredObjectSource, string | null]> = [
+    ...leadFiles.map((f): [StoredObjectSource, string | null] => ['LEAD_FILE', f.url]),
+    ...emailFiles.map((f): [StoredObjectSource, string | null] => ['EMAIL_ATTACHMENT', f.fileUrl]),
+    ...ticketFiles.map((f): [StoredObjectSource, string | null] => ['TICKET_ATTACHMENT', f.url]),
+    ...chatMessages.flatMap((m) =>
+      chatAttachmentLocators(m.attachments).map((l): [StoredObjectSource, string | null] => [
+        'CHAT_ATTACHMENT',
+        l,
+      ])
+    ),
+  ];
+
+  const queue: QueuedObject[] = [];
+  const seen = new Set<string>();
+  for (const [source, locator] of locators) {
+    const found = classifyStoredLocator(source, locator, tenantId, config);
+    if (found.kind === 'NONE') continue;
+    const where = found.kind === 'OBJECT' ? `${found.ref.bucket}/${found.ref.path}` : locator;
+    const key = `${source}|${where}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    // An object another row (kept, not part of this erasure) still points to is never deleted
+    // here: another person's mail may use the same upload. It goes to the admin instead.
+    if (
+      found.kind === 'OBJECT' &&
+      !(await sharedWithOthers(db, tenantId, found.ref.path, rowIds))
+    ) {
+      queue.push({ source, state: 'PENDING', bucket: found.ref.bucket, locator: found.ref.path });
+    } else {
+      queue.push({ source, state: 'MANUAL', bucket: null, locator: String(locator).trim() });
+    }
+  }
+  return { queue, ...rowIds };
+}
+
+/** Whether a row outside this erasure's own rows, in the same tenant, still names this object. */
+async function sharedWithOthers(
+  db: Db,
+  tenantId: string,
+  path: string,
+  planned: Omit<StoredFilePlan, 'queue'>
+): Promise<boolean> {
+  const [email, lead, ticket, chat] = await Promise.all([
+    db.emailAttachment.count({
+      where: { tenantId, fileUrl: { contains: path }, id: { notIn: planned.emailAttachmentIds } },
+    }),
+    db.leadFile.count({
+      where: { tenantId, url: { contains: path }, id: { notIn: planned.leadFileIds } },
+    }),
+    db.ticketAttachment.count({
+      where: { tenantId, url: { contains: path }, id: { notIn: planned.ticketAttachmentIds } },
+    }),
+    db.$queryRaw<Array<{ n: bigint | number }>>`
+      SELECT count(*) AS n FROM chat_messages
+      WHERE "tenantId" = ${tenantId} AND NOT (id = ANY(${planned.chatMessageIds}::text[]))
+        AND strpos(attachments::text, ${path}) > 0`,
+  ]);
+  return email + lead + ticket + Number(chat[0]?.n ?? 0) > 0;
 }
 
 /** Deals and tasks stay on the checklist (owner ruling Q23); counted for the preview and result. */

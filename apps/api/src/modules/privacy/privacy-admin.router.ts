@@ -14,6 +14,7 @@ import type { DsarRecord } from '@intelliflow/application';
 import { effectiveDeadline, isTerminalDsarStatus } from '@intelliflow/domain';
 import {
   dsarCancelErasureSchema,
+  dsarConfirmManualFilesSchema,
   dsarCompleteAccessSchema,
   dsarCompleteSchema,
   dsarExtendSchema,
@@ -25,6 +26,7 @@ import {
   restrictionForSchema,
   type DsarErasureResultDto,
   type DsarExportDto,
+  type DsarManualFileDto,
   type DsarRequestDto,
   type ProcessingRestrictionStatusDto,
 } from '@intelliflow/validators';
@@ -193,16 +195,24 @@ export const privacyAdminRouter = createTRPCRouter({
       const now = new Date();
       const rows = await dsarService(ctx).list(ctx.tenant.tenantId, input.status);
       // IFC-316: a completed erasure shows how many stored files are still not deleted.
+      // Said only when known: an erasure from before the queue, or a failed lookup, makes no
+      // claim that the files are gone.
       const erased = rows.filter((r) => r.type === 'ERASURE' && r.status === 'COMPLETED');
       const left = await dsarService(ctx).storedFilesLeft(
         ctx.tenant.tenantId,
         erased.map((r) => r.id)
       );
-      const erasedIds = new Set(erased.map((r) => r.id));
       return rows
         .map((r) => {
           const dto = toDsarRequestDto(r, now);
-          return erasedIds.has(r.id) ? { ...dto, storedFilesLeft: left[r.id] ?? 0 } : dto;
+          const entry = left?.[r.id];
+          return entry
+            ? {
+                ...dto,
+                storedFilesLeft: entry.queued + entry.manual,
+                storedFilesManual: entry.manual,
+              }
+            : dto;
         })
         .sort(byUrgency);
     }),
@@ -332,6 +342,37 @@ export const privacyAdminRouter = createTRPCRouter({
         checklist: result.checklist,
       });
       return { deleted: result.deleted, checklist: result.checklist };
+    }),
+
+  /** IFC-316: the stored files of a completed erasure that only the admin can delete. */
+  manualFiles: adminTenantProcedure
+    .input(dsarIdInputSchema)
+    .query(async ({ ctx, input }): Promise<DsarManualFileDto[]> => {
+      const result = await dsarService(ctx).manualFiles({
+        tenantId: ctx.tenant.tenantId,
+        id: input.id,
+      });
+      assertOk(result);
+      return result.files;
+    }),
+
+  /** IFC-316: the admin deleted these files by hand; they stop counting as left. */
+  confirmManualFiles: adminTenantProcedure
+    .input(dsarConfirmManualFilesSchema)
+    .mutation(async ({ ctx, input }) => {
+      const result = await dsarService(ctx).confirmManualFiles({
+        tenantId: ctx.tenant.tenantId,
+        id: input.id,
+        fileIds: input.fileIds,
+        now: new Date(),
+      });
+      assertOk(result);
+      await audit(ctx, 'UPDATE', input.id, {
+        change: 'MANUAL_FILES_CONFIRMED',
+        requested: input.fileIds.length,
+        handled: result.handled,
+      });
+      return { handled: result.handled };
     }),
 
   completeAccess: adminTenantProcedure

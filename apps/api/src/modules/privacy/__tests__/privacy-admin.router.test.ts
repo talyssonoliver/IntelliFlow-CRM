@@ -145,27 +145,45 @@ describe('list', () => {
     vi.useRealTimers();
   });
 
-  it('shows a completed erasure how many stored files are still not deleted (IFC-316)', async () => {
+  it('shows a completed erasure how many stored files are not deleted, only when it knows (IFC-316)', async () => {
     service.list.mockResolvedValue([
       record({ id: 'clherased0000000000', status: 'COMPLETED', completedAt: NOW }),
       record({ id: 'clherasedok00000000', status: 'COMPLETED', completedAt: NOW }),
+      record({ id: 'clhlegacy0000000000', status: 'COMPLETED', completedAt: NOW }),
       record({ id: 'clhopen000000000000' }),
       record({ id: 'clhaccess0000000000', type: 'ACCESS', status: 'COMPLETED', completedAt: NOW }),
     ]);
-    service.storedFilesLeft.mockResolvedValue({ clherased0000000000: 2 });
+    service.storedFilesLeft.mockResolvedValue({
+      clherased0000000000: { queued: 1, manual: 2 },
+      // Queued before, all deleted since: a real 0.
+      clherasedok00000000: { queued: 0, manual: 0 },
+    });
     const rows = await adminCaller().list({});
-    const byId = Object.fromEntries(rows.map((r) => [r.id, r.storedFilesLeft]));
-    // 0 when all are gone; absent for requests that are not a completed erasure.
+    const byId = Object.fromEntries(
+      rows.map((r) => [r.id, [r.storedFilesLeft, r.storedFilesManual]])
+    );
     expect(byId).toEqual({
-      clherased0000000000: 2,
-      clherasedok00000000: 0,
-      clhopen000000000000: undefined,
-      clhaccess0000000000: undefined,
+      clherased0000000000: [3, 2],
+      clherasedok00000000: [0, 0],
+      // No queue rows (an erasure from before the queue): no claim that anything was deleted.
+      clhlegacy0000000000: [undefined, undefined],
+      clhopen000000000000: [undefined, undefined],
+      clhaccess0000000000: [undefined, undefined],
     });
     expect(service.storedFilesLeft).toHaveBeenCalledWith(TENANT, [
       'clherased0000000000',
       'clherasedok00000000',
+      'clhlegacy0000000000',
     ]);
+  });
+
+  it('makes no claim about stored files when the count is unknown', async () => {
+    service.list.mockResolvedValue([
+      record({ id: 'clherased0000000000', status: 'COMPLETED', completedAt: NOW }),
+    ]);
+    service.storedFilesLeft.mockResolvedValue(null);
+    const rows = await adminCaller().list({});
+    expect(rows[0]).not.toHaveProperty('storedFilesLeft');
   });
 
   it('reports a download link as active only while its token is live', () => {
@@ -483,6 +501,36 @@ describe('the remaining admin actions', () => {
     service.retryFileCleanup.mockResolvedValue({ outcome: 'NOT_FOUND' });
     await expect(adminCaller().retryFileCleanup({ id: ID })).rejects.toMatchObject({
       code: 'NOT_FOUND',
+    });
+  });
+
+  it('lists the files the admin must delete by hand and records those deleted', async () => {
+    const files = [{ id: 'f1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/a' }];
+    service.manualFiles = vi.fn().mockResolvedValue({ outcome: 'OK', files });
+    await expect(adminCaller().manualFiles({ id: ID })).resolves.toEqual(files);
+    expect(service.manualFiles).toHaveBeenCalledWith({ tenantId: TENANT, id: ID });
+
+    service.confirmManualFiles = vi.fn().mockResolvedValue({ outcome: 'OK', handled: 1 });
+    await expect(
+      adminCaller().confirmManualFiles({ id: ID, fileIds: ['clhfile00000000000'] })
+    ).resolves.toEqual({ handled: 1 });
+    expect(service.confirmManualFiles).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: TENANT, id: ID, fileIds: ['clhfile00000000000'] })
+    );
+    // The audit row holds counts, never a locator.
+    expect(auditLog).toHaveBeenCalledWith(
+      'UPDATE',
+      'dsar_request',
+      ID,
+      TENANT,
+      expect.objectContaining({
+        metadata: { change: 'MANUAL_FILES_CONFIRMED', requested: 1, handled: 1 },
+      })
+    );
+    await expect(adminCaller().confirmManualFiles({ id: ID, fileIds: [] })).rejects.toBeTruthy();
+    service.manualFiles.mockResolvedValue({ outcome: 'INVALID', field: 'status' });
+    await expect(adminCaller().manualFiles({ id: ID })).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
     });
   });
 

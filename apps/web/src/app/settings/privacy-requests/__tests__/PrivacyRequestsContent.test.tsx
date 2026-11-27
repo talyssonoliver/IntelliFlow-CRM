@@ -16,6 +16,7 @@ const h = vi.hoisted(() => ({
   list: { data: undefined as unknown, isLoading: false, isError: false, error: null as unknown },
   restrictions: { data: undefined as unknown },
   preview: { data: undefined as unknown },
+  manualFiles: { data: undefined as unknown, error: null as unknown },
   mutations: {} as Record<string, { mutateAsync: ReturnType<typeof vi.fn>; isPending: boolean }>,
   invalidate: vi.fn(),
   toast: vi.fn(),
@@ -50,6 +51,8 @@ vi.mock('@/lib/trpc', () => {
           liftRestriction: m('liftRestriction'),
           exportData: m('exportData'),
           retryFileCleanup: m('retryFileCleanup'),
+          confirmManualFiles: m('confirmManualFiles'),
+          manualFiles: { useQuery: () => h.manualFiles },
         },
       },
     },
@@ -95,6 +98,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.list = { data: [request()], isLoading: false, isError: false, error: null };
   h.restrictions = { data: [] };
+  h.manualFiles = { data: undefined, error: null };
   h.preview = { data: { counts: { leads: 1, contacts: 1 }, checklist: { tickets: 2 } } };
   h.mutations = Object.fromEntries(
     [
@@ -108,6 +112,7 @@ beforeEach(() => {
       'liftRestriction',
       'exportData',
       'retryFileCleanup',
+      'confirmManualFiles',
     ].map((name) => [name, mutation()])
   );
 });
@@ -180,8 +185,20 @@ describe('PrivacyRequestsContent', () => {
 
   it('shows what a completed erasure still has in storage and retries the deletion', async () => {
     h.list.data = [
-      request({ id: 'clhleft0000000000', status: 'COMPLETED', storedFilesLeft: 2 }),
-      request({ id: 'clhclean000000000', status: 'COMPLETED', storedFilesLeft: 0 }),
+      request({
+        id: 'clhleft0000000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 2,
+        storedFilesManual: 0,
+      }),
+      request({
+        id: 'clhclean000000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 0,
+        storedFilesManual: 0,
+      }),
+      // An erasure from before the queue: nothing is claimed either way.
+      request({ id: 'clhlegacy00000000', status: 'COMPLETED' }),
     ];
     h.mutations.retryFileCleanup!.mutateAsync.mockResolvedValue({
       deleted: 2,
@@ -189,8 +206,8 @@ describe('PrivacyRequestsContent', () => {
     });
     render(<PrivacyRequestsContent />);
     expect(screen.getByText('2 stored files not deleted yet')).toBeTruthy();
-    expect(screen.getByText('Stored files deleted')).toBeTruthy();
-    // Only the request with files left offers the retry.
+    expect(screen.getAllByText('Stored files deleted')).toHaveLength(1);
+    // Only the request with files the CRM can still delete offers the retry.
     const retry = screen.getAllByRole('button', { name: /^Retry deleting stored files/ });
     expect(retry).toHaveLength(1);
     fireEvent.click(retry[0]!);
@@ -200,6 +217,42 @@ describe('PrivacyRequestsContent', () => {
       })
     );
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith({ title: 'Stored files deleted' }));
+  });
+
+  it('lets the admin see the files to delete by hand and mark them deleted', async () => {
+    h.list.data = [
+      request({
+        id: 'clhmanual0000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 1,
+        storedFilesManual: 1,
+      }),
+    ];
+    h.manualFiles = {
+      data: [{ id: 'f1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/a.pdf' }],
+      error: null,
+    };
+    h.mutations.confirmManualFiles!.mutateAsync.mockResolvedValue({ handled: 1 });
+    render(<PrivacyRequestsContent />);
+    // Nothing the CRM can retry: the files are the admin's.
+    expect(screen.queryByRole('button', { name: /^Retry deleting stored files/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /^Show files to delete by hand/ }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Lead file')).toBeTruthy();
+    expect(within(dialog).getByText('https://files.example.invalid/a.pdf')).toBeTruthy();
+    const mark = within(dialog).getByRole('button', { name: 'Mark as deleted' });
+    expect((mark as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(within(dialog).getByRole('checkbox'));
+    fireEvent.click(mark);
+    await waitFor(() =>
+      expect(h.mutations.confirmManualFiles!.mutateAsync).toHaveBeenCalledWith({
+        id: 'clhmanual0000000',
+        fileIds: ['f1'],
+      })
+    );
+    await waitFor(() =>
+      expect(h.toast).toHaveBeenCalledWith({ title: '1 stored files marked as deleted' })
+    );
   });
 
   it('keeps a server refusal inside the dialog', async () => {

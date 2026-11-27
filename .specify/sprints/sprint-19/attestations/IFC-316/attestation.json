@@ -14,11 +14,11 @@
       },
       {
         "path": "packages/adapters/src/repositories/subject-stored-files.ts",
-        "sha256": "914396ef3d43fb94a5089961cfde08b0b7d8244fe9c2e2b988618e50ceb56095"
+        "sha256": "36a7523c5693fbab8316c6aa37ab7004d27cf12f9d7c37d7fc3fd495abee143b"
       },
       {
         "path": "packages/application/src/services/ErasedFilesCleanupService.ts",
-        "sha256": "fb6089def0bb5bfd62048878678d3aaaabe77922cce33fe80cd053e19ad1a23a"
+        "sha256": "ab6a0ae2b26bcbc88f02669dc715b38b8fb2fb6b1043fd98adf48548546cba9a"
       }
     ],
     "invariants_acknowledged": [
@@ -29,8 +29,8 @@
   "evidence_summary": {
     "communication_types_erased": 9,
     "stored_file_sources_deleted": 4,
-    "new_unit_tests": 44,
-    "real_db_tests": 48,
+    "new_unit_tests": 58,
+    "real_db_tests": 50,
     "pr_communications": 1361,
     "pr_stored_files": "the pull request from branch feat/ifc-316b-erase-stored-files (number in the PR title link)"
   },
@@ -57,7 +57,7 @@
       "timestamp": "2026-11-27T14:30:00Z"
     },
     {
-      "name": "Real-DB DSAR suites (48 tests) through the test slot, migrations applied",
+      "name": "Real-DB DSAR suites (50 tests) through the test slot, migrations applied",
       "command": "node with-slot.mjs --exclusive intelliflow-db -- node scripts/test-db.mjs run --seed -- npx vitest run --project integration tests/integration/dsar-communications.test.ts tests/integration/dsar.test.ts",
       "exit_code": 0,
       "passed": true,
@@ -102,13 +102,21 @@
     {
       "gate_id": "deletes-never-leave-the-tenant-prefix",
       "passed": true
+    },
+    {
+      "gate_id": "shared-objects-never-deleted",
+      "passed": true
+    },
+    {
+      "gate_id": "no-deletion-claim-without-a-queue-record",
+      "passed": true
     }
   ],
   "kpi_results": [
     {
       "kpi": "Checklist items left after an erasure for covered types",
       "target": "0",
-      "actual": "0 for email records, tickets, chats, feedback, notifications, drafts, calendar events, experiment assignments and the stored files of the four sources (lead files, email, chat and ticket attachments) once deleted; a failed delete stays queued on the request and is counted until a retry deletes it (real-DB suite). A file on another host or bucket, or under another firm's prefix, is never deleted by the CRM and stays counted for the admin.",
+      "actual": "The stored files of the four sources (lead files, email, chat and ticket attachments) are deleted after the commit; a failed delete stays queued on the request and is counted until a retry deletes it; a file the CRM must not delete (another host or bucket, another firm's prefix, or an object another record still uses) is queued for the admin and counted until the admin confirms it deleted (real-DB suite). Email records, tickets, chats, feedback, notifications, drafts, calendar events and experiment assignments are erased in the transaction (#1361).",
       "met": true
     },
     {
@@ -146,5 +154,5 @@
       "met": true
     }
   ],
-  "notes": "Two PRs: #1361 (communications in the erasure transaction) and the follow-up on branch feat/ifc-316b-erase-stored-files (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are recognised by shape: a path under the firm's own prefix in CRM_FILES_BUCKET (default crm-files) or a URL of this project's storage naming one. Anything else is queued MANUAL and counted for the admin; there is no check-off button for those yet (listed in the DSAR process known gaps)."
+  "notes": "Two PRs: #1361 (communications in the erasure transaction) and the follow-up on branch feat/ifc-316b-erase-stored-files (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are recognised by shape: a path under the firm's own prefix in CRM_FILES_BUCKET (default crm-files) or a URL of this project's storage naming one. Anything else, or an object another record still uses, is queued MANUAL: the admin lists it on the request (Files to delete by hand), deletes it where it lives and confirms, and the locator leaves the database. An erasure from before the queue shows no claim about its files."
 }

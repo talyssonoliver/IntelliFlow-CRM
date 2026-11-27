@@ -60,6 +60,12 @@ export function isManagedRef(ref: StoredObjectRef, tenantId: string, config: Sto
   );
 }
 
+/**
+ * A path step that means something to the URL parser (`.`, `..`, in any `%2e` spelling) or a
+ * backslash. Checked on the raw locator, BEFORE `new URL` collapses it into a different path.
+ */
+const PATH_TRICK = /\\|(?:^|\/)(?:\.|%2e){1,2}(?=[/?#]|$)/i;
+
 const STORAGE_URL_PATH = /^\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+)$/;
 
 function defaultBucket(source: StoredObjectSource, config: StoredObjectConfig): string {
@@ -77,6 +83,7 @@ export function classifyStoredLocator(
   if (value === '' || /^data:/i.test(value)) return { kind: 'NONE' };
   // This app's own download route (`/api/email/attachments/...`): no object behind it.
   if (value.startsWith('/')) return { kind: 'NONE' };
+  if (PATH_TRICK.test(value)) return { kind: 'UNMANAGED' };
 
   let ref: StoredObjectRef;
   if (/^[a-z][a-z0-9+.-]*:/i.test(value)) {

@@ -20,6 +20,17 @@ export interface StoredObjectSettlement {
   error?: string;
 }
 
+export interface StoredObjectsLeft {
+  queued: number;
+  manual: number;
+}
+
+export interface ManualStoredObject {
+  id: string;
+  source: StoredObjectSource;
+  locator: string;
+}
+
 export interface StoredObjectOutboxPort {
   /** PENDING objects of the request, oldest first, at most `limit`. */
   pending(tenantId: string, requestId: string, limit: number): Promise<PendingStoredObject[]>;
@@ -36,8 +47,21 @@ export interface StoredObjectOutboxPort {
     now: Date
   ): Promise<void>;
 
-  /** How many objects are still left (queued or manual) for each of these requests. */
-  leftFor(tenantId: string, requestIds: string[]): Promise<Record<string, number>>;
+  /**
+   * What is still left for each of these requests, split into objects the CRM will delete (queued)
+   * and files only the admin can (manual). A request that never queued anything (an erasure from
+   * before this queue existed, or one with no stored files) is ABSENT: no claim is made for it.
+   */
+  leftFor(tenantId: string, requestIds: string[]): Promise<Record<string, StoredObjectsLeft>>;
+
+  /** The files the admin must delete by hand (source and locator), oldest first. */
+  manual(tenantId: string, requestId: string): Promise<ManualStoredObject[]>;
+
+  /**
+   * The admin deleted these manual files: they become DELETED and lose their locator. Returns
+   * how many changed; ids that are not this request's manual files are ignored.
+   */
+  markHandled(tenantId: string, requestId: string, ids: string[], now: Date): Promise<number>;
 
   /** What is still left, counted per checklist key (storedLeadFiles ...): PENDING and MANUAL rows. */
   remaining(tenantId: string, requestId: string): Promise<Record<string, number>>;

@@ -5,9 +5,11 @@
 import type { PrismaClient } from '@intelliflow/db';
 import { STORED_OBJECT_CHECKLIST_KEYS, type StoredObjectSource } from '@intelliflow/domain';
 import type {
+  ManualStoredObject,
   PendingStoredObject,
   StoredObjectOutboxPort,
   StoredObjectSettlement,
+  StoredObjectsLeft,
 } from '@intelliflow/application';
 
 export class PrismaStoredObjectRepository implements StoredObjectOutboxPort {
@@ -70,14 +72,49 @@ export class PrismaStoredObjectRepository implements StoredObjectOutboxPort {
     });
   }
 
-  async leftFor(tenantId: string, requestIds: string[]): Promise<Record<string, number>> {
+  async leftFor(
+    tenantId: string,
+    requestIds: string[]
+  ): Promise<Record<string, StoredObjectsLeft>> {
     if (requestIds.length === 0) return {};
     const groups = await this.prisma.dsarStoredObject.groupBy({
-      by: ['requestId'],
-      where: { tenantId, requestId: { in: requestIds }, state: { in: ['PENDING', 'MANUAL'] } },
+      by: ['requestId', 'state'],
+      where: { tenantId, requestId: { in: requestIds } },
       _count: { _all: true },
     });
-    return Object.fromEntries(groups.map((g) => [g.requestId, g._count._all]));
+    // Any row (even a DELETED one) means the queue was used: 0 left is then a real answer.
+    const left: Record<string, StoredObjectsLeft> = {};
+    for (const g of groups) {
+      const entry = (left[g.requestId] ??= { queued: 0, manual: 0 });
+      if (g.state === 'PENDING') entry.queued = g._count._all;
+      if (g.state === 'MANUAL') entry.manual = g._count._all;
+    }
+    return left;
+  }
+
+  async manual(tenantId: string, requestId: string): Promise<ManualStoredObject[]> {
+    const rows = await this.prisma.dsarStoredObject.findMany({
+      where: { tenantId, requestId, state: 'MANUAL' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      select: { id: true, source: true, locator: true },
+    });
+    return rows.flatMap((r) =>
+      r.locator ? [{ id: r.id, source: r.source as StoredObjectSource, locator: r.locator }] : []
+    );
+  }
+
+  async markHandled(
+    tenantId: string,
+    requestId: string,
+    ids: string[],
+    now: Date
+  ): Promise<number> {
+    if (ids.length === 0) return 0;
+    const done = await this.prisma.dsarStoredObject.updateMany({
+      where: { tenantId, requestId, state: 'MANUAL', id: { in: ids } },
+      data: { state: 'DELETED', locator: null, settledAt: now },
+    });
+    return done.count;
   }
 
   async remaining(tenantId: string, requestId: string): Promise<Record<string, number>> {
