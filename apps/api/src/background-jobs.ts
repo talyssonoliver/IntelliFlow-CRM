@@ -1,7 +1,7 @@
 /**
  * Background jobs the API process can run on timers (approval sweep, email
- * bounce scan, Outlook inbox sync with the Google Calendar sync, DSAR deadline alerts, the daily
- * clearing of kept file locations).
+ * bounce scan, Outlook inbox sync with the Google Calendar sync, DSAR deadline alerts, the hourly
+ * clearing of expired kept file locations).
  *
  * Idle-sleep (Railway App Sleeping): a process that makes outbound traffic while
  * idle never sleeps, and these timers are the traffic. They are therefore behind
@@ -231,8 +231,8 @@ export function startBackgroundJobs({
     },
   });
 
-  // IFC-316: the daily clearing of the locations kept for files an erasure left outside the CRM's
-  // storage, 30 days after the erasure. Not a heartbeat job: a missed day is caught by the next one.
+  // IFC-316: the (hourly, idempotent) clearing of the locations kept for files an erasure left outside the CRM's
+  // storage, 30 days after the erasure. Not a heartbeat job: a missed tick is caught by the next one, an hour later.
   const keptLocations = startKeptLocationsScheduler({
     intervalMs: keptLocationsIntervalFromEnv(env),
     log,

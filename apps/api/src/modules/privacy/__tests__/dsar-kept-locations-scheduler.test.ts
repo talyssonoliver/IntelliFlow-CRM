@@ -14,8 +14,8 @@ describe('keptLocationsIntervalFromEnv (IFC-316)', () => {
     expect(keptLocationsIntervalFromEnv({ VERCEL: '1' })).toBe(0);
   });
 
-  it('defaults to daily, accepts an override and 0 to disable', () => {
-    expect(keptLocationsIntervalFromEnv({})).toBe(24 * 3_600_000);
+  it('defaults to hourly, accepts an override and 0 to disable', () => {
+    expect(keptLocationsIntervalFromEnv({})).toBe(3_600_000);
     expect(keptLocationsIntervalFromEnv({})).toBe(DEFAULT_KEPT_LOCATIONS_INTERVAL_MS);
     expect(keptLocationsIntervalFromEnv({ DSAR_KEPT_LOCATIONS_INTERVAL_MS: '5000' })).toBe(5000);
     expect(keptLocationsIntervalFromEnv({ DSAR_KEPT_LOCATIONS_INTERVAL_MS: '0' })).toBe(0);
@@ -50,6 +50,44 @@ describe('startKeptLocationsScheduler', () => {
     expect(startKeptLocationsScheduler({ intervalMs: 1000, run, log })).toBe(false);
     await vi.advanceTimersByTimeAsync(1000);
     expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs soon after start with the default interval, not a day later (a restarted worker still clears)', async () => {
+    vi.useFakeTimers();
+    const run = vi.fn(async () => ({ cleared: 0 }));
+    const interval = keptLocationsIntervalFromEnv({});
+    startKeptLocationsScheduler({
+      intervalMs: interval,
+      run,
+      log: { info: vi.fn(), warn: vi.fn() },
+    });
+    // A worker that is restarted every few hours still reaches a tick: the first is within the hour.
+    await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
+    expect(run).toHaveBeenCalledTimes(1);
+    // And it keeps going, through the same single-flight guard.
+    await vi.advanceTimersByTimeAsync(2 * 60 * 60 * 1000);
+    expect(run).toHaveBeenCalledTimes(3);
+  });
+
+  it('never runs two sweeps at once', async () => {
+    vi.useFakeTimers();
+    let release: (() => void) | undefined;
+    // Only the first sweep is slow; later ones finish at once, so stopping the timer never hangs.
+    const run = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<{ cleared: number }>((resolve) => {
+            release = () => resolve({ cleared: 0 });
+          })
+      )
+      .mockResolvedValue({ cleared: 0 });
+    startKeptLocationsScheduler({ intervalMs: 1000, run, log: { info: vi.fn(), warn: vi.fn() } });
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(run).toHaveBeenCalledTimes(1);
+    release?.();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(run).toHaveBeenCalledTimes(2);
   });
 
   it('logs a failed tick by error class only, and keeps going', async () => {

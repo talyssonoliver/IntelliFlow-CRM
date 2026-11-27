@@ -1,9 +1,9 @@
 /**
- * Daily clearing of the locations kept for files an erasure left outside the CRM's storage
+ * Clearing of the locations kept for files an erasure left outside the CRM's storage
  * (IFC-316). The location stays on the erasure record for UNMANAGED_LOCATION_DAYS so an
  * administrator can find the file; after that it is cleared.
  *
- * Its own daily timer, started from `startBackgroundJobs` only (so in the combined worker, never
+ * Its own hourly timer, started from `startBackgroundJobs` only (so in the combined worker, never
  * from test servers), like the compliance snapshots. One statement clears every firm's expired
  * rows and nothing else: rows younger than the limit are left alone. Replicas and a repeated run
  * are safe: clearing an already cleared location changes nothing. Opening the privacy requests
@@ -13,7 +13,13 @@
  */
 import { UNMANAGED_LOCATION_DAYS } from '@intelliflow/domain';
 
-export const DEFAULT_KEPT_LOCATIONS_INTERVAL_MS = 24 * 3_600_000;
+/**
+ * Hourly, not daily: a worker that restarts or redeploys more than once a day never reaches a
+ * 24-hour tick, so the first tick must come soon after start. Each tick is one idempotent
+ * statement that only touches rows already past the 30 days, and an hour late is still within
+ * the product's promise (the location is also never shown after the 30 days).
+ */
+export const DEFAULT_KEPT_LOCATIONS_INTERVAL_MS = 3_600_000;
 
 let timer: ReturnType<typeof setInterval> | null = null;
 let running = false;

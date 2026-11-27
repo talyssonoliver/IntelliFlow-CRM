@@ -793,7 +793,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     }
   });
 
-  it('the daily job clears only expired kept locations, across firms, and leaves the rest', async () => {
+  it('the job clears only expired kept locations, across firms, and leaves the rest', async () => {
     const day = 86_400_000;
     const now = new Date();
     const tenants = [`${RUN}_sweep1`, `${RUN}_sweep2`];
