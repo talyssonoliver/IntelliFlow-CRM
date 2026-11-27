@@ -47,6 +47,15 @@ vi.mock('@/lib/feedback-survey/hooks', () => ({
   useFeedbackSurveyDashboard: () => mockDashboardData,
 }));
 
+// The send dialog and settings card talk to tRPC; they have their own tests.
+vi.mock('@/components/feedback-analytics/SendSurveyDialog', () => ({
+  SendSurveyDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="send-dialog">Send survey dialog</div> : null,
+}));
+vi.mock('@/components/feedback-analytics/AutoSurveySettings', () => ({
+  AutoSurveySettings: () => <div data-testid="auto-survey-settings" />,
+}));
+
 // Mock export utilities
 vi.mock('@/lib/export/csv', () => ({
   exportToCSV: vi.fn(),
@@ -84,10 +93,31 @@ describe('FeedbackAnalyticsPage', () => {
 
     render(<FeedbackAnalyticsPage />);
 
-    // feedback/page.tsx:98 renders `<EmptyState entity="insights" />` —
-    // canonical title 'No insights yet'. Semantic misuse noted (feedback
-    // responses) worth source-side follow-up.
-    expect(screen.getByText('No insights yet')).toBeInTheDocument();
+    expect(screen.getByText('No survey responses yet')).toBeInTheDocument();
+  });
+
+  it('shows the shared hero with breadcrumbs, and the empty state offers "Send a survey"', () => {
+    mockDashboardData.data = {
+      hasData: false,
+      nps: null,
+      csat: null,
+      ces: null,
+      sentiment: null,
+      trends: [],
+      responseRates: [],
+    };
+
+    render(<FeedbackAnalyticsPage />);
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Feedback Analytics' })
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('Dashboard').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Analytics').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('auto-survey-settings')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send a survey' }));
+    expect(screen.getByTestId('send-dialog')).toBeInTheDocument();
   });
 
   it('renders NPS gauge when data is available', async () => {
@@ -126,14 +156,12 @@ describe('FeedbackAnalyticsPage', () => {
 
     render(<FeedbackAnalyticsPage />);
 
-    expect(screen.getByText('7d')).toBeInTheDocument();
-    expect(screen.getByText('30d')).toBeInTheDocument();
-    expect(screen.getByText('90d')).toBeInTheDocument();
-    expect(screen.getByText('YTD')).toBeInTheDocument();
+    const picker = screen.getByLabelText('Period') as HTMLSelectElement;
+    expect(Array.from(picker.options).map((o) => o.value)).toEqual(['7d', '30d', '90d', 'ytd']);
+    expect(picker.value).toBe('90d');
 
-    // Click 30d
-    fireEvent.click(screen.getByText('30d'));
-    // Should not crash — state updates internally
+    fireEvent.change(picker, { target: { value: '30d' } });
+    expect(picker.value).toBe('30d');
   });
 
   it('renders survey type tabs (NPS/CSAT/CES/CUSTOM/All)', () => {
@@ -169,7 +197,7 @@ describe('FeedbackAnalyticsPage', () => {
 
     render(<FeedbackAnalyticsPage />);
 
-    expect(screen.getByText('Export CSV')).toBeInTheDocument();
+    expect(screen.getAllByText('Export CSV').length).toBeGreaterThan(0);
   });
 
   it('renders CSAT and CES scores when available', () => {

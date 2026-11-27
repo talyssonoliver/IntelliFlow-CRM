@@ -9,6 +9,9 @@
 
 import { Suspense, lazy, useState, useCallback } from 'react';
 import { EmptyState } from '@intelliflow/ui';
+import { PageHeader, type PageAction } from '@/components/shared/page-header';
+import { SendSurveyDialog } from '@/components/feedback-analytics/SendSurveyDialog';
+import { AutoSurveySettings } from '@/components/feedback-analytics/AutoSurveySettings';
 import { useFeedbackSurveyDashboard } from '@/lib/feedback-survey/hooks';
 import type { FeedbackDashboardFilters } from '@/lib/feedback-survey/types';
 
@@ -41,6 +44,13 @@ const PERIOD_MAP: Record<PeriodKey, () => Date> = {
   ytd: () => new Date(new Date().getFullYear(), 0, 1),
 };
 
+const PERIOD_LABELS: Record<PeriodKey, string> = {
+  '7d': 'Last 7 days',
+  '30d': 'Last 30 days',
+  '90d': 'Last 90 days',
+  ytd: 'Year to date',
+};
+
 function ChartSkeleton() {
   return <div className="h-64 animate-pulse rounded-lg border bg-muted" />;
 }
@@ -48,6 +58,7 @@ function ChartSkeleton() {
 export default function FeedbackAnalyticsPage() {
   const [period, setPeriod] = useState<PeriodKey>('90d');
   const [surveyTab, setSurveyTab] = useState<SurveyTab>('All');
+  const [sendOpen, setSendOpen] = useState(false);
 
   const filters: FeedbackDashboardFilters = {
     dateFrom: PERIOD_MAP[period](),
@@ -81,16 +92,56 @@ export default function FeedbackAnalyticsPage() {
       });
   }, [data, period]);
 
+  const actions: PageAction[] = [
+    { label: 'Send a survey', icon: 'send', variant: 'primary', onClick: () => setSendOpen(true) },
+    {
+      label: 'Export CSV',
+      icon: 'download',
+      variant: 'secondary',
+      onClick: handleExportCSV,
+      disabled: !data?.hasData,
+    },
+  ];
+
+  const header = (
+    <PageHeader
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Analytics', href: '/analytics' },
+      ]}
+      title="Feedback Analytics"
+      description="NPS, CSAT and customer comments from the surveys you send."
+      actions={actions}
+    >
+      <label className="mt-3 inline-flex items-center gap-2 text-sm text-white/80">
+        <span className="sr-only sm:not-sr-only">Period</span>
+        <select
+          aria-label="Period"
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as PeriodKey)}
+          className="rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-white"
+        >
+          {(Object.keys(PERIOD_LABELS) as PeriodKey[]).map((p) => (
+            <option key={p} value={p} className="text-foreground">
+              {PERIOD_LABELS[p]}
+            </option>
+          ))}
+        </select>
+      </label>
+    </PageHeader>
+  );
+
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Feedback Analytics</h1>
+        {header}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <ChartSkeleton />
           <ChartSkeleton />
           <ChartSkeleton />
         </div>
         <ChartSkeleton />
+        <SendSurveyDialog open={sendOpen} onOpenChange={setSendOpen} />
       </div>
     );
   }
@@ -98,39 +149,23 @@ export default function FeedbackAnalyticsPage() {
   if (!data?.hasData) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Feedback Analytics</h1>
-        <EmptyState entity="insights" showCta={false} />
+        {header}
+        <EmptyState
+          entity="insights"
+          title="No survey responses yet"
+          description="Send a short NPS or CSAT question to a customer. Their answers fill this page."
+          ctaLabel="Send a survey"
+          onCtaClick={() => setSendOpen(true)}
+        />
+        <AutoSurveySettings />
+        <SendSurveyDialog open={sendOpen} onOpenChange={setSendOpen} />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Feedback Analytics</h1>
-        <button
-          onClick={handleExportCSV}
-          className="rounded-md border bg-card px-3 py-1.5 text-sm font-medium hover:bg-accent"
-        >
-          Export CSV
-        </button>
-      </div>
-
-      {/* Period Selector */}
-      <div className="flex flex-wrap gap-2">
-        {(['7d', '30d', '90d', 'ytd'] as const).map((p) => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              period === p ? 'bg-primary text-primary-foreground' : 'border bg-card hover:bg-accent'
-            }`}
-          >
-            {p === 'ytd' ? 'YTD' : p}
-          </button>
-        ))}
-      </div>
+      {header}
 
       {/* Survey Type Tabs */}
       <div className="flex flex-wrap gap-2">
@@ -211,6 +246,9 @@ export default function FeedbackAnalyticsPage() {
           </div>
         </div>
       )}
+
+      <AutoSurveySettings />
+      <SendSurveyDialog open={sendOpen} onOpenChange={setSendOpen} />
     </div>
   );
 }

@@ -101,7 +101,7 @@ describe('PrismaFeedbackSurveyRepository', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId,
-            createdAt: { lte: to },
+            createdAt: { gte: from, lte: to },
             type: 'NPS',
           }),
         })
@@ -331,6 +331,34 @@ describe('PrismaFeedbackSurveyRepository', () => {
       const result = await repository.getResponseRateByType(tenantId, from, to);
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('MVP-012 answers written by the public survey page', () => {
+    it('reads the Sentiment enum values the answer page stores (upper case)', async () => {
+      mockPrisma.$queryRawUnsafe.mockResolvedValue([
+        { sentiment: 'POSITIVE', count: 4n },
+        { sentiment: 'NEGATIVE', count: 1n },
+        { sentiment: 'NEUTRAL', count: 2n },
+      ]);
+
+      const result = await repository.getSentimentBreakdown(tenantId, from, to);
+
+      expect(result).toEqual({ positive: 4, neutral: 2, negative: 1, total: 7 });
+    });
+
+    it('keeps dateFrom and dateTo together in one createdAt filter', async () => {
+      mockPrisma.feedbackSurvey.findMany.mockResolvedValue([]);
+
+      await repository.getDashboardSummary(tenantId, {
+        granularity: 'month',
+        dateFrom: from,
+        dateTo: to,
+      });
+
+      const where = mockPrisma.feedbackSurvey.findMany.mock.calls[0][0].where;
+      expect(where.tenantId).toBe(tenantId);
+      expect(where.createdAt).toEqual({ gte: from, lte: to });
     });
   });
 });

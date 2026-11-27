@@ -9,6 +9,7 @@
  * - SLA tracking
  */
 
+import { queueSurveyForResolvedTicket, type SurveyDb } from '../feedback/survey-service';
 import { z } from 'zod';
 import { tenantUserWhere } from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
@@ -442,6 +443,24 @@ function dispatchTicketPostCreateSideEffects(
   }
 }
 
+/**
+ * MVP-012: after a bulk change, survey the contacts of the tickets that ended up resolved or closed.
+ * Runs one ticket at a time in the background, so two tickets of one contact cannot both pass the
+ * 30-day throttle, and never delays or fails the bulk call.
+ */
+function queueSurveysForBulk(ctx: Context, tenantId: string, ids: string[]): void {
+  void (async () => {
+    for (const id of ids) {
+      await queueSurveyForResolvedTicket(
+        ctx.prismaWithTenant as unknown as SurveyDb,
+        ctx.adapters?.notificationService,
+        tenantId,
+        id
+      );
+    }
+  })();
+}
+
 export const ticketRouter = createTRPCRouter({
   /**
    * Create a new ticket
@@ -589,6 +608,20 @@ export const ticketRouter = createTRPCRouter({
           (args) =>
             createNotification(ctx.prismaWithTenant, args, ctx.services?.notificationOrchestrator)
         ).catch(() => {});
+      }
+
+      // MVP-012: a resolved or closed ticket queues a CSAT survey (tenant switch, 30-day throttle).
+      if (
+        before &&
+        before.status !== ticket.status &&
+        (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED')
+      ) {
+        void queueSurveyForResolvedTicket(
+          ctx.prismaWithTenant as unknown as SurveyDb,
+          ctx.adapters?.notificationService,
+          tenantId,
+          ticket.id
+        );
       }
 
       // PG-185: existing escalation notification — now gated on
@@ -757,14 +790,18 @@ export const ticketRouter = createTRPCRouter({
       const { ticketIds, status } = input;
 
       let successCount = 0;
+      const surveyIds: string[] = [];
       for (const ticketId of ticketIds) {
         try {
           await ticketService.update(ticketId, { status });
           successCount++;
+          if (status === 'RESOLVED' || status === 'CLOSED') surveyIds.push(ticketId);
         } catch {
           // Continue with other tickets
         }
       }
+
+      queueSurveysForBulk(ctx, ctx.tenant.tenantId, surveyIds);
 
       return { success: true, updated: successCount };
     }),
@@ -783,14 +820,18 @@ export const ticketRouter = createTRPCRouter({
       const { ticketIds } = input;
 
       let successCount = 0;
+      const surveyIds: string[] = [];
       for (const ticketId of ticketIds) {
         try {
           await ticketService.update(ticketId, { status: 'RESOLVED' });
           successCount++;
+          surveyIds.push(ticketId);
         } catch {
           // Continue with other tickets
         }
       }
+
+      queueSurveysForBulk(ctx, ctx.tenant.tenantId, surveyIds);
 
       return { success: true, updated: successCount };
     }),
@@ -835,14 +876,18 @@ export const ticketRouter = createTRPCRouter({
       const { ticketIds } = input;
 
       let successCount = 0;
+      const surveyIds: string[] = [];
       for (const ticketId of ticketIds) {
         try {
           await ticketService.update(ticketId, { status: 'CLOSED' });
           successCount++;
+          surveyIds.push(ticketId);
         } catch {
           // Continue with other tickets
         }
       }
+
+      queueSurveysForBulk(ctx, ctx.tenant.tenantId, surveyIds);
 
       return { success: true, updated: successCount };
     }),

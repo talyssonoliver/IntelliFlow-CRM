@@ -75,6 +75,7 @@ import { moduleAccessRouter } from './modules/subscription/subscription.router';
 import { experimentRouter } from './modules/experiment';
 import { routingRouter } from './modules/routing';
 import { feedbackSurveyRouter } from './modules/feedback/feedbackSurvey.router';
+import { publicSurveyRouter } from './modules/feedback/publicSurvey.router';
 import { publicFeedbackRouter } from './modules/public-feedback/public-feedback.router';
 import { publicBookingRouter } from './modules/calendar/public-booking.router';
 import { userRouter } from './modules/user/user.router';
@@ -260,6 +261,9 @@ export const appRouter = createTRPCRouter({
 
   // Anonymous Public Feedback Widget (PG-126)
   publicFeedback: publicFeedbackRouter,
+
+  // Public survey answer page, token only (MVP-012)
+  publicSurvey: publicSurveyRouter,
   publicBooking: publicBookingRouter, // PG-203: unauthenticated booking page (ADR-083)
 
   // User Profile & Timezone (IFC-191)

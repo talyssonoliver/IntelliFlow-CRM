@@ -39,8 +39,13 @@ export class PrismaFeedbackSurveyRepository implements FeedbackSurveyRepositoryP
         tenantId,
         status: { in: RESPONDED_STATUSES },
         score: { not: null },
-        ...(filters.dateFrom && { createdAt: { gte: filters.dateFrom } }),
-        ...(filters.dateTo && { createdAt: { lte: filters.dateTo } }),
+        // One createdAt filter: two spreads would let dateTo replace dateFrom.
+        ...((filters.dateFrom || filters.dateTo) && {
+          createdAt: {
+            ...(filters.dateFrom && { gte: filters.dateFrom }),
+            ...(filters.dateTo && { lte: filters.dateTo }),
+          },
+        }),
         ...(filters.surveyType && { type: filters.surveyType }),
       },
       select: {
@@ -203,7 +208,8 @@ export class PrismaFeedbackSurveyRepository implements FeedbackSurveyRepositoryP
 
     for (const row of result) {
       const count = Number(row.count);
-      switch (row.sentiment) {
+      // The column is the Sentiment enum (POSITIVE/NEUTRAL/NEGATIVE); older rows may be lower case.
+      switch (row.sentiment?.toLowerCase()) {
         case 'positive':
           positive = count;
           break;
