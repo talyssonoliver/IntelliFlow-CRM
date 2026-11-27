@@ -3,12 +3,13 @@
 import { trpc } from '@/lib/trpc';
 
 /**
- * The tenant's one currency, from Analytics -> Report settings. GBP while the
+ * The tenant's one currency, from Analytics -> Report settings, read through the core
+ * `reportSettings.currency` query so plans without Analytics get it too (codex 27/11). GBP while the
  * setting loads or if it cannot be read. Saving the setting invalidates this
  * query (ReportSettingsContent), so every figure follows without a reload.
  */
 export function useTenantCurrency(): string {
-  const query = trpc.analytics.reportSettings.get.useQuery(undefined, {
+  const query = trpc.analytics.reportSettings.currency.useQuery(undefined, {
     staleTime: 5 * 60_000,
   });
   const currency = query.data?.currency;
@@ -27,7 +28,7 @@ export function useTenantCurrencyForSave(): {
   failed: boolean;
   retry: () => void;
 } {
-  const query = trpc.analytics.reportSettings.get.useQuery(undefined, {
+  const query = trpc.analytics.reportSettings.currency.useQuery(undefined, {
     staleTime: 5 * 60_000,
   });
   const value = query.data?.currency;

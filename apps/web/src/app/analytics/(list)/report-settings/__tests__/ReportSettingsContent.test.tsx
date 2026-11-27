@@ -16,7 +16,10 @@ vi.mock('@/lib/trpc', () => ({
   trpc: {
     useUtils: () => ({
       analytics: {
-        reportSettings: { get: { invalidate: mockInvalidate } },
+        reportSettings: {
+          get: { invalidate: mockInvalidate },
+          currency: { invalidate: mockInvalidate },
+        },
       },
     }),
     analytics: {

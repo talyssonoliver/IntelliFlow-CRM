@@ -937,10 +937,14 @@ async function persistInsightRecord(
         entityType: insight.entityType === 'deal' ? 'opportunity' : insight.entityType,
         entityId: insight.entityId,
         // Any type: one open insight per record (owner 27/11).
-        id: { not: created.id },
         // Only insights older than this one: two jobs running at once then never expire each
-        // other's new insight, and the newest one stays open (codex review 26/11).
-        createdAt: { lt: created.createdAt },
+        // other's new insight, and the newest one stays open (codex review 26/11). Equal
+        // timestamps are ordered by id (codex 27/11), so exactly one of two same-millisecond
+        // insights stays open whichever job finishes last.
+        OR: [
+          { createdAt: { lt: created.createdAt } },
+          { createdAt: created.createdAt, id: { lt: created.id } },
+        ],
         status: { in: ['NEW', 'VIEWED'] },
         metadata: { path: ['userId'], equals: userId },
       },

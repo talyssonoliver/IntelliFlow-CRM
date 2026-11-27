@@ -589,6 +589,22 @@ describe('SavedReportView', () => {
     // (Timezone Refactor locale migration) → £48,500.
     expect(screen.getByText('£48,500')).toBeInTheDocument();
   });
+
+  it('labels the money cards in the tenant currency, like the charts (codex 27/11)', () => {
+    tenantCurrency.value = 'USD';
+    try {
+      mockQueries.getOverview = { data: mockOverview, isLoading: false };
+      mockQueries.getTimeSeriesData = { data: mockTimeSeries7d, isLoading: false };
+      render(<SavedReportView config={weeklyConfig} />);
+      expect(screen.queryByText('£48,500')).not.toBeInTheDocument();
+      expect(screen.getByText(/48,500/).textContent).toMatch(/\$|US\$/);
+    } finally {
+      tenantCurrency.value = 'GBP';
+    }
+  });
 });
 
-vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));
+const tenantCurrency = vi.hoisted(() => ({ value: 'GBP' }));
+vi.mock('@/lib/format/useTenantCurrency', () => ({
+  useTenantCurrency: () => tenantCurrency.value,
+}));

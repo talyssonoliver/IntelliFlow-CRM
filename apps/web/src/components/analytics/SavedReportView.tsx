@@ -346,6 +346,7 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
                 title={mc.title}
                 value={mc.value}
                 format={mc.format}
+                currency={currency}
                 icon={mc.icon}
                 change={mc.change}
                 isLoading={isLoading}
