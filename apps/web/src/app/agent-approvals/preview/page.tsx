@@ -15,6 +15,7 @@ import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
 import { NoActionsEmptyState } from '../components/NoActionsEmptyState';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import type { AgentAction, ActionStatus } from '@/lib/agent';
@@ -590,17 +591,63 @@ function ActionCard({
 // Metrics
 // =============================================================================
 
-function MetricsLoadingSkeleton() {
+/** Owner 26/11: "These kpis aren't following our shared components" - the shared KpiCard. */
+const METRICS = [
+  {
+    id: 'pending',
+    label: 'Pending Review',
+    icon: 'pending_actions',
+    tone: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  },
+  {
+    id: 'loaded',
+    label: 'Actions Loaded',
+    icon: 'list_alt',
+    tone: 'bg-ds-primary/10 text-ds-primary',
+  },
+  {
+    id: 'expiring',
+    label: 'Expiring Soon',
+    icon: 'timer',
+    tone: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  },
+  {
+    id: 'highimpact',
+    label: 'High Impact',
+    icon: 'bolt',
+    tone: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+  },
+] as const;
+
+function MetricsGrid({
+  values,
+  pending = false,
+}: Readonly<{ values?: Record<(typeof METRICS)[number]['id'], number>; pending?: boolean }>) {
   return (
-    <div className="grid gap-4 md:grid-cols-4" data-testid="metrics-dashboard">
-      {[1, 2, 3, 4].map((i) => (
-        <Card key={i} className="p-4 animate-pulse">
-          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20 mb-2" />
-          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-12" />
-        </Card>
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4" data-testid="metrics-dashboard">
+      {METRICS.map((m) => (
+        <div key={m.id} data-testid={`metric-${m.id}`}>
+          <KpiCard
+            framed
+            label={m.label}
+            icon={m.icon}
+            iconClassName={m.tone}
+            pending={pending}
+            value={<span data-testid="metric-value">{values?.[m.id] ?? 0}</span>}
+            footer={
+              m.id === 'expiring' && !pending ? (
+                <p className="text-xs text-muted-foreground">Within 2 hours</p>
+              ) : undefined
+            }
+          />
+        </div>
       ))}
     </div>
   );
+}
+
+function MetricsLoadingSkeleton() {
+  return <MetricsGrid pending />;
 }
 
 interface MetricsSectionProps {
@@ -622,39 +669,14 @@ function MetricsSection({ actions, pendingCount, isLoading }: MetricsSectionProp
   const highImpact = actions.filter((a) => a.impact === 'HIGH').length;
 
   return (
-    <div className="grid gap-4 md:grid-cols-4" data-testid="metrics-dashboard">
-      <Card className="p-4" data-testid="metric-pending">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Pending Review</div>
-        <div className="text-2xl font-bold text-amber-600" data-testid="metric-value">
-          {pendingCount}
-        </div>
-      </Card>
-
-      <Card className="p-4" data-testid="metric-loaded">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Actions Loaded</div>
-        <div
-          className="text-2xl font-bold text-slate-900 dark:text-white"
-          data-testid="metric-value"
-        >
-          {actions.length}
-        </div>
-      </Card>
-
-      <Card className="p-4" data-testid="metric-expiring">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Expiring Soon</div>
-        <div className="text-2xl font-bold text-red-600" data-testid="metric-value">
-          {expiringSoon}
-        </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400">Within 2 hours</div>
-      </Card>
-
-      <Card className="p-4" data-testid="metric-highimpact">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">High Impact</div>
-        <div className="text-2xl font-bold text-[#2a78f6]" data-testid="metric-value">
-          {highImpact}
-        </div>
-      </Card>
-    </div>
+    <MetricsGrid
+      values={{
+        pending: pendingCount,
+        loaded: actions.length,
+        expiring: expiringSoon,
+        highimpact: highImpact,
+      }}
+    />
   );
 }
 

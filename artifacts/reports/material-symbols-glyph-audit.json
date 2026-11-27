@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-23T01:56:16.047Z",
+  "generated_at": "2026-11-27T08:25:42.432Z",
   "upstream_font_sha256": "b9a28e5c5328940ee287c3d7f6b626e32a9afa92f86b055295cdf6fd5d1c004b",
   "subsetter_version": "subset-font@^2.5.0",
   "variation_axes": {
@@ -112,7 +112,6 @@
     "draw",
     "dynamic_feed",
     "dynamic_form",
-    "eco",
     "edit",
     "edit_note",
     "email",
@@ -193,6 +192,7 @@
     "link",
     "link_off",
     "list",
+    "list_alt",
     "local_activity",
     "local_fire_department",
     "local_offer",
@@ -385,7 +385,7 @@
     "zoom_out"
   ],
   "icons_count": 374,
-  "scanned_files_count": 1482,
+  "scanned_files_count": 1490,
   "source_scan_patterns": [
     "apps/web/src",
     "packages/ui/src"
