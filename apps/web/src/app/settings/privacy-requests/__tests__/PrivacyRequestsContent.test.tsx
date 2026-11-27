@@ -282,7 +282,7 @@ describe('PrivacyRequestsContent', () => {
     h.mutations.confirmManualFiles!.mutateAsync.mockImplementation(
       async ({ fileIds }: { fileIds: string[] }) => ({ handled: fileIds.length })
     );
-    render(<PrivacyRequestsContent />);
+    const view = render(<PrivacyRequestsContent />);
     fireEvent.click(screen.getByRole('button', { name: /^Show files to delete by hand/ }));
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText(/Showing the first 500 files/)).toBeTruthy();
@@ -298,6 +298,22 @@ describe('PrivacyRequestsContent', () => {
     // Never more than the schema takes, and the dialog loads the next page instead of closing.
     expect(h.manualFiles.refetch).toHaveBeenCalled();
     expect(screen.getByRole('dialog')).toBeTruthy();
+
+    // The next page loads: the tick does not carry over, so it cannot be confirmed unasked.
+    h.manualFiles = {
+      data: [{ id: 'g1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/next.pdf' }],
+      error: null,
+      refetch: vi.fn().mockResolvedValue({}),
+    };
+    view.rerender(<PrivacyRequestsContent />);
+    const next = await screen.findByRole('dialog');
+    expect(within(next).getByText('https://files.example.invalid/next.pdf')).toBeTruthy();
+    expect(
+      (within(next).getByRole('checkbox') as HTMLInputElement).getAttribute('aria-checked')
+    ).toBe('false');
+    expect(
+      (within(next).getByRole('button', { name: 'Mark as deleted' }) as HTMLButtonElement).disabled
+    ).toBe(true);
   });
 
   it('keeps a server refusal inside the dialog', async () => {

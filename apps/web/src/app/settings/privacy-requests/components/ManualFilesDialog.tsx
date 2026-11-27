@@ -49,9 +49,12 @@ export function ManualFilesDialog({
 }: Readonly<ManualFilesDialogProps>) {
   const [confirmed, setConfirmed] = useState(false);
 
+  // The tick belongs to the page it was given on: a new request or a new page of files starts
+  // unticked, so the next page is never marked deleted on the strength of the last one.
+  const pageKey = `${request?.id ?? ''}:${(files ?? []).map((f) => f.id).join(',')}`;
   useEffect(() => {
     setConfirmed(false);
-  }, [request?.id]);
+  }, [pageKey]);
 
   if (!request) return null;
   const ready = files !== null;
