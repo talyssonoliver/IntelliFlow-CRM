@@ -606,14 +606,12 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
         ...(await communicationCounts(this.prisma, tenantId, subjectEmail, ids)),
         // Deleted from storage right after the erasure (IFC-316).
         storedFilesDeleted: files.toDelete,
-        // Another retained record uses these: kept, resolved, never offered for deletion.
-        storedFilesKept: files.kept,
+        // Kept, resolved and read-only: another retained record uses them, or they are outside
+        // the CRM's storage.
+        storedFilesKept: files.keptShared + files.keptUnmanaged,
       },
-      // What stays for the admin: deals and tasks, and any stored file the CRM cannot delete.
-      checklist: {
-        ...(await dealsAndTasks(this.prisma, tenantId, subjectEmail, ids)),
-        ...files.manual,
-      },
+      // What stays for the admin: deals and tasks. Stored files are deleted, or kept and resolved.
+      checklist: await dealsAndTasks(this.prisma, tenantId, subjectEmail, ids),
     };
   }
 
@@ -715,7 +713,14 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
         // Read first: the stored files are found through the person's address, which the
         // erasure removes. They are queued in this transaction (the queue commits with the
         // erasure) and their locators leave the rows; the cleanup deletes the objects afterwards.
-        const files = await planStoredFiles(tx, tenantId, subjectEmail, ids, this.storedObjects());
+        const files = await planStoredFiles(
+          tx,
+          tenantId,
+          subjectEmail,
+          ids,
+          this.storedObjects(),
+          true
+        );
         const left = storedFileCounts(files);
         const open = await dealsAndTasks(tx, tenantId, subjectEmail, ids);
         const communications = await eraseCommunications(tx, {
@@ -754,7 +759,7 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
               aiInsights: leadInsights.count + contactInsights.count + insights.count,
               bookings: Number(bookings),
               ...communications,
-              storedFilesKept: left.kept,
+              storedFilesKept: left.keptShared + left.keptUnmanaged,
             },
             // Until the cleanup has run, every queued object still counts as left.
             checklist: { ...open, ...left.left },

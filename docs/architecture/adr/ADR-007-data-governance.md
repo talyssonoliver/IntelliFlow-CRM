@@ -661,22 +661,21 @@ so a double click or two admins cannot run it twice. It anonymises in place:
   count and an error code, so it survives a restart and an admin's **Retry file
   deletion** runs only what is left (idempotent). The adapter deletes only a
   path under `<tenantId>/` in a bucket the CRM owns (email attachments,
-  `CRM_FILES_BUCKET`); a location outside that (another tenant, another host or
-  bucket) is never sent to storage and is queued `MANUAL` (reason `UNMANAGED`):
-  the admin lists those files on the request, deletes them where they live and
-  confirms (the server only accepts ids of that request's unmanaged files); the
-  row becomes `DELETED` and its locator is cleared. An object that a retained
-  record outside the erasure still uses is queued `KEPT` (reason `SHARED_KEPT`):
-  never deleted, never listed, no locator stored, and counted as resolved,
-  because other people's data is not erased and only the erased person's link to
-  it is removed. A request with no queue rows (an erasure from before the queue)
-  is shown without any claim about its files. The cleanup never fails the
-  erasure.
+  `CRM_FILES_BUCKET`), and only an object no retained record still uses (decided
+  on the full bucket and path, under a transaction advisory lock on the object,
+  so two erasures sharing a file cannot both keep it). Anything else is queued
+  `KEPT` (reason `SHARED_KEPT` or `UNMANAGED`): never sent to storage, no
+  locator stored, read-only and resolved, with no delete or confirm action.
+  Other people's data is not erased; only the erased person's link to it is
+  removed. Failed deletes are retried least-tried first, so a stuck object
+  cannot starve the rest. A request with no queue rows (an erasure from before
+  the queue) is shown without any claim about its files. The cleanup never fails
+  the erasure.
 - **Left on a counted checklist.** Deals and tasks (Q23) and, per source, the
-  stored files not yet deleted (failed or unmanaged): the result and the request
-  list count exactly what remains, with kept files shown apart as resolved, 0
-  when all are gone. Legal holds: no hold register exists yet, so the admin's
-  no-hold confirmation is the check.
+  stored files the CRM owns and has not yet deleted (failed): the result and the
+  request list count exactly what remains, 0 when all are gone. Kept files are
+  shown apart as resolved, with their reason. Legal holds: no hold register
+  exists yet, so the admin's no-hold confirmation is the check.
 - **Audit logs** keep counts and the admin id, never erased values. The audit
   row is awaited.
 

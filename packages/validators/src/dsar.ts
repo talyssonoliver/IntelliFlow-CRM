@@ -22,7 +22,6 @@ import {
   type DsarSource,
   type DsarStatus,
   type DsarWithheldCategory,
-  MANUAL_FILES_PAGE,
 } from '@intelliflow/domain';
 import { idSchema } from './common';
 import { stripControlChars } from './event-types';
@@ -180,11 +179,6 @@ export const dsarCancelErasureSchema = z
   .object({ id: idSchema, reason: cleanText(10, 500) })
   .strict();
 
-/** IFC-316: the admin deleted these stored files by hand (ids of the request's manual files). */
-export const dsarConfirmManualFilesSchema = z
-  .object({ id: idSchema, fileIds: z.array(idSchema).min(1).max(MANUAL_FILES_PAGE) })
-  .strict();
-
 export const dsarLiftRestrictionSchema = z
   .object({ restrictionId: idSchema, note: cleanText(10, 500) })
   .strict();
@@ -243,22 +237,13 @@ export interface DsarRequestDto {
   clockBreached: boolean;
   createdAt: string;
   /**
-   * A completed erasure that queued stored files (IFC-316): how many are not deleted yet, and
-   * how many of those only the admin can delete. Absent when unknown or never queued.
+   * A completed erasure that queued stored files (IFC-316): how many are not deleted yet, and how
+   * many were kept (resolved, read-only) because another retained record still uses them or
+   * because they are outside the CRM's storage. Absent when unknown or never queued.
    */
   storedFilesLeft?: number;
-  storedFilesManual?: number;
-  /** Kept because another retained record still uses them: resolved, read-only. */
-  storedFilesKept?: number;
-}
-
-/** A stored file the CRM cannot delete itself (IFC-316): where it was and where it is. */
-export interface DsarManualFileDto {
-  id: string;
-  source: 'LEAD_FILE' | 'EMAIL_ATTACHMENT' | 'CHAT_ATTACHMENT' | 'TICKET_ATTACHMENT';
-  locator: string;
-  /** UNMANAGED: another host, bucket or firm's prefix. */
-  reason: 'UNMANAGED';
+  storedFilesKeptShared?: number;
+  storedFilesKeptUnmanaged?: number;
 }
 
 export interface DsarErasureResultDto {

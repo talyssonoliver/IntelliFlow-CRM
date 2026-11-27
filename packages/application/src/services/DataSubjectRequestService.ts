@@ -35,10 +35,7 @@ import type {
   RestrictionStatus,
 } from '../ports/repositories/ProcessingRestrictionPort';
 import type { ErasedFilesPurger } from './ErasedFilesCleanupService';
-import type {
-  ManualStoredObject,
-  StoredObjectsLeft,
-} from '../ports/repositories/StoredObjectOutboxPort';
+import type { StoredObjectsLeft } from '../ports/repositories/StoredObjectOutboxPort';
 import type {
   DsarNotice,
   DsarNotificationPort,
@@ -736,41 +733,6 @@ export class DataSubjectRequestService {
     } catch {
       return null;
     }
-  }
-
-  /** The stored files of a completed erasure that only the admin can delete. */
-  async manualFiles(input: {
-    tenantId: string;
-    id: string;
-  }): Promise<Ok<{ files: ManualStoredObject[] }> | NotFound | Invalid> {
-    const record = await this.deps.repo.findForTenant(input.tenantId, input.id);
-    if (!record) return { outcome: 'NOT_FOUND' };
-    if (record.type !== 'ERASURE' || record.status !== 'COMPLETED') {
-      return { outcome: 'INVALID', field: 'status' };
-    }
-    if (!this.deps.erasedFiles) return { outcome: 'INVALID', field: 'storage' };
-    return {
-      outcome: 'OK',
-      files: await this.deps.erasedFiles.manualFiles(input.tenantId, record.id),
-    };
-  }
-
-  /** The admin deleted these files by hand: they stop counting as left. */
-  async confirmManualFiles(input: {
-    tenantId: string;
-    id: string;
-    fileIds: string[];
-    now: Date;
-  }): Promise<Ok<{ handled: number }> | NotFound | Invalid> {
-    const listed = await this.manualFiles(input);
-    if (listed.outcome !== 'OK') return listed;
-    const handled = await this.deps.erasedFiles!.confirmManual(
-      input.tenantId,
-      input.id,
-      input.fileIds,
-      input.now
-    );
-    return { outcome: 'OK', handled };
   }
 
   /**

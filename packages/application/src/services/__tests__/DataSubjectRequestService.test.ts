@@ -1375,8 +1375,6 @@ describe('stored files after an erasure (IFC-316)', () => {
     erasedFiles: Partial<{
       purge: ReturnType<typeof vi.fn>;
       leftFor: ReturnType<typeof vi.fn>;
-      manualFiles: ReturnType<typeof vi.fn>;
-      confirmManual: ReturnType<typeof vi.fn>;
     }>
   ) {
     const withFiles = new DataSubjectRequestService({
@@ -1389,8 +1387,6 @@ describe('stored files after an erasure (IFC-316)', () => {
       erasedFiles: {
         purge: vi.fn(),
         leftFor: vi.fn(),
-        manualFiles: vi.fn(),
-        confirmManual: vi.fn(),
         ...erasedFiles,
       },
     });
@@ -1471,7 +1467,7 @@ describe('stored files after an erasure (IFC-316)', () => {
   });
 
   it('lists what each completed erasure still has, and says so when it cannot know', async () => {
-    const left = { r1: { queued: 1, manual: 1, kept: 2 } };
+    const left = { r1: { queued: 1, keptShared: 2, keptUnmanaged: 1 } };
     const leftFor = vi.fn().mockResolvedValue(left);
     const { withFiles } = await erasureWith({ leftFor });
     expect(await withFiles.storedFilesLeft('tenant-a', ['r1'])).toEqual(left);
@@ -1480,39 +1476,5 @@ describe('stored files after an erasure (IFC-316)', () => {
     leftFor.mockRejectedValueOnce(new Error('db down'));
     expect(await withFiles.storedFilesLeft('tenant-a', ['r1'])).toBeNull();
     expect(await service.storedFilesLeft('tenant-a', ['r1'])).toBeNull();
-  });
-
-  it('shows the admin the files left of a completed erasure and records those deleted by hand', async () => {
-    const files = [
-      {
-        id: 'f1',
-        source: 'LEAD_FILE',
-        locator: 'https://files.example.invalid/a',
-        reason: 'UNMANAGED',
-      },
-    ];
-    const manualFiles = vi.fn().mockResolvedValue(files);
-    const confirmManual = vi.fn().mockResolvedValue(1);
-    const { withFiles, id } = await erasureWith({ manualFiles, confirmManual });
-    const input = { tenantId: 'tenant-a', id };
-    // Open: nothing to show or confirm yet.
-    expect(await withFiles.manualFiles(input)).toEqual({ outcome: 'INVALID', field: 'status' });
-    expect(await withFiles.confirmManualFiles({ ...input, fileIds: ['f1'], now: NOW })).toEqual({
-      outcome: 'INVALID',
-      field: 'status',
-    });
-    expect(confirmManual).not.toHaveBeenCalled();
-
-    repo.rows.get(id)!.status = 'COMPLETED';
-    expect(await withFiles.manualFiles(input)).toEqual({ outcome: 'OK', files });
-    expect(await withFiles.confirmManualFiles({ ...input, fileIds: ['f1'], now: NOW })).toEqual({
-      outcome: 'OK',
-      handled: 1,
-    });
-    expect(confirmManual).toHaveBeenCalledWith('tenant-a', id, ['f1'], NOW);
-    expect(await withFiles.manualFiles({ tenantId: 'tenant-b', id })).toEqual({
-      outcome: 'NOT_FOUND',
-    });
-    expect(await service.manualFiles(input)).toEqual({ outcome: 'INVALID', field: 'storage' });
   });
 });

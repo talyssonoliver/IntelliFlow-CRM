@@ -16,11 +16,6 @@ const h = vi.hoisted(() => ({
   list: { data: undefined as unknown, isLoading: false, isError: false, error: null as unknown },
   restrictions: { data: undefined as unknown },
   preview: { data: undefined as unknown },
-  manualFiles: {
-    data: undefined as unknown,
-    error: null as unknown,
-    refetch: undefined as unknown,
-  },
   mutations: {} as Record<string, { mutateAsync: ReturnType<typeof vi.fn>; isPending: boolean }>,
   invalidate: vi.fn(),
   toast: vi.fn(),
@@ -55,8 +50,6 @@ vi.mock('@/lib/trpc', () => {
           liftRestriction: m('liftRestriction'),
           exportData: m('exportData'),
           retryFileCleanup: m('retryFileCleanup'),
-          confirmManualFiles: m('confirmManualFiles'),
-          manualFiles: { useQuery: () => h.manualFiles },
         },
       },
     },
@@ -102,7 +95,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.list = { data: [request()], isLoading: false, isError: false, error: null };
   h.restrictions = { data: [] };
-  h.manualFiles = { data: undefined, error: null, refetch: vi.fn().mockResolvedValue({}) };
   h.preview = { data: { counts: { leads: 1, contacts: 1 }, checklist: { tickets: 2 } } };
   h.mutations = Object.fromEntries(
     [
@@ -116,7 +108,6 @@ beforeEach(() => {
       'liftRestriction',
       'exportData',
       'retryFileCleanup',
-      'confirmManualFiles',
     ].map((name) => [name, mutation()])
   );
 });
@@ -182,7 +173,7 @@ describe('PrivacyRequestsContent', () => {
     await waitFor(() =>
       expect(h.toast).toHaveBeenCalledWith({
         title:
-          'Data erased and the person told. 3 stored files are not deleted yet; open the request to retry or delete them by hand.',
+          'Data erased and the person told. 3 stored files are not deleted yet; retry from the request.',
       })
     );
   });
@@ -193,13 +184,11 @@ describe('PrivacyRequestsContent', () => {
         id: 'clhleft0000000000',
         status: 'COMPLETED',
         storedFilesLeft: 2,
-        storedFilesManual: 0,
       }),
       request({
         id: 'clhclean000000000',
         status: 'COMPLETED',
         storedFilesLeft: 0,
-        storedFilesManual: 0,
       }),
       // An erasure from before the queue: nothing is claimed either way.
       request({ id: 'clhlegacy00000000', status: 'COMPLETED' }),
@@ -223,131 +212,25 @@ describe('PrivacyRequestsContent', () => {
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith({ title: 'Stored files deleted' }));
   });
 
-  it('says how many files were kept because another record uses them, with no action on them', () => {
+  it('says what was kept and why, read-only: no delete, confirm or retry action on kept files', () => {
     h.list.data = [
       request({
         id: 'clhkept000000000',
         status: 'COMPLETED',
         storedFilesLeft: 0,
-        storedFilesManual: 0,
-        storedFilesKept: 2,
+        storedFilesKeptShared: 2,
+        storedFilesKeptUnmanaged: 1,
       }),
     ];
     render(<PrivacyRequestsContent />);
     expect(screen.getByText('2 files kept because another record still uses them')).toBeTruthy();
-    // Resolved: nothing is left, and kept files offer neither retry nor deletion.
+    expect(
+      screen.getByText("1 file kept: outside the CRM's storage, delete where stored")
+    ).toBeTruthy();
+    // Resolved: nothing is left to delete, and there is no action at all on kept files.
     expect(screen.getByText('Stored files deleted')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Retry deleting stored files/ })).toBeNull();
-    expect(screen.queryByRole('button', { name: /^Show files to delete by hand/ })).toBeNull();
-  });
-
-  it('lets the admin see the files to delete by hand and mark them deleted', async () => {
-    h.list.data = [
-      request({
-        id: 'clhmanual0000000',
-        status: 'COMPLETED',
-        storedFilesLeft: 1,
-        storedFilesManual: 1,
-      }),
-    ];
-    h.manualFiles = {
-      data: [
-        {
-          id: 'f1',
-          source: 'LEAD_FILE',
-          locator: 'https://files.example.invalid/a.pdf',
-          reason: 'UNMANAGED',
-        },
-      ],
-      error: null,
-      refetch: vi.fn().mockResolvedValue({}),
-    };
-    h.mutations.confirmManualFiles!.mutateAsync.mockResolvedValue({ handled: 1 });
-    render(<PrivacyRequestsContent />);
-    // Nothing the CRM can retry: the files are the admin's.
-    expect(screen.queryByRole('button', { name: /^Retry deleting stored files/ })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: /^Show files to delete by hand/ }));
-    const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('Lead file')).toBeTruthy();
-    // The reason is shown on each row.
-    expect(within(dialog).getByText(/the CRM cannot delete it/)).toBeTruthy();
-    expect(within(dialog).getByText('https://files.example.invalid/a.pdf')).toBeTruthy();
-    const mark = within(dialog).getByRole('button', { name: 'Mark as deleted' });
-    expect((mark as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.click(within(dialog).getByRole('checkbox'));
-    fireEvent.click(mark);
-    await waitFor(() =>
-      expect(h.mutations.confirmManualFiles!.mutateAsync).toHaveBeenCalledWith({
-        id: 'clhmanual0000000',
-        fileIds: ['f1'],
-      })
-    );
-    await waitFor(() =>
-      expect(h.toast).toHaveBeenCalledWith({ title: '1 stored files marked as deleted' })
-    );
-  });
-
-  it('confirms one page of manual files at a time and loads the next page', async () => {
-    h.list.data = [
-      request({
-        id: 'clhmanual0000000',
-        status: 'COMPLETED',
-        storedFilesLeft: 501,
-        storedFilesManual: 501,
-      }),
-    ];
-    // The server sends one page of 500; the dialog says more follow.
-    h.manualFiles = {
-      data: Array.from({ length: 500 }, (_, i) => ({
-        id: `f${i}`,
-        source: 'LEAD_FILE',
-        locator: `https://files.example.invalid/${i}.pdf`,
-      })),
-      error: null,
-      refetch: vi.fn().mockResolvedValue({}),
-    };
-    h.mutations.confirmManualFiles!.mutateAsync.mockImplementation(
-      async ({ fileIds }: { fileIds: string[] }) => ({ handled: fileIds.length })
-    );
-    const view = render(<PrivacyRequestsContent />);
-    fireEvent.click(screen.getByRole('button', { name: /^Show files to delete by hand/ }));
-    const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText(/Showing the first 500 files/)).toBeTruthy();
-    fireEvent.click(within(dialog).getByRole('checkbox'));
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Mark as deleted' }));
-    await waitFor(() =>
-      expect(h.toast).toHaveBeenCalledWith({ title: '500 stored files marked as deleted' })
-    );
-    const sent = h.mutations.confirmManualFiles!.mutateAsync.mock.calls[0]![0] as {
-      fileIds: string[];
-    };
-    expect(sent.fileIds).toHaveLength(500);
-    // Never more than the schema takes, and the dialog loads the next page instead of closing.
-    expect(h.manualFiles.refetch).toHaveBeenCalled();
-    expect(screen.getByRole('dialog')).toBeTruthy();
-
-    // The next page loads: the tick does not carry over, so it cannot be confirmed unasked.
-    h.manualFiles = {
-      data: [
-        {
-          id: 'g1',
-          source: 'LEAD_FILE',
-          locator: 'https://files.example.invalid/next.pdf',
-          reason: 'UNMANAGED',
-        },
-      ],
-      error: null,
-      refetch: vi.fn().mockResolvedValue({}),
-    };
-    view.rerender(<PrivacyRequestsContent />);
-    const next = await screen.findByRole('dialog');
-    expect(within(next).getByText('https://files.example.invalid/next.pdf')).toBeTruthy();
-    expect(
-      (within(next).getByRole('checkbox') as HTMLInputElement).getAttribute('aria-checked')
-    ).toBe('false');
-    expect(
-      (within(next).getByRole('button', { name: 'Mark as deleted' }) as HTMLButtonElement).disabled
-    ).toBe(true);
+    expect(screen.queryByRole('button', { name: /by hand|Mark as deleted/ })).toBeNull();
   });
 
   it('keeps a server refusal inside the dialog', async () => {

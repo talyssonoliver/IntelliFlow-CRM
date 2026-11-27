@@ -10,15 +10,15 @@
     "files_read": [
       {
         "path": "packages/adapters/src/repositories/PrismaSubjectDataRepository.ts",
-        "sha256": "72d48e0536d2714617988a3a4b4ff0a7e508e26098c4883fd8987f43d973ed40"
+        "sha256": "bf8888fca63a1b94fa1934faa34392b9ad0038241f95c2c4c1d8a9a66bceb299"
       },
       {
         "path": "packages/adapters/src/repositories/subject-stored-files.ts",
-        "sha256": "05474dbc9e8a89b2f2c9570011f15c4ec6e48fde2dd82df61a51e88226281496"
+        "sha256": "926749eb28a2525fc4cd542227a8d96e21449bfed465b66f9e540d5a7ba2480d"
       },
       {
         "path": "packages/application/src/services/ErasedFilesCleanupService.ts",
-        "sha256": "ab6a0ae2b26bcbc88f02669dc715b38b8fb2fb6b1043fd98adf48548546cba9a"
+        "sha256": "4aae3562250bd94e9067c1ee0d25c2d72db8df2ccc8985956095ca8311e20111"
       }
     ],
     "invariants_acknowledged": [
@@ -30,7 +30,7 @@
     "communication_types_erased": 9,
     "stored_file_sources_deleted": 4,
     "new_unit_tests": 58,
-    "real_db_tests": 51,
+    "real_db_tests": 52,
     "pr_communications": 1361,
     "pr_stored_files": "the pull request from branch feat/ifc-316b-erase-stored-files (number in the PR title link)"
   },
@@ -57,7 +57,7 @@
       "timestamp": "2026-11-27T14:30:00Z"
     },
     {
-      "name": "Real-DB DSAR suites (51 tests) through the test slot, migrations applied",
+      "name": "Real-DB DSAR suites (52 tests) through the test slot, migrations applied",
       "command": "node with-slot.mjs --exclusive intelliflow-db -- node scripts/test-db.mjs run --seed -- npx vitest run --project integration tests/integration/dsar-communications.test.ts tests/integration/dsar.test.ts",
       "exit_code": 0,
       "passed": true,
@@ -112,7 +112,11 @@
       "passed": true
     },
     {
-      "gate_id": "shared-files-kept-not-offered-for-deletion",
+      "gate_id": "only-files-the-crm-owns-are-deleted",
+      "passed": true
+    },
+    {
+      "gate_id": "concurrent-erasures-never-orphan-a-shared-file",
       "passed": true
     }
   ],
@@ -120,7 +124,7 @@
     {
       "kpi": "Checklist items left after an erasure for covered types",
       "target": "0",
-      "actual": "The stored files of the four sources (lead files, email, chat and ticket attachments) are deleted after the commit; a failed delete stays queued on the request and is counted until a retry deletes it; a file the CRM must not delete (another host or bucket, another firm's prefix, or an object another record still uses) is queued for the admin and counted until the admin confirms it deleted (real-DB suite). Email records, tickets, chats, feedback, notifications, drafts, calendar events and experiment assignments are erased in the transaction (#1361).",
+      "actual": "The stored files of the four sources (lead files, email, chat and ticket attachments) that the CRM owns are deleted after the commit; a failed delete stays queued on the request and is counted until a retry deletes it. Files the CRM must not delete (another host or bucket, another firm's prefix, or an object another retained record uses) are kept, resolved and read-only, with their reason (real-DB suite, including two concurrent erasures sharing one file). Email records, tickets, chats, feedback, notifications, drafts, calendar events and experiment assignments are erased in the transaction (#1361).",
       "met": true
     },
     {
@@ -158,5 +162,5 @@
       "met": true
     }
   ],
-  "notes": "Two PRs: #1361 (communications in the erasure transaction) and the follow-up on branch feat/ifc-316b-erase-stored-files (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are recognised by shape: a path under the firm's own prefix in CRM_FILES_BUCKET (default crm-files) or a URL of this project's storage naming one. Anything else is queued MANUAL (UNMANAGED): the admin lists it on the request (Files to delete by hand), deletes it where it lives and confirms, and the locator leaves the database. An object another retained record still uses is kept (SHARED_KEPT): never deleted, never offered, counted as resolved. An erasure from before the queue shows no claim about its files."
+  "notes": "Two PRs: #1361 (communications in the erasure transaction) and the follow-up on branch feat/ifc-316b-erase-stored-files (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are recognised by shape: a path under the firm's own prefix in CRM_FILES_BUCKET (default crm-files) or a URL of this project's storage naming one. The CRM deletes only files it alone owns (in its bucket, under the firm's prefix, used by no retained record). Everything else is kept, read-only and resolved: SHARED_KEPT (another retained record uses it) or UNMANAGED (outside the CRM's storage), with no locator stored and no delete or confirm action. An erasure from before the queue shows no claim about its files."
 }

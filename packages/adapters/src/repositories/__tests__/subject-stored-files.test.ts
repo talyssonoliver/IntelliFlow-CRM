@@ -23,9 +23,11 @@ interface Rows {
   chatMessage?: Array<{ id: string; attachments: unknown }>;
 }
 
+type Other = { source: string; locator: string | null; attachments: string | null };
+
 /** A client: by-address lookups find nothing, the linked lookups find one row per table. */
-function db(rows: Rows = {}) {
-  const model = (name: string, data: unknown[] = []) => ({
+function db(rows: Rows = {}, others: Other[] = []) {
+  const model = (data: unknown[] = []) => ({
     findMany: vi.fn(async () => data),
     count: vi.fn(async () => 0),
     updateMany: vi.fn(async () => ({ count: 0 })),
@@ -33,27 +35,36 @@ function db(rows: Rows = {}) {
   });
   const linked = (id: string) => [{ id }];
   return {
-    emailRecord: model('emailRecord', linked('e1')),
-    ticket: model('ticket', linked('k1')),
-    chatConversation: model('chatConversation', linked('h1')),
-    feedbackSurvey: model('feedbackSurvey'),
-    opportunity: model('opportunity'),
-    task: model('task'),
-    leadFile: model('leadFile', rows.leadFile),
-    emailAttachment: model('emailAttachment', rows.emailAttachment),
-    ticketAttachment: model('ticketAttachment', rows.ticketAttachment),
-    chatMessage: model('chatMessage', rows.chatMessage),
-    dsarStoredObject: model('dsarStoredObject'),
-    $queryRaw: vi.fn(async () => []),
+    emailRecord: model(linked('e1')),
+    ticket: model(linked('k1')),
+    chatConversation: model(linked('h1')),
+    feedbackSurvey: model(),
+    opportunity: model(),
+    task: model(),
+    leadFile: model(rows.leadFile),
+    emailAttachment: model(rows.emailAttachment),
+    ticketAttachment: model(rows.ticketAttachment),
+    chatMessage: model(rows.chatMessage),
+    dsarStoredObject: model(),
+    // The by-address lookups find nothing; the sharing lookup finds `others`.
+    $queryRaw: vi.fn(async (strings: TemplateStringsArray) =>
+      strings.join('?').includes('strpos') ? others : []
+    ),
+    $executeRaw: vi.fn(async () => 1),
   } as any;
 }
 
+const sharingQueries = (client: any) =>
+  client.$queryRaw.mock.calls.filter((c: unknown[]) =>
+    (c[0] as TemplateStringsArray).join('?').includes('strpos')
+  );
+
 describe('planStoredFiles (IFC-316)', () => {
-  it('sorts every source into queued objects, manual files and nothing to delete', async () => {
+  it('queues what the CRM owns to delete; everything else is kept, with its reason and no location', async () => {
     const client = db({
       leadFile: [
         { id: 'lf1', url: `${T}/lead/a.pdf` },
-        { id: 'lf2', url: 'https://files.example.invalid/b.pdf' },
+        { id: 'lf2', url: FOREIGN_URL },
       ],
       emailAttachment: [{ id: 'ea1', fileUrl: `${T}/1-c.pdf` }],
       ticketAttachment: [{ id: 'ta1', url: 'data:application/pdf;base64,AAAA...' }],
@@ -72,13 +83,7 @@ describe('planStoredFiles (IFC-316)', () => {
         bucket: 'crm-files',
         locator: `${T}/lead/a.pdf`,
       },
-      {
-        source: 'LEAD_FILE',
-        state: 'MANUAL',
-        reason: 'UNMANAGED',
-        bucket: null,
-        locator: 'https://files.example.invalid/b.pdf',
-      },
+      { source: 'LEAD_FILE', state: 'KEPT', reason: 'UNMANAGED', bucket: null, locator: null },
       {
         source: 'EMAIL_ATTACHMENT',
         state: 'PENDING',
@@ -101,25 +106,21 @@ describe('planStoredFiles (IFC-316)', () => {
       ticketAttachmentIds: ['ta1'],
       chatMessageIds: ['cm1', 'cm2'],
     });
+    // Kept files are resolved: only what is still to delete is "left".
     expect(storedFileCounts(plan)).toEqual({
       toDelete: 3,
-      kept: 0,
+      keptShared: 0,
+      keptUnmanaged: 1,
       left: {
-        storedLeadFiles: 2,
+        storedLeadFiles: 1,
         storedEmailAttachments: 1,
         storedChatAttachments: 1,
-        storedTicketAttachments: 0,
-      },
-      manual: {
-        storedLeadFiles: 1,
-        storedEmailAttachments: 0,
-        storedChatAttachments: 0,
         storedTicketAttachments: 0,
       },
     });
   });
 
-  it("never queues another tenant's path or a path with a traversal: it stays manual", async () => {
+  it("never queues another tenant's path or a path with a traversal: kept as unmanaged", async () => {
     const plan = await planStoredFiles(
       db({
         leadFile: [
@@ -132,20 +133,22 @@ describe('planStoredFiles (IFC-316)', () => {
       IDS,
       config
     );
-    expect(plan.queue.map((q) => q.state)).toEqual(['MANUAL', 'MANUAL']);
-    expect(plan.queue.every((q) => q.bucket === null)).toBe(true);
+    expect(plan.queue.map((q) => [q.state, q.reason, q.locator])).toEqual([
+      ['KEPT', 'UNMANAGED', null],
+      ['KEPT', 'UNMANAGED', null],
+    ]);
   });
 
-  it('keeps an object that a retained record still uses: never deleted, never listed, no locator', async () => {
-    const client = db({
-      emailAttachment: [
-        { id: 'ea1', fileUrl: `${T}/1-x.pdf` },
-        { id: 'ea2', fileUrl: `${T}/2-y.pdf` },
-      ],
-    });
-    // The set-based lookup says the first upload is still used elsewhere.
-    client.$queryRaw.mockImplementation(async (strings: TemplateStringsArray) =>
-      strings.join('?').includes('strpos') ? [{ path: `${T}/1-x.pdf` }] : []
+  it('keeps an object a retained record still uses: never deleted, no location, resolved', async () => {
+    const client = db(
+      {
+        emailAttachment: [
+          { id: 'ea1', fileUrl: `${T}/1-x.pdf` },
+          { id: 'ea2', fileUrl: `${T}/2-y.pdf` },
+        ],
+      },
+      // Another person's retained mail uses the first upload.
+      [{ source: 'EMAIL_ATTACHMENT', locator: `${T}/1-x.pdf`, attachments: null }]
     );
     const plan = await planStoredFiles(client, T, 'a', IDS, config);
     expect(plan.queue).toEqual([
@@ -164,15 +167,53 @@ describe('planStoredFiles (IFC-316)', () => {
         locator: `${T}/2-y.pdf`,
       },
     ]);
-    // Resolved, not left: it counts in neither the checklist nor the manual list.
     const counts = storedFileCounts(plan);
-    expect(counts.kept).toBe(1);
-    expect(counts.toDelete).toBe(1);
+    expect(counts).toMatchObject({ toDelete: 1, keptShared: 1 });
     expect(counts.left.storedEmailAttachments).toBe(1);
-    expect(counts.manual.storedEmailAttachments).toBe(0);
   });
 
-  it('asks which objects are still used with ONE query for all of them, scoped to the tenant', async () => {
+  it('compares the full identity: the same path in another bucket is not a shared object', async () => {
+    // The erased attachment is in the email bucket. A retained LEAD file with the same
+    // path lives in the files bucket, so it is a different object.
+    const client = db({ emailAttachment: [{ id: 'ea1', fileUrl: `${T}/same.pdf` }] }, [
+      { source: 'LEAD_FILE', locator: `${T}/same.pdf`, attachments: null },
+    ]);
+    const plan = await planStoredFiles(client, T, 'a', IDS, config);
+    expect(plan.queue[0]).toMatchObject({ state: 'PENDING', bucket: 'email-attachments' });
+    // ...while the same bucket and path, named as a storage URL, is shared.
+    const url = `https://${config.storageHost}/storage/v1/object/sign/email-attachments/${T}/same.pdf?token=x`;
+    const shared = await planStoredFiles(
+      db({ emailAttachment: [{ id: 'ea1', fileUrl: `${T}/same.pdf` }] }, [
+        { source: 'TICKET_ATTACHMENT', locator: url, attachments: null },
+      ]),
+      T,
+      'a',
+      IDS,
+      config
+    );
+    expect(shared.queue[0]).toMatchObject({ state: 'KEPT', reason: 'SHARED_KEPT' });
+  });
+
+  it('reads a retained chat message that names the object', async () => {
+    const client = db({ leadFile: [{ id: 'lf1', url: `${T}/c.png` }] }, [
+      {
+        source: 'CHAT_ATTACHMENT',
+        locator: null,
+        attachments: JSON.stringify([{ name: 'c.png', url: `${T}/c.png` }]),
+      },
+    ]);
+    expect((await planStoredFiles(client, T, 'a', IDS, config)).queue[0]).toMatchObject({
+      state: 'KEPT',
+      reason: 'SHARED_KEPT',
+    });
+    // An unreadable attachment list names nothing.
+    const broken = db({ leadFile: [{ id: 'lf1', url: `${T}/c.png` }] }, [
+      { source: 'CHAT_ATTACHMENT', locator: null, attachments: '{not json' },
+    ]);
+    expect((await planStoredFiles(broken, T, 'a', IDS, config)).queue[0]!.state).toBe('PENDING');
+  });
+
+  it('asks which objects are used with ONE query for all of them, scoped to the tenant', async () => {
     const files = Array.from({ length: 300 }, (_, i) => ({
       id: `ea${i}`,
       fileUrl: `${T}/${i}-f.pdf`,
@@ -180,12 +221,9 @@ describe('planStoredFiles (IFC-316)', () => {
     const client = db({ emailAttachment: files });
     const plan = await planStoredFiles(client, T, 'a', IDS, config);
     expect(plan.queue).toHaveLength(300);
-    // Not one query per file: a person with many files must not stall the erasure transaction.
-    const sharedQueries = client.$queryRaw.mock.calls.filter((c: unknown[]) =>
-      (c[0] as TemplateStringsArray).join('?').includes('strpos')
-    );
-    expect(sharedQueries).toHaveLength(1);
-    const [strings, ...params] = sharedQueries[0] as [TemplateStringsArray, ...unknown[]];
+    const queries = sharingQueries(client);
+    expect(queries).toHaveLength(1);
+    const [strings, ...params] = queries[0] as [TemplateStringsArray, ...unknown[]];
     const sql = strings.join('?');
     for (const table of [
       'email_attachments',
@@ -196,7 +234,7 @@ describe('planStoredFiles (IFC-316)', () => {
       expect(sql).toContain(table);
     }
     expect(params.filter((p) => p === T)).toHaveLength(4);
-    expect(params[0]).toHaveLength(300);
+    expect(params).toContainEqual(files.map((f) => f.fileUrl));
     // The erasure's own rows are excluded, so only OTHER records count.
     expect(params).toContainEqual(files.map((f) => f.id));
   });
@@ -204,11 +242,33 @@ describe('planStoredFiles (IFC-316)', () => {
   it('asks nothing when no file is an object the CRM could delete', async () => {
     const client = db({ leadFile: [{ id: 'lf1', url: FOREIGN_URL }] });
     await planStoredFiles(client, T, 'a', IDS, config);
-    expect(
-      client.$queryRaw.mock.calls.some((c: unknown[]) =>
-        (c[0] as TemplateStringsArray).join('?').includes('strpos')
-      )
-    ).toBe(false);
+    expect(sharingQueries(client)).toHaveLength(0);
+  });
+
+  it('locks each object, in a fixed order, only inside the erasure transaction', async () => {
+    const files = [
+      { id: 'ea1', fileUrl: `${T}/b.pdf` },
+      { id: 'ea2', fileUrl: `${T}/a.pdf` },
+    ];
+    const preview = db({ emailAttachment: files });
+    await planStoredFiles(preview, T, 'a', IDS, config);
+    // A preview takes no lock.
+    expect(preview.$executeRaw).not.toHaveBeenCalled();
+
+    const tx = db({ emailAttachment: files });
+    await planStoredFiles(tx, T, 'a', IDS, config, true);
+    expect(tx.$executeRaw).toHaveBeenCalledTimes(1);
+    const [strings, ...params] = tx.$executeRaw.mock.calls[0] as [
+      TemplateStringsArray,
+      ...unknown[],
+    ];
+    expect(strings.join('?')).toContain('pg_advisory_xact_lock');
+    // The lock is taken before the sharing is decided, on the sorted keys of this tenant.
+    expect(params).toContain(T);
+    expect(params).toContainEqual([`email-attachments/${T}/a.pdf`, `email-attachments/${T}/b.pdf`]);
+    expect(tx.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      tx.$queryRaw.mock.invocationCallOrder.at(-1)!
+    );
   });
 
   it('lists a shared object once per source', async () => {
@@ -275,11 +335,8 @@ describe('queueStoredFiles', () => {
     expect(client.chatMessage.updateMany.mock.calls[0][0].where.tenantId).toBe(T);
   });
 
-  it('records a kept object with its reason and no locator, so nothing about it can be listed', async () => {
-    const client = db({ leadFile: [{ id: 'lf1', url: `${T}/shared.pdf` }] });
-    client.$queryRaw.mockImplementation(async (strings: TemplateStringsArray) =>
-      strings.join('?').includes('strpos') ? [{ path: `${T}/shared.pdf` }] : []
-    );
+  it('records a kept object with its reason and no location, and still removes the person’s link', async () => {
+    const client = db({ leadFile: [{ id: 'lf1', url: FOREIGN_URL }] });
     const plan = await planStoredFiles(client, T, 'a', IDS, config);
     await queueStoredFiles(client, T, 'req-1', plan);
     expect(client.dsarStoredObject.createMany.mock.calls[0][0].data).toEqual([
@@ -288,12 +345,11 @@ describe('queueStoredFiles', () => {
         requestId: 'req-1',
         source: 'LEAD_FILE',
         state: 'KEPT',
-        reason: 'SHARED_KEPT',
+        reason: 'UNMANAGED',
         bucket: null,
         locator: null,
       },
     ]);
-    // The erased person's own link is still removed.
     expect(client.leadFile.updateMany.mock.calls[0][0].data).toEqual({ url: null });
   });
 

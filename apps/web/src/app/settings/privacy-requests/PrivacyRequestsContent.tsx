@@ -35,7 +35,6 @@ import {
   type RequestAction,
 } from './components/RequestActionDialog';
 import { LogRequestDialog, TYPE_LABELS } from './components/LogRequestDialog';
-import { ManualFilesDialog } from './components/ManualFilesDialog';
 
 const OPEN_TITLE_ID = 'open-requests-title';
 // The server requires a reason of at least 10 characters to lift a restriction.
@@ -115,20 +114,16 @@ function RequestRow({
   onAction,
   onExport,
   onRetryFiles,
-  onManualFiles,
   retrying,
 }: Readonly<{
   request: DsarRequestDto;
   onAction: (action: RequestAction, request: DsarRequestDto) => void;
   onExport: (request: DsarRequestDto) => void;
   onRetryFiles: (request: DsarRequestDto) => void;
-  onManualFiles: (request: DsarRequestDto) => void;
   retrying: boolean;
 }>) {
   const isExport = request.type === 'ACCESS' || request.type === 'PORTABILITY';
-  const manualFiles = request.storedFilesManual ?? 0;
-  // The CRM retries only what it can delete; the files left for the admin are not its to retry.
-  const retryable = (request.storedFilesLeft ?? 0) - manualFiles;
+  const retryable = request.storedFilesLeft ?? 0;
   return (
     <li className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="space-y-1">
@@ -148,8 +143,15 @@ function RequestRow({
             </Badge>
           )}
           {request.clockBreached && <Badge variant="destructive">Answered late</Badge>}
-          {(request.storedFilesKept ?? 0) > 0 && (
-            <Badge variant="outline">{`${request.storedFilesKept} ${request.storedFilesKept === 1 ? 'file' : 'files'} kept because another record still uses ${request.storedFilesKept === 1 ? 'it' : 'them'}`}</Badge>
+          {(request.storedFilesKeptShared ?? 0) > 0 && (
+            <Badge variant="outline">
+              {`${request.storedFilesKeptShared} ${request.storedFilesKeptShared === 1 ? 'file' : 'files'} kept because another record still uses ${request.storedFilesKeptShared === 1 ? 'it' : 'them'}`}
+            </Badge>
+          )}
+          {(request.storedFilesKeptUnmanaged ?? 0) > 0 && (
+            <Badge variant="outline">
+              {`${request.storedFilesKeptUnmanaged} ${request.storedFilesKeptUnmanaged === 1 ? 'file' : 'files'} kept: outside the CRM's storage, delete where stored`}
+            </Badge>
           )}
           {request.storedFilesLeft !== undefined && (
             <Badge variant={request.storedFilesLeft > 0 ? 'destructive' : 'outline'}>
@@ -175,17 +177,6 @@ function RequestRow({
             aria-label={`Download data: ${TYPE_LABELS[request.type]} for ${request.subjectEmail}`}
           >
             Download data
-          </Button>
-        )}
-        {manualFiles > 0 && (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => onManualFiles(request)}
-            aria-label={`Show files to delete by hand: erasure for ${request.subjectEmail}`}
-          >
-            Files to delete by hand
           </Button>
         )}
         {retryable > 0 && (
@@ -265,13 +256,6 @@ export default function PrivacyRequestsContent() {
   const liftRestriction = trpc.privacy.admin.liftRestriction.useMutation({ onSuccess: refresh });
   const exportData = trpc.privacy.admin.exportData.useMutation();
   const retryFiles = trpc.privacy.admin.retryFileCleanup.useMutation({ onSuccess: refresh });
-  const confirmManual = trpc.privacy.admin.confirmManualFiles.useMutation({ onSuccess: refresh });
-  const [manualFor, setManualFor] = useState<DsarRequestDto | null>(null);
-  const [manualError, setManualError] = useState<string | null>(null);
-  const manualFiles = trpc.privacy.admin.manualFiles.useQuery(
-    { id: manualFor?.id ?? '' },
-    { enabled: manualFor !== null, retry: false }
-  );
 
   const pending =
     complete.isPending ||
@@ -309,9 +293,7 @@ export default function PrivacyRequestsContent() {
             .filter(([key]) => key.startsWith('stored'))
             .reduce((sum, [, n]) => sum + n, 0);
           const notDeleted =
-            left > 0
-              ? `. ${left} stored files are not deleted yet; open the request to retry or delete them by hand.`
-              : '';
+            left > 0 ? `. ${left} stored files are not deleted yet; retry from the request.` : '';
           done = result.erasure
             ? `Data erased and the person told${notDeleted}`
             : 'Request completed';
@@ -370,19 +352,6 @@ export default function PrivacyRequestsContent() {
         description: errorMessage(error),
         variant: 'destructive',
       });
-    }
-  };
-
-  const runConfirmManual = async (fileIds: string[]) => {
-    if (!manualFor) return;
-    setManualError(null);
-    try {
-      const result = await confirmManual.mutateAsync({ id: manualFor.id, fileIds });
-      toast({ title: `${result.handled} stored files marked as deleted` });
-      // The dialog stays open: the next page of files, if any, loads in its place.
-      await manualFiles.refetch();
-    } catch (error) {
-      setManualError(errorMessage(error));
     }
   };
 
@@ -458,7 +427,6 @@ export default function PrivacyRequestsContent() {
                 runExport(row).catch(() => undefined);
               }}
               onRetryFiles={() => undefined}
-              onManualFiles={() => undefined}
               retrying={false}
             />
           ))}
@@ -539,10 +507,6 @@ export default function PrivacyRequestsContent() {
                 onRetryFiles={(row) => {
                   runRetryFiles(row).catch(() => undefined);
                 }}
-                onManualFiles={(row) => {
-                  setManualError(null);
-                  setManualFor(row);
-                }}
                 retrying={retryFiles.isPending}
               />
             ))}
@@ -561,18 +525,6 @@ export default function PrivacyRequestsContent() {
         }}
         onClose={() => setActive(null)}
         onCloseAutoFocus={onDialogCloseAutoFocus}
-      />
-
-      <ManualFilesDialog
-        request={manualFor}
-        files={manualFiles.data ?? null}
-        // Busy while saving and while the next page loads: the old page cannot be confirmed twice.
-        pending={confirmManual.isPending || manualFiles.isFetching}
-        error={manualError ?? (manualFiles.error ? errorMessage(manualFiles.error) : null)}
-        onConfirm={(ids) => {
-          runConfirmManual(ids).catch(() => setManualError('Please try again.'));
-        }}
-        onClose={() => setManualFor(null)}
       />
 
       <LogRequestDialog

@@ -21,13 +21,6 @@ export const STORED_OBJECT_SOURCES = [
 ] as const;
 export type StoredObjectSource = (typeof STORED_OBJECT_SOURCES)[number];
 
-/**
- * The most manual files the admin sees, and confirms, at a time. The list is a page of this size
- * and a confirmation takes at most this many ids, so the two always fit; the next page follows
- * once these are marked as deleted.
- */
-export const MANUAL_FILES_PAGE = 500;
-
 /** The admin checklist key each source is counted under. */
 export const STORED_OBJECT_CHECKLIST_KEYS: Record<StoredObjectSource, string> = {
   LEAD_FILE: 'storedLeadFiles',
@@ -37,9 +30,10 @@ export const STORED_OBJECT_CHECKLIST_KEYS: Record<StoredObjectSource, string> = 
 };
 
 /**
- * Why a stored file is not deleted by the CRM. UNMANAGED: another host, bucket or firm's prefix,
- * so the admin deletes it. SHARED_KEPT: another retained record still uses the object, so it is
- * kept, never offered for deletion, and counts as resolved (other people's data is not erased).
+ * Why a stored file is kept, not deleted by the CRM. SHARED_KEPT: another retained record still
+ * uses the object (other people's data is not erased; the erased person's link to it is removed).
+ * UNMANAGED: it is outside the CRM's own storage (another host, bucket or firm's prefix), so the
+ * CRM never touches it. Both count as resolved and are shown read-only.
  */
 export const STORED_OBJECT_REASONS = ['UNMANAGED', 'SHARED_KEPT'] as const;
 export type StoredObjectReason = (typeof STORED_OBJECT_REASONS)[number];

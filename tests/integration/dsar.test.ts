@@ -1100,7 +1100,9 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
     it('previews counts without changing anything', async () => {
       const preview = await subjects.previewErasure(TENANT_A, SUBJECT);
       expect(preview.counts).toMatchObject({ leads: 1, contacts: 1, bookings: 1 });
-      expect(preview.checklist.storedLeadFiles).toBe(1);
+      // Kept (outside the CRM's storage), resolved: counted apart, not on the checklist.
+      expect(preview.counts.storedFilesKept).toBe(1);
+      expect(preview.checklist.storedLeadFiles).toBeUndefined();
       const lead = await prisma.lead.findUnique({ where: { id: leadA } });
       expect(lead.firstName).toBe('Ada');
     });
@@ -1232,16 +1234,17 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
       });
       expect(contactActivity.description).toBe('Erased activity');
       const file = await prisma.leadFile.findFirst({ where: { leadId: leadA } });
-      // The CRM cannot delete a file on another host: its locator moves to the request's queue
-      // (MANUAL), where the admin's checklist still counts it, and leaves the row.
+      // The CRM does not own a file on another host: it is kept, resolved and read-only, with
+      // its reason and no location, and the person's own link to it leaves the row.
       expect(file).toMatchObject({ name: 'erased', url: null });
       await expect(
         prisma.dsarStoredObject.findMany({ where: { tenantId: TENANT_A, source: 'LEAD_FILE' } })
       ).resolves.toEqual([
         expect.objectContaining({
-          state: 'MANUAL',
+          state: 'KEPT',
+          reason: 'UNMANAGED',
           bucket: null,
-          locator: 'https://files.example.invalid/passport.pdf',
+          locator: null,
         }),
       ]);
       expect(await prisma.aIScore.count({ where: { leadId: leadA } })).toBe(0);

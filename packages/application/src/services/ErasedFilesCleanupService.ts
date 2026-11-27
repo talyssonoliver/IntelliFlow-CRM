@@ -10,7 +10,6 @@
  * nothing pending does nothing. It never throws: a failure here must not undo an erasure.
  */
 import type {
-  ManualStoredObject,
   PendingStoredObject,
   StoredObjectOutboxPort,
   StoredObjectSettlement,
@@ -24,12 +23,8 @@ import type {
 export interface ErasedFilesPurger {
   /** Deletes what is queued for the request and returns what remains, per checklist key. */
   purge(tenantId: string, requestId: string, now: Date): Promise<ErasedFilesPurgeResult>;
-  /** What is left for each request; a request that never queued a file is absent. */
+  /** What is left, and what was kept, per request; a request that never queued a file is absent. */
   leftFor(tenantId: string, requestIds: string[]): Promise<Record<string, StoredObjectsLeft>>;
-  /** The files only the admin can delete. */
-  manualFiles(tenantId: string, requestId: string): Promise<ManualStoredObject[]>;
-  /** The admin deleted these manual files by hand; returns how many were recorded. */
-  confirmManual(tenantId: string, requestId: string, ids: string[], now: Date): Promise<number>;
 }
 
 export interface ErasedFilesPurgeResult {
@@ -75,14 +70,6 @@ export class ErasedFilesCleanupService implements ErasedFilesPurger {
 
   leftFor(tenantId: string, requestIds: string[]) {
     return this.outbox.leftFor(tenantId, requestIds);
-  }
-
-  manualFiles(tenantId: string, requestId: string) {
-    return this.outbox.manual(tenantId, requestId);
-  }
-
-  confirmManual(tenantId: string, requestId: string, ids: string[], now: Date) {
-    return this.outbox.markHandled(tenantId, requestId, ids, now);
   }
 
   async purge(tenantId: string, requestId: string, now: Date): Promise<ErasedFilesPurgeResult> {

@@ -8,8 +8,8 @@
 -- Why a table: a storage delete cannot join the database transaction. The erasure writes one row
 -- per stored object (PENDING) in its own transaction, moves the locator out of the lead file,
 -- email attachment, chat message and ticket attachment rows, and commits; the objects are
--- deleted afterwards and each row is settled (DELETED, locator cleared). A row left PENDING or
--- MANUAL is exactly what the admin's checklist still shows, and survives a restart.
+-- deleted afterwards and each row is settled (DELETED, locator cleared). A row left PENDING is
+-- exactly what the admin's checklist still shows, and survives a restart.
 --
 -- Recovery plan: forward-only. Operational rollback = stop calling the cleanup (the rows stay
 -- queued). DROP TABLE dsar_stored_objects is Class C (human-only): it would lose the list of
@@ -37,17 +37,15 @@ CREATE TABLE "dsar_stored_objects" (
     CONSTRAINT "dsar_stored_objects_pkey" PRIMARY KEY ("id"),
     CONSTRAINT "dsar_stored_objects_source_check" CHECK ("source" IN
         ('LEAD_FILE', 'EMAIL_ATTACHMENT', 'CHAT_ATTACHMENT', 'TICKET_ATTACHMENT')),
-    CONSTRAINT "dsar_stored_objects_state_check" CHECK ("state" IN ('PENDING', 'MANUAL', 'KEPT', 'DELETED')),
-    -- Why a row is not deleted by the CRM: UNMANAGED (manual: another host, bucket or firm) or
-    -- SHARED_KEPT (kept: another retained record still uses the object).
+    CONSTRAINT "dsar_stored_objects_state_check" CHECK ("state" IN ('PENDING', 'KEPT', 'DELETED')),
+    -- Why a row is kept, not deleted by the CRM: SHARED_KEPT (another retained record still uses
+    -- the object) or UNMANAGED (outside the CRM's own storage). Kept rows are read-only.
     CONSTRAINT "dsar_stored_objects_reason_check" CHECK (
-        ("state" = 'MANUAL' AND "reason" = 'UNMANAGED')
-        OR ("state" = 'KEPT' AND "reason" = 'SHARED_KEPT')
+        ("state" = 'KEPT' AND "reason" IN ('SHARED_KEPT', 'UNMANAGED'))
         OR ("state" IN ('PENDING', 'DELETED') AND "reason" IS NULL)),
-    -- A deletable row names its bucket and path; a settled one keeps no locator.
+    -- A deletable row names its bucket and path; a kept or settled one keeps no locator.
     CONSTRAINT "dsar_stored_objects_locator_check" CHECK (
         ("state" = 'PENDING' AND "bucket" IS NOT NULL AND "locator" IS NOT NULL)
-        OR ("state" = 'MANUAL' AND "locator" IS NOT NULL)
         OR ("state" IN ('KEPT', 'DELETED') AND "locator" IS NULL))
 );
 

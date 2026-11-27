@@ -245,28 +245,27 @@ ticket attachments are deleted from storage, in four steps:
    rows), or when the count cannot be read: it never shows "deleted" without a
    record.
 
-Deletion is tenant-scoped by construction. A location is deleted only if it is a
-path under `<firm id>/` (no `..`, escapes, backslashes or empty parts) in one of
-the two buckets the CRM owns (email attachments, and `CRM_FILES_BUCKET`, default
-`crm-files`, for lead, chat and ticket files), or a URL of this project's own
-storage that names such a path. Each queued file carries a reason:
+The CRM deletes only a file **it alone owns**: a path under `<firm id>/` (no
+`..`, escapes, backslashes or empty parts) in one of the two buckets the CRM
+owns (email attachments, and `CRM_FILES_BUCKET`, default `crm-files`, for lead,
+chat and ticket files), or a URL of this project's own storage that names such a
+path, and that **no retained record still uses**. Whether a retained record uses
+it is decided on the full storage identity (bucket and path), under a
+transaction lock on that object, so two erasures that share a file cannot both
+keep it: the erasure that removes the last reference queues the delete.
 
-- **Shared, kept (`SHARED_KEPT`).** A record that is not part of the erasure
-  still uses the same object (one upload attached to someone else's retained
-  mail). It is never sent to storage and never offered for deletion, and no
-  location is stored for it. It counts as **resolved**, not as left: other
-  people's data is not erased, and the erased person's link to it is removed
-  (their own lead file, attachment or chat row loses its location). The request
-  shows a read-only line, "N files kept because another record still uses them",
-  with no action.
-- **Unmanaged (`UNMANAGED`).** The CRM cannot delete it: another host or bucket,
-  or another firm's path. It is never sent to storage and stays on the
-  checklist. The admin opens **Files to delete by hand** on the request, sees
-  each file's source, location and reason, deletes it where it lives, ticks "I
-  deleted these files" and marks them as deleted; the location then leaves the
-  database. The list is one page of 500 at a time. The server refuses any id
-  that is not an unmanaged file of that request, so a shared file cannot be
-  confirmed.
+Every other file is **kept, read-only and resolved**. It is never sent to
+storage, no location is stored for it, and the request has no delete or confirm
+action on it. The request shows why, as a count per reason:
+
+- **Shared (`SHARED_KEPT`):** "N files kept because another record still uses
+  them". Another person's retained data (one upload attached to someone else's
+  mail) is not erased, and the erased person's link to it is removed: their own
+  lead file, attachment or chat row loses its location.
+- **Outside the CRM's storage (`UNMANAGED`):** "N files kept: outside the CRM's
+  storage, delete where stored". Another host or bucket, or another firm's path.
+  The CRM never touches it. The firm deletes it where it lives; the CRM keeps no
+  location for it.
 
 A location that is not an object (empty, an inline `data:` URL, or the app's own
 download route) is simply cleared.
@@ -278,10 +277,10 @@ so it lists only what remains; 0 when everything is deleted). It holds:
   erased, because the firm may need them for its own records, and the admin
   decides)
 - tasks linked to the person's leads, contacts or deals (same)
-- stored files the CRM did not delete: objects whose delete failed (retry) and
-  unmanaged files it cannot delete (another host or bucket), counted per source:
-  lead files, email, chat and ticket attachments. Files kept because another
-  record uses them are not in this list; they are shown apart as resolved
+- stored files the CRM owns and has not deleted yet: objects whose delete failed
+  (retry), counted per source: lead files, email, chat and ticket attachments.
+  Kept files (shared or outside the CRM's storage) are not in this list: they
+  are resolved, and shown apart with their reason
 
 **Kept on purpose**: audit log entries (legal obligation). The erasure audit row
 holds counts and the admin id, never erased values.

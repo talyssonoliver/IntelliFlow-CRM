@@ -19,8 +19,6 @@ import { PrismaDsarRepository } from '../../packages/adapters/src/repositories/P
 import { PrismaSubjectDataRepository } from '../../packages/adapters/src/repositories/PrismaSubjectDataRepository';
 import { PrismaStoredObjectRepository } from '../../packages/adapters/src/repositories/PrismaStoredObjectRepository';
 import { SupabaseStorageAdapter } from '../../packages/adapters/src/storage/SupabaseStorageAdapter';
-import { MANUAL_FILES_PAGE } from '../../packages/domain/src/legal/privacy/stored-object';
-import { dsarConfirmManualFilesSchema } from '../../packages/validators/src/dsar';
 import { ErasedFilesCleanupService } from '../../packages/application/src/services/ErasedFilesCleanupService';
 import type { StoredObjectDeletionPort } from '../../packages/application/src/ports/external/StorageServicePort';
 import { ensureMigrationSql } from './dsar-setup';
@@ -352,18 +350,12 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       calendarEvents: 1,
     });
     // Deleted from storage after the erasure: the lead file, the email attachment, the ticket
-    // attachment and the chat attachment. Only the files the CRM cannot delete stay by hand.
+    // attachment and the chat attachment. Kept, resolved and read-only: two lead files outside
+    // the CRM's storage and the upload another person's mail still uses. Only deals and tasks
+    // stay for the admin.
     expect(preview.counts.storedFilesDeleted).toBe(4);
-    expect(preview.counts.storedFilesKept).toBe(1);
-    expect(preview.checklist).toEqual({
-      deals: 0,
-      tasks: 0,
-      storedLeadFiles: 2,
-      // The upload another person's mail still uses is kept: resolved, not left.
-      storedEmailAttachments: 0,
-      storedChatAttachments: 0,
-      storedTicketAttachments: 0,
-    });
+    expect(preview.counts.storedFilesKept).toBe(3);
+    expect(preview.checklist).toEqual({ deals: 0, tasks: 0 });
   });
 
   it('erases them in the same transaction and queues the stored files', async () => {
@@ -380,11 +372,13 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     expect(result.outcome).toBe('ERASED');
     if (result.outcome !== 'ERASED') return;
     expect(result.result.counts).toMatchObject({ emailRecords: 1, tickets: 1, chats: 1 });
-    // Until the cleanup has run every queued object still counts as left, per source.
+    // Until the cleanup has run every object still to delete counts as left, per source; kept
+    // files are resolved and not in it.
+    expect(result.result.counts.storedFilesKept).toBe(3);
     expect(result.result.checklist).toEqual({
       deals: 0,
       tasks: 0,
-      storedLeadFiles: 3,
+      storedLeadFiles: 1,
       storedEmailAttachments: 1,
       storedChatAttachments: 1,
       storedTicketAttachments: 1,
@@ -397,17 +391,25 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     const byKey = (row: unknown[]) => JSON.stringify(row);
     expect(
       queued
-        .map((q: any) => [q.source, q.state, q.bucket, q.locator])
+        .map((q: any) => [q.source, q.state, q.bucket, q.locator, q.reason])
         .sort((x: unknown[], y: unknown[]) => byKey(x).localeCompare(byKey(y)))
     ).toEqual(
       [
-        ['CHAT_ATTACHMENT', 'PENDING', 'crm-files', `${TENANT}/chat/ada-photo.png`],
-        ['EMAIL_ATTACHMENT', 'PENDING', 'email-attachments', `${TENANT}/mail/1-ada-passport.pdf`],
-        ['EMAIL_ATTACHMENT', 'KEPT', null, null],
-        ['LEAD_FILE', 'PENDING', 'crm-files', `${TENANT}/leads/ada-cv.pdf`],
-        ['LEAD_FILE', 'MANUAL', null, FOREIGN],
-        ['LEAD_FILE', 'MANUAL', null, `${RUN}_b/leads/other.pdf`],
-        ['TICKET_ATTACHMENT', 'PENDING', 'crm-files', `${TENANT}/tickets/ada-scan.pdf`],
+        ['CHAT_ATTACHMENT', 'PENDING', 'crm-files', `${TENANT}/chat/ada-photo.png`, null],
+        [
+          'EMAIL_ATTACHMENT',
+          'PENDING',
+          'email-attachments',
+          `${TENANT}/mail/1-ada-passport.pdf`,
+          null,
+        ],
+        // Used by another person's retained mail: kept, with no location stored.
+        ['EMAIL_ATTACHMENT', 'KEPT', null, null, 'SHARED_KEPT'],
+        ['LEAD_FILE', 'PENDING', 'crm-files', `${TENANT}/leads/ada-cv.pdf`, null],
+        // Outside the CRM's storage (another host, another firm's prefix): kept, no location.
+        ['LEAD_FILE', 'KEPT', null, null, 'UNMANAGED'],
+        ['LEAD_FILE', 'KEPT', null, null, 'UNMANAGED'],
+        ['TICKET_ATTACHMENT', 'PENDING', 'crm-files', `${TENANT}/tickets/ada-scan.pdf`, null],
       ].sort((x, y) => byKey(x).localeCompare(byKey(y)))
     );
     const rowsWithLocator = await Promise.all([
@@ -517,7 +519,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       });
       const first = await cleanup.purge(TENANT, requestId, new Date());
       // Only this tenant's objects went to storage; the other tenant's path and the foreign URL
-      // are manual and were never sent.
+      // are kept and were never sent.
       const sent = calls.flat();
       expect(sent.every((path) => path.startsWith(`${TENANT}/`))).toBe(true);
       expect(sent).not.toContain(FOREIGN);
@@ -525,9 +527,9 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       // The upload another person's mail still uses was never sent to storage either.
       expect(sent).not.toContain(SHARED);
       expect(first.deleted).toBe(3);
-      // What remains is exactly what the checklist shows: the failed attachment and the two
-      // files only the admin can delete.
-      expect(first.remaining).toEqual({ storedEmailAttachments: 1, storedLeadFiles: 2 });
+      // What remains is exactly what the checklist shows: the failed attachment. Kept files are
+      // resolved.
+      expect(first.remaining).toEqual({ storedEmailAttachments: 1 });
       const failed = (await states()).find(
         (s: any) => s.source === 'EMAIL_ATTACHMENT' && s.state === 'PENDING'
       );
@@ -540,7 +542,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
 
       // The admin's list shows the request with what is left.
       expect(await outbox().leftFor(TENANT, [requestId])).toEqual({
-        [requestId]: { queued: 1, manual: 2, kept: 1 },
+        [requestId]: { queued: 1, keptShared: 1, keptUnmanaged: 2 },
       });
 
       // Storage recovers: a retry deletes only what was still queued.
@@ -548,7 +550,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       calls.length = 0;
       const retried = await cleanup.purge(TENANT, requestId, new Date());
       expect(calls).toEqual([[`${TENANT}/mail/1-ada-passport.pdf`]]);
-      expect(retried).toEqual({ deleted: 1, remaining: { storedLeadFiles: 2 } });
+      expect(retried).toEqual({ deleted: 1, remaining: {} });
       const done = await states();
       expect(
         done.filter((s: any) => s.state === 'DELETED').every((s: any) => s.locator === null)
@@ -559,7 +561,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       calls.length = 0;
       expect(await cleanup.purge(TENANT, requestId, new Date())).toEqual({
         deleted: 0,
-        remaining: { storedLeadFiles: 2 },
+        remaining: {},
       });
       expect(calls).toEqual([]);
       // Grace's mail still has its attachment, untouched.
@@ -573,14 +575,6 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       expect(await outbox().remaining(`${TENANT}_x`, requestId)).toEqual({});
       await outbox().settle(`${TENANT}_x`, requestId, [{ id: 'nope', deleted: true }], new Date());
       expect(await outbox().leftFor(`${TENANT}_x`, [requestId])).toEqual({});
-      expect(await outbox().manual(`${TENANT}_x`, requestId)).toEqual([]);
-      // Nor another request's: the files must belong to the request named.
-      const mine = await prisma.dsarStoredObject.findFirst({
-        where: { tenantId: TENANT, requestId, state: 'MANUAL' },
-      });
-      expect(await outbox().markHandled(TENANT, 'another-request', [mine.id], new Date())).toBe(0);
-      expect(await outbox().manual(TENANT, 'another-request')).toEqual([]);
-      expect(await outbox().markHandled(`${TENANT}_x`, requestId, ['nope'], new Date())).toBe(0);
     });
 
     it('makes no claim for a request that never queued a file', async () => {
@@ -605,81 +599,134 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         sleep: async () => undefined,
       }).purge(TENANT, requestId, new Date());
       expect(remove).not.toHaveBeenCalled();
-      // Still queued (the adapter refused it), next to the manual files.
-      expect(result.remaining).toEqual({ storedLeadFiles: 3 });
+      // Still queued (the adapter refused it): the only thing left on the checklist.
+      expect(result.remaining).toEqual({ storedLeadFiles: 1 });
     });
 
-    it('lists the files left for the admin and stops counting them once the admin confirms', async () => {
-      const manual = await outbox().manual(TENANT, requestId);
-      expect(manual.map((m) => [m.source, m.locator]).sort()).toEqual(
-        [
-          ['LEAD_FILE', FOREIGN],
-          ['LEAD_FILE', `${RUN}_b/leads/other.pdf`],
-        ].sort()
-      );
-      expect(await outbox().leftFor(TENANT, [requestId])).toEqual({
-        [requestId]: { queued: 1, manual: 2, kept: 1 },
-      });
-      // A kept (shared) file is not in the list at all, and its id cannot be confirmed.
-      const keptRow = await prisma.dsarStoredObject.findFirst({
+    it('kept files are read-only: no location, and the cleanup never touches them', async () => {
+      const kept = await prisma.dsarStoredObject.findMany({
         where: { tenantId: TENANT, requestId, state: 'KEPT' },
       });
-      expect(keptRow).toMatchObject({ reason: 'SHARED_KEPT', locator: null, bucket: null });
-      expect(manual.map((m) => m.id)).not.toContain(keptRow.id);
-      // Confirming only changes manual files: the queued and kept ones stay as they are.
-      const queuedRow = await prisma.dsarStoredObject.findFirst({
-        where: { tenantId: TENANT, requestId, state: 'PENDING' },
-      });
-      const handled = await outbox().markHandled(
+      expect(kept.map((k: any) => k.reason).sort()).toEqual([
+        'SHARED_KEPT',
+        'UNMANAGED',
+        'UNMANAGED',
+      ]);
+      expect(kept.every((k: any) => k.locator === null && k.bucket === null)).toBe(true);
+      // Not pending, so never sent to storage; settling them changes nothing.
+      const pending = await outbox().pending(TENANT, requestId, 100);
+      expect(pending.map((o) => o.id)).not.toEqual(
+        expect.arrayContaining(kept.map((k: any) => k.id))
+      );
+      await outbox().settle(
         TENANT,
         requestId,
-        [...manual.map((m) => m.id), queuedRow.id, keptRow.id],
+        kept.map((k: any) => ({ id: k.id, deleted: true })),
         new Date()
       );
-      expect(handled).toBe(2);
-      expect(await outbox().leftFor(TENANT, [requestId])).toEqual({
-        [requestId]: { queued: 1, manual: 0, kept: 1 },
+      const after = await prisma.dsarStoredObject.count({
+        where: { tenantId: TENANT, requestId, state: 'KEPT' },
       });
-      // Confirmed files lose their locator.
-      const rows = await prisma.dsarStoredObject.findMany({
-        where: { id: { in: manual.map((m) => m.id) } },
-      });
-      expect(rows.every((r: any) => r.state === 'DELETED' && r.locator === null)).toBe(true);
+      expect(after).toBe(3);
     });
 
-    it('lists the manual files a page at a time, each page confirmable in one call', async () => {
-      await prisma.dsarStoredObject.createMany({
-        data: Array.from({ length: 501 }, (_, i) => ({
+    it('tries the least-tried objects first, so failures cannot starve the rest', async () => {
+      const stuck = await prisma.dsarStoredObject.create({
+        data: {
           tenantId: TENANT,
           requestId,
           source: 'LEAD_FILE',
-          state: 'MANUAL',
-          reason: 'UNMANAGED',
-          locator: `https://files.example.invalid/bulk-${i}.pdf`,
-        })),
+          state: 'PENDING',
+          bucket: 'crm-files',
+          locator: `${TENANT}/leads/stuck.pdf`,
+          attempts: 9,
+          createdAt: new Date(Date.now() - 86_400_000),
+        },
       });
-      const first = await outbox().manual(TENANT, requestId);
-      // Never more than a confirmation takes (the schema's own limit).
-      expect(first).toHaveLength(MANUAL_FILES_PAGE);
-      expect(
-        dsarConfirmManualFilesSchema.safeParse({ id: requestId, fileIds: first.map((f) => f.id) })
-          .success
-      ).toBe(true);
-      expect(
-        await outbox().markHandled(
-          TENANT,
+      const fresh = await prisma.dsarStoredObject.create({
+        data: {
+          tenantId: TENANT,
           requestId,
-          first.map((f) => f.id),
-          new Date()
-        )
-      ).toBe(MANUAL_FILES_PAGE);
-      // The next page follows.
-      expect(await outbox().manual(TENANT, requestId)).toHaveLength(1);
-      expect((await outbox().leftFor(TENANT, [requestId]))[requestId]).toEqual({
-        queued: 1,
-        manual: 1,
-        kept: 1,
+          source: 'LEAD_FILE',
+          state: 'PENDING',
+          bucket: 'crm-files',
+          locator: `${TENANT}/leads/new.pdf`,
+        },
       });
+      const next = await outbox().pending(TENANT, requestId, 1);
+      expect(next.map((o) => o.id)).not.toContain(stuck.id);
+      await prisma.dsarStoredObject.deleteMany({ where: { id: { in: [stuck.id, fresh.id] } } });
     });
+  });
+
+  it('two erasures that share an object cannot both keep it: exactly one queues the delete', async () => {
+    const tenant = `${RUN}_race`;
+    const admin = `${tenant}_admin`;
+    const mails = [`${RUN}-ann@example.invalid`, `${RUN}-bob@example.invalid`];
+    const path = `${tenant}/mail/shared-by-two.pdf`;
+    await prisma.tenant.create({ data: { id: tenant, name: 'Race Law', slug: tenant } });
+    try {
+      await prisma.user.create({
+        data: { id: admin, tenantId: tenant, email: `${admin}@example.invalid`, role: 'ADMIN' },
+      });
+      const requests: string[] = [];
+      for (const [i, address] of mails.entries()) {
+        const mail = await prisma.emailRecord.create({
+          data: { tenantId: tenant, subject: 's', body: 'b', fromEmail: address, toEmail: address },
+        });
+        await prisma.emailAttachment.create({
+          data: {
+            tenantId: tenant,
+            emailId: mail.id,
+            fileName: 'shared.pdf',
+            fileSize: 1,
+            fileType: 'application/pdf',
+            fileUrl: path,
+          },
+        });
+        const record = await new PrismaDsarRepository(prisma).createStaff({
+          tenantId: tenant,
+          type: 'ERASURE',
+          subjectEmail: address,
+          capEmailHash: String(i + 1).repeat(64),
+          details: null,
+          objectionScope: null,
+          identityMethod: 'IN_PERSON_ID',
+          identityNote: 'Passport checked at the front desk',
+          receivedAt: new Date(),
+          receivedOnReason: null,
+          verifiedAt: new Date(),
+          slaDeadline: new Date(Date.now() + 30 * 24 * HOUR),
+          createdById: admin,
+        });
+        requests.push(record.id);
+      }
+      const results = await Promise.all(
+        mails.map((address, i) =>
+          subjects.erase({
+            tenantId: tenant,
+            requestId: requests[i]!,
+            subjectEmail: address,
+            resolvedById: admin,
+            note: 'No hold applies',
+            now: new Date(),
+            clockBreached: false,
+          })
+        )
+      );
+      expect(results.map((r) => r.outcome)).toEqual(['ERASED', 'ERASED']);
+      const rows = await prisma.dsarStoredObject.findMany({ where: { tenantId: tenant } });
+      // Neither both PENDING (a delete queued while the other still uses it) nor both KEPT (the
+      // object orphaned once both links are gone): the erasure that removes the LAST reference
+      // queues the delete.
+      expect(rows.map((r: any) => r.state).sort()).toEqual(['KEPT', 'PENDING']);
+      expect(rows.find((r: any) => r.state === 'KEPT').reason).toBe('SHARED_KEPT');
+      expect(rows.find((r: any) => r.state === 'PENDING').locator).toBe(path);
+      expect(
+        await prisma.emailAttachment.count({ where: { tenantId: tenant, fileUrl: path } })
+      ).toBe(0);
+    } finally {
+      await prisma.tenant.deleteMany({ where: { id: tenant } });
+    }
   });
 });

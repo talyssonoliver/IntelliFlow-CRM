@@ -154,17 +154,20 @@ describe('list', () => {
       record({ id: 'clhaccess0000000000', type: 'ACCESS', status: 'COMPLETED', completedAt: NOW }),
     ]);
     service.storedFilesLeft.mockResolvedValue({
-      clherased0000000000: { queued: 1, manual: 2, kept: 4 },
+      clherased0000000000: { queued: 1, keptShared: 4, keptUnmanaged: 2 },
       // Queued before, all deleted since: a real 0.
-      clherasedok00000000: { queued: 0, manual: 0, kept: 0 },
+      clherasedok00000000: { queued: 0, keptShared: 0, keptUnmanaged: 0 },
     });
     const rows = await adminCaller().list({});
     const byId = Object.fromEntries(
-      rows.map((r) => [r.id, [r.storedFilesLeft, r.storedFilesManual, r.storedFilesKept]])
+      rows.map((r) => [
+        r.id,
+        [r.storedFilesLeft, r.storedFilesKeptShared, r.storedFilesKeptUnmanaged],
+      ])
     );
     expect(byId).toEqual({
-      // 3 left (kept ones are resolved, counted apart).
-      clherased0000000000: [3, 2, 4],
+      // 1 left; the kept ones are resolved and counted apart, by reason.
+      clherased0000000000: [1, 4, 2],
       clherasedok00000000: [0, 0, 0],
       // No queue rows (an erasure from before the queue): no claim that anything was deleted.
       clhlegacy0000000000: [undefined, undefined, undefined],
@@ -502,43 +505,6 @@ describe('the remaining admin actions', () => {
     service.retryFileCleanup.mockResolvedValue({ outcome: 'NOT_FOUND' });
     await expect(adminCaller().retryFileCleanup({ id: ID })).rejects.toMatchObject({
       code: 'NOT_FOUND',
-    });
-  });
-
-  it('lists the files the admin must delete by hand and records those deleted', async () => {
-    const files = [
-      {
-        id: 'f1',
-        source: 'LEAD_FILE',
-        locator: 'https://files.example.invalid/a',
-        reason: 'UNMANAGED',
-      },
-    ];
-    service.manualFiles = vi.fn().mockResolvedValue({ outcome: 'OK', files });
-    await expect(adminCaller().manualFiles({ id: ID })).resolves.toEqual(files);
-    expect(service.manualFiles).toHaveBeenCalledWith({ tenantId: TENANT, id: ID });
-
-    service.confirmManualFiles = vi.fn().mockResolvedValue({ outcome: 'OK', handled: 1 });
-    await expect(
-      adminCaller().confirmManualFiles({ id: ID, fileIds: ['clhfile00000000000'] })
-    ).resolves.toEqual({ handled: 1 });
-    expect(service.confirmManualFiles).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, id: ID, fileIds: ['clhfile00000000000'] })
-    );
-    // The audit row holds counts, never a locator.
-    expect(auditLog).toHaveBeenCalledWith(
-      'UPDATE',
-      'dsar_request',
-      ID,
-      TENANT,
-      expect.objectContaining({
-        metadata: { change: 'MANUAL_FILES_CONFIRMED', requested: 1, handled: 1 },
-      })
-    );
-    await expect(adminCaller().confirmManualFiles({ id: ID, fileIds: [] })).rejects.toBeTruthy();
-    service.manualFiles.mockResolvedValue({ outcome: 'INVALID', field: 'status' });
-    await expect(adminCaller().manualFiles({ id: ID })).rejects.toMatchObject({
-      code: 'BAD_REQUEST',
     });
   });
 

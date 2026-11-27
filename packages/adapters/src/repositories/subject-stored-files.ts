@@ -16,6 +16,7 @@ import {
   classifyStoredLocator,
   type StoredObjectConfig,
   type StoredObjectReason,
+  type StoredObjectRef,
   type StoredObjectSource,
 } from '@intelliflow/domain';
 import {
@@ -30,10 +31,11 @@ type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 interface QueuedObject {
   source: StoredObjectSource;
   /**
-   * PENDING: the CRM deletes it. MANUAL: it cannot, the admin does (UNMANAGED). KEPT: another
-   * retained record still uses it (SHARED_KEPT): never deleted, never listed, no locator kept.
+   * PENDING: the CRM owns the object and deletes it. KEPT: the CRM does not delete it, and the
+   * row is read-only and resolved: SHARED_KEPT (another retained record still uses it) or
+   * UNMANAGED (outside the CRM's own storage). A kept row stores no locator.
    */
-  state: 'PENDING' | 'MANUAL' | 'KEPT';
+  state: 'PENDING' | 'KEPT';
   reason: StoredObjectReason | null;
   bucket: string | null;
   locator: string | null;
@@ -48,27 +50,27 @@ export interface StoredFilePlan {
   chatMessageIds: string[];
 }
 
-/** Every checklist key at 0, then the queued objects in the given states counted per source. */
-function storedCounts(queue: QueuedObject[], states: QueuedObject['state'][]) {
+/** Every checklist key at 0, then the queued objects counted per source. */
+function pendingCounts(queue: QueuedObject[]) {
   const counts: Record<string, number> = Object.fromEntries(
     Object.values(STORED_OBJECT_CHECKLIST_KEYS).map((key) => [key, 0])
   );
   for (const q of queue) {
-    if (states.includes(q.state)) counts[STORED_OBJECT_CHECKLIST_KEYS[q.source]] += 1;
+    if (q.state === 'PENDING') counts[STORED_OBJECT_CHECKLIST_KEYS[q.source]] += 1;
   }
   return counts;
 }
 
-/** What the erasure will delete from storage afterwards, and what is left until it has. */
+/** What the erasure will delete from storage afterwards, and what it keeps (resolved). */
 export function storedFileCounts(plan: StoredFilePlan) {
+  const kept = (reason: StoredObjectReason) =>
+    plan.queue.filter((q) => q.state === 'KEPT' && q.reason === reason).length;
   return {
     toDelete: plan.queue.filter((q) => q.state === 'PENDING').length,
-    /** Kept for another record: resolved, so not in `left` or `manual`. */
-    kept: plan.queue.filter((q) => q.state === 'KEPT').length,
-    /** Queued or manual, per checklist key: what is left until the cleanup has run. */
-    left: storedCounts(plan.queue, ['PENDING', 'MANUAL']),
-    /** Only what the CRM cannot delete itself. */
-    manual: storedCounts(plan.queue, ['MANUAL']),
+    keptShared: kept('SHARED_KEPT'),
+    keptUnmanaged: kept('UNMANAGED'),
+    /** Still to delete, per checklist key: what is left until the cleanup has run. */
+    left: pendingCounts(plan.queue),
   };
 }
 
@@ -77,7 +79,9 @@ export async function planStoredFiles(
   tenantId: string,
   email: string,
   ids: SubjectIds,
-  config: StoredObjectConfig
+  config: StoredObjectConfig,
+  /** Inside the erasure transaction only: lock each object while its sharing is decided. */
+  lock = false
 ): Promise<StoredFilePlan> {
   const c = await communicationIds(db, tenantId, email, ids);
   const [leadFiles, emailFiles, ticketFiles, chatMessages] = await Promise.all([
@@ -117,11 +121,10 @@ export async function planStoredFiles(
     ),
   ];
 
-  // Sorted first, in memory; then ONE set-based query says which objects other records still use.
+  // Sorted in memory first: what is not an object the CRM owns is never touched.
   const seen = new Set<string>();
   const candidates: Array<{
     source: StoredObjectSource;
-    locator: string | null;
     found: ReturnType<typeof classifyStoredLocator>;
   }> = [];
   for (const [source, locator] of locators) {
@@ -131,30 +134,19 @@ export async function planStoredFiles(
     const key = `${source}|${where}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    candidates.push({ source, locator, found });
+    candidates.push({ source, found });
   }
-  const shared = await sharedPaths(
-    db,
-    tenantId,
-    candidates.flatMap((c) => (c.found.kind === 'OBJECT' ? [c.found.ref.path] : [])),
-    rowIds
-  );
+  const owned = candidates.flatMap((c) => (c.found.kind === 'OBJECT' ? [c.found.ref] : []));
+  const shared = await sharedObjects(db, tenantId, owned, rowIds, config, lock);
 
-  // An object another retained record still points to is never deleted and never offered for
-  // deletion: another person's mail may use the same upload. The erased person's link to it is
-  // removed with the locator; no locator is kept for it. An object the CRM cannot delete
-  // (another host, bucket or firm) is the admin's.
-  const queue: QueuedObject[] = candidates.map(({ source, locator, found }) => {
+  // The CRM deletes only an object it alone owns: in its bucket, under this firm's prefix, and
+  // used by no retained record. Everything else is kept, read-only and resolved, with its reason;
+  // no location is stored for it (the erased person's own link to it is removed with the rest).
+  const queue: QueuedObject[] = candidates.map(({ source, found }) => {
     if (found.kind !== 'OBJECT') {
-      return {
-        source,
-        state: 'MANUAL',
-        reason: 'UNMANAGED',
-        bucket: null,
-        locator: String(locator).trim(),
-      };
+      return { source, state: 'KEPT', reason: 'UNMANAGED', bucket: null, locator: null };
     }
-    return shared.has(found.ref.path)
+    return shared.has(objectKey(found.ref))
       ? { source, state: 'KEPT', reason: 'SHARED_KEPT', bucket: null, locator: null }
       : {
           source,
@@ -167,35 +159,76 @@ export async function planStoredFiles(
   return { queue, ...rowIds };
 }
 
+/** The parsed JSON, or null when it is not JSON (an unreadable list names nothing). */
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+const objectKey = (ref: StoredObjectRef) => `${ref.bucket}/${ref.path}`;
+
 /**
- * Which of these object paths a row outside this erasure's own rows, in the same tenant, still
- * names. One query for all paths (a person with many files must not mean many queries inside
- * the erasure transaction). A path that is only part of another locator counts as shared: that
- * errs towards keeping a file, never towards deleting one.
+ * Which of these objects a record outside this erasure's own rows, in the same tenant, still
+ * uses. The match is on the full identity (bucket and path, as the classifier reads each other
+ * locator), not on a path substring, so an unrelated file with the same path in another bucket
+ * does not count. One query finds the candidate rows; the identities are compared in memory.
+ *
+ * Inside the erasure transaction each object is first locked (transaction-scoped advisory lock,
+ * in a fixed order), so two erasures that share an object cannot both decide "kept": the second
+ * one waits for the first to commit and then sees that the first's reference is gone.
  */
-async function sharedPaths(
+async function sharedObjects(
   db: Db,
   tenantId: string,
-  paths: string[],
-  planned: Omit<StoredFilePlan, 'queue'>
+  objects: StoredObjectRef[],
+  planned: Omit<StoredFilePlan, 'queue'>,
+  config: StoredObjectConfig,
+  lock: boolean
 ): Promise<Set<string>> {
-  if (paths.length === 0) return new Set();
-  const rows = await db.$queryRaw<Array<{ path: string }>>`
-    SELECT p.path FROM unnest(${paths}::text[]) AS p(path)
-    WHERE EXISTS (
-        SELECT 1 FROM email_attachments e WHERE e."tenantId" = ${tenantId}
-          AND NOT (e.id = ANY(${planned.emailAttachmentIds}::text[])) AND strpos(e."fileUrl", p.path) > 0)
-      OR EXISTS (
-        SELECT 1 FROM lead_files l WHERE l."tenantId" = ${tenantId}
-          AND NOT (l.id = ANY(${planned.leadFileIds}::text[])) AND strpos(l.url, p.path) > 0)
-      OR EXISTS (
-        SELECT 1 FROM ticket_attachments t WHERE t."tenantId" = ${tenantId}
-          AND NOT (t.id = ANY(${planned.ticketAttachmentIds}::text[])) AND strpos(t.url, p.path) > 0)
-      OR EXISTS (
-        SELECT 1 FROM chat_messages c WHERE c."tenantId" = ${tenantId}
-          AND NOT (c.id = ANY(${planned.chatMessageIds}::text[]))
-          AND strpos(c.attachments::text, p.path) > 0)`;
-  return new Set(rows.map((r) => r.path));
+  if (objects.length === 0) return new Set();
+  const keys = [...new Set(objects.map(objectKey))].sort((a, b) => (a < b ? -1 : 1));
+  if (lock) {
+    await db.$executeRaw`
+      SELECT pg_advisory_xact_lock(hashtextextended(${tenantId} || '/' || s.k, 0))
+      FROM (SELECT k FROM unnest(${keys}::text[]) AS k ORDER BY k) AS s`;
+  }
+  const paths = [...new Set(objects.map((o) => o.path))];
+  const rows = await db.$queryRaw<
+    Array<{ source: StoredObjectSource; locator: string | null; attachments: string | null }>
+  >`
+    SELECT 'EMAIL_ATTACHMENT' AS source, e."fileUrl" AS locator, NULL::text AS attachments
+      FROM email_attachments e WHERE e."tenantId" = ${tenantId}
+        AND NOT (e.id = ANY(${planned.emailAttachmentIds}::text[]))
+        AND EXISTS (SELECT 1 FROM unnest(${paths}::text[]) p WHERE strpos(e."fileUrl", p) > 0)
+    UNION ALL
+    SELECT 'LEAD_FILE', l.url, NULL FROM lead_files l WHERE l."tenantId" = ${tenantId}
+        AND NOT (l.id = ANY(${planned.leadFileIds}::text[]))
+        AND EXISTS (SELECT 1 FROM unnest(${paths}::text[]) p WHERE strpos(l.url, p) > 0)
+    UNION ALL
+    SELECT 'TICKET_ATTACHMENT', t.url, NULL FROM ticket_attachments t WHERE t."tenantId" = ${tenantId}
+        AND NOT (t.id = ANY(${planned.ticketAttachmentIds}::text[]))
+        AND EXISTS (SELECT 1 FROM unnest(${paths}::text[]) p WHERE strpos(t.url, p) > 0)
+    UNION ALL
+    SELECT 'CHAT_ATTACHMENT', NULL, c.attachments::text FROM chat_messages c
+      WHERE c."tenantId" = ${tenantId} AND NOT (c.id = ANY(${planned.chatMessageIds}::text[]))
+        AND EXISTS (SELECT 1 FROM unnest(${paths}::text[]) p WHERE strpos(c.attachments::text, p) > 0)`;
+  const used = new Set<string>();
+  const note = (source: StoredObjectSource, locator: string | null) => {
+    const found = classifyStoredLocator(source, locator, tenantId, config);
+    if (found.kind === 'OBJECT') used.add(objectKey(found.ref));
+  };
+  for (const row of rows) {
+    if (row.attachments === null) note(row.source, row.locator);
+    else {
+      for (const locator of chatAttachmentLocators(parseJson(row.attachments))) {
+        note(row.source, locator);
+      }
+    }
+  }
+  return new Set(keys.filter((k) => used.has(k)));
 }
 
 /** Deals and tasks stay on the checklist (owner ruling Q23); counted for the preview and result. */

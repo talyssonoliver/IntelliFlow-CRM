@@ -16,7 +16,7 @@ const R = 'request-1';
 
 /** The outbox as a Map: PENDING rows are deleted, failures raise `attempts`. */
 class FakeOutbox implements StoredObjectOutboxPort {
-  rows = new Map<string, PendingStoredObject & { state: 'PENDING' | 'MANUAL' | 'DELETED' }>();
+  rows = new Map<string, PendingStoredObject & { state: 'PENDING' | 'KEPT' | 'DELETED' }>();
   constructor(paths: string[], manual = 0) {
     paths.forEach((path, i) =>
       this.rows.set(`o${i}`, {
@@ -35,7 +35,7 @@ class FakeOutbox implements StoredObjectOutboxPort {
         bucket: '',
         path: 'https://files.example.invalid/x',
         attempts: 0,
-        state: 'MANUAL',
+        state: 'KEPT',
       });
     }
   }
@@ -56,26 +56,10 @@ class FakeOutbox implements StoredObjectOutboxPort {
     return {
       [R]: {
         queued: all.filter((r) => r.state === 'PENDING').length,
-        manual: all.filter((r) => r.state === 'MANUAL').length,
-        kept: 0,
+        keptShared: 1,
+        keptUnmanaged: all.filter((r) => r.state === 'KEPT').length,
       },
     };
-  }
-  async manual() {
-    return [...this.rows.values()]
-      .filter((r) => r.state === 'MANUAL')
-      .map((r) => ({ id: r.id, source: r.source, locator: r.path, reason: 'UNMANAGED' as const }));
-  }
-  async markHandled(_t: string, _r: string, ids: string[]) {
-    let n = 0;
-    for (const id of ids) {
-      const row = this.rows.get(id);
-      if (row?.state === 'MANUAL') {
-        row.state = 'DELETED';
-        n += 1;
-      }
-    }
-    return n;
   }
   async remaining() {
     const keys = {
@@ -86,7 +70,7 @@ class FakeOutbox implements StoredObjectOutboxPort {
     } as const;
     const counts: Record<string, number> = {};
     for (const r of this.rows.values()) {
-      if (r.state !== 'DELETED') counts[keys[r.source]] = (counts[keys[r.source]] ?? 0) + 1;
+      if (r.state === 'PENDING') counts[keys[r.source]] = (counts[keys[r.source]] ?? 0) + 1;
     }
     return counts;
   }
@@ -171,7 +155,7 @@ describe('ErasedFilesCleanupService (IFC-316)', () => {
     expect(calls).toHaveLength(1);
   });
 
-  it('a retry after a failure deletes what is left, and counts manual files until the admin clears them', async () => {
+  it('a retry after a failure deletes what is left; kept files never count as left', async () => {
     const outbox = new FakeOutbox(['t/a'], 1);
     let down = true;
     const port: StoredObjectDeletionPort = {
@@ -182,14 +166,11 @@ describe('ErasedFilesCleanupService (IFC-316)', () => {
       },
     };
     const cleanup = service(outbox, port, { attempts: 1 });
-    expect((await cleanup.purge(T, R, NOW)).remaining).toEqual({
-      storedEmailAttachments: 1,
-      storedChatAttachments: 1,
-    });
+    expect((await cleanup.purge(T, R, NOW)).remaining).toEqual({ storedEmailAttachments: 1 });
     down = false;
     expect(await cleanup.purge(T, R, NOW)).toEqual({
       deleted: 1,
-      remaining: { storedChatAttachments: 1 },
+      remaining: {},
     });
   });
 
@@ -229,38 +210,12 @@ describe('ErasedFilesCleanupService (IFC-316)', () => {
     error.mockRestore();
   });
 
-  it('reports what is left for a list of requests, split into queued and manual', async () => {
+  it('reports what is left, and what was kept and why, for a list of requests', async () => {
     const outbox = new FakeOutbox(['t/a'], 2);
     expect(await service(outbox, null).leftFor(T, [R])).toEqual({
-      [R]: { queued: 1, manual: 2, kept: 0 },
+      [R]: { queued: 1, keptShared: 1, keptUnmanaged: 2 },
     });
     // A request that never queued a file is absent: no claim is made for it.
     expect(await service(new FakeOutbox([]), null).leftFor(T, [R])).toEqual({});
-  });
-
-  it('lists the files left for the admin and records the ones the admin deleted by hand', async () => {
-    const outbox = new FakeOutbox(['t/a'], 2);
-    const cleanup = service(outbox, null);
-    const files = await cleanup.manualFiles(T, R);
-    expect(files).toEqual([
-      {
-        id: 'm0',
-        source: 'CHAT_ATTACHMENT',
-        locator: 'https://files.example.invalid/x',
-        reason: 'UNMANAGED',
-      },
-      {
-        id: 'm1',
-        source: 'CHAT_ATTACHMENT',
-        locator: 'https://files.example.invalid/x',
-        reason: 'UNMANAGED',
-      },
-    ]);
-    // A queued object is not the admin's to confirm: only manual files change.
-    expect(await cleanup.confirmManual(T, R, ['m0', 'o0'], NOW)).toBe(1);
-    expect((await cleanup.purge(T, R, NOW)).remaining).toEqual({
-      storedEmailAttachments: 1,
-      storedChatAttachments: 1,
-    });
   });
 });
