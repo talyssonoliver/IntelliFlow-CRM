@@ -178,7 +178,7 @@ describe('PrivacyRequestsContent', () => {
     await waitFor(() =>
       expect(h.toast).toHaveBeenCalledWith({
         title:
-          'Data erased and the person told. 3 stored files are not deleted yet; retry from the request.',
+          'Data erased and the person told. 3 stored files are not deleted yet; open the request to retry or delete them by hand.',
       })
     );
   });
@@ -253,6 +253,40 @@ describe('PrivacyRequestsContent', () => {
     await waitFor(() =>
       expect(h.toast).toHaveBeenCalledWith({ title: '1 stored files marked as deleted' })
     );
+  });
+
+  it('confirms a long list of manual files in pieces the server accepts', async () => {
+    h.list.data = [
+      request({
+        id: 'clhmanual0000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 1001,
+        storedFilesManual: 1001,
+      }),
+    ];
+    h.manualFiles = {
+      data: Array.from({ length: 1001 }, (_, i) => ({
+        id: `f${i}`,
+        source: 'LEAD_FILE',
+        locator: `https://files.example.invalid/${i}.pdf`,
+      })),
+      error: null,
+    };
+    h.mutations.confirmManualFiles!.mutateAsync.mockImplementation(
+      async ({ fileIds }: { fileIds: string[] }) => ({ handled: fileIds.length })
+    );
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Show files to delete by hand/ }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('checkbox'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Mark as deleted' }));
+    await waitFor(() =>
+      expect(h.toast).toHaveBeenCalledWith({ title: '1001 stored files marked as deleted' })
+    );
+    const sizes = h.mutations.confirmManualFiles!.mutateAsync.mock.calls.map(
+      (call: unknown[]) => (call[0] as { fileIds: string[] }).fileIds.length
+    );
+    expect(sizes).toEqual([500, 500, 1]);
   });
 
   it('keeps a server refusal inside the dialog', async () => {

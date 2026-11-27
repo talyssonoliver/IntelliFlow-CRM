@@ -38,6 +38,8 @@ import { LogRequestDialog, TYPE_LABELS } from './components/LogRequestDialog';
 import { ManualFilesDialog } from './components/ManualFilesDialog';
 
 const OPEN_TITLE_ID = 'open-requests-title';
+/** The most manual-file ids the server accepts in one confirmation (dsarConfirmManualFilesSchema). */
+const MANUAL_FILES_BATCH = 500;
 // The server requires a reason of at least 10 characters to lift a restriction.
 const LIFT_NOTE_MIN = 10;
 
@@ -306,7 +308,9 @@ export default function PrivacyRequestsContent() {
             .filter(([key]) => key.startsWith('stored'))
             .reduce((sum, [, n]) => sum + n, 0);
           const notDeleted =
-            left > 0 ? `. ${left} stored files are not deleted yet; retry from the request.` : '';
+            left > 0
+              ? `. ${left} stored files are not deleted yet; open the request to retry or delete them by hand.`
+              : '';
           done = result.erasure
             ? `Data erased and the person told${notDeleted}`
             : 'Request completed';
@@ -372,8 +376,16 @@ export default function PrivacyRequestsContent() {
     if (!manualFor) return;
     setManualError(null);
     try {
-      const result = await confirmManual.mutateAsync({ id: manualFor.id, fileIds });
-      toast({ title: `${result.handled} stored files marked as deleted` });
+      // The server takes at most MANUAL_FILES_BATCH ids a call, so a long list goes in pieces.
+      let handled = 0;
+      for (let i = 0; i < fileIds.length; i += MANUAL_FILES_BATCH) {
+        const result = await confirmManual.mutateAsync({
+          id: manualFor.id,
+          fileIds: fileIds.slice(i, i + MANUAL_FILES_BATCH),
+        });
+        handled += result.handled;
+      }
+      toast({ title: `${handled} stored files marked as deleted` });
       setManualFor(null);
     } catch (error) {
       setManualError(errorMessage(error));

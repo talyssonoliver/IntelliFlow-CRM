@@ -9,6 +9,7 @@ import {
 
 const T = 't1';
 const IDS = { leadIds: ['l1'], contactIds: ['c1'] };
+const FOREIGN_URL = 'https://files.example.invalid/b.pdf';
 const config: StoredObjectConfig = {
   storageHost: 'abc.supabase.example.invalid',
   emailBucket: 'email-attachments',
@@ -121,38 +122,65 @@ describe('planStoredFiles (IFC-316)', () => {
   });
 
   it('never queues an object that a record outside the erasure still uses: it goes to the admin', async () => {
-    const rows = { emailAttachment: [{ id: 'ea1', fileUrl: `${T}/1-x.pdf` }] };
-    for (const [table, lookup] of [
-      ['emailAttachment', (c: any) => c.emailAttachment.count],
-      ['leadFile', (c: any) => c.leadFile.count],
-      ['ticketAttachment', (c: any) => c.ticketAttachment.count],
-    ] as const) {
-      const client = db(rows);
-      lookup(client).mockResolvedValue(1);
-      const plan = await planStoredFiles(client, T, 'a', IDS, config);
-      expect(plan.queue, table).toEqual([
-        { source: 'EMAIL_ATTACHMENT', state: 'MANUAL', bucket: null, locator: `${T}/1-x.pdf` },
-      ]);
-      // The check looks only at rows outside this erasure's own, in this tenant.
-      const where = client[table].count.mock.calls[0][0].where;
-      expect(where).toMatchObject({ tenantId: T, id: { notIn: expect.any(Array) } });
-    }
-    // A chat message outside the erasure that names the same object counts too.
-    const client = db(rows);
+    const client = db({
+      emailAttachment: [
+        { id: 'ea1', fileUrl: `${T}/1-x.pdf` },
+        { id: 'ea2', fileUrl: `${T}/2-y.pdf` },
+      ],
+    });
+    // The set-based lookup says the first upload is still used elsewhere.
     client.$queryRaw.mockImplementation(async (strings: TemplateStringsArray) =>
-      strings.join('?').includes('FROM chat_messages') ? [{ n: 1n }] : []
+      strings.join('?').includes('strpos') ? [{ path: `${T}/1-x.pdf` }] : []
     );
-    expect((await planStoredFiles(client, T, 'a', IDS, config)).queue[0]!.state).toBe('MANUAL');
+    const plan = await planStoredFiles(client, T, 'a', IDS, config);
+    expect(plan.queue).toEqual([
+      { source: 'EMAIL_ATTACHMENT', state: 'MANUAL', bucket: null, locator: `${T}/1-x.pdf` },
+      {
+        source: 'EMAIL_ATTACHMENT',
+        state: 'PENDING',
+        bucket: 'email-attachments',
+        locator: `${T}/2-y.pdf`,
+      },
+    ]);
   });
 
-  it('checks an object once it is not shared: it is queued to delete', async () => {
-    const client = db({ emailAttachment: [{ id: 'ea1', fileUrl: `${T}/1-x.pdf` }] });
+  it('asks which objects are still used with ONE query for all of them, scoped to the tenant', async () => {
+    const files = Array.from({ length: 300 }, (_, i) => ({
+      id: `ea${i}`,
+      fileUrl: `${T}/${i}-f.pdf`,
+    }));
+    const client = db({ emailAttachment: files });
     const plan = await planStoredFiles(client, T, 'a', IDS, config);
-    expect(plan.queue[0]).toMatchObject({ state: 'PENDING', bucket: 'email-attachments' });
-    expect(client.emailAttachment.count.mock.calls[0][0].where).toMatchObject({
-      fileUrl: { contains: `${T}/1-x.pdf` },
-      id: { notIn: ['ea1'] },
-    });
+    expect(plan.queue).toHaveLength(300);
+    // Not one query per file: a person with many files must not stall the erasure transaction.
+    const sharedQueries = client.$queryRaw.mock.calls.filter((c: unknown[]) =>
+      (c[0] as TemplateStringsArray).join('?').includes('strpos')
+    );
+    expect(sharedQueries).toHaveLength(1);
+    const [strings, ...params] = sharedQueries[0] as [TemplateStringsArray, ...unknown[]];
+    const sql = strings.join('?');
+    for (const table of [
+      'email_attachments',
+      'lead_files',
+      'ticket_attachments',
+      'chat_messages',
+    ]) {
+      expect(sql).toContain(table);
+    }
+    expect(params.filter((p) => p === T)).toHaveLength(4);
+    expect(params[0]).toHaveLength(300);
+    // The erasure's own rows are excluded, so only OTHER records count.
+    expect(params).toContainEqual(files.map((f) => f.id));
+  });
+
+  it('asks nothing when no file is an object the CRM could delete', async () => {
+    const client = db({ leadFile: [{ id: 'lf1', url: FOREIGN_URL }] });
+    await planStoredFiles(client, T, 'a', IDS, config);
+    expect(
+      client.$queryRaw.mock.calls.some((c: unknown[]) =>
+        (c[0] as TemplateStringsArray).join('?').includes('strpos')
+      )
+    ).toBe(false);
   });
 
   it('lists a shared object once per source', async () => {

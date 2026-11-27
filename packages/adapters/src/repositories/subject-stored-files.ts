@@ -110,8 +110,13 @@ export async function planStoredFiles(
     ),
   ];
 
-  const queue: QueuedObject[] = [];
+  // Sorted first, in memory; then ONE set-based query says which objects other records still use.
   const seen = new Set<string>();
+  const candidates: Array<{
+    source: StoredObjectSource;
+    locator: string | null;
+    found: ReturnType<typeof classifyStoredLocator>;
+  }> = [];
   for (const [source, locator] of locators) {
     const found = classifyStoredLocator(source, locator, tenantId, config);
     if (found.kind === 'NONE') continue;
@@ -119,43 +124,54 @@ export async function planStoredFiles(
     const key = `${source}|${where}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    // An object another row (kept, not part of this erasure) still points to is never deleted
-    // here: another person's mail may use the same upload. It goes to the admin instead.
-    if (
-      found.kind === 'OBJECT' &&
-      !(await sharedWithOthers(db, tenantId, found.ref.path, rowIds))
-    ) {
-      queue.push({ source, state: 'PENDING', bucket: found.ref.bucket, locator: found.ref.path });
-    } else {
-      queue.push({ source, state: 'MANUAL', bucket: null, locator: String(locator).trim() });
-    }
+    candidates.push({ source, locator, found });
   }
+  const shared = await sharedPaths(
+    db,
+    tenantId,
+    candidates.flatMap((c) => (c.found.kind === 'OBJECT' ? [c.found.ref.path] : [])),
+    rowIds
+  );
+
+  // An object another row (kept, not part of this erasure) still points to is never deleted
+  // here: another person's mail may use the same upload. It goes to the admin instead.
+  const queue: QueuedObject[] = candidates.map(({ source, locator, found }) =>
+    found.kind === 'OBJECT' && !shared.has(found.ref.path)
+      ? { source, state: 'PENDING', bucket: found.ref.bucket, locator: found.ref.path }
+      : { source, state: 'MANUAL', bucket: null, locator: String(locator).trim() }
+  );
   return { queue, ...rowIds };
 }
 
-/** Whether a row outside this erasure's own rows, in the same tenant, still names this object. */
-async function sharedWithOthers(
+/**
+ * Which of these object paths a row outside this erasure's own rows, in the same tenant, still
+ * names. One query for all paths (a person with many files must not mean many queries inside
+ * the erasure transaction). A path that is only part of another locator counts as shared: that
+ * errs towards keeping a file, never towards deleting one.
+ */
+async function sharedPaths(
   db: Db,
   tenantId: string,
-  path: string,
+  paths: string[],
   planned: Omit<StoredFilePlan, 'queue'>
-): Promise<boolean> {
-  const [email, lead, ticket, chat] = await Promise.all([
-    db.emailAttachment.count({
-      where: { tenantId, fileUrl: { contains: path }, id: { notIn: planned.emailAttachmentIds } },
-    }),
-    db.leadFile.count({
-      where: { tenantId, url: { contains: path }, id: { notIn: planned.leadFileIds } },
-    }),
-    db.ticketAttachment.count({
-      where: { tenantId, url: { contains: path }, id: { notIn: planned.ticketAttachmentIds } },
-    }),
-    db.$queryRaw<Array<{ n: bigint | number }>>`
-      SELECT count(*) AS n FROM chat_messages
-      WHERE "tenantId" = ${tenantId} AND NOT (id = ANY(${planned.chatMessageIds}::text[]))
-        AND strpos(attachments::text, ${path}) > 0`,
-  ]);
-  return email + lead + ticket + Number(chat[0]?.n ?? 0) > 0;
+): Promise<Set<string>> {
+  if (paths.length === 0) return new Set();
+  const rows = await db.$queryRaw<Array<{ path: string }>>`
+    SELECT p.path FROM unnest(${paths}::text[]) AS p(path)
+    WHERE EXISTS (
+        SELECT 1 FROM email_attachments e WHERE e."tenantId" = ${tenantId}
+          AND NOT (e.id = ANY(${planned.emailAttachmentIds}::text[])) AND strpos(e."fileUrl", p.path) > 0)
+      OR EXISTS (
+        SELECT 1 FROM lead_files l WHERE l."tenantId" = ${tenantId}
+          AND NOT (l.id = ANY(${planned.leadFileIds}::text[])) AND strpos(l.url, p.path) > 0)
+      OR EXISTS (
+        SELECT 1 FROM ticket_attachments t WHERE t."tenantId" = ${tenantId}
+          AND NOT (t.id = ANY(${planned.ticketAttachmentIds}::text[])) AND strpos(t.url, p.path) > 0)
+      OR EXISTS (
+        SELECT 1 FROM chat_messages c WHERE c."tenantId" = ${tenantId}
+          AND NOT (c.id = ANY(${planned.chatMessageIds}::text[]))
+          AND strpos(c.attachments::text, p.path) > 0)`;
+  return new Set(rows.map((r) => r.path));
 }
 
 /** Deals and tasks stay on the checklist (owner ruling Q23); counted for the preview and result. */
