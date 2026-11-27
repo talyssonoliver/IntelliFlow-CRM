@@ -4485,6 +4485,9 @@ model EmailRecord {
   templateId   String?
   subject      String
   body         String   @db.Text
+  /// The provider's HTML body, sanitised server-side at write time (email-html-sanitizer.ts).
+  /// Null for plain-text mail; `body` stays the text fallback.
+  bodyHtml     String?  @db.Text
   fromEmail    String
   toEmail      String
   ccEmails     String?
@@ -4549,7 +4552,14 @@ model EmailAttachment {
   fileName    String
   fileSize    Int
   fileType    String
+  /// '' for mail synced from a provider: the file is NOT copied into Aurora; it is fetched from
+  /// the provider on demand through `providerAttachmentId`.
   fileUrl     String
+  /// The provider's locator for the file (Gmail part id, Graph attachment id, Zoho folder:id).
+  providerAttachmentId String? @db.VarChar(512)
+  /// The Content-ID an inline image is referenced by in the HTML (cid:), without angle brackets.
+  contentId   String?  @db.VarChar(255)
+  isInline    Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   // DBA-117: Multi-tenancy (DB has tenantId NOT NULL)

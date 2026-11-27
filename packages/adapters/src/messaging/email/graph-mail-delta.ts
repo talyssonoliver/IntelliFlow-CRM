@@ -20,6 +20,8 @@ import {
   type MailAutomationSignals,
 } from './mail-automation-signals';
 import { MailboxTransportError } from './mailbox-errors';
+import type { MailContent } from './mail-content';
+import { readGraphContent } from './graph-mail-content';
 
 const GRAPH_HOST = 'graph.microsoft.com';
 const GRAPH_ME = `https://${GRAPH_HOST}/v1.0/me`;
@@ -58,6 +60,8 @@ export interface GraphSyncedMessage {
   bodyText: string;
   /** MVP-011: what the headers say about who sent it (see mail-automation-signals.ts). */
   signals?: MailAutomationSignals;
+  /** The HTML body and the attachments' metadata, read only for mail the sync keeps. */
+  loadContent?: () => Promise<MailContent>;
 }
 
 export interface GraphDeltaRound {
@@ -219,11 +223,16 @@ const EXPIRED: Readonly<GraphDeltaRound> = {
 };
 
 /** Adds one page's entries to the round: removals by id, usable messages in full. */
-function collectEntries(page: GraphDeltaPage, round: GraphDeltaRound, maxBodyChars: number): void {
+function collectEntries(
+  page: GraphDeltaPage,
+  round: GraphDeltaRound,
+  maxBodyChars: number,
+  withContent: (message: GraphSyncedMessage) => GraphSyncedMessage
+): void {
   for (const entry of page.value ?? []) {
     if (entry['@removed'] === undefined) {
       const message = toSyncedMessage(entry, maxBodyChars);
-      if (message) round.messages.push(message);
+      if (message) round.messages.push(withContent(message));
     } else if (entry.id) {
       round.removedIds.push(entry.id);
     }
@@ -280,7 +289,11 @@ export async function readGraphMailDelta(
     if (pages > 0 && clock() >= stopAt) break;
     const { status, page } = await readPage(fetchImpl, url, headers, timeoutMs);
     if (status === 410 || !page) return { ...EXPIRED };
-    collectEntries(page, round, options.maxBodyChars);
+    collectEntries(page, round, options.maxBodyChars, (message) => ({
+      ...message,
+      loadContent: () =>
+        readGraphContent(accessToken, message.providerMessageId, message.bodyText, fetchImpl),
+    }));
     const step = nextStep(page, url);
     if (step.done) return { ...round, cursor: step.cursor, complete: step.complete };
     url = step.next;

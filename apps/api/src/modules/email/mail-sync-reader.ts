@@ -12,6 +12,7 @@ import {
   readZohoFolder,
   readZohoFolderIds,
 } from '@intelliflow/adapters';
+import type { MailContent } from '@intelliflow/adapters';
 import { hasGmailRead, hasMailRead, hasZohoRead } from './mail-sync-scopes';
 
 export { hasGmailRead, hasMailRead, hasZohoRead } from './mail-sync-scopes';
@@ -39,6 +40,11 @@ export interface SyncedMessage {
   signals?: MailAutomationSignals;
   /** When set, the body is read only for mail the sync keeps (`bodyText` is then empty). */
   loadBody?: () => Promise<string>;
+  /**
+   * Rich readers: the text, the provider's HTML and the attachments' metadata in one read (used
+   * instead of `loadBody` when present). Attachments are never downloaded by the sync.
+   */
+  loadContent?: () => Promise<MailContent>;
 }
 
 export interface SyncRound {
