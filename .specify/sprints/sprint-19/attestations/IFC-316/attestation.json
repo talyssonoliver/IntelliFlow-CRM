@@ -30,7 +30,7 @@
     "communication_types_erased": 9,
     "stored_file_sources_deleted": 4,
     "new_unit_tests": 58,
-    "real_db_tests": 50,
+    "real_db_tests": 51,
     "pr_communications": 1361,
     "pr_stored_files": "the pull request from branch feat/ifc-316b-erase-stored-files (number in the PR title link)"
   },
@@ -57,7 +57,7 @@
       "timestamp": "2026-11-27T14:30:00Z"
     },
     {
-      "name": "Real-DB DSAR suites (50 tests) through the test slot, migrations applied",
+      "name": "Real-DB DSAR suites (51 tests) through the test slot, migrations applied",
       "command": "node with-slot.mjs --exclusive intelliflow-db -- node scripts/test-db.mjs run --seed -- npx vitest run --project integration tests/integration/dsar-communications.test.ts tests/integration/dsar.test.ts",
       "exit_code": 0,
       "passed": true,

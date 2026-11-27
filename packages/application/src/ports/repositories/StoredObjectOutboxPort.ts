@@ -54,7 +54,11 @@ export interface StoredObjectOutboxPort {
    */
   leftFor(tenantId: string, requestIds: string[]): Promise<Record<string, StoredObjectsLeft>>;
 
-  /** The files the admin must delete by hand (source and locator), oldest first. */
+  /**
+   * The files the admin must delete by hand (source and locator), oldest first: one page of at
+   * most MANUAL_FILES_PAGE, because a confirmation takes at most that many ids. The next page
+   * follows once these are marked.
+   */
   manual(tenantId: string, requestId: string): Promise<ManualStoredObject[]>;
 
   /**

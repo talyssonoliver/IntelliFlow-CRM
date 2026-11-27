@@ -22,6 +22,7 @@ import {
   type DsarSource,
   type DsarStatus,
   type DsarWithheldCategory,
+  MANUAL_FILES_PAGE,
 } from '@intelliflow/domain';
 import { idSchema } from './common';
 import { stripControlChars } from './event-types';
@@ -181,7 +182,7 @@ export const dsarCancelErasureSchema = z
 
 /** IFC-316: the admin deleted these stored files by hand (ids of the request's manual files). */
 export const dsarConfirmManualFilesSchema = z
-  .object({ id: idSchema, fileIds: z.array(idSchema).min(1).max(500) })
+  .object({ id: idSchema, fileIds: z.array(idSchema).min(1).max(MANUAL_FILES_PAGE) })
   .strict();
 
 export const dsarLiftRestrictionSchema = z

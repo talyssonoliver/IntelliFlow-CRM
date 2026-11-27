@@ -21,6 +21,13 @@ export const STORED_OBJECT_SOURCES = [
 ] as const;
 export type StoredObjectSource = (typeof STORED_OBJECT_SOURCES)[number];
 
+/**
+ * The most manual files the admin sees, and confirms, at a time. The list is a page of this size
+ * and a confirmation takes at most this many ids, so the two always fit; the next page follows
+ * once these are marked as deleted.
+ */
+export const MANUAL_FILES_PAGE = 500;
+
 /** The admin checklist key each source is counted under. */
 export const STORED_OBJECT_CHECKLIST_KEYS: Record<StoredObjectSource, string> = {
   LEAD_FILE: 'storedLeadFiles',

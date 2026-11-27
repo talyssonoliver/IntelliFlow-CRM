@@ -16,7 +16,11 @@ const h = vi.hoisted(() => ({
   list: { data: undefined as unknown, isLoading: false, isError: false, error: null as unknown },
   restrictions: { data: undefined as unknown },
   preview: { data: undefined as unknown },
-  manualFiles: { data: undefined as unknown, error: null as unknown },
+  manualFiles: {
+    data: undefined as unknown,
+    error: null as unknown,
+    refetch: undefined as unknown,
+  },
   mutations: {} as Record<string, { mutateAsync: ReturnType<typeof vi.fn>; isPending: boolean }>,
   invalidate: vi.fn(),
   toast: vi.fn(),
@@ -98,7 +102,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.list = { data: [request()], isLoading: false, isError: false, error: null };
   h.restrictions = { data: [] };
-  h.manualFiles = { data: undefined, error: null };
+  h.manualFiles = { data: undefined, error: null, refetch: vi.fn().mockResolvedValue({}) };
   h.preview = { data: { counts: { leads: 1, contacts: 1 }, checklist: { tickets: 2 } } };
   h.mutations = Object.fromEntries(
     [
@@ -231,6 +235,7 @@ describe('PrivacyRequestsContent', () => {
     h.manualFiles = {
       data: [{ id: 'f1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/a.pdf' }],
       error: null,
+      refetch: vi.fn().mockResolvedValue({}),
     };
     h.mutations.confirmManualFiles!.mutateAsync.mockResolvedValue({ handled: 1 });
     render(<PrivacyRequestsContent />);
@@ -255,22 +260,24 @@ describe('PrivacyRequestsContent', () => {
     );
   });
 
-  it('confirms a long list of manual files in pieces the server accepts', async () => {
+  it('confirms one page of manual files at a time and loads the next page', async () => {
     h.list.data = [
       request({
         id: 'clhmanual0000000',
         status: 'COMPLETED',
-        storedFilesLeft: 1001,
-        storedFilesManual: 1001,
+        storedFilesLeft: 501,
+        storedFilesManual: 501,
       }),
     ];
+    // The server sends one page of 500; the dialog says more follow.
     h.manualFiles = {
-      data: Array.from({ length: 1001 }, (_, i) => ({
+      data: Array.from({ length: 500 }, (_, i) => ({
         id: `f${i}`,
         source: 'LEAD_FILE',
         locator: `https://files.example.invalid/${i}.pdf`,
       })),
       error: null,
+      refetch: vi.fn().mockResolvedValue({}),
     };
     h.mutations.confirmManualFiles!.mutateAsync.mockImplementation(
       async ({ fileIds }: { fileIds: string[] }) => ({ handled: fileIds.length })
@@ -278,15 +285,19 @@ describe('PrivacyRequestsContent', () => {
     render(<PrivacyRequestsContent />);
     fireEvent.click(screen.getByRole('button', { name: /^Show files to delete by hand/ }));
     const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(/Showing the first 500 files/)).toBeTruthy();
     fireEvent.click(within(dialog).getByRole('checkbox'));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Mark as deleted' }));
     await waitFor(() =>
-      expect(h.toast).toHaveBeenCalledWith({ title: '1001 stored files marked as deleted' })
+      expect(h.toast).toHaveBeenCalledWith({ title: '500 stored files marked as deleted' })
     );
-    const sizes = h.mutations.confirmManualFiles!.mutateAsync.mock.calls.map(
-      (call: unknown[]) => (call[0] as { fileIds: string[] }).fileIds.length
-    );
-    expect(sizes).toEqual([500, 500, 1]);
+    const sent = h.mutations.confirmManualFiles!.mutateAsync.mock.calls[0]![0] as {
+      fileIds: string[];
+    };
+    expect(sent.fileIds).toHaveLength(500);
+    // Never more than the schema takes, and the dialog loads the next page instead of closing.
+    expect(h.manualFiles.refetch).toHaveBeenCalled();
+    expect(screen.getByRole('dialog')).toBeTruthy();
   });
 
   it('keeps a server refusal inside the dialog', async () => {

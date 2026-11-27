@@ -3,7 +3,11 @@
  * stored files in `dsar_stored_objects`. Every query carries the tenant and the request.
  */
 import type { PrismaClient } from '@intelliflow/db';
-import { STORED_OBJECT_CHECKLIST_KEYS, type StoredObjectSource } from '@intelliflow/domain';
+import {
+  MANUAL_FILES_PAGE,
+  STORED_OBJECT_CHECKLIST_KEYS,
+  type StoredObjectSource,
+} from '@intelliflow/domain';
 import type {
   ManualStoredObject,
   PendingStoredObject,
@@ -96,6 +100,8 @@ export class PrismaStoredObjectRepository implements StoredObjectOutboxPort {
     const rows = await this.prisma.dsarStoredObject.findMany({
       where: { tenantId, requestId, state: 'MANUAL' },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      // One page: a confirmation takes at most this many ids, and the next page follows it.
+      take: MANUAL_FILES_PAGE,
       select: { id: true, source: true, locator: true },
     });
     return rows.flatMap((r) =>

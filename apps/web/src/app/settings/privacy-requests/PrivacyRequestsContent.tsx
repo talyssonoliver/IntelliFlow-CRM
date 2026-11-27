@@ -38,8 +38,6 @@ import { LogRequestDialog, TYPE_LABELS } from './components/LogRequestDialog';
 import { ManualFilesDialog } from './components/ManualFilesDialog';
 
 const OPEN_TITLE_ID = 'open-requests-title';
-/** The most manual-file ids the server accepts in one confirmation (dsarConfirmManualFilesSchema). */
-const MANUAL_FILES_BATCH = 500;
 // The server requires a reason of at least 10 characters to lift a restriction.
 const LIFT_NOTE_MIN = 10;
 
@@ -376,17 +374,10 @@ export default function PrivacyRequestsContent() {
     if (!manualFor) return;
     setManualError(null);
     try {
-      // The server takes at most MANUAL_FILES_BATCH ids a call, so a long list goes in pieces.
-      let handled = 0;
-      for (let i = 0; i < fileIds.length; i += MANUAL_FILES_BATCH) {
-        const result = await confirmManual.mutateAsync({
-          id: manualFor.id,
-          fileIds: fileIds.slice(i, i + MANUAL_FILES_BATCH),
-        });
-        handled += result.handled;
-      }
-      toast({ title: `${handled} stored files marked as deleted` });
-      setManualFor(null);
+      const result = await confirmManual.mutateAsync({ id: manualFor.id, fileIds });
+      toast({ title: `${result.handled} stored files marked as deleted` });
+      // The dialog stays open: the next page of files, if any, loads in its place.
+      await manualFiles.refetch();
     } catch (error) {
       setManualError(errorMessage(error));
     }

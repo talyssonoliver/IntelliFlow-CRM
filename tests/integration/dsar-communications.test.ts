@@ -19,6 +19,8 @@ import { PrismaDsarRepository } from '../../packages/adapters/src/repositories/P
 import { PrismaSubjectDataRepository } from '../../packages/adapters/src/repositories/PrismaSubjectDataRepository';
 import { PrismaStoredObjectRepository } from '../../packages/adapters/src/repositories/PrismaStoredObjectRepository';
 import { SupabaseStorageAdapter } from '../../packages/adapters/src/storage/SupabaseStorageAdapter';
+import { MANUAL_FILES_PAGE } from '../../packages/domain/src/legal/privacy/stored-object';
+import { dsarConfirmManualFilesSchema } from '../../packages/validators/src/dsar';
 import { ErasedFilesCleanupService } from '../../packages/application/src/services/ErasedFilesCleanupService';
 import type { StoredObjectDeletionPort } from '../../packages/application/src/ports/external/StorageServicePort';
 import { ensureMigrationSql } from './dsar-setup';
@@ -634,6 +636,39 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         where: { id: { in: manual.map((m) => m.id) } },
       });
       expect(rows.every((r: any) => r.state === 'DELETED' && r.locator === null)).toBe(true);
+    });
+
+    it('lists the manual files a page at a time, each page confirmable in one call', async () => {
+      await prisma.dsarStoredObject.createMany({
+        data: Array.from({ length: 501 }, (_, i) => ({
+          tenantId: TENANT,
+          requestId,
+          source: 'LEAD_FILE',
+          state: 'MANUAL',
+          locator: `https://files.example.invalid/bulk-${i}.pdf`,
+        })),
+      });
+      const first = await outbox().manual(TENANT, requestId);
+      // Never more than a confirmation takes (the schema's own limit).
+      expect(first).toHaveLength(MANUAL_FILES_PAGE);
+      expect(
+        dsarConfirmManualFilesSchema.safeParse({ id: requestId, fileIds: first.map((f) => f.id) })
+          .success
+      ).toBe(true);
+      expect(
+        await outbox().markHandled(
+          TENANT,
+          requestId,
+          first.map((f) => f.id),
+          new Date()
+        )
+      ).toBe(MANUAL_FILES_PAGE);
+      // The next page follows.
+      expect(await outbox().manual(TENANT, requestId)).toHaveLength(1);
+      expect((await outbox().leftFor(TENANT, [requestId]))[requestId]).toEqual({
+        queued: 1,
+        manual: 1,
+      });
     });
   });
 });

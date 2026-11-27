@@ -20,6 +20,9 @@ import {
 } from '@intelliflow/ui';
 import type { DsarManualFileDto, DsarRequestDto } from '@intelliflow/validators/dsar';
 
+/** The server lists, and confirms, this many files at a time (MANUAL_FILES_PAGE). */
+const PAGE_SIZE = 500;
+
 const SOURCE_LABELS: Record<DsarManualFileDto['source'], string> = {
   LEAD_FILE: 'Lead file',
   EMAIL_ATTACHMENT: 'Email attachment',
@@ -78,6 +81,11 @@ export function ManualFilesDialog({
                   </li>
                 ))}
               </ul>
+              {files.length >= PAGE_SIZE && (
+                <p className="text-xs text-muted-foreground">
+                  {`Showing the first ${PAGE_SIZE} files. The next ones appear once these are marked as deleted.`}
+                </p>
+              )}
               <div className="flex items-start gap-2">
                 <Checkbox
                   id="manual-files-confirm"
