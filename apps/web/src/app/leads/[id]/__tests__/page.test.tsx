@@ -1097,12 +1097,12 @@ describe('LeadDetailPage - Activity Feed Toggle (IFC-247)', () => {
 // ─── MVP-006: the activity cards fit a phone screen ──────────────────────────
 
 describe('LeadDetailPage - activity card on a phone (MVP-006)', () => {
-  // The first card of the Pitshanger lead carries an email address and a ledger id in its
+  // The first card of the Greenleaf lead carries an email address and a ledger id in its
   // description. Without min-w-0 the text column kept that width and pushed the expand button
   // 9 px past a 390 px screen, so the whole page scrolled sideways.
   // Long and unbroken, like a pasted address with no spaces (not a record id: those are stripped, #42).
   const LONG =
-    'hello@pitshangerhealthandfitness.co.uk-and-a-very-long-unbroken-tail-of-text-without-spaces';
+    'hello@greenleafgardens.example.invalid-and-a-very-long-unbroken-tail-of-text-without-spaces';
 
   beforeEach(() => {
     vi.clearAllMocks();

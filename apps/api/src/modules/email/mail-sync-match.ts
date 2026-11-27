@@ -2,7 +2,7 @@
  * Who a synced mail is with, and whether it is already logged: split out of the sync engine
  * (outlook-inbox-sync.ts) to keep it within its size limit. No behaviour of its own.
  */
-import { MailboxTransportError } from '@intelliflow/adapters';
+import { MailboxTransportError, type MailContent } from '@intelliflow/adapters';
 import type { LoggedRecord } from './mail-sync-links';
 import { messageIdHeader } from './mail-sync-record';
 import type { SyncFolder, SyncedMessage } from './mail-sync-reader';
@@ -18,17 +18,29 @@ export interface MatchDeps {
 export interface MatchMailbox {
   id: string;
   tenantId: string;
+  /** The owner of a personal mailbox; null for the company mailbox. */
+  userId?: string | null;
   accountAddress: string | null;
   fromAddress: string;
 }
 
-/** The lead or contact the sender is, in the mailbox's tenant; null when neither. */
+/**
+ * The lead or contact the sender is, in the mailbox's tenant; null when neither. A personal mailbox
+ * (`ownerId` set) matches only the people its owner owns (register #64): mail is linked to a lead or
+ * contact, and so becomes visible to whoever can see them, so it must never be linked to a person
+ * the owner cannot see (someone could add a lead with a colleague's correspondent's address).
+ */
 async function matchSender(
   deps: MatchDeps,
   tenantId: string,
-  email: string
+  email: string,
+  ownerId?: string | null
 ): Promise<{ contactId: string | null; leadId: string | null } | null> {
-  const where = { tenantId, email: { equals: email, mode: 'insensitive' } };
+  const where = {
+    tenantId,
+    email: { equals: email, mode: 'insensitive' },
+    ...(ownerId ? { ownerId } : {}),
+  };
   const contact = await deps.prisma.contact.findFirst({ where, select: { id: true } });
   if (contact) return { contactId: contact.id, leadId: null };
   const lead = await deps.prisma.lead.findFirst({ where, select: { id: true } });
@@ -49,7 +61,7 @@ export async function counterparty(
   const candidates = folder === 'inbox' ? [message.fromAddress] : [...message.to, ...message.cc];
   for (const email of candidates) {
     if (!email || email === own) continue;
-    const match = await matchSender(deps, mailbox.tenantId, email);
+    const match = await matchSender(deps, mailbox.tenantId, email, mailbox.userId);
     if (match) return { email, ...match };
   }
   return null;
@@ -89,6 +101,23 @@ export async function alreadyLogged(
     select: { id: true, metadata: true },
   });
   return existing;
+}
+
+/**
+ * A kept mail's content (text, HTML, attachment metadata); null when the provider refuses that one
+ * message (deleted meanwhile). A reader without rich content yields its text only.
+ */
+export async function contentOf(message: SyncedMessage): Promise<MailContent | null> {
+  if (!message.loadContent) {
+    const text = await bodyOf(message);
+    return text === null ? null : { text, html: null, attachments: [] };
+  }
+  try {
+    return await message.loadContent();
+  } catch (error) {
+    if (error instanceof MailboxTransportError && error.code === 'REJECTED') return null;
+    throw error;
+  }
 }
 
 /** A kept mail's body; null when the provider refuses that one message (deleted meanwhile). */

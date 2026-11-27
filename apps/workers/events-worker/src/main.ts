@@ -924,8 +924,20 @@ const envConfig = loadEventsWorkerConfig();
 
 // Backward compatibility: keep legacy USE_DATABASE_OUTBOX while transitioning to EVENTS_WORKER_USE_DATABASE
 const useDatabase = envConfig.useDatabase || process.env.USE_DATABASE_OUTBOX === 'true';
+// One client, one pool, for the whole process. The default pg pool is 10 connections; this worker
+// runs a few timers and one outbox poller, so 5 is plenty and leaves Supavisor's free-plan
+// connections for the API. DATABASE_POOL_MAX (or the older DB_POOL_MAX) overrides it.
+const poolMax = Number.parseInt(
+  process.env.DATABASE_POOL_MAX || process.env.DB_POOL_MAX || '5',
+  10
+);
 const prismaClient = useDatabase
-  ? new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) })
+  ? new PrismaClient({
+      adapter: new PrismaPg({
+        connectionString: process.env.DATABASE_URL!,
+        max: Number.isFinite(poolMax) && poolMax > 0 ? poolMax : 5,
+      }),
+    })
   : undefined;
 
 const worker = new EventsWorker({

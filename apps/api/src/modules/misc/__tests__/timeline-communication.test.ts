@@ -16,9 +16,13 @@ import {
 } from '../timeline';
 import { TimelineEventType } from '../timeline.router';
 
+const viewer = { tenantId: 't1', userId: 'u1' };
+
 // Create a mock PrismaClient
 function createMockPrisma() {
   return {
+    // the mail visibility policy asks which personal mail is logged to a visible person
+    $queryRaw: vi.fn().mockResolvedValue([]),
     emailRecord: {
       findMany: vi.fn().mockResolvedValue([]),
     },
@@ -46,17 +50,17 @@ describe('TimelineCommunicationService', () => {
 
   beforeEach(() => {
     mockPrisma = createMockPrisma();
-    service = new TimelineCommunicationService(mockPrisma);
+    service = new TimelineCommunicationService(mockPrisma, viewer);
   });
 
   describe('constructor and factory', () => {
     it('should create instance via constructor', () => {
-      const svc = new TimelineCommunicationService(mockPrisma);
+      const svc = new TimelineCommunicationService(mockPrisma, viewer);
       expect(svc).toBeInstanceOf(TimelineCommunicationService);
     });
 
     it('should create instance via factory function', () => {
-      const svc = createTimelineCommunicationService(mockPrisma);
+      const svc = createTimelineCommunicationService(mockPrisma, viewer);
       expect(svc).toBeInstanceOf(TimelineCommunicationService);
     });
   });

@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { recordStageMove, stageLabel } from '../stage-move-record';
 
 const tenant = { tenantId: 't1', userId: 'u1' };
-const deal = { id: { value: 'opp-1' }, name: 'Pilates Living', stage: 'NEEDS_ANALYSIS' };
+const deal = { id: { value: 'opp-1' }, name: 'Studio Pilates Demo', stage: 'NEEDS_ANALYSIS' };
 
 function ctxWith(create: ReturnType<typeof vi.fn>) {
   return {
@@ -34,7 +34,7 @@ describe('recordStageMove', () => {
       data: {
         type: 'STAGE_CHANGE',
         title: 'Stage changed: Qualification to Needs Analysis',
-        description: '"Pilates Living" moved from Qualification to Needs Analysis.',
+        description: '"Studio Pilates Demo" moved from Qualification to Needs Analysis.',
         stageFrom: 'QUALIFICATION',
         stageTo: 'NEEDS_ANALYSIS',
         opportunityId: 'opp-1',

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { MailViewer } from '@intelliflow/db';
 import {
   activityRowDirection,
   personKey,
@@ -142,7 +143,7 @@ describe('replies that did not reach the person', () => {
       ...over,
     }) as never;
   const ids = async (t: ReturnType<typeof waitingLead>) =>
-    (await loadWaiting(fakeDb(t), 't1', scope, contactScope)).map((i) => i.id);
+    (await loadWaiting(fakeDb(t), viewer, scope, contactScope)).map((i) => i.id);
 
   it('a reply sent to them clears the wait (control)', async () => {
     const t = waitingLead();
@@ -326,6 +327,8 @@ describe('direction helpers', () => {
   });
 });
 
+const viewer: MailViewer = { tenantId: 't1', userId: 'u1' };
+
 // A small fake of the Prisma calls the loader makes. It applies the `tenantId` and owner filters
 // the loader passes, so a test fails if the loader forgets to scope a query.
 function fakeDb(tables: {
@@ -344,7 +347,7 @@ function fakeDb(tables: {
     return (value ?? null) === cond;
   };
   const match = (rows: Record<string, unknown>[], where: Record<string, unknown>) =>
-    rows.filter((r) => Object.entries(where).every(([k, v]) => holds(r[k], v))); // Like Prisma: filter, then order (newest first when asked) and cut to take.
+    rows.filter((r) => Object.entries(where).every(([k, v]) => k === 'AND' || holds(r[k], v))); // Like Prisma: filter, then order (newest first when asked) and cut to take.
   const table = (rows: Record<string, unknown>[]) => ({
     findMany: async ({
       where,
@@ -375,6 +378,8 @@ function fakeDb(tables: {
     leadActivity: table(tables.leadActivities),
     contactActivity: table(tables.contactActivities),
     emailRecord: table(tables.emails),
+    // The visibility policy asks which personal mail is logged to a visible person: none here.
+    $queryRaw: async () => [],
   } as never;
 }
 
@@ -463,7 +468,7 @@ describe('loadWaiting', () => {
   const scope = { tenantId: 't1' };
 
   it('is tenant-scoped: another tenant waiting person never appears', async () => {
-    const items = await loadWaiting(fakeDb(tables()), 't1', scope, scope);
+    const items = await loadWaiting(fakeDb(tables()), viewer, scope, scope);
     expect(items.map((i) => i.id)).not.toContain('lead-z');
   });
 
@@ -473,11 +478,11 @@ describe('loadWaiting', () => {
     t.leads = t.leads.map((l) =>
       l.id === 'lead-a' ? { ...l, status: 'LOST', tags: ['automated-sender'] } : l
     );
-    expect((await loadWaiting(fakeDb(t), 't1', scope, scope)).map((i) => i.id)).toEqual([
+    expect((await loadWaiting(fakeDb(t), viewer, scope, scope)).map((i) => i.id)).toEqual([
       'contact-a',
     ]);
     t.leads = t.leads.map((l) => (l.id === 'lead-a' ? { ...l, status: 'LOST', tags: [] } : l));
-    expect((await loadWaiting(fakeDb(t), 't1', scope, scope)).map((i) => i.id)).toEqual([
+    expect((await loadWaiting(fakeDb(t), viewer, scope, scope)).map((i) => i.id)).toEqual([
       'lead-a',
       'contact-a',
     ]);
@@ -487,12 +492,12 @@ describe('loadWaiting', () => {
     const t = tables();
     // Without the CRM-sent mail, lead-a is still waiting.
     t.emails = t.emails.filter((e) => e.subject !== 'Sent from CRM');
-    const items = await loadWaiting(fakeDb(t), 't1', scope, scope);
+    const items = await loadWaiting(fakeDb(t), viewer, scope, scope);
     expect(items.map((i) => i.id)).toEqual(['lead-a', 'contact-a']);
   });
 
   it('counts mail sent from inside the CRM, addressed to the person, as a reply', async () => {
-    const items = await loadWaiting(fakeDb(tables()), 't1', scope, scope);
+    const items = await loadWaiting(fakeDb(tables()), viewer, scope, scope);
     expect(items.map((i) => i.id)).toEqual(['contact-a']);
   });
 
@@ -502,7 +507,7 @@ describe('loadWaiting', () => {
     t.emails = [];
     const items = await loadWaiting(
       fakeDb(t),
-      't1',
+      viewer,
       { tenantId: 't1', ownerId: 'u1' },
       { tenantId: 't1', id: { in: [] } }
     );
@@ -518,17 +523,17 @@ describe('names', () => {
         ...leadRow('lead-a', 't1'),
         firstName: null,
         lastName: null,
-        company: ' West London Handyman Ltd ',
+        company: ' Acme Handyman Ltd ',
       } as never,
     ];
     t.emails = [];
     const items = await loadWaiting(
       fakeDb(t),
-      't1',
+      viewer,
       { tenantId: 't1' },
       { tenantId: 't1', id: { in: [] } }
     );
-    expect(items[0]?.name).toBe('West London Handyman Ltd');
+    expect(items[0]?.name).toBe('Acme Handyman Ltd');
   });
 
   it('falls back to the email when a lead has no name', async () => {
@@ -537,7 +542,7 @@ describe('names', () => {
     t.emails = [];
     const items = await loadWaiting(
       fakeDb(t),
-      't1',
+      viewer,
       { tenantId: 't1' },
       { tenantId: 't1', id: { in: [] } }
     );
@@ -566,7 +571,7 @@ describe('webhook mail', () => {
         createdAt: day(12),
       } as never,
     ];
-    const items = await loadWaiting(fakeDb(t), 't1', { tenantId: 't1' }, { tenantId: 't1' });
+    const items = await loadWaiting(fakeDb(t), viewer, { tenantId: 't1' }, { tenantId: 't1' });
     expect(items.map((i) => i.id)).toEqual(['lead-b', 'lead-a']);
   });
 });
@@ -600,7 +605,7 @@ describe('logged mail', () => {
         createdAt: day(12),
       } as never,
     ];
-    const items = await loadWaiting(fakeDb(t), 't1', { tenantId: 't1' }, { tenantId: 't1' });
+    const items = await loadWaiting(fakeDb(t), viewer, { tenantId: 't1' }, { tenantId: 't1' });
     expect(items.map((i) => i.id)).toEqual(['lead-a']);
   });
 });
@@ -656,7 +661,7 @@ describe('cap boundary: every source is judged on the same history', () => {
       ],
       [inbound(10)]
     );
-    const items = await loadWaiting(db, 't1', scope, contactScope, 3);
+    const items = await loadWaiting(db, viewer, scope, contactScope, 3);
     expect(items.map((i) => i.id)).toEqual([]);
   });
 
@@ -670,13 +675,13 @@ describe('cap boundary: every source is judged on the same history', () => {
       ],
       [inbound(15)]
     );
-    const items = await loadWaiting(db, 't1', scope, contactScope, 3);
+    const items = await loadWaiting(db, viewer, scope, contactScope, 3);
     expect(items.map((i) => i.id)).toEqual(['lead-a']);
   });
 
   it('with the cap not reached, the same history lists them as before', async () => {
     const db = setup([rec('n1', 12, 'x@example.invalid')], [inbound(10)]);
-    const items = await loadWaiting(db, 't1', scope, contactScope, 3);
+    const items = await loadWaiting(db, viewer, scope, contactScope, 3);
     expect(items.map((i) => i.id)).toEqual(['lead-a']);
   });
 
@@ -747,7 +752,7 @@ describe('one clock for records: sentAt, else createdAt', () => {
         rec('n2', {}, 12, 12),
         rec('n3', {}, 13, 13),
       ]),
-      't1',
+      viewer,
       scope,
       contactScope,
       3
@@ -759,7 +764,7 @@ describe('one clock for records: sentAt, else createdAt', () => {
     // Stored on day 15 but sent on day 9, with the reply on day 10: answered, uncapped.
     const items = await loadWaiting(
       db([inboundRec('in', 9, 15), rec('reply', { toEmail: 'lead-a@example.invalid' }, 10, 10)]),
-      't1',
+      viewer,
       scope,
       contactScope
     );
@@ -776,7 +781,7 @@ describe('one clock for records: sentAt, else createdAt', () => {
         rec('n2', {}, 12, 12),
         rec('n3', {}, 13, 13),
       ]),
-      't1',
+      viewer,
       scope,
       contactScope,
       3
@@ -868,7 +873,7 @@ describe('activities that mirror records, tenants and owners', () => {
         rec({ id: 'reply', sentAt: day(11), createdAt: day(11) }),
       ]
     );
-    expect((await loadWaiting(db, 't1', scope, none)).map((i) => i.id)).toEqual([]);
+    expect((await loadWaiting(db, viewer, scope, none)).map((i) => i.id)).toEqual([]);
   });
 
   it('links a person whose address differs from the mail when it was logged to them', async () => {
@@ -888,7 +893,7 @@ describe('activities that mirror records, tenants and owners', () => {
         }),
       ]
     );
-    expect((await loadWaiting(db, 't1', scope, none)).map((i) => i.id)).toEqual(['lead-a']);
+    expect((await loadWaiting(db, viewer, scope, none)).map((i) => i.id)).toEqual(['lead-a']);
   });
 
   it('never lets another tenant answer or open a wait', async () => {
@@ -900,9 +905,9 @@ describe('activities that mirror records, tenants and owners', () => {
       ],
       [rec({ id: 'other-tenant', tenantId: 't2' })]
     );
-    expect((await loadWaiting(db, 't1', scope, none)).map((i) => i.id)).toEqual(['lead-a']);
+    expect((await loadWaiting(db, viewer, scope, none)).map((i) => i.id)).toEqual(['lead-a']);
     const quiet = world([act('lead-a', 't2', 10, { direction: 'inbound' })], []);
-    expect(await loadWaiting(quiet, 't1', scope, none)).toEqual([]);
+    expect(await loadWaiting(quiet, viewer, scope, none)).toEqual([]);
   });
 
   it('applies the owner scope to contacts as well as leads', async () => {
@@ -922,9 +927,9 @@ describe('activities that mirror records, tenants and owners', () => {
       } as never,
     ];
     const db = fakeDb(t);
-    const mine = await loadWaiting(db, 't1', scope, { tenantId: 't1', ownerId: 'u1' });
+    const mine = await loadWaiting(db, viewer, scope, { tenantId: 't1', ownerId: 'u1' });
     expect(mine).toEqual([]);
-    const theirs = await loadWaiting(db, 't1', scope, { tenantId: 't1', ownerId: 'u2' });
+    const theirs = await loadWaiting(db, viewer, scope, { tenantId: 't1', ownerId: 'u2' });
     expect(theirs.map((i) => i.id)).toEqual(['contact-a']);
   });
 });
@@ -952,7 +957,7 @@ describe('narrowToWaiting (the leads-list filter)', () => {
     t.emails = [];
     const db = fakeDb(t);
     const ids = await narrowToWaiting(ctx(db), { waitingForReply: true });
-    const card = await loadWaiting(db, 't1', { tenantId: 't1' }, { tenantId: 't1' });
+    const card = await loadWaiting(db, viewer, { tenantId: 't1' }, { tenantId: 't1' });
     expect(ids).toEqual(card.filter((i) => i.kind === 'lead').map((i) => i.id));
     expect(ids).toEqual(['lead-a']);
   });
@@ -990,7 +995,7 @@ describe('narrowToWaiting (the leads-list filter)', () => {
       ]
     );
     expect(await narrowToWaiting(ctx(db), { waitingForReply: true })).toEqual([]);
-    expect(await loadWaiting(db, 't1', { tenantId: 't1' }, { tenantId: 't1' })).toEqual([]);
+    expect(await loadWaiting(db, viewer, { tenantId: 't1' }, { tenantId: 't1' })).toEqual([]);
     // Unanswered after a later mail to the contact: both list the lead, once.
     t.contactActivities.splice(
       0,
@@ -1006,7 +1011,7 @@ describe('narrowToWaiting (the leads-list filter)', () => {
         } as never,
       ]
     );
-    const card = await loadWaiting(db, 't1', { tenantId: 't1' }, { tenantId: 't1' });
+    const card = await loadWaiting(db, viewer, { tenantId: 't1' }, { tenantId: 't1' });
     expect(await narrowToWaiting(ctx(db), { waitingForReply: true })).toEqual(['lead-a']);
     expect(card.map((i) => i.id)).toEqual(['lead-a']);
   });

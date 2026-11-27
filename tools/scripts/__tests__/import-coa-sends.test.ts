@@ -28,7 +28,7 @@ const ROBERT = 'robert@example.invalid';
 
 const send = (overrides: Partial<CoaSend> = {}): CoaSend => ({
   id: 'draft-1',
-  subject: 'Helping West London Handyman win more jobs',
+  subject: 'Helping Acme Handyman win more jobs',
   body: 'Hello Robert',
   sentAt: new Date('2026-11-16T09:00:24.855Z'),
   messageId: 'resend-id-1',
@@ -83,7 +83,7 @@ describe('recordFor', () => {
     const { record } = recordFor(send(), party, OPTIONS);
 
     expect(record).toMatchObject({
-      subject: 'Helping West London Handyman win more jobs',
+      subject: 'Helping Acme Handyman win more jobs',
       fromEmail: 'hello@sender.example.invalid',
       toEmail: ROBERT,
       status: 'SENT',

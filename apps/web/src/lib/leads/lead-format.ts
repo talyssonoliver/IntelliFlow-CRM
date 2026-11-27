@@ -150,7 +150,7 @@ function readablePath(path: string): string {
 /**
  * A lead's website as a clean link: the href without tracking parameters, and a short
  * label (the host without "www.", plus a path when there is one), e.g.
- * "http://www.energym.co.uk/?utm_source=google" -> { label: "energym.co.uk" }.
+ * "http://www.northfield-fitness.example.invalid/?utm_source=google" -> { label: "northfield-fitness.example.invalid" }.
  * Null when there is no usable http(s) address, so the row is not shown.
  */
 export function leadWebsite(

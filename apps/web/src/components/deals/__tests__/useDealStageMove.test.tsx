@@ -31,7 +31,7 @@ function setup(stage: any = 'NEEDS_ANALYSIS', isPending = false) {
   const hook = renderHook(() =>
     useDealStageMove({
       dealId: 'deal-1',
-      dealName: 'Pilates Living',
+      dealName: 'Studio Pilates Demo',
       stage,
       mutation: { isPending, mutate },
     })
@@ -48,7 +48,7 @@ describe('useDealStageMove (MVP-012 #32)', () => {
     render(<>{hook.result.current.dialog}</>);
     expect(screen.getByRole('heading', { name: 'Move to Proposal?' })).toBeInTheDocument();
     expect(
-      screen.getByText(/"Pilates Living" will move from Needs Analysis to Proposal/)
+      screen.getByText(/"Studio Pilates Demo" will move from Needs Analysis to Proposal/)
     ).toBeInTheDocument();
     expect(screen.getByText(/recorded on the deal's activity/)).toBeInTheDocument();
   });

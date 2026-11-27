@@ -10,6 +10,7 @@ import {
   advisoryNote,
   depScanNote,
   finalLine,
+  reviewSkipNote,
 } from '../lib/preship-report.mjs';
 
 const fmt = (ms: number) => `${ms}ms`;
@@ -164,5 +165,27 @@ describe('persisted state and printed lines', () => {
     const line = finalLine('PASS', '3s', [{ id: 'a', verdict: 'PASS' }], ['a']);
     expect(line.startsWith('pre-ship: PASS in 3s (')).toBe(true);
     expect(line.endsWith(').\n')).toBe(true);
+  });
+});
+
+describe('reviewSkipNote makes a skipped semantic review visible', () => {
+  const pass = { id: 'codex-review', verdict: 'PASS' };
+  const skipped = JSON.stringify({
+    verdict: 'SKIPPED',
+    skipped_reason: 'only docs changed (1 docs)',
+  });
+
+  it('prints the reason when the review called no model', () => {
+    expect(reviewSkipNote(pass, skipped)).toBe(
+      '    Semantic review skipped, no model called: only docs changed (1 docs)\n'
+    );
+  });
+
+  it('prints nothing for a real review, another step, a failure or a bad file', () => {
+    expect(reviewSkipNote(pass, JSON.stringify({ verdict: 'PASS' }))).toBe('');
+    expect(reviewSkipNote({ id: 'lint', verdict: 'PASS' }, skipped)).toBe('');
+    expect(reviewSkipNote({ id: 'codex-review', verdict: 'FAIL' }, skipped)).toBe('');
+    expect(reviewSkipNote(pass, '')).toBe('');
+    expect(reviewSkipNote(pass, 'not json')).toBe('');
   });
 });

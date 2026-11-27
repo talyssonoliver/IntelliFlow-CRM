@@ -17,12 +17,12 @@ vi.mock('next/link', () => ({
 
 const deal = (over: Partial<Deal> = {}): Deal => ({
   id: 'deal-1',
-  name: 'Pilates Living',
+  name: 'Studio Pilates Demo',
   value: 4200,
   stage: 'QUALIFICATION',
   probability: 20,
   expectedCloseDate: '2026-12-05T00:00:00.000Z',
-  accountName: 'Pilates Living Ltd',
+  accountName: 'Studio Pilates Demo Ltd',
   contactName: null,
   ownerId: 'u1',
   ownerName: 'Talysson Oliveira',
@@ -33,11 +33,11 @@ const deal = (over: Partial<Deal> = {}): Deal => ({
 describe('DealPhoneCards (MVP-012 #43)', () => {
   it('shows what the phone table hid: the stage and the probability, with the value and account', () => {
     render(<DealPhoneCards deals={[deal()]} timezone="Europe/London" />);
-    const card = screen.getByRole('link', { name: /Pilates Living/ });
+    const card = screen.getByRole('link', { name: /Studio Pilates Demo/ });
     expect(within(card).getByText('Qualification')).toBeInTheDocument();
     expect(within(card).getByText('20%')).toBeInTheDocument();
     expect(within(card).getByText('£4,200')).toBeInTheDocument();
-    expect(within(card).getByText('Pilates Living Ltd')).toBeInTheDocument();
+    expect(within(card).getByText('Studio Pilates Demo Ltd')).toBeInTheDocument();
     expect(card).toHaveTextContent('5 Dec 2026');
     expect(card).toHaveTextContent('Talysson Oliveira');
   });
@@ -88,7 +88,7 @@ describe('DealPhoneCards (MVP-012 #43)', () => {
         renderActions={(d) => <button type="button">{`Actions for ${d.name}`}</button>}
       />
     );
-    const actions = screen.getByRole('button', { name: 'Actions for Pilates Living' });
+    const actions = screen.getByRole('button', { name: 'Actions for Studio Pilates Demo' });
     expect(actions.closest('a')).toBeNull();
     expect(screen.getByRole('button', { name: 'Actions for Second deal' })).toBeInTheDocument();
     expect(screen.getAllByRole('link')).toHaveLength(2);

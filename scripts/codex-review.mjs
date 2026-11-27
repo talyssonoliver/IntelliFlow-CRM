@@ -18,14 +18,22 @@
  * reviewed against an empty diff). An empty, partial or unsplittable diff FAILS the gate, and a
  * diff over the prompt cap is reviewed in chunks, every chunk in full; one unreviewed chunk FAILS.
  *
- * Reviewer selection (primary → fallback):
- *   - Codex (OAuth) is the PRIMARY reviewer.
- *   - When codex is absent/unauthed OR returns no parseable findings (e.g. the
- *     OpenAI usage/tier cap returns an error instead of JSON), the gate FALLS
- *     BACK to the Claude Code CLI (`claude -p`) on the SAME prompt/schema, so a
- *     fallback review blocks/passes exactly as codex would. It never silently
- *     passes while a reviewer is available.
- *   - SKIPPED_PRECONDITION (exit 0) only when NEITHER codex nor claude is usable.
+ * Sized to the diff (lib/review-tier.mjs, owner ruling 2026-11-26):
+ *   - docs / tests / generated / comment-only diffs: NO model. Recorded as "skipped: <reason>".
+ *   - small diffs: Codex on a light model and effort; large or risky ones: the strong Codex.
+ *     Models are passed as flags per run; ~/.codex/config.toml is never edited.
+ *
+ * Reviewer selection (lib/review-policy.mjs):
+ *   - Codex (OAuth) reviews. Claude (`claude -p`, lean flags) reviews ONLY when Codex is
+ *     capped/failed/unavailable AND the diff is risky.
+ *   - Otherwise the gate waits for Codex's reset when it is near (CODEX_REVIEW_MAX_WAIT_MIN) and
+ *     retries once, or FAILS with "REVIEW_DEFERRED: codex unavailable". Never a silent pass.
+ *
+ * Rounds (lib/review-rounds.mjs): a new push re-reviews only hunks unseen since the last round
+ * (state in artifacts/codex-review/round-state.json, keyed by branch); after CODEX_REVIEW_MAX_ROUNDS
+ * (default 4) failed rounds the gate stops with a human route and never waives.
+ * Metrics: one JSON line per run in artifacts/codex-review/metrics.jsonl
+ * (summary: node scripts/codex-review-metrics.mjs).
  *
  * Policy and reuse (lib/codex-review-cache.mjs): an unwaived critical/high/medium
  * finding blocks; an unwaived LOW goes to the branch's follow-up issue; a review of
@@ -46,8 +54,12 @@
  *
  * Env:
  *   CODEX_REVIEW_VERBOSE=1         — print full reviewer stdout to stderr
- *   CODEX_REVIEW_FORCE_FALLBACK=1  — skip codex, use the Claude fallback directly
- *                                    (handy during a codex usage/tier outage)
+ *   CODEX_REVIEW_FORCE_FALLBACK=1  — treat codex as unavailable (the policy above then decides)
+ *   CODEX_REVIEW_ALLOW_CLAUDE=1    — owner/orchestrator: let Claude review a non-risky diff too
+ *   CODEX_REVIEW_MAX_WAIT_MIN=20   — longest wait for Codex's reset before deferring
+ *   CODEX_REVIEW_MAX_ROUNDS=4      — failed model rounds per branch before the human route
+ *   CODEX_REVIEW_{LIGHT,STRONG}_{MODEL,EFFORT} — override the tier models
+ *   CODEX_REVIEW_PR=<n>            — PR number written to the metrics
  *
  * Auth:
  *   Codex uses its local OAuth session (`codex login`; confirm `codex login
@@ -58,16 +70,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import os from 'node:os';
 import { claudeReviewText, runClaudeReviewer, runCodexReviewer } from './lib/review-commands.mjs';
-import {
-  failureArtifact,
-  isStaleReviewArtifact,
-  makeCodexRunner,
-  reviewWithFallback,
-  runChunkedReview,
-  scopeChanges,
-} from './lib/codex-chunk-review.mjs';
-import { makeReviewIo } from './lib/codex-review-cache.mjs';
+import { createGate } from './lib/codex-review-run.mjs';
+import { parseClaudeUsage } from './lib/review-metrics.mjs';
 import {
   activeWaivers,
   checkWaivers,
@@ -150,16 +156,17 @@ function claudeAvailable() {
  * waiver + exit logic, so a Claude pass blocks/passes exactly like a codex pass.
  * Returns '' on failure (the caller then degrades to SKIPPED_PRECONDITION).
  */
-function runClaudeReview(fullPrompt) {
+function runClaudeReview(fullPrompt, { model } = {}) {
   // `claude -p` reads the prompt from stdin in print/headless mode and emits a
   // single-turn result. `--output-format json` wraps it as { result: "<text>" }.
-  // No shell tools: the reviewer reads, and never starts processes (lib/review-commands.mjs).
-  const r = runClaudeReviewer(fullPrompt, REPO_ROOT, spawnSync);
+  // Lean flags and no shell tools: the reviewer reads, and never starts processes
+  // (lib/review-commands.mjs).
+  const r = runClaudeReviewer(fullPrompt, REPO_ROOT, spawnSync, { model });
   if (VERBOSE) {
     process.stderr.write('--- claude stdout ---\n' + (r.stdout || '') + '\n');
     process.stderr.write('--- claude stderr ---\n' + (r.stderr || '') + '\n');
   }
-  return claudeReviewText(r);
+  return { text: claudeReviewText(r), ...parseClaudeUsage(r.stdout || '') };
 }
 
 // sonar.sources paths from sonar-project.properties
@@ -331,129 +338,13 @@ function writeSchema() {
   return p;
 }
 
-// ── main ───────────────────────────────────────────────────────────────
-function main() {
-  fs.mkdirSync(OUT_DIR, { recursive: true });
-
-  // 1+2. Pick a semantic reviewer. Codex (OAuth) is primary; Claude Code is the
-  //      FALLBACK when codex is absent/unauthed OR hits its usage/tier cap. The
-  //      step degrades to SKIPPED_PRECONDITION only when NEITHER is usable — it
-  //      must never silently pass while a reviewer is available.
-  // CODEX_REVIEW_FORCE_FALLBACK=1 forces the Claude path (skip codex) — useful
-  // during a codex usage/tier outage and for testing the fallback.
-  const io = makeReviewIo({
-    repoRoot: REPO_ROOT,
-    outDir: OUT_DIR,
-    baseRef,
-    isInScope,
-    spawn: spawnSync,
-    fs,
-  });
-  const cache = io.lookup();
-  if (cache.reuse) return finish({ ...cache.reuse, io, cache: null });
-  const forceFallback = process.env.CODEX_REVIEW_FORCE_FALLBACK === '1';
-  const codexUsable = !forceFallback && commandAvailable('codex') && codexLoggedIn();
-  const claudeUsable = claudeAvailable();
-  if (!codexUsable && !claudeUsable) {
-    process.stdout.write(
-      'SKIPPED_PRECONDITION: no semantic reviewer available.\n' +
-        '  Install + authenticate codex (`npm i -g @openai/codex` then `codex login`),\n' +
-        '  or have the Claude Code CLI (`claude`) available as a fallback.\n'
-    );
-    process.exit(0);
-  }
-  if (!codexUsable) {
-    process.stdout.write(
-      '[codex-review] codex unavailable/unauthed — using Claude fallback reviewer.\n'
-    );
-  }
-
-  // 3. Collect changed files in sonar scope (a base that does not resolve FAILS the gate)
-  const scope = scopeChanges(baseRef, spawnSync, isInScope);
-  if (scope.message) stopGate(scope.message, [], []);
-  const { changed: changedFiles, scoped: scopedFiles } = scope;
-
-  process.stdout.write(`[codex-review] base ref : ${baseRef}\n`);
-  process.stdout.write(`[codex-review] changed  : ${changedFiles.length} files total\n`);
-  process.stdout.write(`[codex-review] in scope : ${scopedFiles.length} files\n`);
-
-  if (scopedFiles.length === 0) {
-    process.stdout.write(
-      '[codex-review] No source files changed — gate PASS (nothing to review).\n'
-    );
-    const result = { findings: [], scoped_files: [], base_ref: baseRef, verdict: 'PASS' };
-    fs.writeFileSync(FINDINGS_PATH, JSON.stringify(result, null, 2));
-    fs.writeFileSync(SUMMARY_PATH, 'No source files changed. Gate PASS.\n');
-    process.exit(0);
-  }
-
-  // 4. Write schema file
-  writeSchema();
-
-  // 5-7. Review the whole diff, chunk by chunk, Codex first and Claude as the FALLBACK
-  //      (lib/codex-chunk-review.mjs). An empty, partial or partly reviewed diff FAILS.
-  process.stdout.write('[codex-review] Preparing diff + review prompt ...\n');
-  const log = { out: (s) => process.stdout.write(s), err: (s) => process.stderr.write(s) };
-  const runCodex = makeCodexRunner({
-    lastMsgPath: path.join(OUT_DIR, 'codex-last-message.txt'),
-    repoRoot: REPO_ROOT,
-    fs,
-    runCodexReviewer,
-    spawn: spawnSync,
-    verbose: VERBOSE,
-    log,
-  });
-  const reviewers = { codexUsable, claudeUsable, runCodex, runClaude: runClaudeReview, log };
-  const result = runChunkedReview({
-    baseRef,
-    scopedFiles,
-    repoRoot: REPO_ROOT,
-    spawn: spawnSync,
-    buildPrompt,
-    review: (prompt) => reviewWithFallback(prompt, { ...reviewers, extract: extractFindings }),
-    write: (name, text) => fs.writeFileSync(path.join(OUT_DIR, name), text, 'utf8'),
-    clearStale: () =>
-      fs
-        .readdirSync(OUT_DIR)
-        .filter(isStaleReviewArtifact)
-        .forEach((name) => fs.rmSync(path.join(OUT_DIR, name))),
-    log,
-  });
-  if (result.kind === 'skip') {
-    // Neither reviewer produced parseable output. This is the ONLY non-enforcing
-    // path (local OAuth gate; CI never runs codex/claude). Degrade, don't block.
-    process.stdout.write(`${result.message}\n`);
-    process.exit(0);
-  }
-  if (result.kind === 'fail') stopGate(result.message, scopedFiles, result.findings);
-
-  process.stdout.write(`[codex-review] reviewer : ${result.reviewerUsed}\n`);
-  finish({
-    scopedFiles,
-    findings: result.findings,
-    reviewerUsed: result.reviewerUsed,
-    chunkCount: result.chunkCount,
-    io,
-    cache,
-  });
-}
-
-/** Writes the failure artifacts and exits 1. Never a PASS. */
-function stopGate(message, scopedFiles, findings) {
-  const artifact = failureArtifact({ baseRef, scopedFiles, findings, message });
-  fs.writeFileSync(FINDINGS_PATH, JSON.stringify(artifact, null, 2));
-  fs.writeFileSync(SUMMARY_PATH, `${message}\n`);
-  process.stdout.write(`${message}\n`);
-  process.exit(1);
-}
-
-function buildPrompt(files, part, diffText) {
+function buildPrompt(files, part, diffText, deltaNote = '') {
   const fileList = files.map((f) => `  - ${f}`).join('\n');
   const prompt = `You are an independent code auditor. Your task is to find REAL bugs in the diff below.
 
 Scope: only the following files changed in this PR (diff vs ${baseRef})${part}:
 ${fileList}
-
+${deltaNote}
 Your job:
 - Flag ONLY real defects with concrete evidence: correctness bugs, security vulnerabilities,
   data-integrity issues, logic/edge-case bugs, hallucinated API/contract assumptions, and
@@ -498,46 +389,48 @@ ${diffText}
 `;
 }
 
-/** Fingerprints, waivers, artifacts and the exit code for a fully reviewed diff. */
-function finish({ scopedFiles, findings: rawFindings, reviewerUsed, chunkCount, io, cache }) {
-  // 8. Stamp fingerprints (Codex computes them too, but we recompute for
-  //    consistency — our normalisation is the contract, not the model's).
-  //    The fingerprint is now anchored to the SOURCE CODE at the flagged
-  //    line(s), not the LLM's prose, so it stays stable across rephrasing.
-  const waivers = loadWaivers();
-  const findings = rawFindings.map((f) => {
-    const fp = fingerprint(f.file, f.line, f.issue, REPO_ROOT);
-    return { ...f, fingerprint: fp };
-  });
-
-  const { summary, blocking, lowLine } = io.complete({
-    rawFindings,
-    findings,
-    waivers,
-    cache,
-    scopedFiles,
-    reviewerUsed,
-    chunkCount,
+/** Everything the run needs from the outside world: git, the CLIs, files, the clock. */
+function runGate() {
+  const gate = createGate({
+    baseRef,
+    repoRoot: REPO_ROOT,
+    outDir: OUT_DIR,
+    env: process.env,
+    spawn: spawnSync,
+    fs,
+    homedir: os.homedir,
+    out: (text) => process.stdout.write(text),
+    err: (text) => process.stderr.write(text),
+    isInScope,
+    commandAvailable,
+    codexLoggedIn,
+    runCodexReviewer,
+    runClaude: runClaudeReview,
+    extract: extractFindings,
+    buildPrompt: (note) => (files, part, diffText) => buildPrompt(files, part, diffText, note),
+    writeSchema,
+    verbose: VERBOSE,
+    loadWaivers,
+    fingerprintOf: (f) => fingerprint(f.file, f.line, f.issue, REPO_ROOT),
     waivedLines: waivedFindingLines,
+    sleep: sleepMs,
   });
-  process.stdout.write(`${summary}\n${lowLine ?? ''}`);
+  process.exit(gate.run());
+}
 
-  if (blocking.length === 0) {
-    process.stdout.write('[codex-review] Gate PASS — no unwaived blocking findings.\n');
-    process.exit(0);
+/** Blocks the thread for ms (the gate is synchronous); used to wait for Codex's reset. */
+function sleepMs(ms) {
+  const cell = new Int32Array(new SharedArrayBuffer(4));
+  let left = ms;
+  while (left > 0) {
+    const step = Math.min(left, 30_000);
+    Atomics.wait(cell, 0, 0, step);
+    left -= step;
   }
-
-  process.stderr.write(
-    `[codex-review] Gate FAIL — ${blocking.length} unwaived blocking finding(s).\n` +
-      `  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml\n` +
-      `  (check with: node scripts/codex-review.mjs --check-waivers)\n` +
-      `  with a non-empty reason, author, and date.\n`
-  );
-  process.exit(1);
 }
 
 if (CHECK_WAIVERS_ONLY) {
   runWaiverCheck();
 } else {
-  main();
+  runGate();
 }

@@ -121,7 +121,7 @@ describe('ActivityFeedService.getStats', () => {
     await service.getStats(TENANT_ID, '7d');
 
     expect(mockCache.set).toHaveBeenCalledWith(
-      expect.stringContaining(`activity-stats:${TENANT_ID}:7d`),
+      expect.stringContaining(`activity-stats:${TENANT_ID}:none:7d`),
       expect.objectContaining({ total: 42, timeWindow: '7d' }),
       60 // TTL
     );

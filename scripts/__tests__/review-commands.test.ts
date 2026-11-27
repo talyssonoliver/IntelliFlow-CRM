@@ -8,6 +8,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
   CLAUDE_REVIEW_ARGS,
+  claudeReviewArgs,
+  claudeReviewModel,
   claudeReviewText,
   codexExecArgs,
   reviewerSpawnOptions,
@@ -30,6 +32,46 @@ describe('reviewer command lines', () => {
       CLAUDE_REVIEW_ARGS.indexOf('--disallowedTools') + 1
     );
     expect(disallowed).toEqual(expect.arrayContaining(['Bash', 'PowerShell']));
+  });
+
+  it('runs the Claude fallback lean: read-only tools, no MCP servers, no slash commands', () => {
+    // Task tiering 26/11/2026: about half the cost per call, same model.
+    expect(CLAUDE_REVIEW_ARGS).toContain('--strict-mcp-config');
+    expect(CLAUDE_REVIEW_ARGS).toContain('--disable-slash-commands');
+    expect(CLAUDE_REVIEW_ARGS[CLAUDE_REVIEW_ARGS.indexOf('--tools') + 1]).toBe('Read,Grep,Glob');
+    expect(CLAUDE_REVIEW_ARGS).not.toContain('--model');
+  });
+
+  it('runs the Claude fallback on Sonnet explicitly, never the account default', () => {
+    expect(claudeReviewModel({})).toBe('sonnet');
+    const args = claudeReviewArgs(claudeReviewModel({}));
+    expect(args[args.indexOf('--model') + 1]).toBe('sonnet');
+    expect(args[0]).toBe('-p');
+    // every lean and no-shell flag is still there
+    for (const a of CLAUDE_REVIEW_ARGS) expect(args).toContain(a);
+  });
+
+  it('lets CODEX_REVIEW_CLAUDE_MODEL override the Claude fallback model', () => {
+    expect(claudeReviewModel({ CODEX_REVIEW_CLAUDE_MODEL: 'claude-sonnet-5-5' })).toBe(
+      'claude-sonnet-5-5'
+    );
+    expect(claudeReviewModel({ CODEX_REVIEW_CLAUDE_MODEL: '  ' })).toBe('sonnet');
+    const spawn = vi.fn(() => ({ stdout: '', stderr: '', status: 0 }));
+    runClaudeReviewer('P', '/repo', spawn as never, { model: 'claude-sonnet-5-5' });
+    const argv = (spawn.mock.calls[0] as unknown as [string, string[]])[1];
+    expect(argv[argv.indexOf('--model') + 1]).toBe('claude-sonnet-5-5');
+  });
+
+  it('passes the tier model and effort to codex per run, never through the global config', () => {
+    const args = codexExecArgs('/tmp/last.txt', { model: 'gpt-6-luna', effort: 'medium' });
+    expect(args[args.indexOf('-m') + 1]).toBe('gpt-6-luna');
+    expect(args[args.indexOf('-c') + 1]).toBe('model_reasoning_effort=medium');
+    expect(args.slice(-2)).toEqual(['-o', '/tmp/last.txt']);
+    expect(args).toEqual(expect.arrayContaining(['-s', 'read-only']));
+    // no model or effort: codex uses its configured ones
+    const bare = codexExecArgs('/tmp/last.txt', { model: null, effort: null });
+    expect(bare).not.toContain('-m');
+    expect(bare).not.toContain('-c');
   });
 });
 
@@ -61,7 +103,7 @@ describe('starting the reviewers', () => {
     expect(spawn).toHaveBeenNthCalledWith(
       2,
       'claude',
-      [...CLAUDE_REVIEW_ARGS],
+      claudeReviewArgs('sonnet'),
       expect.objectContaining({ input: 'PROMPT', cwd: '/repo' })
     );
   });
@@ -81,15 +123,24 @@ describe('starting the reviewers', () => {
     expect(script).toMatch(
       /import \{[^}]*\brunCodexReviewer\b[^}]*\} from '\.\/lib\/review-commands\.mjs'/
     );
-    expect(script).toMatch(/makeCodexRunner\(\{[^}]*\brunCodexReviewer,[^}]*spawn: spawnSync/);
-    expect(loop).toMatch(/runCodexReviewer\(prompt, lastMsgPath, repoRoot, spawn\)/);
-    expect(script).toMatch(/runClaudeReviewer\(fullPrompt, REPO_ROOT, spawnSync\)/);
+    // The script hands the gate the codex starter and spawnSync; the gate hands them to the runner.
+    const gate = readFileSync(path.join(__dirname, '..', 'lib', 'codex-review-run.mjs'), 'utf8');
+    expect(script).toMatch(/createGate\(\{[\s\S]*spawn: spawnSync[\s\S]*\brunCodexReviewer,/);
+    expect(gate).toMatch(
+      /makeCodexRunner\(\{[^}]*runCodexReviewer: d\.runCodexReviewer,[^}]*spawn: d\.spawn/
+    );
+    expect(loop).toMatch(/runCodexReviewer\(prompt, lastMsgPath, repoRoot, spawn, tier\)/);
+    expect(script).toMatch(/runClaudeReviewer\(fullPrompt, REPO_ROOT, spawnSync, \{ model \}\)/);
     // No review run starts past the helper (`codex login status` is only an auth check).
-    for (const source of [script, loop]) {
+    for (const source of [script, loop, gate]) {
       expect(source).not.toMatch(/spawn(Sync)?\(\s*'codex',\s*\[\s*'exec'/);
       expect(source).not.toMatch(/spawn(Sync)?\(\s*'claude'/);
     }
     // The loop starts nothing but git itself.
-    expect(loop.match(/\bspawn\(\s*'(\w+)'/g)).toEqual(["spawn('git'", "spawn('git'"]);
+    expect(loop.match(/\bspawn\(\s*'(\w+)'/g)).toEqual([
+      "spawn('git'",
+      "spawn('git'",
+      "spawn('git'",
+    ]);
   });
 });
