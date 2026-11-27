@@ -844,6 +844,26 @@ async function persistEntityActivity(
   }
 }
 
+/** The task field that links a task to the record an insight is about. */
+export function taskLinkFor(insight: Pick<GeneratedInsight, 'entityType' | 'entityId'>): {
+  leadId?: string;
+  contactId?: string;
+  opportunityId?: string;
+} {
+  if (!insight.entityId) return {};
+  switch (insight.entityType) {
+    case 'lead':
+      return { leadId: insight.entityId };
+    case 'contact':
+      return { contactId: insight.entityId };
+    case 'deal':
+    case 'opportunity':
+      return { opportunityId: insight.entityId };
+    default:
+      return {};
+  }
+}
+
 /** Writes the insight; returns its id, or null when it was a duplicate or its entity is gone. */
 async function persistInsightRecord(
   prisma: any,
@@ -1078,6 +1098,9 @@ async function persistHighPriorityInsightSideEffects(
           tenantId,
           ownerId: userId,
           dueDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+          // Owner 27/11: the task is about the insight's record; without the link the Tasks
+          // table showed "—" under Linked entity for every AI task.
+          ...taskLinkFor(insight),
         },
       });
     } catch (taskError) {
