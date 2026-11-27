@@ -42,6 +42,8 @@ const SYSTEM_PATHS: Record<string, string> = {
     "reads one mailbox's own conversation to draft that mailbox's reply (never another mailbox)",
   'packages/adapters/src/repositories/PrismaConversionUndoAdapter.ts':
     'counts the rows an undone conversion touched (an integrity check), shows no mail',
+  'packages/adapters/src/repositories/subject-communications.ts':
+    'DSAR erasure of one data subject (IFC-316): an administrator action that anonymises mail, shows nobody a mail',
   'packages/adapters/src/repositories/PrismaSubjectDataRepository.ts':
     'DSAR export of one data subject: an administrator action (owner decision 26/11: may export all)',
 };
