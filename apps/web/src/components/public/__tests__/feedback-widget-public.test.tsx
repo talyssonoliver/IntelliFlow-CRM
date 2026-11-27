@@ -326,3 +326,49 @@ describe('FeedbackRatingRadioGroup', () => {
     expect((screen.getByTestId('public-feedback-rating-1') as HTMLInputElement).checked).toBe(true);
   });
 });
+
+describe('PublicFeedbackFab on phones (Aurora register #66, 27/11)', () => {
+  const setViewport = (width: number, scrollY: number, scrollHeight = 5000) => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 844 });
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: scrollY });
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      configurable: true,
+      value: scrollHeight,
+    });
+  };
+  const scrollTo = (y: number) =>
+    act(() => {
+      Object.defineProperty(window, 'scrollY', { configurable: true, value: y });
+      window.dispatchEvent(new Event('scroll'));
+    });
+
+  it('tucks away while scrolling down at 390 px and returns on scroll up', () => {
+    setViewport(390, 0);
+    render(<PublicFeedbackFab />);
+    const fab = screen.getByTestId('public-feedback-fab');
+    expect(fab).toHaveAttribute('data-tucked', 'false');
+    scrollTo(400);
+    expect(fab).toHaveAttribute('data-tucked', 'true');
+    expect(fab.className).toMatch(/pointer-events-none/);
+    scrollTo(300);
+    expect(fab).toHaveAttribute('data-tucked', 'false');
+  });
+
+  it('comes back at the end of the page', () => {
+    setViewport(390, 0, 1500);
+    render(<PublicFeedbackFab />);
+    const fab = screen.getByTestId('public-feedback-fab');
+    scrollTo(300);
+    expect(fab).toHaveAttribute('data-tucked', 'true');
+    scrollTo(1500 - 844);
+    expect(fab).toHaveAttribute('data-tucked', 'false');
+  });
+
+  it('never tucks on a wide screen', () => {
+    setViewport(1440, 0);
+    render(<PublicFeedbackFab />);
+    scrollTo(800);
+    expect(screen.getByTestId('public-feedback-fab')).toHaveAttribute('data-tucked', 'false');
+  });
+});

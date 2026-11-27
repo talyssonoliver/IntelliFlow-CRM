@@ -40,11 +40,45 @@ import { usePathname } from 'next/navigation';
 // FAB
 // -----------------------------
 
+const PHONE_MAX_WIDTH = 639;
+const SCROLL_DELTA = 8;
+
+/**
+ * Below 640 px the FAB slides away while the visitor scrolls down and comes back when they
+ * scroll up or reach the end of the page (Aurora register #66, 27/11: at 390 px it sat over
+ * the AI agents card text on /status). Wider screens keep it in place. A focused FAB never
+ * tucks, so keyboard users keep it.
+ */
+export function useTuckOnScrollDown(target: React.RefObject<HTMLElement | null>): boolean {
+  const [tucked, setTucked] = React.useState(false);
+  React.useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const phone = window.innerWidth <= PHONE_MAX_WIDTH;
+      const atEnd = window.innerHeight + y >= document.documentElement.scrollHeight - 4;
+      const focused = target.current !== null && document.activeElement === target.current;
+      if (!phone || atEnd || focused) setTucked(false);
+      else if (y > last + SCROLL_DELTA) setTucked(true);
+      else if (y < last - SCROLL_DELTA) setTucked(false);
+      if (Math.abs(y - last) > SCROLL_DELTA) last = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [target]);
+  return tucked;
+}
+
 export function PublicFeedbackFab() {
   const [open, setOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
   const fabRef = React.useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
+  const tucked = useTuckOnScrollDown(fabRef);
 
   React.useEffect(() => {
     setMounted(true);
@@ -63,8 +97,11 @@ export function PublicFeedbackFab() {
         className={cn(
           'fixed bottom-6 right-6 size-12 rounded-full bg-ds-primary text-white shadow-lg',
           'flex items-center justify-center hover:shadow-xl transition-shadow',
-          'focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2'
+          'focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2',
+          'motion-safe:transition-[transform,opacity,box-shadow] motion-safe:duration-200',
+          tucked && 'pointer-events-none translate-y-24 opacity-0'
         )}
+        data-tucked={tucked ? 'true' : 'false'}
         style={{ zIndex: 50 }}
       >
         <span className="material-symbols-outlined" aria-hidden="true">
