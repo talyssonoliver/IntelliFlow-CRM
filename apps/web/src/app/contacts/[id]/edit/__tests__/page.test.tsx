@@ -225,14 +225,16 @@ describe('Edit Contact page — clearing the last name (MVP-003, #28)', () => {
   it('sends "" when the last name is cleared, so the API saves it empty', async () => {
     h.record = { ...h.record, firstName: 'Unknown', lastName: 'Unknown' };
     render(<EditContactPage />);
-    fireEvent.change(screen.getByLabelText(/First Name/i), { target: { value: 'Pilates Living' } });
+    fireEvent.change(screen.getByLabelText(/First Name/i), {
+      target: { value: 'Studio Pilates Demo' },
+    });
     fireEvent.change(screen.getByLabelText(/Last Name/i), { target: { value: '' } });
     goToLastStep();
     fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
     await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1));
     const sent = h.mutateAsync.mock.calls[0][0];
     expect(sent).toHaveProperty('lastName', '');
-    expect(sent.firstName).toBe('Pilates Living');
+    expect(sent.firstName).toBe('Studio Pilates Demo');
   });
 
   it('treats a last name of only spaces as cleared', async () => {
@@ -248,7 +250,7 @@ describe('Edit Contact page — clearing the last name (MVP-003, #28)', () => {
     h.record = {
       ...h.record,
       phone: '+447700900123',
-      company: 'Pilates Living',
+      company: 'Studio Pilates Demo',
       title: 'Owner',
       department: 'Studio',
       linkedInUrl: 'https://www.linkedin.com/in/example-invalid',

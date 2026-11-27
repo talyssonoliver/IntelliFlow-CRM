@@ -16,7 +16,7 @@ export interface AppAvatarProps extends React.HTMLAttributes<HTMLDivElement> {
 
 /**
  * Initials for a name: the first letters of the first words, or the first letters of a
- * single word ("Energym" -> "EN"); "?" only when there is no name at all.
+ * single word ("Northfield" -> "NO"); "?" only when there is no name at all.
  */
 export function getInitials(name: string, maxInitials = 2): string {
   const parts = name

@@ -153,14 +153,14 @@ describe('ConvertLeadDialog', () => {
     const email = 'owner@pilates.example.invalid';
     render(
       <ConvertLeadDialog
-        lead={{ id: 'lead-9', company: 'Pilates Living', email }}
+        lead={{ id: 'lead-9', company: 'Studio Pilates Demo', email }}
         userId="user-1"
         open
         onOpenChange={vi.fn()}
       />
     );
     const line = screen.getByText('Contact:').parentElement;
-    expect(line).toHaveTextContent(`Contact: Pilates Living (${email})`);
+    expect(line).toHaveTextContent(`Contact: Studio Pilates Demo (${email})`);
     expect(line).not.toHaveTextContent(/unknown/i);
   });
 

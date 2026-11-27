@@ -30,6 +30,20 @@
       "reason": "ADR-054: #1117 — added by #1278 with the same skip as rls-tenant-isolation and inherited-membership: CI's Integration Tests job runs it against the migrated database, while the local pre-ship coverage step cannot resolve @intelliflow/db from tests/integration/setup.ts, so createIsolatedTestPrismaClient() returns null and all 13 tests skip there. Surfaced by the first full local run after #1278 (a lockfile change widens pre-ship to the full suite). Remove this entry when #1117 makes the coverage run load the client."
     },
     {
+      "file": "tests/integration/ai-monitoring-sql-parity.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 15,
+      "reviewBy": "2026-12-31",
+      "reason": "ADR-054: #1117 — egress audit 1126. Runs 15/15 in CI's Integration Tests job and in the pre-ship integration-tests step against the migrated database. The local pre-ship coverage step cannot resolve @intelliflow/db from tests/integration/setup.ts, so createIsolatedTestPrismaClient() returns null and the suite skips there. Remove this entry when #1117 makes the coverage run load the client."
+    },
+    {
+      "file": "tests/integration/ai-monitoring-retention.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 4,
+      "reviewBy": "2026-12-31",
+      "reason": "ADR-054: #1117 — egress audit 1126. Runs 4/4 in CI's Integration Tests job and in the pre-ship integration-tests step against the migrated database. The local pre-ship coverage step cannot resolve @intelliflow/db from tests/integration/setup.ts, so the suite skips there. Remove this entry when #1117 makes the coverage run load the client."
+    },
+    {
       "file": "tests/integration/auth-session-revocation.test.ts",
       "kind": "infra-gated",
       "maxSkipped": 4,

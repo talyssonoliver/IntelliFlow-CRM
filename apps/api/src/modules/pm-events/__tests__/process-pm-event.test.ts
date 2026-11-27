@@ -12,7 +12,7 @@ function envelope(over: Record<string, unknown> = {}): string {
   return JSON.stringify({
     eventId: EVENT_ID,
     sequence: 42,
-    tenantSlug: 'nutri-gyn',
+    tenantSlug: 'example-clinic',
     category: 'project',
     type: 'stage_changed',
     occurredAt: '2026-06-20T10:00:00Z',
@@ -181,7 +181,7 @@ describe('processPmEvent — leakage', () => {
   it('every response is aggregate-only and never leaks payload/tenant/secret/raw error', async () => {
     const throwingStore = {
       get: async () => {
-        throw new Error('SENSITIVE: tenant nutri-gyn row 42 bearer=' + BEARER);
+        throw new Error('SENSITIVE: tenant example-clinic row 42 bearer=' + BEARER);
       },
       put: async () => ({ created: true }),
     };
@@ -197,7 +197,7 @@ describe('processPmEvent — leakage', () => {
       expect(Object.keys(r.body).every((k) => allowed.has(k))).toBe(true);
       const s = JSON.stringify(r.body);
       expect(s).not.toContain(BEARER);
-      expect(s).not.toContain('nutri-gyn');
+      expect(s).not.toContain('example-clinic');
       expect(s).not.toMatch(/payload|tenant|row 42|connection refused|5432/i);
     }
   });
