@@ -785,6 +785,29 @@ describe('GoogleCalendarAdapter', () => {
         expect(body()).not.toHaveProperty('id');
       });
 
+      it('stamps the event with its appointment and idempotency key, and reads the appointment back', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: async () =>
+            eventJson({
+              extendedProperties: { private: { auroraAppointmentId: 'appt-1' } },
+            }),
+        });
+        const appointment = createMockAppointment();
+
+        const result = await adapter.createEvent(mockTokens, appointment as any, 'appt-1:create', {
+          eventId: 'abc123',
+        });
+
+        expect(body().extendedProperties).toEqual({
+          private: {
+            auroraAppointmentId: appointment.id.value,
+            auroraIdempotencyKey: 'appt-1:create',
+          },
+        });
+        expect(result.value?.auroraAppointmentId).toBe('appt-1');
+      });
+
       it('returns the event that is already there when Google answers 409', async () => {
         mockFetch
           .mockResolvedValueOnce({ ok: false, status: 409, json: async () => ({}) })
