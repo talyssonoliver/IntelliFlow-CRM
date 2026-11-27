@@ -49,7 +49,9 @@ const SCROLL_DELTA = 8;
  * the AI agents card text on /status). Wider screens keep it in place. A focused FAB never
  * tucks, so keyboard users keep it.
  */
-export function useTuckOnScrollDown(target: React.RefObject<HTMLElement | null>): boolean {
+export function useTuckOnScrollDown(
+  target: React.RefObject<HTMLElement | null>
+): [boolean, () => void] {
   const [tucked, setTucked] = React.useState(false);
   React.useEffect(() => {
     let last = window.scrollY;
@@ -70,7 +72,9 @@ export function useTuckOnScrollDown(target: React.RefObject<HTMLElement | null>)
       window.removeEventListener('resize', onScroll);
     };
   }, [target]);
-  return tucked;
+  // Keyboard focus brings it back at once (codex 27/11: a tucked FAB was still a Tab stop).
+  const untuck = React.useCallback(() => setTucked(false), []);
+  return [tucked, untuck];
 }
 
 export function PublicFeedbackFab() {
@@ -78,7 +82,7 @@ export function PublicFeedbackFab() {
   const [mounted, setMounted] = React.useState(false);
   const fabRef = React.useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
-  const tucked = useTuckOnScrollDown(fabRef);
+  const [tucked, untuck] = useTuckOnScrollDown(fabRef);
 
   React.useEffect(() => {
     setMounted(true);
@@ -92,6 +96,7 @@ export function PublicFeedbackFab() {
         ref={fabRef}
         type="button"
         onClick={() => setOpen(true)}
+        onFocus={untuck}
         aria-label="Open feedback form"
         data-testid="public-feedback-fab"
         className={cn(

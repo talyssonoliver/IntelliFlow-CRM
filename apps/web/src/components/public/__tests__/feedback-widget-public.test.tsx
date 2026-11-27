@@ -355,6 +355,16 @@ describe('PublicFeedbackFab on phones (Aurora register #66, 27/11)', () => {
     expect(fab).toHaveAttribute('data-tucked', 'false');
   });
 
+  it('comes back as soon as it gets keyboard focus (codex 27/11)', () => {
+    setViewport(390, 0);
+    render(<PublicFeedbackFab />);
+    const fab = screen.getByTestId('public-feedback-fab');
+    scrollTo(400);
+    expect(fab).toHaveAttribute('data-tucked', 'true');
+    act(() => fab.focus());
+    expect(fab).toHaveAttribute('data-tucked', 'false');
+  });
+
   it('comes back at the end of the page', () => {
     setViewport(390, 0, 1500);
     render(<PublicFeedbackFab />);
