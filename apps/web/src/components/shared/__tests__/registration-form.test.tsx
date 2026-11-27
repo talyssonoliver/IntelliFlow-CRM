@@ -32,6 +32,21 @@ describe('RegistrationForm', () => {
     expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
   });
 
+  // The one real property signup-security.test.ts touched; it asserted strings, not the form (#1216).
+  it('marks both password fields as new passwords, so browsers never autofill a saved one', () => {
+    render(<RegistrationForm onSubmit={mockOnSubmit} />);
+
+    expect(screen.getByPlaceholderText(/create a password/i)).toHaveAttribute(
+      'autocomplete',
+      'new-password'
+    );
+    expect(screen.getByPlaceholderText(/confirm your password/i)).toHaveAttribute(
+      'autocomplete',
+      'new-password'
+    );
+    expect(screen.getByLabelText(/email address/i)).toHaveAttribute('autocomplete', 'email');
+  });
+
   it('renders terms and privacy policy links', () => {
     render(<RegistrationForm onSubmit={mockOnSubmit} />);
 
