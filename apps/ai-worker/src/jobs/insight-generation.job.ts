@@ -874,6 +874,48 @@ export function insightLockKey(
   return `insight:${tenantId}:${userId}:${type}:${insight.entityId}`;
 }
 
+/**
+ * Takes the per-user, per-record insight lock (held to the end of the caller's transaction) and
+ * says whether the insight should still be written: a heuristic fallback is not, when the user
+ * already has an open insight about the record.
+ */
+async function lockRecordForInsight(
+  prisma: any,
+  insight: GeneratedInsight,
+  tenantId: string,
+  userId: string,
+  fromFallback: boolean
+): Promise<boolean> {
+  if (!insight.entityId || !insight.entityType) return true;
+  // One writer at a time per user and record (codex 27/11): this runs inside the subject's
+  // transaction, so the lock is held through the insert and the supersession that follow. Two jobs
+  // writing about one deal at once otherwise could not see each other's uncommitted insight and
+  // both would stay open. Lead and contact insights also hold the person's row lock.
+  await prisma.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${insightLockKey(
+    tenantId,
+    userId,
+    insight
+  )}, 0))`;
+
+  // A generic fallback (model down) adds nothing when the user already has an open insight about
+  // this record, and the Home lists show one per record, newest first: the fallback would hide
+  // the model-written one (codex 27/11). Checked under the record lock above.
+  if (fromFallback) {
+    const open = await prisma.aIInsight.findFirst({
+      where: {
+        tenantId,
+        entityType: insight.entityType === 'deal' ? 'opportunity' : insight.entityType,
+        entityId: insight.entityId,
+        status: { in: ['NEW', 'VIEWED'] },
+        metadata: { path: ['userId'], equals: userId },
+      },
+      select: { id: true },
+    });
+    if (open) return false;
+  }
+  return true;
+}
+
 /** Writes the insight; returns its id, or null when it was a duplicate or its entity is gone. */
 async function persistInsightRecord(
   prisma: any,
@@ -888,16 +930,8 @@ async function persistInsightRecord(
 ): Promise<string | null> {
   const expiresAt = new Date(now.getTime() + getInsightTTL(insight.priority));
 
-  // One writer at a time per user and record (codex 27/11): this runs inside the subject's
-  // transaction, so the lock is held through the insert and the supersession below. Two jobs
-  // writing about one deal at once otherwise could not see each other's uncommitted insight and
-  // both would stay open. Lead and contact insights also hold the person's row lock.
-  if (insight.entityId && insight.entityType) {
-    await prisma.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${insightLockKey(
-      tenantId,
-      userId,
-      insight
-    )}, 0))`;
+  if (!(await lockRecordForInsight(prisma, insight, tenantId, userId, fromFallback))) {
+    return null;
   }
 
   const existingInsight = await prisma.aIInsight.findFirst({

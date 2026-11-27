@@ -24,6 +24,7 @@ const mockPrimaryMeta = vi.hoisted(() => vi.fn());
 const mockFallbackMeta = vi.hoisted(() => vi.fn());
 const mockGenerateFallbackInsights = vi.hoisted(() => vi.fn());
 const mockCreate = vi.hoisted(() => vi.fn());
+const mockInsightFindFirst = vi.hoisted(() => vi.fn(async (_args?: unknown) => null as unknown));
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockTaskCreate = vi.hoisted(() => vi.fn());
 const mockLeadAIInsightUpsert = vi.hoisted(() => vi.fn());
@@ -79,7 +80,7 @@ vi.mock('@intelliflow/db', () => ({
     aIInsight: {
       updateMany: () => Promise.resolve({ count: 0 }),
       create: (...args: any[]) => mockCreate(...args),
-      findFirst: () => Promise.resolve(null),
+      findFirst: (args: unknown) => mockInsightFindFirst(args),
     },
     notification: {
       create: (...args: any[]) => mockNotificationCreate(...args),
@@ -218,6 +219,26 @@ describe('insight generation — provider fallback (#324)', () => {
     expect(mockGenerateFallbackInsights).toHaveBeenCalled();
     const confidences = mockCreate.mock.calls.map((c: any[]) => c[0].data.confidence);
     confidences.forEach((c: number) => expect(c).toBe(40));
+  });
+
+  it('writes no heuristic insight over an open one about the same record (codex 27/11)', async () => {
+    mockPrimaryMeta.mockRejectedValue(new Error('primary provider unavailable'));
+    mockFallbackMeta.mockRejectedValue(new Error('fallback provider unavailable'));
+    // The open-insight check (it selects only the id) finds the model-written insight.
+    mockInsightFindFirst.mockImplementation(async (args: unknown) =>
+      (args as { select?: { id?: boolean } })?.select?.id ? { id: 'model-insight' } : null
+    );
+    try {
+      await processInsightJob(createMockJob());
+      expect(mockGenerateFallbackInsights).toHaveBeenCalled();
+      const aboutRecords = mockCreate.mock.calls.filter((c: any[]) => c[0].data.entityId);
+      expect(aboutRecords).toHaveLength(0);
+      expect(mockInsightFindFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ select: { id: true } })
+      );
+    } finally {
+      mockInsightFindFirst.mockImplementation(async () => null);
+    }
   });
 
   it('keeps the heuristic when the fallback provider also throws', async () => {
