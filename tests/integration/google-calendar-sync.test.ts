@@ -168,7 +168,7 @@ describeDb('google calendar sync on a real database', () => {
     await prisma.$disconnect();
   });
 
-  beforeEach(async () => {
+  beforeEach(async ({ onTestFailed }) => {
     mocks.hasOAuthClient.mockReturnValue(true);
     mocks.getOAuthAccess.mockImplementation(
       async (_p: unknown, mailbox: { tokenVersion: number }) => ({
@@ -176,7 +176,23 @@ describeDb('google calendar sync on a real database', () => {
         tokenVersion: mailbox.tokenVersion,
       })
     );
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    // Quiet, but kept: a failing test prints what the sync warned about and the state it left.
+    const warnings: unknown[][] = [];
+    vi.spyOn(console, 'warn').mockImplementation((...args) => void warnings.push(args));
+    onTestFailed(async () => {
+      const mailboxes = await prisma.emailMailbox.findMany({
+        where: { id: { in: [mailboxA, mailboxB] } },
+        select: {
+          id: true,
+          calendarStatus: true,
+          calendarNextSyncAt: true,
+          calendarLockedUntil: true,
+          calendarFailureCount: true,
+          calendarSyncToken: true,
+        },
+      });
+      console.error('DIAG calendar sync', JSON.stringify({ warnings, mailboxes, now: new Date() }));
+    });
     // A clean slate for each test: both calendars empty, both mailboxes healthy and unsynced.
     await prisma.calendarEventLink.deleteMany({ where: { tenantId: { in: [tenantA, tenantB] } } });
     await prisma.appointment.deleteMany({ where: { tenantId: { in: [tenantA, tenantB] } } });
