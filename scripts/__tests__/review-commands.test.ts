@@ -31,6 +31,26 @@ describe('reviewer command lines', () => {
     );
     expect(disallowed).toEqual(expect.arrayContaining(['Bash', 'PowerShell']));
   });
+
+  it('runs the Claude fallback lean: read-only tools, no MCP servers, no slash commands', () => {
+    // Task tiering 26/11/2026: about half the cost per call, same model.
+    expect(CLAUDE_REVIEW_ARGS).toContain('--strict-mcp-config');
+    expect(CLAUDE_REVIEW_ARGS).toContain('--disable-slash-commands');
+    expect(CLAUDE_REVIEW_ARGS[CLAUDE_REVIEW_ARGS.indexOf('--tools') + 1]).toBe('Read,Grep,Glob');
+    expect(CLAUDE_REVIEW_ARGS).not.toContain('--model');
+  });
+
+  it('passes the tier model and effort to codex per run, never through the global config', () => {
+    const args = codexExecArgs('/tmp/last.txt', { model: 'gpt-6-luna', effort: 'medium' });
+    expect(args[args.indexOf('-m') + 1]).toBe('gpt-6-luna');
+    expect(args[args.indexOf('-c') + 1]).toBe('model_reasoning_effort=medium');
+    expect(args.slice(-2)).toEqual(['-o', '/tmp/last.txt']);
+    expect(args).toEqual(expect.arrayContaining(['-s', 'read-only']));
+    // no model or effort: codex uses its configured ones
+    const bare = codexExecArgs('/tmp/last.txt', { model: null, effort: null });
+    expect(bare).not.toContain('-m');
+    expect(bare).not.toContain('-c');
+  });
 });
 
 describe('starting the reviewers', () => {
@@ -82,7 +102,7 @@ describe('starting the reviewers', () => {
       /import \{[^}]*\brunCodexReviewer\b[^}]*\} from '\.\/lib\/review-commands\.mjs'/
     );
     expect(script).toMatch(/makeCodexRunner\(\{[^}]*\brunCodexReviewer,[^}]*spawn: spawnSync/);
-    expect(loop).toMatch(/runCodexReviewer\(prompt, lastMsgPath, repoRoot, spawn\)/);
+    expect(loop).toMatch(/runCodexReviewer\(prompt, lastMsgPath, repoRoot, spawn, tier\)/);
     expect(script).toMatch(/runClaudeReviewer\(fullPrompt, REPO_ROOT, spawnSync\)/);
     // No review run starts past the helper (`codex login status` is only an auth check).
     for (const source of [script, loop]) {
@@ -90,6 +110,10 @@ describe('starting the reviewers', () => {
       expect(source).not.toMatch(/spawn(Sync)?\(\s*'claude'/);
     }
     // The loop starts nothing but git itself.
-    expect(loop.match(/\bspawn\(\s*'(\w+)'/g)).toEqual(["spawn('git'", "spawn('git'"]);
+    expect(loop.match(/\bspawn\(\s*'(\w+)'/g)).toEqual([
+      "spawn('git'",
+      "spawn('git'",
+      "spawn('git'",
+    ]);
   });
 });
