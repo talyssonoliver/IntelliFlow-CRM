@@ -22,9 +22,12 @@ describe('deduplicateInsights (owner 21/11: same purpose, same lead)', () => {
     expect(deduplicateInsights(rows).map((r) => r.id)).toEqual(['3', '5']);
   });
 
-  it('keeps insights of different types about the same record', () => {
-    const rows = [row('2', 'Risk', 'lead-b', 'anomaly'), row('1', 'Opportunity', 'lead-b')];
-    expect(deduplicateInsights(rows)).toHaveLength(2);
+  it('keeps one per record even across types (owner 27/11: achievement + reminder, same lead)', () => {
+    const rows = [
+      row('2', 'Lead converted', 'lead-b', 'prediction'),
+      row('1', 'Converted, check', 'lead-b'),
+    ];
+    expect(deduplicateInsights(rows).map((r) => r.id)).toEqual(['2']);
   });
 
   it('still removes same-title copies of insights that are not about one record', () => {

@@ -916,7 +916,7 @@ async function persistInsightRecord(
         tenantId,
         entityType: insight.entityType === 'deal' ? 'opportunity' : insight.entityType,
         entityId: insight.entityId,
-        type: mapInsightTypeToDbType(insight.type),
+        // Any type: one open insight per record (owner 27/11).
         id: { not: created.id },
         // Only insights older than this one: two jobs running at once then never expire each
         // other's new insight, and the newest one stays open (codex review 26/11).

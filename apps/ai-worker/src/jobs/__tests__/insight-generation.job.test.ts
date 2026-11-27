@@ -216,7 +216,7 @@ describe('processInsightJob', () => {
     expect(firstCall.data.metadata).toHaveProperty('userId', 'user-001');
   });
 
-  it('supersedes older open insights of the same user of the same type for the same entity', async () => {
+  it('supersedes older open insights of the same user for the same entity, any type', async () => {
     // Owner 21/11: three "Opportunity" insights for one lead, each worded differently by the
     // model, so the old exact-title check never matched.
     const job = createMockJob({
@@ -230,7 +230,6 @@ describe('processInsightJob', () => {
       tenantId: '00000000-0000-4000-a000-000000000001',
       entityType: 'opportunity',
       entityId: 'deal-1',
-      type: mockCreate.mock.calls[0][0].data.type,
       id: { not: 'insight-1' },
       // Only older insights: two concurrent jobs never expire each other's new one.
       createdAt: { lt: new Date('2026-11-26T12:00:00Z') },
@@ -238,6 +237,7 @@ describe('processInsightJob', () => {
       status: { in: ['NEW', 'VIEWED'] },
       metadata: { path: ['userId'], equals: 'user-001' },
     });
+    expect(where).not.toHaveProperty('type');
     expect(data).toEqual({ status: 'EXPIRED' });
   });
 

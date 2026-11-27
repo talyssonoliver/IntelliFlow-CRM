@@ -279,8 +279,10 @@ export function deduplicateInsights<
 >(items: T[]): T[] {
   const seen = new Set<string>();
   return items.filter((item) => {
+    // One per record, whatever the type (owner 27/11: an achievement and a reminder that both said
+    // "Pilates Living converted" were the same insight twice).
     const key = item.entityId
-      ? `entity:${item.entityType ?? ''}:${item.entityId}:${item.type ?? ''}`
+      ? `entity:${item.entityType ?? ''}:${item.entityId}`
       : `title:${item.title}`;
     if (seen.has(key)) return false;
     seen.add(key);
