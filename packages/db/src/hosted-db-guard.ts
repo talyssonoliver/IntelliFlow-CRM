@@ -9,7 +9,8 @@
  * runtime. This is the ONE shared check; every DB client creation site calls it.
  *
  * Deployed runtimes that pass:
- *   - Railway: `RAILWAY_ENVIRONMENT` is present.
+ *   - Railway: any of `RAILWAY_ENVIRONMENT`, `RAILWAY_ENVIRONMENT_NAME`, `RAILWAY_ENVIRONMENT_ID` or
+ *     `RAILWAY_PROJECT_ID` is present (RAILWAY_ENVIRONMENT may be a legacy alias, so accept all four).
  *   - Vercel: `VERCEL_ENV` is `production` or `preview` (apps/web has no server-side DB client today;
  *     if one is added, a Vercel deployment passes and `vercel dev` / local builds do not).
  * Deliberate ops tools (not the Prisma CLI, which never creates a client) set `ALLOW_HOSTED_DB=1`;
@@ -58,9 +59,17 @@ export function isHostedSupabaseUrl(connectionString: string | undefined | null)
   return HOSTED_AFTER_AT.test(connectionString);
 }
 
+/** Variables Railway injects into every deployed container; any one proves a Railway runtime. */
+const RAILWAY_MARKERS = [
+  'RAILWAY_ENVIRONMENT',
+  'RAILWAY_ENVIRONMENT_NAME',
+  'RAILWAY_ENVIRONMENT_ID',
+  'RAILWAY_PROJECT_ID',
+] as const;
+
 /** True when the process is a real deployed Railway or Vercel (production/preview) runtime. */
 export function isDeployedRuntime(env: HostedDbGuardEnv = process.env): boolean {
-  if (env['RAILWAY_ENVIRONMENT']) return true;
+  if (RAILWAY_MARKERS.some((name) => Boolean(env[name]))) return true;
   const vercelEnv = env['VERCEL_ENV'];
   return vercelEnv === 'production' || vercelEnv === 'preview';
 }
@@ -89,7 +98,7 @@ export function assertHostedDbAllowed(
 
   throw new Error(
     `[hosted-db-guard] ${options.variableName} names a hosted database outside a deployed ` +
-      'runtime (no RAILWAY_ENVIRONMENT, and VERCEL_ENV is not production or preview). ' +
+      'runtime (no Railway environment variable, and VERCEL_ENV is not production or preview). ' +
       'Refusing to start. Point it at the local database, or set ALLOW_HOSTED_DB=1 for a ' +
       'deliberate ops task.'
   );

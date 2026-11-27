@@ -53,6 +53,30 @@ describe('hosted-db-guard', () => {
     ).not.toThrow();
   });
 
+  it.each([
+    'RAILWAY_ENVIRONMENT',
+    'RAILWAY_ENVIRONMENT_NAME',
+    'RAILWAY_ENVIRONMENT_ID',
+    'RAILWAY_PROJECT_ID',
+  ])('passes hosted + %s alone as a Railway runtime', (name) => {
+    expect(isDeployedRuntime({ [name]: 'placeholder' })).toBe(true);
+    expect(() =>
+      assertHostedDbAllowed(hostedDirect, opts({ [name]: 'placeholder' }))
+    ).not.toThrow();
+    expect(() =>
+      assertHostedDbAllowed(hostedPooler, opts({ [name]: 'placeholder' }))
+    ).not.toThrow();
+  });
+
+  it('does not accept an empty Railway variable or an unrelated RAILWAY_ prefix', () => {
+    expect(() =>
+      assertHostedDbAllowed(
+        hostedDirect,
+        opts({ RAILWAY_ENVIRONMENT: '', RAILWAY_SERVICE_NAME: 'x' })
+      )
+    ).toThrow();
+  });
+
   it.each(['production', 'preview'])('passes hosted + VERCEL_ENV=%s', (vercelEnv) => {
     expect(() =>
       assertHostedDbAllowed(hostedDirect, opts({ VERCEL_ENV: vercelEnv }))
