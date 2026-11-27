@@ -123,8 +123,8 @@ export function usePerformanceMetrics(range: DateRange, period: PeriodKey, enabl
       pending: trend.isLoading || trendBefore.isLoading,
       failed: (trend.isError && !trend.data) || (trendBefore.isError && !trendBefore.data),
       retry: () => {
-        void trend.refetch();
-        void trendBefore.refetch();
+        // A failed refetch shows again as `failed`; nothing else to handle here.
+        Promise.all([trend.refetch(), trendBefore.refetch()]).catch(() => undefined);
       },
     },
   };
