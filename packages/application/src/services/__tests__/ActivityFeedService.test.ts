@@ -270,7 +270,8 @@ describe('ActivityFeedService', () => {
         'CONTACT',
         'contact-abc',
         11, // limit + 1
-        null
+        null,
+        undefined
       );
     });
 
@@ -292,10 +293,17 @@ describe('ActivityFeedService', () => {
       const cursorStr = encodeCursor(ts, 'lead_5');
 
       await service.getEntityFeed(tenantId, 'LEAD', 'lead-1', 20, cursorStr);
-      expect(mockRepo.getEntityFeed).toHaveBeenCalledWith(tenantId, 'LEAD', 'lead-1', 21, {
-        timestamp: ts,
-        id: 'lead_5',
-      });
+      expect(mockRepo.getEntityFeed).toHaveBeenCalledWith(
+        tenantId,
+        'LEAD',
+        'lead-1',
+        21,
+        {
+          timestamp: ts,
+          id: 'lead_5',
+        },
+        undefined
+      );
     });
 
     it('returns hasMore and nextCursor when more results exist', async () => {
