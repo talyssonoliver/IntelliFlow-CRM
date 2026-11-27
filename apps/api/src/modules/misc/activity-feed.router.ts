@@ -40,7 +40,11 @@ async function unreadableMailItems(
   if (mail.length === 0) return new Set();
   const records = mail.map((id) => id.replace(/^email_/, ''));
   const readable = (await (ctx.prismaWithTenant as any).emailRecord.findMany({
-    where: { id: { in: records }, tenantId: ctx.tenant.tenantId, AND: [await visibleMail(ctx)] },
+    where: {
+      id: { in: records },
+      tenantId: ctx.tenant.tenantId,
+      AND: [await visibleMail(ctx, records)],
+    },
     select: { id: true },
   })) as { id: string }[];
   const ok = new Set(readable.map((r) => r.id));

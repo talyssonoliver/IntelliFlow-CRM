@@ -79,7 +79,7 @@ async function loadEmail(
   emailId: string,
   write = false
 ): Promise<StoredEmail> {
-  const readable = write ? ownMail(ctx) : await visibleMail(ctx);
+  const readable = write ? ownMail(ctx) : await visibleMail(ctx, [emailId]);
   const email: StoredEmail | null = await ctx.prismaWithTenant.emailRecord.findFirst({
     where: { id: emailId, tenantId: ctx.tenant.tenantId, AND: [readable] },
     select: {

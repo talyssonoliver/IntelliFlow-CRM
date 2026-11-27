@@ -106,6 +106,15 @@ export function emailVisibleSql(
 }
 
 /**
+ * The most logged-personal-mail ids one lookup returns when no `only` bound is given (newest first).
+ * Prisma inlines them as bind parameters of an `id IN (...)` filter, and Postgres allows 65,535 per
+ * statement, so the list is capped well below that. Past the cap the OLDEST logged personal mail of
+ * a colleague drops out of list views: the failure is closed (hidden), never open. A single-mail
+ * read passes `only` and is never affected.
+ */
+export const LOGGED_PERSONAL_MAIL_ID_CAP = 20000;
+
+/**
  * Ids of mail in a personal mailbox (anyone's) that the viewer may read because it is logged to a
  * lead or contact they can see. Bounded by that set, never the whole table; it is the
  * one part of the policy a Prisma `where` cannot express (email_records has no relation to leads).
@@ -128,7 +137,9 @@ export async function loggedPersonalMailIds(
         OR (e."mailboxId" IS NULL
             AND (e."userId" IS NOT NULL OR e.metadata ->> 'mailboxOwnerId' IS NOT NULL)))
       ${among}
-      AND ${logged}`);
+      AND ${logged}
+    ORDER BY e."createdAt" DESC
+    LIMIT ${LOGGED_PERSONAL_MAIL_ID_CAP}`);
   return rows.map((r) => r.id);
 }
 

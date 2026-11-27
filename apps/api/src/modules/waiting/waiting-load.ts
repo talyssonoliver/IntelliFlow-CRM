@@ -119,6 +119,9 @@ async function loadRecords(
   cap: number
 ): Promise<{ sent: RecordRow[]; unsent: RecordRow[] }> {
   const { tenantId } = viewer;
+  // Deliberate policy (register #64): "answered" is judged from the mail this viewer may read. A
+  // reply sent from a colleague's personal mailbox and not logged to the lead or contact is that
+  // colleague's private mail, so the lead keeps showing as waiting until the reply is logged.
   const visible = await visibleEmailWhere(db as never, viewer);
   const [sent, unsent] = await Promise.all([
     db.emailRecord.findMany({
