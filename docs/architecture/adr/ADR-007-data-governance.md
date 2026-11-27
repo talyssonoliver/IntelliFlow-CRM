@@ -662,16 +662,21 @@ so a double click or two admins cannot run it twice. It anonymises in place:
   deletion** runs only what is left (idempotent). The adapter deletes only a
   path under `<tenantId>/` in a bucket the CRM owns (email attachments,
   `CRM_FILES_BUCKET`); a location outside that (another tenant, another host or
-  bucket), or one that a record outside the erasure still uses, is never sent to
-  storage and is queued `MANUAL`. The admin lists those files on the request,
-  deletes them where they live and confirms; the row becomes `DELETED` and its
-  locator is cleared. A request with no queue rows (an erasure from before the
-  queue) is shown without any claim about its files. The cleanup never fails the
+  bucket) is never sent to storage and is queued `MANUAL` (reason `UNMANAGED`):
+  the admin lists those files on the request, deletes them where they live and
+  confirms (the server only accepts ids of that request's unmanaged files); the
+  row becomes `DELETED` and its locator is cleared. An object that a retained
+  record outside the erasure still uses is queued `KEPT` (reason `SHARED_KEPT`):
+  never deleted, never listed, no locator stored, and counted as resolved,
+  because other people's data is not erased and only the erased person's link to
+  it is removed. A request with no queue rows (an erasure from before the queue)
+  is shown without any claim about its files. The cleanup never fails the
   erasure.
 - **Left on a counted checklist.** Deals and tasks (Q23) and, per source, the
-  stored files not yet deleted (failed or manual): the result and the request
-  list count exactly what remains, 0 when all are gone. Legal holds: no hold
-  register exists yet, so the admin's no-hold confirmation is the check.
+  stored files not yet deleted (failed or unmanaged): the result and the request
+  list count exactly what remains, with kept files shown apart as resolved, 0
+  when all are gone. Legal holds: no hold register exists yet, so the admin's
+  no-hold confirmation is the check.
 - **Audit logs** keep counts and the admin id, never erased values. The audit
   row is awaited.
 

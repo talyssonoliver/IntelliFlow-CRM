@@ -2784,7 +2784,9 @@ model DsarRequest {
 
 /// IFC-316: a stored file of an erased person, queued by the erasure transaction so its object can
 /// be deleted after the commit. PENDING = delete it; MANUAL = the CRM cannot delete it (the admin
-/// does); DELETED = done (the locator is cleared). Pending and manual rows ARE the checklist.
+/// does); KEPT = another retained record still uses the object, so it is never deleted or listed;
+/// DELETED = done (the locator is cleared). Pending and manual rows ARE the checklist.
+/// KEPT and DELETED rows hold no locator.
 model DsarStoredObject {
   id        String      @id @default(cuid())
   tenantId  String
@@ -2793,8 +2795,10 @@ model DsarStoredObject {
   request   DsarRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   /// LEAD_FILE | EMAIL_ATTACHMENT | CHAT_ATTACHMENT | TICKET_ATTACHMENT (CHECK)
   source    String      @db.VarChar(20)
-  /// PENDING | MANUAL | DELETED (CHECK)
+  /// PENDING | MANUAL | KEPT | DELETED (CHECK)
   state     String      @default("PENDING") @db.VarChar(10)
+  /// MANUAL: UNMANAGED. KEPT: SHARED_KEPT. Otherwise null (CHECK).
+  reason    String?     @db.VarChar(20)
   bucket    String?     @db.VarChar(100)
   /// The storage path (PENDING) or the unmanaged locator (MANUAL); null once DELETED.
   locator   String?

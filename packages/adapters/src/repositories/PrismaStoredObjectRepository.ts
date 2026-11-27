@@ -89,9 +89,10 @@ export class PrismaStoredObjectRepository implements StoredObjectOutboxPort {
     // Any row (even a DELETED one) means the queue was used: 0 left is then a real answer.
     const left: Record<string, StoredObjectsLeft> = {};
     for (const g of groups) {
-      const entry = (left[g.requestId] ??= { queued: 0, manual: 0 });
+      const entry = (left[g.requestId] ??= { queued: 0, manual: 0, kept: 0 });
       if (g.state === 'PENDING') entry.queued = g._count._all;
       if (g.state === 'MANUAL') entry.manual = g._count._all;
+      if (g.state === 'KEPT') entry.kept = g._count._all;
     }
     return left;
   }
@@ -104,8 +105,18 @@ export class PrismaStoredObjectRepository implements StoredObjectOutboxPort {
       take: MANUAL_FILES_PAGE,
       select: { id: true, source: true, locator: true },
     });
+    // Only UNMANAGED rows are state MANUAL: a kept (shared) object is never listed.
     return rows.flatMap((r) =>
-      r.locator ? [{ id: r.id, source: r.source as StoredObjectSource, locator: r.locator }] : []
+      r.locator
+        ? [
+            {
+              id: r.id,
+              source: r.source as StoredObjectSource,
+              locator: r.locator,
+              reason: 'UNMANAGED' as const,
+            },
+          ]
+        : []
     );
   }
 
@@ -118,7 +129,7 @@ export class PrismaStoredObjectRepository implements StoredObjectOutboxPort {
     if (ids.length === 0) return 0;
     const done = await this.prisma.dsarStoredObject.updateMany({
       where: { tenantId, requestId, state: 'MANUAL', id: { in: ids } },
-      data: { state: 'DELETED', locator: null, settledAt: now },
+      data: { state: 'DELETED', reason: null, locator: null, settledAt: now },
     });
     return done.count;
   }

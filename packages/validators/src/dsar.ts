@@ -248,6 +248,8 @@ export interface DsarRequestDto {
    */
   storedFilesLeft?: number;
   storedFilesManual?: number;
+  /** Kept because another retained record still uses them: resolved, read-only. */
+  storedFilesKept?: number;
 }
 
 /** A stored file the CRM cannot delete itself (IFC-316): where it was and where it is. */
@@ -255,6 +257,8 @@ export interface DsarManualFileDto {
   id: string;
   source: 'LEAD_FILE' | 'EMAIL_ATTACHMENT' | 'CHAT_ATTACHMENT' | 'TICKET_ATTACHMENT';
   locator: string;
+  /** UNMANAGED: another host, bucket or firm's prefix. */
+  reason: 'UNMANAGED';
 }
 
 export interface DsarErasureResultDto {

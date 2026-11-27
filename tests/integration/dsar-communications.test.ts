@@ -354,12 +354,13 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     // Deleted from storage after the erasure: the lead file, the email attachment, the ticket
     // attachment and the chat attachment. Only the files the CRM cannot delete stay by hand.
     expect(preview.counts.storedFilesDeleted).toBe(4);
+    expect(preview.counts.storedFilesKept).toBe(1);
     expect(preview.checklist).toEqual({
       deals: 0,
       tasks: 0,
       storedLeadFiles: 2,
-      // The upload another person's mail still uses is the admin's to decide.
-      storedEmailAttachments: 1,
+      // The upload another person's mail still uses is kept: resolved, not left.
+      storedEmailAttachments: 0,
       storedChatAttachments: 0,
       storedTicketAttachments: 0,
     });
@@ -384,7 +385,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       deals: 0,
       tasks: 0,
       storedLeadFiles: 3,
-      storedEmailAttachments: 2,
+      storedEmailAttachments: 1,
       storedChatAttachments: 1,
       storedTicketAttachments: 1,
     });
@@ -402,7 +403,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       [
         ['CHAT_ATTACHMENT', 'PENDING', 'crm-files', `${TENANT}/chat/ada-photo.png`],
         ['EMAIL_ATTACHMENT', 'PENDING', 'email-attachments', `${TENANT}/mail/1-ada-passport.pdf`],
-        ['EMAIL_ATTACHMENT', 'MANUAL', null, SHARED],
+        ['EMAIL_ATTACHMENT', 'KEPT', null, null],
         ['LEAD_FILE', 'PENDING', 'crm-files', `${TENANT}/leads/ada-cv.pdf`],
         ['LEAD_FILE', 'MANUAL', null, FOREIGN],
         ['LEAD_FILE', 'MANUAL', null, `${RUN}_b/leads/other.pdf`],
@@ -526,7 +527,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       expect(first.deleted).toBe(3);
       // What remains is exactly what the checklist shows: the failed attachment and the two
       // files only the admin can delete.
-      expect(first.remaining).toEqual({ storedEmailAttachments: 2, storedLeadFiles: 2 });
+      expect(first.remaining).toEqual({ storedEmailAttachments: 1, storedLeadFiles: 2 });
       const failed = (await states()).find(
         (s: any) => s.source === 'EMAIL_ATTACHMENT' && s.state === 'PENDING'
       );
@@ -539,7 +540,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
 
       // The admin's list shows the request with what is left.
       expect(await outbox().leftFor(TENANT, [requestId])).toEqual({
-        [requestId]: { queued: 1, manual: 3 },
+        [requestId]: { queued: 1, manual: 2, kept: 1 },
       });
 
       // Storage recovers: a retry deletes only what was still queued.
@@ -547,10 +548,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       calls.length = 0;
       const retried = await cleanup.purge(TENANT, requestId, new Date());
       expect(calls).toEqual([[`${TENANT}/mail/1-ada-passport.pdf`]]);
-      expect(retried).toEqual({
-        deleted: 1,
-        remaining: { storedLeadFiles: 2, storedEmailAttachments: 1 },
-      });
+      expect(retried).toEqual({ deleted: 1, remaining: { storedLeadFiles: 2 } });
       const done = await states();
       expect(
         done.filter((s: any) => s.state === 'DELETED').every((s: any) => s.locator === null)
@@ -561,7 +559,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       calls.length = 0;
       expect(await cleanup.purge(TENANT, requestId, new Date())).toEqual({
         deleted: 0,
-        remaining: { storedLeadFiles: 2, storedEmailAttachments: 1 },
+        remaining: { storedLeadFiles: 2 },
       });
       expect(calls).toEqual([]);
       // Grace's mail still has its attachment, untouched.
@@ -608,34 +606,39 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       }).purge(TENANT, requestId, new Date());
       expect(remove).not.toHaveBeenCalled();
       // Still queued (the adapter refused it), next to the manual files.
-      expect(result.remaining).toEqual({ storedLeadFiles: 3, storedEmailAttachments: 1 });
+      expect(result.remaining).toEqual({ storedLeadFiles: 3 });
     });
 
     it('lists the files left for the admin and stops counting them once the admin confirms', async () => {
       const manual = await outbox().manual(TENANT, requestId);
       expect(manual.map((m) => [m.source, m.locator]).sort()).toEqual(
         [
-          ['EMAIL_ATTACHMENT', SHARED],
           ['LEAD_FILE', FOREIGN],
           ['LEAD_FILE', `${RUN}_b/leads/other.pdf`],
         ].sort()
       );
       expect(await outbox().leftFor(TENANT, [requestId])).toEqual({
-        [requestId]: { queued: 1, manual: 3 },
+        [requestId]: { queued: 1, manual: 2, kept: 1 },
       });
-      // Confirming only changes manual files: the queued object stays queued.
+      // A kept (shared) file is not in the list at all, and its id cannot be confirmed.
+      const keptRow = await prisma.dsarStoredObject.findFirst({
+        where: { tenantId: TENANT, requestId, state: 'KEPT' },
+      });
+      expect(keptRow).toMatchObject({ reason: 'SHARED_KEPT', locator: null, bucket: null });
+      expect(manual.map((m) => m.id)).not.toContain(keptRow.id);
+      // Confirming only changes manual files: the queued and kept ones stay as they are.
       const queuedRow = await prisma.dsarStoredObject.findFirst({
         where: { tenantId: TENANT, requestId, state: 'PENDING' },
       });
       const handled = await outbox().markHandled(
         TENANT,
         requestId,
-        [...manual.map((m) => m.id), queuedRow.id],
+        [...manual.map((m) => m.id), queuedRow.id, keptRow.id],
         new Date()
       );
-      expect(handled).toBe(3);
+      expect(handled).toBe(2);
       expect(await outbox().leftFor(TENANT, [requestId])).toEqual({
-        [requestId]: { queued: 1, manual: 0 },
+        [requestId]: { queued: 1, manual: 0, kept: 1 },
       });
       // Confirmed files lose their locator.
       const rows = await prisma.dsarStoredObject.findMany({
@@ -651,6 +654,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
           requestId,
           source: 'LEAD_FILE',
           state: 'MANUAL',
+          reason: 'UNMANAGED',
           locator: `https://files.example.invalid/bulk-${i}.pdf`,
         })),
       });
@@ -674,6 +678,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       expect((await outbox().leftFor(TENANT, [requestId]))[requestId]).toEqual({
         queued: 1,
         manual: 1,
+        kept: 1,
       });
     });
   });

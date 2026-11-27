@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-27T16:40:48.952Z",
+  "timestamp": "2026-11-27T17:11:53.065Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1534,7 +1534,7 @@
   },
   "database_inventory": {
     "total_tables": 221,
-    "total_fields": 3306,
+    "total_fields": 3307,
     "total_indexes": 975,
     "total_relations": 327,
     "tables_with_embeddings": 4,
@@ -2066,6 +2066,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "DsarStoredObject",
+        "fields": 14,
+        "indexes": 2,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "ProcessingRestriction",
         "fields": 14,
         "indexes": 3,
@@ -2160,13 +2167,6 @@
         "name": "AuditLog",
         "fields": 13,
         "indexes": 5,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "DsarStoredObject",
-        "fields": 13,
-        "indexes": 2,
         "relations": 2,
         "hasEmbedding": false
       },

@@ -57,13 +57,14 @@ class FakeOutbox implements StoredObjectOutboxPort {
       [R]: {
         queued: all.filter((r) => r.state === 'PENDING').length,
         manual: all.filter((r) => r.state === 'MANUAL').length,
+        kept: 0,
       },
     };
   }
   async manual() {
     return [...this.rows.values()]
       .filter((r) => r.state === 'MANUAL')
-      .map((r) => ({ id: r.id, source: r.source, locator: r.path }));
+      .map((r) => ({ id: r.id, source: r.source, locator: r.path, reason: 'UNMANAGED' as const }));
   }
   async markHandled(_t: string, _r: string, ids: string[]) {
     let n = 0;
@@ -230,7 +231,9 @@ describe('ErasedFilesCleanupService (IFC-316)', () => {
 
   it('reports what is left for a list of requests, split into queued and manual', async () => {
     const outbox = new FakeOutbox(['t/a'], 2);
-    expect(await service(outbox, null).leftFor(T, [R])).toEqual({ [R]: { queued: 1, manual: 2 } });
+    expect(await service(outbox, null).leftFor(T, [R])).toEqual({
+      [R]: { queued: 1, manual: 2, kept: 0 },
+    });
     // A request that never queued a file is absent: no claim is made for it.
     expect(await service(new FakeOutbox([]), null).leftFor(T, [R])).toEqual({});
   });
@@ -240,8 +243,18 @@ describe('ErasedFilesCleanupService (IFC-316)', () => {
     const cleanup = service(outbox, null);
     const files = await cleanup.manualFiles(T, R);
     expect(files).toEqual([
-      { id: 'm0', source: 'CHAT_ATTACHMENT', locator: 'https://files.example.invalid/x' },
-      { id: 'm1', source: 'CHAT_ATTACHMENT', locator: 'https://files.example.invalid/x' },
+      {
+        id: 'm0',
+        source: 'CHAT_ATTACHMENT',
+        locator: 'https://files.example.invalid/x',
+        reason: 'UNMANAGED',
+      },
+      {
+        id: 'm1',
+        source: 'CHAT_ATTACHMENT',
+        locator: 'https://files.example.invalid/x',
+        reason: 'UNMANAGED',
+      },
     ]);
     // A queued object is not the admin's to confirm: only manual files change.
     expect(await cleanup.confirmManual(T, R, ['m0', 'o0'], NOW)).toBe(1);

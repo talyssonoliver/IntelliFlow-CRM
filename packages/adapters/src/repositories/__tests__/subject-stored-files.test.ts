@@ -65,20 +65,34 @@ describe('planStoredFiles (IFC-316)', () => {
     const plan = await planStoredFiles(client, T, 'ada@example.invalid', IDS, config);
 
     expect(plan.queue).toEqual([
-      { source: 'LEAD_FILE', state: 'PENDING', bucket: 'crm-files', locator: `${T}/lead/a.pdf` },
+      {
+        source: 'LEAD_FILE',
+        state: 'PENDING',
+        reason: null,
+        bucket: 'crm-files',
+        locator: `${T}/lead/a.pdf`,
+      },
       {
         source: 'LEAD_FILE',
         state: 'MANUAL',
+        reason: 'UNMANAGED',
         bucket: null,
         locator: 'https://files.example.invalid/b.pdf',
       },
       {
         source: 'EMAIL_ATTACHMENT',
         state: 'PENDING',
+        reason: null,
         bucket: 'email-attachments',
         locator: `${T}/1-c.pdf`,
       },
-      { source: 'CHAT_ATTACHMENT', state: 'PENDING', bucket: 'crm-files', locator: `${T}/d.png` },
+      {
+        source: 'CHAT_ATTACHMENT',
+        state: 'PENDING',
+        reason: null,
+        bucket: 'crm-files',
+        locator: `${T}/d.png`,
+      },
     ]);
     // Every row with a locator or an attachment list is cleared, including inline content.
     expect(plan).toMatchObject({
@@ -89,6 +103,7 @@ describe('planStoredFiles (IFC-316)', () => {
     });
     expect(storedFileCounts(plan)).toEqual({
       toDelete: 3,
+      kept: 0,
       left: {
         storedLeadFiles: 2,
         storedEmailAttachments: 1,
@@ -121,7 +136,7 @@ describe('planStoredFiles (IFC-316)', () => {
     expect(plan.queue.every((q) => q.bucket === null)).toBe(true);
   });
 
-  it('never queues an object that a record outside the erasure still uses: it goes to the admin', async () => {
+  it('keeps an object that a retained record still uses: never deleted, never listed, no locator', async () => {
     const client = db({
       emailAttachment: [
         { id: 'ea1', fileUrl: `${T}/1-x.pdf` },
@@ -134,14 +149,27 @@ describe('planStoredFiles (IFC-316)', () => {
     );
     const plan = await planStoredFiles(client, T, 'a', IDS, config);
     expect(plan.queue).toEqual([
-      { source: 'EMAIL_ATTACHMENT', state: 'MANUAL', bucket: null, locator: `${T}/1-x.pdf` },
+      {
+        source: 'EMAIL_ATTACHMENT',
+        state: 'KEPT',
+        reason: 'SHARED_KEPT',
+        bucket: null,
+        locator: null,
+      },
       {
         source: 'EMAIL_ATTACHMENT',
         state: 'PENDING',
+        reason: null,
         bucket: 'email-attachments',
         locator: `${T}/2-y.pdf`,
       },
     ]);
+    // Resolved, not left: it counts in neither the checklist nor the manual list.
+    const counts = storedFileCounts(plan);
+    expect(counts.kept).toBe(1);
+    expect(counts.toDelete).toBe(1);
+    expect(counts.left.storedEmailAttachments).toBe(1);
+    expect(counts.manual.storedEmailAttachments).toBe(0);
   });
 
   it('asks which objects are still used with ONE query for all of them, scoped to the tenant', async () => {
@@ -233,6 +261,7 @@ describe('queueStoredFiles', () => {
         requestId: 'req-1',
         source: 'LEAD_FILE',
         state: 'PENDING',
+        reason: null,
         bucket: 'crm-files',
         locator: `${T}/a.pdf`,
       },
@@ -244,6 +273,28 @@ describe('queueStoredFiles', () => {
     expect(client.emailAttachment.updateMany.mock.calls[0][0].data).toEqual({ fileUrl: '' });
     expect(client.ticketAttachment.updateMany.mock.calls[0][0].data).toEqual({ url: null });
     expect(client.chatMessage.updateMany.mock.calls[0][0].where.tenantId).toBe(T);
+  });
+
+  it('records a kept object with its reason and no locator, so nothing about it can be listed', async () => {
+    const client = db({ leadFile: [{ id: 'lf1', url: `${T}/shared.pdf` }] });
+    client.$queryRaw.mockImplementation(async (strings: TemplateStringsArray) =>
+      strings.join('?').includes('strpos') ? [{ path: `${T}/shared.pdf` }] : []
+    );
+    const plan = await planStoredFiles(client, T, 'a', IDS, config);
+    await queueStoredFiles(client, T, 'req-1', plan);
+    expect(client.dsarStoredObject.createMany.mock.calls[0][0].data).toEqual([
+      {
+        tenantId: T,
+        requestId: 'req-1',
+        source: 'LEAD_FILE',
+        state: 'KEPT',
+        reason: 'SHARED_KEPT',
+        bucket: null,
+        locator: null,
+      },
+    ]);
+    // The erased person's own link is still removed.
+    expect(client.leadFile.updateMany.mock.calls[0][0].data).toEqual({ url: null });
   });
 
   it('writes no queue row when there is nothing to delete', async () => {

@@ -36,6 +36,14 @@ export const STORED_OBJECT_CHECKLIST_KEYS: Record<StoredObjectSource, string> = 
   TICKET_ATTACHMENT: 'storedTicketAttachments',
 };
 
+/**
+ * Why a stored file is not deleted by the CRM. UNMANAGED: another host, bucket or firm's prefix,
+ * so the admin deletes it. SHARED_KEPT: another retained record still uses the object, so it is
+ * kept, never offered for deletion, and counts as resolved (other people's data is not erased).
+ */
+export const STORED_OBJECT_REASONS = ['UNMANAGED', 'SHARED_KEPT'] as const;
+export type StoredObjectReason = (typeof STORED_OBJECT_REASONS)[number];
+
 export interface StoredObjectRef {
   bucket: string;
   path: string;

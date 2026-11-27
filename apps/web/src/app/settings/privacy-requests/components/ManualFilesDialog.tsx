@@ -23,6 +23,10 @@ import type { DsarManualFileDto, DsarRequestDto } from '@intelliflow/validators/
 /** The server lists, and confirms, this many files at a time (MANUAL_FILES_PAGE). */
 const PAGE_SIZE = 500;
 
+const REASON_LABELS: Record<DsarManualFileDto['reason'], string> = {
+  UNMANAGED: 'Stored on another host or bucket, or under another firm: the CRM cannot delete it.',
+};
+
 const SOURCE_LABELS: Record<DsarManualFileDto['source'], string> = {
   LEAD_FILE: 'Lead file',
   EMAIL_ATTACHMENT: 'Email attachment',
@@ -81,6 +85,9 @@ export function ManualFilesDialog({
                   <li key={file.id}>
                     <span className="font-medium">{SOURCE_LABELS[file.source]}</span>
                     <span className="block break-all font-mono text-xs">{file.locator}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {REASON_LABELS[file.reason]}
+                    </span>
                   </li>
                 ))}
               </ul>

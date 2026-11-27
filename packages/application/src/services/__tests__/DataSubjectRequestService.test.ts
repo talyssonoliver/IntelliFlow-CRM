@@ -1471,7 +1471,7 @@ describe('stored files after an erasure (IFC-316)', () => {
   });
 
   it('lists what each completed erasure still has, and says so when it cannot know', async () => {
-    const left = { r1: { queued: 1, manual: 1 } };
+    const left = { r1: { queued: 1, manual: 1, kept: 2 } };
     const leftFor = vi.fn().mockResolvedValue(left);
     const { withFiles } = await erasureWith({ leftFor });
     expect(await withFiles.storedFilesLeft('tenant-a', ['r1'])).toEqual(left);
@@ -1483,7 +1483,14 @@ describe('stored files after an erasure (IFC-316)', () => {
   });
 
   it('shows the admin the files left of a completed erasure and records those deleted by hand', async () => {
-    const files = [{ id: 'f1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/a' }];
+    const files = [
+      {
+        id: 'f1',
+        source: 'LEAD_FILE',
+        locator: 'https://files.example.invalid/a',
+        reason: 'UNMANAGED',
+      },
+    ];
     const manualFiles = vi.fn().mockResolvedValue(files);
     const confirmManual = vi.fn().mockResolvedValue(1);
     const { withFiles, id } = await erasureWith({ manualFiles, confirmManual });

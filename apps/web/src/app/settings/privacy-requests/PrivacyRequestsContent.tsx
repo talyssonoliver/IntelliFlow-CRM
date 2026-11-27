@@ -148,6 +148,9 @@ function RequestRow({
             </Badge>
           )}
           {request.clockBreached && <Badge variant="destructive">Answered late</Badge>}
+          {(request.storedFilesKept ?? 0) > 0 && (
+            <Badge variant="outline">{`${request.storedFilesKept} ${request.storedFilesKept === 1 ? 'file' : 'files'} kept because another record still uses ${request.storedFilesKept === 1 ? 'it' : 'them'}`}</Badge>
+          )}
           {request.storedFilesLeft !== undefined && (
             <Badge variant={request.storedFilesLeft > 0 ? 'destructive' : 'outline'}>
               {request.storedFilesLeft > 0

@@ -606,6 +606,8 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
         ...(await communicationCounts(this.prisma, tenantId, subjectEmail, ids)),
         // Deleted from storage right after the erasure (IFC-316).
         storedFilesDeleted: files.toDelete,
+        // Another retained record uses these: kept, resolved, never offered for deletion.
+        storedFilesKept: files.kept,
       },
       // What stays for the admin: deals and tasks, and any stored file the CRM cannot delete.
       checklist: {
@@ -752,6 +754,7 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
               aiInsights: leadInsights.count + contactInsights.count + insights.count,
               bookings: Number(bookings),
               ...communications,
+              storedFilesKept: left.kept,
             },
             // Until the cleanup has run, every queued object still counts as left.
             checklist: { ...open, ...left.left },

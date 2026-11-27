@@ -154,21 +154,22 @@ describe('list', () => {
       record({ id: 'clhaccess0000000000', type: 'ACCESS', status: 'COMPLETED', completedAt: NOW }),
     ]);
     service.storedFilesLeft.mockResolvedValue({
-      clherased0000000000: { queued: 1, manual: 2 },
+      clherased0000000000: { queued: 1, manual: 2, kept: 4 },
       // Queued before, all deleted since: a real 0.
-      clherasedok00000000: { queued: 0, manual: 0 },
+      clherasedok00000000: { queued: 0, manual: 0, kept: 0 },
     });
     const rows = await adminCaller().list({});
     const byId = Object.fromEntries(
-      rows.map((r) => [r.id, [r.storedFilesLeft, r.storedFilesManual]])
+      rows.map((r) => [r.id, [r.storedFilesLeft, r.storedFilesManual, r.storedFilesKept]])
     );
     expect(byId).toEqual({
-      clherased0000000000: [3, 2],
-      clherasedok00000000: [0, 0],
+      // 3 left (kept ones are resolved, counted apart).
+      clherased0000000000: [3, 2, 4],
+      clherasedok00000000: [0, 0, 0],
       // No queue rows (an erasure from before the queue): no claim that anything was deleted.
-      clhlegacy0000000000: [undefined, undefined],
-      clhopen000000000000: [undefined, undefined],
-      clhaccess0000000000: [undefined, undefined],
+      clhlegacy0000000000: [undefined, undefined, undefined],
+      clhopen000000000000: [undefined, undefined, undefined],
+      clhaccess0000000000: [undefined, undefined, undefined],
     });
     expect(service.storedFilesLeft).toHaveBeenCalledWith(TENANT, [
       'clherased0000000000',
@@ -505,7 +506,14 @@ describe('the remaining admin actions', () => {
   });
 
   it('lists the files the admin must delete by hand and records those deleted', async () => {
-    const files = [{ id: 'f1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/a' }];
+    const files = [
+      {
+        id: 'f1',
+        source: 'LEAD_FILE',
+        locator: 'https://files.example.invalid/a',
+        reason: 'UNMANAGED',
+      },
+    ];
     service.manualFiles = vi.fn().mockResolvedValue({ outcome: 'OK', files });
     await expect(adminCaller().manualFiles({ id: ID })).resolves.toEqual(files);
     expect(service.manualFiles).toHaveBeenCalledWith({ tenantId: TENANT, id: ID });

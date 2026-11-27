@@ -15,6 +15,7 @@ import {
   chatAttachmentLocators,
   classifyStoredLocator,
   type StoredObjectConfig,
+  type StoredObjectReason,
   type StoredObjectSource,
 } from '@intelliflow/domain';
 import {
@@ -28,10 +29,14 @@ type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
 interface QueuedObject {
   source: StoredObjectSource;
-  /** PENDING: the CRM deletes it. MANUAL: it cannot, the admin does. */
-  state: 'PENDING' | 'MANUAL';
+  /**
+   * PENDING: the CRM deletes it. MANUAL: it cannot, the admin does (UNMANAGED). KEPT: another
+   * retained record still uses it (SHARED_KEPT): never deleted, never listed, no locator kept.
+   */
+  state: 'PENDING' | 'MANUAL' | 'KEPT';
+  reason: StoredObjectReason | null;
   bucket: string | null;
-  locator: string;
+  locator: string | null;
 }
 
 export interface StoredFilePlan {
@@ -58,6 +63,8 @@ function storedCounts(queue: QueuedObject[], states: QueuedObject['state'][]) {
 export function storedFileCounts(plan: StoredFilePlan) {
   return {
     toDelete: plan.queue.filter((q) => q.state === 'PENDING').length,
+    /** Kept for another record: resolved, so not in `left` or `manual`. */
+    kept: plan.queue.filter((q) => q.state === 'KEPT').length,
     /** Queued or manual, per checklist key: what is left until the cleanup has run. */
     left: storedCounts(plan.queue, ['PENDING', 'MANUAL']),
     /** Only what the CRM cannot delete itself. */
@@ -133,13 +140,30 @@ export async function planStoredFiles(
     rowIds
   );
 
-  // An object another row (kept, not part of this erasure) still points to is never deleted
-  // here: another person's mail may use the same upload. It goes to the admin instead.
-  const queue: QueuedObject[] = candidates.map(({ source, locator, found }) =>
-    found.kind === 'OBJECT' && !shared.has(found.ref.path)
-      ? { source, state: 'PENDING', bucket: found.ref.bucket, locator: found.ref.path }
-      : { source, state: 'MANUAL', bucket: null, locator: String(locator).trim() }
-  );
+  // An object another retained record still points to is never deleted and never offered for
+  // deletion: another person's mail may use the same upload. The erased person's link to it is
+  // removed with the locator; no locator is kept for it. An object the CRM cannot delete
+  // (another host, bucket or firm) is the admin's.
+  const queue: QueuedObject[] = candidates.map(({ source, locator, found }) => {
+    if (found.kind !== 'OBJECT') {
+      return {
+        source,
+        state: 'MANUAL',
+        reason: 'UNMANAGED',
+        bucket: null,
+        locator: String(locator).trim(),
+      };
+    }
+    return shared.has(found.ref.path)
+      ? { source, state: 'KEPT', reason: 'SHARED_KEPT', bucket: null, locator: null }
+      : {
+          source,
+          state: 'PENDING',
+          reason: null,
+          bucket: found.ref.bucket,
+          locator: found.ref.path,
+        };
+  });
   return { queue, ...rowIds };
 }
 
@@ -207,6 +231,7 @@ export async function queueStoredFiles(
         requestId,
         source: q.source,
         state: q.state,
+        reason: q.reason,
         bucket: q.bucket,
         locator: q.locator,
       })),

@@ -223,6 +223,24 @@ describe('PrivacyRequestsContent', () => {
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith({ title: 'Stored files deleted' }));
   });
 
+  it('says how many files were kept because another record uses them, with no action on them', () => {
+    h.list.data = [
+      request({
+        id: 'clhkept000000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 0,
+        storedFilesManual: 0,
+        storedFilesKept: 2,
+      }),
+    ];
+    render(<PrivacyRequestsContent />);
+    expect(screen.getByText('2 files kept because another record still uses them')).toBeTruthy();
+    // Resolved: nothing is left, and kept files offer neither retry nor deletion.
+    expect(screen.getByText('Stored files deleted')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Retry deleting stored files/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Show files to delete by hand/ })).toBeNull();
+  });
+
   it('lets the admin see the files to delete by hand and mark them deleted', async () => {
     h.list.data = [
       request({
@@ -233,7 +251,14 @@ describe('PrivacyRequestsContent', () => {
       }),
     ];
     h.manualFiles = {
-      data: [{ id: 'f1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/a.pdf' }],
+      data: [
+        {
+          id: 'f1',
+          source: 'LEAD_FILE',
+          locator: 'https://files.example.invalid/a.pdf',
+          reason: 'UNMANAGED',
+        },
+      ],
       error: null,
       refetch: vi.fn().mockResolvedValue({}),
     };
@@ -244,6 +269,8 @@ describe('PrivacyRequestsContent', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Show files to delete by hand/ }));
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('Lead file')).toBeTruthy();
+    // The reason is shown on each row.
+    expect(within(dialog).getByText(/the CRM cannot delete it/)).toBeTruthy();
     expect(within(dialog).getByText('https://files.example.invalid/a.pdf')).toBeTruthy();
     const mark = within(dialog).getByRole('button', { name: 'Mark as deleted' });
     expect((mark as HTMLButtonElement).disabled).toBe(true);
@@ -301,7 +328,14 @@ describe('PrivacyRequestsContent', () => {
 
     // The next page loads: the tick does not carry over, so it cannot be confirmed unasked.
     h.manualFiles = {
-      data: [{ id: 'g1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/next.pdf' }],
+      data: [
+        {
+          id: 'g1',
+          source: 'LEAD_FILE',
+          locator: 'https://files.example.invalid/next.pdf',
+          reason: 'UNMANAGED',
+        },
+      ],
       error: null,
       refetch: vi.fn().mockResolvedValue({}),
     };

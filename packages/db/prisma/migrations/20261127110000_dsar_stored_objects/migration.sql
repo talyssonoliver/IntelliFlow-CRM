@@ -26,6 +26,7 @@ CREATE TABLE "dsar_stored_objects" (
     "requestId" TEXT NOT NULL,
     "source" VARCHAR(20) NOT NULL,
     "state" VARCHAR(10) NOT NULL DEFAULT 'PENDING',
+    "reason" VARCHAR(20),
     "bucket" VARCHAR(100),
     "locator" TEXT,
     "attempts" INTEGER NOT NULL DEFAULT 0,
@@ -36,12 +37,18 @@ CREATE TABLE "dsar_stored_objects" (
     CONSTRAINT "dsar_stored_objects_pkey" PRIMARY KEY ("id"),
     CONSTRAINT "dsar_stored_objects_source_check" CHECK ("source" IN
         ('LEAD_FILE', 'EMAIL_ATTACHMENT', 'CHAT_ATTACHMENT', 'TICKET_ATTACHMENT')),
-    CONSTRAINT "dsar_stored_objects_state_check" CHECK ("state" IN ('PENDING', 'MANUAL', 'DELETED')),
+    CONSTRAINT "dsar_stored_objects_state_check" CHECK ("state" IN ('PENDING', 'MANUAL', 'KEPT', 'DELETED')),
+    -- Why a row is not deleted by the CRM: UNMANAGED (manual: another host, bucket or firm) or
+    -- SHARED_KEPT (kept: another retained record still uses the object).
+    CONSTRAINT "dsar_stored_objects_reason_check" CHECK (
+        ("state" = 'MANUAL' AND "reason" = 'UNMANAGED')
+        OR ("state" = 'KEPT' AND "reason" = 'SHARED_KEPT')
+        OR ("state" IN ('PENDING', 'DELETED') AND "reason" IS NULL)),
     -- A deletable row names its bucket and path; a settled one keeps no locator.
     CONSTRAINT "dsar_stored_objects_locator_check" CHECK (
         ("state" = 'PENDING' AND "bucket" IS NOT NULL AND "locator" IS NOT NULL)
         OR ("state" = 'MANUAL' AND "locator" IS NOT NULL)
-        OR ("state" = 'DELETED' AND "locator" IS NULL))
+        OR ("state" IN ('KEPT', 'DELETED') AND "locator" IS NULL))
 );
 
 CREATE INDEX "dsar_stored_objects_tenantId_requestId_state_idx"

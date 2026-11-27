@@ -72,6 +72,7 @@ export const CHECKLIST_LABELS: Record<string, string> = {
   calendarEvents: 'Calendar events',
   experimentAssignments: 'Experiment assignments',
   storedFilesDeleted: 'Stored files deleted from storage',
+  storedFilesKept: 'Files kept because another record still uses them',
   storedLeadFiles: 'Lead files not deleted',
   storedEmailAttachments: 'Email attachments not deleted',
   storedChatAttachments: 'Chat attachments not deleted',

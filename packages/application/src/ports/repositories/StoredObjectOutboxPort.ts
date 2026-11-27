@@ -22,13 +22,18 @@ export interface StoredObjectSettlement {
 
 export interface StoredObjectsLeft {
   queued: number;
+  /** Only the admin can delete these (reason UNMANAGED). */
   manual: number;
+  /** Kept because another retained record uses them: resolved, never listed or deleted. */
+  kept: number;
 }
 
 export interface ManualStoredObject {
   id: string;
   source: StoredObjectSource;
   locator: string;
+  /** Only files the CRM cannot delete are ever listed; a kept (shared) file never is. */
+  reason: 'UNMANAGED';
 }
 
 export interface StoredObjectOutboxPort {

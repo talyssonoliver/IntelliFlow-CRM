@@ -10,11 +10,11 @@
     "files_read": [
       {
         "path": "packages/adapters/src/repositories/PrismaSubjectDataRepository.ts",
-        "sha256": "1186c101ee58ebc56a133f82dc51f707a4295968e47886740b4712b106b7f69d"
+        "sha256": "72d48e0536d2714617988a3a4b4ff0a7e508e26098c4883fd8987f43d973ed40"
       },
       {
         "path": "packages/adapters/src/repositories/subject-stored-files.ts",
-        "sha256": "36a7523c5693fbab8316c6aa37ab7004d27cf12f9d7c37d7fc3fd495abee143b"
+        "sha256": "05474dbc9e8a89b2f2c9570011f15c4ec6e48fde2dd82df61a51e88226281496"
       },
       {
         "path": "packages/application/src/services/ErasedFilesCleanupService.ts",
@@ -110,6 +110,10 @@
     {
       "gate_id": "no-deletion-claim-without-a-queue-record",
       "passed": true
+    },
+    {
+      "gate_id": "shared-files-kept-not-offered-for-deletion",
+      "passed": true
     }
   ],
   "kpi_results": [
@@ -154,5 +158,5 @@
       "met": true
     }
   ],
-  "notes": "Two PRs: #1361 (communications in the erasure transaction) and the follow-up on branch feat/ifc-316b-erase-stored-files (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are recognised by shape: a path under the firm's own prefix in CRM_FILES_BUCKET (default crm-files) or a URL of this project's storage naming one. Anything else, or an object another record still uses, is queued MANUAL: the admin lists it on the request (Files to delete by hand), deletes it where it lives and confirms, and the locator leaves the database. An erasure from before the queue shows no claim about its files."
+  "notes": "Two PRs: #1361 (communications in the erasure transaction) and the follow-up on branch feat/ifc-316b-erase-stored-files (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are recognised by shape: a path under the firm's own prefix in CRM_FILES_BUCKET (default crm-files) or a URL of this project's storage naming one. Anything else is queued MANUAL (UNMANAGED): the admin lists it on the request (Files to delete by hand), deletes it where it lives and confirms, and the locator leaves the database. An object another retained record still uses is kept (SHARED_KEPT): never deleted, never offered, counted as resolved. An erasure from before the queue shows no claim about its files."
 }
