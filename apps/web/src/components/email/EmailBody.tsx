@@ -53,6 +53,24 @@ function bytesOf(base64: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
+const BASE64_SIGNATURES: ReadonlyArray<readonly [string, string]> = [
+  ['iVBORw0KGgo', 'image/png'],
+  ['/9j/', 'image/jpeg'],
+  ['R0lGOD', 'image/gif'],
+  ['UklGR', 'image/webp'],
+];
+
+/**
+ * The raster type to draw an inline image with: the declared one when it is a raster type, else (a
+ * provider that sends octet-stream) the one the first bytes show. Never SVG or anything unknown.
+ */
+export function rasterTypeOf(file: { contentType: string; contentBase64: string }): string | null {
+  const declared = file.contentType.toLowerCase().split(';')[0]!.trim();
+  if (isEmbeddable(declared)) return declared;
+  if (declared !== 'application/octet-stream' && declared !== '') return null;
+  return BASE64_SIGNATURES.find(([prefix]) => file.contentBase64.startsWith(prefix))?.[1] ?? null;
+}
+
 function isEmbeddable(type: string): boolean {
   return (INLINE_IMAGE_TYPES as readonly string[]).includes(type.toLowerCase());
 }
@@ -87,8 +105,9 @@ async function inlineImageOf(
 ): Promise<Record<string, string> | null> {
   try {
     const file = await load.fetchFile(attachment.id!);
-    if (!isEmbeddable(file.contentType)) return null;
-    const data = `data:${file.contentType};base64,${file.contentBase64}`;
+    const type = rasterTypeOf(file);
+    if (type === null) return null;
+    const data = `data:${type};base64,${file.contentBase64}`;
     const keyed: Record<string, string> = {};
     for (const [named, cid] of Object.entries(load.cidMap)) {
       if (cid === attachment.contentId) keyed[named] = data;

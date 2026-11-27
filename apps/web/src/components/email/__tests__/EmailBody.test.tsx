@@ -12,7 +12,7 @@ vi.mock('@/lib/trpc', () => ({
   trpc: { useUtils: () => ({ emailAttachments: { fetch: { fetch: m.fetch } } }) },
 }));
 
-import { EmailBody } from '../EmailBody';
+import { EmailBody, rasterTypeOf } from '../EmailBody';
 
 const frame = () => screen.getByTitle('Email content') as HTMLIFrameElement;
 const PNG_B64 = 'iVBORw0KGgo=';
@@ -114,6 +114,44 @@ describe('EmailBody', () => {
       <EmailBody emailId="e1" htmlBody='<img src="cid:shot1">' attachments={[...attachments]} />
     );
     expect(m.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('draws an inline image the provider sent as octet-stream, by its first bytes, but never SVG', async () => {
+    expect(rasterTypeOf({ contentType: 'application/octet-stream', contentBase64: PNG_B64 })).toBe(
+      'image/png'
+    );
+    expect(rasterTypeOf({ contentType: '', contentBase64: '/9j/4AAQ' })).toBe('image/jpeg');
+    expect(
+      rasterTypeOf({ contentType: 'application/octet-stream', contentBase64: 'PHN2Zz4=' })
+    ).toBeNull();
+    // A declared non-image type is believed, whatever the bytes look like.
+    expect(rasterTypeOf({ contentType: 'application/pdf', contentBase64: PNG_B64 })).toBeNull();
+    m.fetch.mockResolvedValue({
+      fileName: 'logo',
+      contentType: 'application/octet-stream',
+      size: 8,
+      contentBase64: PNG_B64,
+    });
+    render(
+      <EmailBody
+        emailId="e1"
+        htmlBody='<img src="cid:z">'
+        attachments={[
+          {
+            id: 'a',
+            filename: 'logo',
+            contentType: 'application/octet-stream',
+            size: 8,
+            isInline: true,
+            contentId: 'z',
+            onDemand: true,
+          },
+        ]}
+      />
+    );
+    await waitFor(() =>
+      expect(frame().getAttribute('srcdoc')).toContain(`data:image/png;base64,${PNG_B64}`)
+    );
   });
 
   it('does not embed an inline "image" that is not a raster image', async () => {
