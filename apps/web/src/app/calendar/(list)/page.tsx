@@ -12,6 +12,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Skeleton } from '@intelliflow/ui';
+import { APPOINTMENT_TYPES } from '@intelliflow/domain';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
 import { AppointmentCalendar } from '@/components/appointments';
 import type {
@@ -161,22 +162,27 @@ export default function CalendarPage() {
 
   const [search, setSearch] = useState('');
   const query = search.trim().toLowerCase();
+  // ?type=MEETING etc., from the sidebar's By Type section (owner 26/11: the links did nothing).
+  const typeParam = searchParams.get('type');
+  const typeFilter =
+    typeParam && (APPOINTMENT_TYPES as readonly string[]).includes(typeParam) ? typeParam : null;
   const shownAppointments = useMemo(
     () =>
-      query
-        ? calendarAppointments.filter(
-            (a) =>
-              a.title.toLowerCase().includes(query) ||
-              (a.location ?? '').toLowerCase().includes(query)
-          )
-        : calendarAppointments,
-    [calendarAppointments, query]
+      calendarAppointments.filter(
+        (a) =>
+          (!typeFilter || a.appointmentType === typeFilter) &&
+          (!query ||
+            a.title.toLowerCase().includes(query) ||
+            (a.location ?? '').toLowerCase().includes(query))
+      ),
+    [calendarAppointments, query, typeFilter]
   );
-  const shownTasks = useMemo(
-    () =>
-      query ? calendarTasks.filter((t) => t.title.toLowerCase().includes(query)) : calendarTasks,
-    [calendarTasks, query]
-  );
+  const shownTasks = useMemo(() => {
+    // Tasks have no appointment type: a type filter shows appointments only.
+    if (typeFilter) return [];
+    if (!query) return calendarTasks;
+    return calendarTasks.filter((t) => t.title.toLowerCase().includes(query));
+  }, [calendarTasks, query, typeFilter]);
 
   const taskCreateMutation = api.task.create.useMutation({
     onSuccess: () => {

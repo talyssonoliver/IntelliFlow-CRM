@@ -18,12 +18,14 @@ import {
 import { CalendarVisibilityProvider } from '@/hooks/useCalendarVisibility';
 import { CalendarSettingsPanel } from '@/components/calendar/CalendarSettingsPanel';
 import { CalendarSettingsSidebarNav } from '@/components/calendar/CalendarSettingsSidebarNav';
+import { useEnabledModules } from '@/hooks/useEnabledModules';
 
 export default function CalendarLayoutShell({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const onSettingsPage = isCalendarSettingsPage(pathname);
+  const { businessType } = useEnabledModules();
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
@@ -31,8 +33,8 @@ export default function CalendarLayoutShell({ children }: Readonly<{ children: R
         <CalendarSettingsSidebarNav isExpanded={isExpanded} />
       ));
     }
-    return createCalendarSidebarConfig(() => setSettingsOpen((prev) => !prev));
-  }, [onSettingsPage]);
+    return createCalendarSidebarConfig(() => setSettingsOpen((prev) => !prev), businessType);
+  }, [onSettingsPage, businessType]);
 
   return (
     <CalendarVisibilityProvider>
