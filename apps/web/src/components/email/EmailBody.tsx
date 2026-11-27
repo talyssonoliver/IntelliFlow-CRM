@@ -57,8 +57,17 @@ const BASE64_SIGNATURES: ReadonlyArray<readonly [string, string]> = [
   ['iVBORw0KGgo', 'image/png'],
   ['/9j/', 'image/jpeg'],
   ['R0lGOD', 'image/gif'],
-  ['UklGR', 'image/webp'],
 ];
+
+/** WebP is RIFF at bytes 0-3 and WEBP at bytes 8-11 (other RIFF files, a WAV, are not images). */
+function isWebp(base64: string): boolean {
+  try {
+    const head = atob(base64.slice(0, 16));
+    return head.startsWith('RIFF') && head.slice(8, 12) === 'WEBP';
+  } catch {
+    return false;
+  }
+}
 
 /**
  * The raster type to draw an inline image with: the declared one when it is a raster type, else (a
@@ -68,6 +77,7 @@ export function rasterTypeOf(file: { contentType: string; contentBase64: string 
   const declared = file.contentType.toLowerCase().split(';')[0]!.trim();
   if (isEmbeddable(declared)) return declared;
   if (declared !== 'application/octet-stream' && declared !== '') return null;
+  if (isWebp(file.contentBase64)) return 'image/webp';
   return BASE64_SIGNATURES.find(([prefix]) => file.contentBase64.startsWith(prefix))?.[1] ?? null;
 }
 
