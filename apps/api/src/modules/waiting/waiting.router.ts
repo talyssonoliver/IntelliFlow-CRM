@@ -6,6 +6,7 @@
 import { z } from 'zod';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { createTenantWhereClause, getTenantContext } from '../../security/tenant-context';
+import { mailViewerOf } from '@intelliflow/db';
 import { loadWaiting } from './waiting-load';
 
 export const waitingRouter = createTRPCRouter({
@@ -14,10 +15,9 @@ export const waitingRouter = createTRPCRouter({
     .input(z.object({ limit: z.number().int().min(1).max(100).default(5) }).optional())
     .query(async ({ ctx, input }) => {
       const typed = getTenantContext(ctx);
-      const { tenantId } = typed.tenant;
       const all = await loadWaiting(
         typed.prismaWithTenant,
-        tenantId,
+        mailViewerOf(typed.tenant),
         createTenantWhereClause(typed.tenant),
         createTenantWhereClause(typed.tenant)
       );

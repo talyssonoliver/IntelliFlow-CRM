@@ -13,9 +13,12 @@
  * also has the user but stores `direction` and a sync `source` (it carries no open tracking), and mail
  * logged by hand has no user, so neither counts as a send unless it was opened.
  *
+ * Only mail the viewer may read counts (register #64): a colleague's personal-mailbox mail that is not
+ * logged to a lead or contact the viewer can see is not part of their lead's open rate.
+ *
  * It is opened when the record says so: openCount above 0, an openedAt, or the status OPENED/CLICKED.
  */
-import { Prisma } from '@intelliflow/db';
+import { Prisma, emailVisibleSql, type MailViewer } from '@intelliflow/db';
 
 /** Postgres regex for `address` as a whole address in a comma, semicolon or space separated list. */
 export function addressPattern(address: string): string {
@@ -28,7 +31,7 @@ interface RawDb {
 }
 
 /** The recipient-list and bounce parts of the where clause, shared by both counts. */
-function engagementSql(tenantId: string, address: string): Prisma.Sql {
+function engagementSql(viewer: MailViewer, address: string): Prisma.Sql {
   const pattern = addressPattern(address);
   const lowered = address.trim().toLowerCase();
   return Prisma.sql`
@@ -39,7 +42,9 @@ function engagementSql(tenantId: string, address: string): Prisma.Sql {
           AND jsonb_typeof(r.metadata -> 'direction') IS DISTINCT FROM 'string'
           AND jsonb_typeof(r.metadata -> 'source') IS DISTINCT FROM 'string') AS from_crm
       FROM email_records r
-      WHERE r."tenantId" = ${tenantId}
+      LEFT JOIN email_mailboxes m ON m.id = r."mailboxId"
+      WHERE r."tenantId" = ${viewer.tenantId}
+        AND ${emailVisibleSql(viewer, { mail: 'r', mailbox: 'm' })}
         AND r.status::text IN ('SENT', 'DELIVERED', 'OPENED', 'CLICKED')
         AND COALESCE(r.metadata ->> 'direction', '') <> 'inbound'
         AND (r."toEmail" ~* ${pattern} OR r."ccEmails" ~* ${pattern} OR r."bccEmails" ~* ${pattern})
@@ -62,14 +67,14 @@ function engagementSql(tenantId: string, address: string): Prisma.Sql {
     FROM mail`;
 }
 
-/** Tracked sends to the address and how many were opened, for one tenant. */
+/** Tracked sends to the address and how many were opened, over the mail the viewer may read. */
 export async function leadEmailEngagement(
   db: RawDb,
-  tenantId: string,
+  viewer: MailViewer,
   address: string
 ): Promise<{ sent: number; opened: number }> {
   const rows = await db.$queryRaw<{ sent: number; opened: number }[]>(
-    engagementSql(tenantId, address)
+    engagementSql(viewer, address)
   );
   return { sent: Number(rows[0]?.sent ?? 0), opened: Number(rows[0]?.opened ?? 0) };
 }

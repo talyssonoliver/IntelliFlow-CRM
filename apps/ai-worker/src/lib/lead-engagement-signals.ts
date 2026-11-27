@@ -13,7 +13,16 @@
  * (budget, need, authority) is sanitized and capped; the referrer is reduced to its host and the
  * landing page to its path.
  */
+import { emailVisibleSql } from '@intelliflow/db';
 import { sanitizeStringField } from '../utils/input-sanitizer';
+
+/**
+ * Register #64: the signals count the mail that is not private to one user: the company mailbox's,
+ * unowned inbound mail, and mail logged to a lead or contact. A colleague's personal-mailbox mail
+ * that nobody logged is not part of what an insight shown to the lead's viewers is built from. The
+ * policy's own SQL, asked as a reader who owns nothing and sees every lead.
+ */
+const SHARED_MAIL_VIEWER = { userId: '', role: 'ADMIN' } as const;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const FREE_TEXT_MAX = 200;
@@ -199,7 +208,9 @@ export async function loadEmailTracking(
           AND jsonb_typeof(r.metadata -> 'source') IS DISTINCT FROM 'string') AS from_crm,
         r."openCount", r."clickCount", r."openedAt", r."clickedAt"
       FROM email_records r
+      LEFT JOIN email_mailboxes m ON m.id = r."mailboxId"
       WHERE r."tenantId" = ${tenantId}
+        AND ${emailVisibleSql({ tenantId, ...SHARED_MAIL_VIEWER }, { mail: 'r', mailbox: 'm' })}
         AND (
           (COALESCE(r.metadata ->> 'direction', '') = 'inbound' AND r."fromEmail" ~* ${pattern})
           OR (
