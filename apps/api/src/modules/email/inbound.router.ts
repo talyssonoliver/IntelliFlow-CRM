@@ -41,6 +41,7 @@ import {
   visibleMail,
   type EmailRouterCtx,
 } from './email-access';
+import { sanitizeEmailHtml } from './email-html-sanitizer';
 import { dispatchUserMail } from './mailbox-sender';
 import { sendComposedEmail } from '../contact/reply-draft-compose';
 const InboundEmailParser = (adapters as any).InboundEmailParser;
@@ -129,6 +130,11 @@ export interface ParsedEmailResponse {
     filename: string;
     contentType: string;
     size: number;
+    /** An inline image (shown in the body through its `cid:`), not a file to list. */
+    isInline: boolean;
+    contentId: string | null;
+    /** True when the file is fetched from the mail provider on demand (not stored in Aurora). */
+    onDemand: boolean;
   }>;
   threadId?: string;
   isReply: boolean;
@@ -150,23 +156,34 @@ export interface ParsedEmailResponse {
 // Helpers: Map Prisma EmailRecord to ParsedEmailResponse
 // ============================================================================
 
-function mapEmailRecord(record: any): ParsedEmailResponse {
+export function mapEmailRecord(record: any): ParsedEmailResponse {
   const metadata = (record.metadata as Record<string, any>) ?? {};
+  // Mail synced or imported from a provider keeps its text in body (its HTML, if any, is bodyHtml):
+  // an address like <ada@example.invalid> in that text is not markup.
+  const textInBody = metadata.source === 'outlook-sync' || metadata.source === 'coa-import';
   const isHtml =
-    metadata.isHtml ?? (typeof record.body === 'string' && /<[a-z][\s\S]*>/i.test(record.body));
+    metadata.isHtml ??
+    (!textInBody && typeof record.body === 'string' && /<[a-z][\s\S]*>/i.test(record.body));
+  // A synced mail keeps the provider's HTML in bodyHtml (and its text in body); older mail and mail
+  // composed here keep HTML in body. Either way it is sanitised again on the way out.
+  const html = sanitizeEmailHtml(record.bodyHtml ?? (isHtml ? record.body : null));
   return {
     id: record.id,
     from: { address: record.fromEmail, name: metadata.fromName },
     to: parseRecipients(record.toEmail),
     cc: record.ccEmails ? parseRecipients(record.ccEmails) : undefined,
     subject: record.subject,
-    textBody: isHtml ? undefined : record.body,
-    htmlBody: isHtml ? record.body : undefined,
+    // HTML kept in body is never shown as text, even when it sanitises to nothing.
+    textBody: isHtml && !record.bodyHtml ? undefined : record.body,
+    htmlBody: html ?? undefined,
     attachments: (record.attachments ?? []).map((a: any) => ({
       id: a.id,
       filename: a.fileName,
       contentType: a.fileType,
       size: a.fileSize,
+      isInline: a.isInline === true,
+      contentId: a.contentId ?? null,
+      onDemand: Boolean(a.providerAttachmentId),
     })),
     threadId: metadata.threadId,
     isReply: !!metadata.isReply,
