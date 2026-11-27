@@ -1,10 +1,4 @@
-import {
-  CardList,
-  CardListGroup,
-  CardListMore,
-  CardListRow,
-  CardListSection,
-} from './CardListSection';
+import { CardList, CardListGroup, CardListMore, CardListSection, TodoRow } from './CardListSection';
 import { leadDisplayName } from '@/lib/leads/lead-format';
 import {
   followUpActionText,
@@ -42,15 +36,28 @@ export function followUpSummary(total: number, dueToday: number, lowerBound = fa
   return overdue > 0 && !lowerBound ? `${today} · ${overdue} overdue` : today;
 }
 
+/** "Due today · last contacted 20 Nov" or "Never contacted": the meta line of a follow-up row. */
+export function followUpDetail(lead: FollowUpLead, now: Date): string {
+  const { label } = followUpStatus(lead.lastContactedAt, now);
+  if (!lead.lastContactedAt) return label;
+  const last = followUpLastContactText(lead.lastContactedAt);
+  return `${label} · ${last.charAt(0).toLowerCase()}${last.slice(1)}`;
+}
+
 export function FollowUpsDueSection({
   leads,
   total,
   dueToday,
   dueTodayIsLowerBound = false,
   now = new Date(),
+  onDone,
+  pendingLeadId,
 }: Readonly<{
   leads: readonly FollowUpLead[];
   total: number;
+  /** The row's checkbox: the follow-up is done (a note is logged on the lead). */
+  onDone: (leadId: string) => void;
+  pendingLeadId?: string | undefined;
   /** Due today among the leads read (newest due first); omit to show no summary line. */
   dueToday?: number;
   dueTodayIsLowerBound?: boolean;
@@ -94,16 +101,16 @@ export function FollowUpsDueSection({
         <CardListGroup key={group.key} title={group.title}>
           <CardList label={group.title ?? undefined}>
             {group.rows.map(({ lead, status }) => (
-              <CardListRow
+              <TodoRow
                 key={lead.id}
                 href={`/leads/${lead.id}`}
-                primary={followUpActionText(leadDisplayName(lead))}
-                // The status already says "Never contacted" when there is no date.
-                secondary={
-                  lead.lastContactedAt ? followUpLastContactText(lead.lastContactedAt) : undefined
-                }
-                status={status.label}
-                statusClassName={toneClass[status.tone]}
+                title={followUpActionText(leadDisplayName(lead))}
+                kind="Follow-up"
+                detail={followUpDetail(lead, now)}
+                detailClassName={toneClass[status.tone]}
+                doneLabel={`Mark done: ${followUpActionText(leadDisplayName(lead))}`}
+                onDone={() => onDone(lead.id)}
+                pending={pendingLeadId === lead.id}
               />
             ))}
           </CardList>

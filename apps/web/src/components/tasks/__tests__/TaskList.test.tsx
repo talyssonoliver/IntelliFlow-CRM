@@ -154,7 +154,7 @@ describe('TaskList', () => {
       );
     });
 
-    it('opens the lead on tap and offers only "Open lead", never complete or delete', () => {
+    it('opens the lead on tap and offers "Mark done" and "Open lead", never Complete or Delete', () => {
       routerPush.mockClear();
       render(<TaskList {...defaultProps} tasks={[followUp]} />);
       const row = screen.getByTestId(`task-row-${followUp.id}`);
@@ -164,6 +164,14 @@ describe('TaskList', () => {
       fireEvent.click(row);
       expect(routerPush).toHaveBeenCalledWith('/leads/lead-9');
       expect(defaultProps.onRowClick).not.toHaveBeenCalledWith(followUp.id);
+    });
+
+    it('"Mark done" on a follow-up row hands its row id to onComplete', () => {
+      const onComplete = vi.fn();
+      render(<TaskList {...defaultProps} onComplete={onComplete} tasks={[followUp]} />);
+      const row = screen.getByTestId(`task-row-${followUp.id}`);
+      fireEvent.click(within(row).getByRole('button', { name: 'Mark done' }));
+      expect(onComplete).toHaveBeenCalledWith(followUp.id);
     });
 
     it('never sends a follow-up id to bulk complete, archive or delete', () => {

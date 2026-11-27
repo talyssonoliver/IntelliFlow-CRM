@@ -228,6 +228,13 @@ function createColumns(
           return (
             <TableRowActions
               quickActions={[
+                // The same "done" as a task's Complete (owner 27/11): the page logs a
+                // "Followed up" note on the lead, which takes it off the due list.
+                {
+                  icon: 'check_circle',
+                  label: 'Mark done',
+                  onClick: () => handlers.onComplete(task.id),
+                },
                 {
                   icon: 'open_in_new',
                   label: 'Open lead',

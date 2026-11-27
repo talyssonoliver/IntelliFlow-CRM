@@ -58,6 +58,10 @@ const followUpsDue = {
   dueTodayIsLowerBound: false,
   isLoading: false,
 };
+vi.mock('@/components/dashboard/widgets/useTodoDone', () => ({
+  useFollowUpDone: () => ({ markDone: vi.fn(), pendingLeadId: undefined }),
+}));
+
 vi.mock('@/components/dashboard/widgets/useFollowUpsDue', () => ({
   useFollowUpsDue: () => followUpsDue,
 }));

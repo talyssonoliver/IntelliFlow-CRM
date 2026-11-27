@@ -170,3 +170,28 @@ export function pickWaiting(people: WaitingPerson[], mail: MailEvent[]): Waiting
   }
   return items.sort((a, b) => a.since.getTime() - b.since.getTime() || a.id.localeCompare(b.id));
 }
+
+/** What a dismissal remembers about the wait it hid. */
+export interface WaitingDismissalRow {
+  personKey: string;
+  since: Date;
+  unanswered: number;
+}
+
+/**
+ * Drops the waits a person marked "handled without a reply". A dismissal hides only the wait it
+ * was made for: the same first unanswered mail (`since`) and no more unanswered mail than then. A
+ * newer inbound email either grows `unanswered` or, once we replied, starts a later `since`, and
+ * brings the person back.
+ */
+export function withoutDismissed(
+  items: WaitingItem[],
+  dismissals: readonly WaitingDismissalRow[]
+): WaitingItem[] {
+  if (dismissals.length === 0) return items;
+  const byKey = new Map(dismissals.map((d) => [d.personKey, d]));
+  return items.filter((item) => {
+    const d = byKey.get(personKey(item.kind, item.id));
+    return !(d && d.since.getTime() === item.since.getTime() && item.unanswered <= d.unanswered);
+  });
+}

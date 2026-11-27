@@ -6,7 +6,9 @@ import {
   pickWaiting,
   recordDirection,
   splitAddresses,
+  withoutDismissed,
   type MailEvent,
+  type WaitingItem,
   type WaitingPerson,
 } from '../waiting-for-reply';
 import { coverageFloor, loadWaiting } from '../waiting-load';
@@ -337,6 +339,7 @@ function fakeDb(tables: {
   leadActivities: Record<string, unknown>[];
   contactActivities: Record<string, unknown>[];
   emails: Record<string, unknown>[];
+  dismissals?: Record<string, unknown>[];
 }) {
   // One Prisma where condition: `{ in: [...] }`, `{ not: x }` or plain equality (null equals unset).
   const holds = (value: unknown, cond: unknown): boolean => {
@@ -378,6 +381,7 @@ function fakeDb(tables: {
     leadActivity: table(tables.leadActivities),
     contactActivity: table(tables.contactActivities),
     emailRecord: table(tables.emails),
+    waitingDismissal: table(tables.dismissals ?? []),
     // The visibility policy asks which personal mail is logged to a visible person: none here.
     $queryRaw: async () => [],
   } as never;
@@ -1021,5 +1025,96 @@ describe('narrowToWaiting (the leads-list filter)', () => {
     expect(
       await narrowToWaiting(ctx(fakeDb(t)), { waitingForReply: true, ids: ['lead-b'] })
     ).toEqual([]);
+  });
+});
+
+describe('withoutDismissed (handled without a reply)', () => {
+  const waiting = (over: Partial<WaitingItem> = {}): WaitingItem => ({
+    ...jane,
+    since: day(10),
+    subject: 'Quote?',
+    unanswered: 1,
+    ...over,
+  });
+  const dismissal = (over = {}) => ({
+    personKey: 'lead:lead-1',
+    since: day(10),
+    unanswered: 1,
+    ...over,
+  });
+
+  it('hides the wait the dismissal was made for', () => {
+    expect(withoutDismissed([waiting()], [dismissal()])).toEqual([]);
+  });
+
+  it('keeps everyone when there are no dismissals', () => {
+    const items = [waiting()];
+    expect(withoutDismissed(items, [])).toBe(items);
+  });
+
+  it('brings the person back when another inbound email grows the unanswered count', () => {
+    expect(withoutDismissed([waiting({ unanswered: 2 })], [dismissal()])).toHaveLength(1);
+  });
+
+  it('brings the person back when a new wait starts later (we replied, they wrote again)', () => {
+    expect(withoutDismissed([waiting({ since: day(15) })], [dismissal()])).toHaveLength(1);
+  });
+
+  it('still hides the wait when fewer mails count now than when it was dismissed', () => {
+    expect(withoutDismissed([waiting({ unanswered: 1 })], [dismissal({ unanswered: 3 })])).toEqual(
+      []
+    );
+  });
+
+  it("does not hide someone else's wait, or the same id of another kind", () => {
+    const contact = waiting({ kind: 'contact', id: 'lead-1' });
+    expect(withoutDismissed([contact], [dismissal()])).toHaveLength(1);
+    expect(withoutDismissed([waiting({ id: 'lead-2' })], [dismissal()])).toHaveLength(1);
+  });
+});
+
+describe('loadWaiting with dismissals', () => {
+  const scope = { tenantId: 't1' };
+  const withoutCrmReply = () => {
+    const t = tables();
+    t.emails = t.emails.filter((e) => e.subject !== 'Sent from CRM');
+    return t;
+  };
+
+  it('leaves out a dismissed person and the leads filter agrees', async () => {
+    const t = { ...withoutCrmReply(), dismissals: [] as Record<string, unknown>[] };
+    const before = await loadWaiting(fakeDb(t), viewer, scope, scope);
+    const lead = before.find((i) => i.id === 'lead-a');
+    expect(lead).toBeDefined();
+    t.dismissals = [
+      {
+        tenantId: 't1',
+        personKey: 'lead:lead-a',
+        since: lead?.since,
+        unanswered: lead?.unanswered,
+      },
+    ];
+    const after = await loadWaiting(fakeDb(t), viewer, scope, scope);
+    expect(after.map((i) => i.id)).toEqual(['contact-a']);
+    const ctx = {
+      prismaWithTenant: fakeDb(t),
+      tenant: {
+        tenantId: 't1',
+        userId: 'u1',
+        role: 'ADMIN',
+        tenantType: 'user',
+        canAccessAllTenantData: true,
+      },
+    } as never;
+    expect(await narrowToWaiting(ctx, { waitingForReply: true })).toEqual([]);
+  });
+
+  it("ignores another tenant's dismissal", async () => {
+    const t = {
+      ...withoutCrmReply(),
+      dismissals: [{ tenantId: 't2', personKey: 'lead:lead-a', since: day(10), unanswered: 1 }],
+    };
+    const items = await loadWaiting(fakeDb(t), viewer, scope, scope);
+    expect(items.map((i) => i.id)).toContain('lead-a');
   });
 });
