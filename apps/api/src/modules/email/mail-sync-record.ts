@@ -7,6 +7,7 @@
  *   mail in the Inbox is inbound.
  */
 import type { MailSyncReader, SyncFolder, SyncedMessage } from './mail-sync-reader';
+import type { RichMail } from './mail-sync-rich';
 
 /** Which way a synced mail went. */
 export type MailDirection = 'inbound' | 'outbound';
@@ -42,19 +43,25 @@ export function recordData(args: {
   party: { contactId: string | null; leadId: string | null };
   body: string;
   threadId: string | null;
+  /** The sanitised HTML and attachment metadata of a reader that has them. */
+  rich?: Pick<RichMail, 'bodyHtml'>;
 }): Record<string, unknown> {
-  const { mailbox, message, folder, provider, party, body, threadId } = args;
+  const { mailbox, message, folder, provider, party, body, threadId, rich } = args;
   const direction = directionOf(folder);
   const sent = direction === 'outbound';
   const fromName = message.fromName?.trim();
   return {
     subject: message.subject,
     body,
+    ...(rich?.bodyHtml ? { bodyHtml: rich.bodyHtml } : {}),
     fromEmail: senderOf(message, mailbox),
     toEmail: message.to.join(', '),
     ccEmails: message.cc.join(', ') || null,
     status: sent ? 'SENT' : 'DELIVERED',
-    ...(sent ? { sentAt: message.receivedAt } : {}),
+    // The provider's own date (Graph receivedDateTime, Gmail internalDate, Zoho receivedTime), for
+    // received mail too, so a thread can be ordered and dated. An inbound record has no userId, so
+    // it stays out of Sent.
+    sentAt: message.receivedAt,
     isRead: sent ? true : message.isRead,
     tenantId: mailbox.tenantId,
     mailboxId: mailbox.id,

@@ -32,6 +32,16 @@ vi.mock('@/components/contacts/ReplyDraftsPanel', () => ({
   ),
 }));
 
+// The opened message has its own tests; here it only shows which mail it was given.
+vi.mock('@/components/leads/LeadEmailMessage', () => ({
+  LeadEmailMessage: ({
+    leadId,
+    emailRecordId,
+  }: Readonly<{ leadId: string; emailRecordId: string }>) => (
+    <div data-testid="opened-message">{`${leadId}/${emailRecordId}`}</div>
+  ),
+}));
+
 import { LeadEmailsTab } from '../LeadEmailsTab';
 import type { LeadEmailRow } from '@/lib/leads/lead-emails';
 
@@ -122,5 +132,21 @@ describe('LeadEmailsTab', () => {
     // Above the list: a waiting reply is the first thing on the tab.
     const first = screen.getAllByTestId(/reply-drafts-for-lead|email-row-label/)[0];
     expect(first).toBe(panel);
+  });
+
+  it('opens the body of a mail that has a record in place, and closes it again', () => {
+    renderTab([
+      row({ id: 'a', subject: 'Quote', emailRecordId: 'rec-9' }),
+      row({ id: 'b', subject: 'Old note', emailRecordId: null }),
+    ]);
+    // A row with no record behind it has nothing to read.
+    expect(screen.queryByRole('button', { name: /Read "Old note"/ })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('opened-message')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Read "Quote"' }));
+    expect(screen.getByTestId('opened-message')).toHaveTextContent('lead-1/rec-9');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hide "Quote"' }));
+    expect(screen.queryByTestId('opened-message')).not.toBeInTheDocument();
   });
 });

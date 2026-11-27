@@ -224,6 +224,7 @@ model Tenant {
   aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
   aiProviderKey             TenantAIProviderKey?       @ignore // PG-199 BYOK
   chainRuns                 ChainRun[]                 // AI Chains page usage stats
+  workspaceExportRequests   WorkspaceExportRequest[]   // whole-workspace data export (agreement clause 5)
   memoryPolicy              TenantMemoryPolicy?        // P2.7: per-tenant memory retention
   goalDefault               TenantGoalDefault?         // IFC-211: org-wide default daily goal
   termsAcceptances          TermsAcceptance[]          @relation("TenantTermsAcceptances") @ignore // IFC-309
@@ -334,6 +335,72 @@ model ChainRun {
   @@map("chain_runs")
 }
 
+
+// Whole-workspace data export (customer agreement clause 5: a standalone copy of a leaving
+// client's data within 14 days). One row per request: who, when, status, counts, link expiry.
+// The ZIP itself lives in a private Supabase Storage bucket; the signed link is never stored.
+enum WorkspaceExportStatus {
+  QUEUED
+  RUNNING
+  READY
+  FAILED
+  EXPIRED
+}
+
+enum WorkspaceExportTrigger {
+  ADMIN
+  SUBSCRIPTION_ENDED
+}
+
+model WorkspaceExportRequest {
+  id              String                 @id @default(cuid())
+  tenantId        String
+  /// The admin who asked; null when the system asked (subscription ended).
+  requestedById   String?
+  trigger         WorkspaceExportTrigger
+  /// Stripe subscription id behind a SUBSCRIPTION_ENDED request (one export per subscription).
+  subscriptionId  String?
+  status          WorkspaceExportStatus  @default(QUEUED)
+  /// Rows per exported file, plus counts of stored files and skipped files.
+  rowCounts       Json?
+  fileCount       Int?
+  archiveBytes    BigInt?
+  archiveSha256   String?                @db.Char(64)
+  storageBucket   String?
+  storagePath     String?
+  /// Retry budget; a replay of a failed subscription export resets it to 0.
+  attempts        Int                    @default(0)
+  /// Counts every claim and is never reset: it owns the claim (a stalled worker cannot match a
+  /// newer claim) and names the attempt's archive path.
+  claimCount      Int                    @default(0)
+  /// Set once every attempt's archive of a FAILED request is confirmed removed.
+  archivesRemovedAt DateTime?
+  /// Last time a cleanup of this FAILED request's archives was tried (the sweep goes oldest first).
+  lastCleanupAttemptAt DateTime?
+  /// Users who have been sent the download link (a failed recipient is retried on its own).
+  emailedToUserIds String[] @default([])
+  /// While set and in the future, one run holds the right to send the export email (no duplicates).
+  deliveryLeaseUntil DateTime?
+  /// The stored parts of the archive: { items: [{ part, path, bytes, sha256 }], manifestPath }.
+  /// storagePath stays part 1; archiveBytes is the total of all parts.
+  parts Json?
+  error           String?
+  requestedAt     DateTime               @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+  /// completedAt + 14 days: after it the link is dead and the archive is removed.
+  expiresAt       DateTime?
+  emailedAt       DateTime?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, subscriptionId])
+  @@index([tenantId, requestedAt])
+  @@index([status, requestedAt])
+  @@map("workspace_export_requests")
+}
 
 // P2.7 — Per-tenant retention policy for conversation/memory artifacts.
 // Absent row = platform default. Pruning job (memory-retention.job.ts) joins
@@ -4485,6 +4552,9 @@ model EmailRecord {
   templateId   String?
   subject      String
   body         String   @db.Text
+  /// The provider's HTML body, sanitised server-side at write time (email-html-sanitizer.ts).
+  /// Null for plain-text mail; `body` stays the text fallback.
+  bodyHtml     String?  @db.Text
   fromEmail    String
   toEmail      String
   ccEmails     String?
@@ -4549,7 +4619,14 @@ model EmailAttachment {
   fileName    String
   fileSize    Int
   fileType    String
+  /// '' for mail synced from a provider: the file is NOT copied into Aurora; it is fetched from
+  /// the provider on demand through `providerAttachmentId`.
   fileUrl     String
+  /// The provider's locator for the file (Gmail part id, Graph attachment id, Zoho folder:id).
+  providerAttachmentId String? @db.VarChar(512)
+  /// The Content-ID an inline image is referenced by in the HTML (cid:), without angle brackets.
+  contentId   String?  @db.VarChar(255)
+  isInline    Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   // DBA-117: Multi-tenancy (DB has tenantId NOT NULL)

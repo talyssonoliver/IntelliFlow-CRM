@@ -15,6 +15,8 @@ export interface LeadEmailRow {
   direction: EmailDirection | null;
   sentAt: string;
   openCount: number;
+  /** The CRM's email record behind this row (mail synced or imported), when there is one: its body can be opened. */
+  emailRecordId?: string | null;
 }
 
 /** The part of an activity the rows are built from. */
@@ -28,6 +30,7 @@ export interface EmailActivityLike {
     opened?: boolean;
     openCount?: number;
     direction?: string;
+    emailRecordId?: string;
   } | null;
 }
 
@@ -49,6 +52,10 @@ export function leadEmailRows(activities: EmailActivityLike[]): LeadEmailRow[] {
       direction: directionOf(activity.metadata?.direction, activity.title),
       sentAt: activity.timestamp,
       openCount: activity.metadata?.openCount || 0,
+      emailRecordId:
+        typeof activity.metadata?.emailRecordId === 'string'
+          ? activity.metadata.emailRecordId
+          : null,
     }));
 }
 

@@ -177,6 +177,91 @@ export function emailVisibilityWhere(viewerUserId: string, loggedIds: readonly s
   };
 }
 
+/**
+ * The mail EVERYONE in the tenant may read, with no personal viewer: the policy above with nobody
+ * signed in. For a read that has no single reader, such as the whole-workspace export that goes to
+ * the tenant's administrators, where a mail may leave only when no colleague's privacy rests on it:
+ *
+ *  - the company mailbox (`scope = 'TENANT'`) and inbound mail with no mailbox and no owner;
+ *  - mail logged to a lead or a contact (`contactId` set, or `metadata.leadId`), which is the
+ *    customer conversation and not personal;
+ *  - never a draft, and never mail that is only in a user's personal mailbox.
+ *
+ * There is no administrator branch (owner decision 26/11/2026): an administrator who exports the
+ * workspace gets exactly what any colleague could already read.
+ *
+ * This is the Prisma half and it is a SUPERSET: a `where` cannot check that the lead or contact a
+ * mail is logged to still exists (`email_records` has no relation to them, and a deleted lead
+ * leaves its id in `metadata`). Use it to narrow the read, then keep a row only when
+ * `isTeamVisibleEmail` says so.
+ */
+export function emailTeamVisibleWhere() {
+  return {
+    AND: [
+      {
+        // A draft is its writer's alone.
+        OR: [
+          { metadata: { path: ['isDraft'], equals: Prisma.AnyNull } },
+          { metadata: { path: ['isDraft'], equals: false } },
+        ],
+      },
+      {
+        OR: [
+          { mailbox: { is: { scope: 'TENANT' } } },
+          {
+            mailboxId: null,
+            userId: null,
+            metadata: { path: ['mailboxOwnerId'], equals: Prisma.AnyNull },
+          },
+          { contactId: { not: null } },
+          { metadata: { path: ['leadId'], string_starts_with: '' } },
+        ],
+      },
+    ],
+  };
+}
+
+/** What `isTeamVisibleEmail` needs to know about the tenant. */
+export interface TeamMailContext {
+  /** Ids of the company mailboxes (`scope = 'TENANT'`). */
+  tenantMailboxIds: ReadonlySet<string>;
+  /** Ids of the contacts that exist in the tenant. */
+  contactIds: ReadonlySet<string>;
+  /** Ids of the leads that exist in the tenant. */
+  leadIds: ReadonlySet<string>;
+}
+
+/** The slice of an `email_records` row the policy reads. */
+export interface TeamMailRow {
+  mailboxId?: string | null;
+  userId?: string | null;
+  contactId?: string | null;
+  metadata?: unknown;
+}
+
+const metadataOf = (row: TeamMailRow): Record<string, unknown> =>
+  row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata)
+    ? (row.metadata as Record<string, unknown>)
+    : {};
+
+/**
+ * The exact form of `emailTeamVisibleWhere`, with the existence check the Prisma form cannot do:
+ * mail logged to a lead or contact counts only while that lead or contact still exists in the
+ * tenant, as in `loggedToVisibleSql`. A draft is never team mail.
+ */
+export function isTeamVisibleEmail(row: TeamMailRow, ctx: TeamMailContext): boolean {
+  const meta = metadataOf(row);
+  if (meta.isDraft === true) return false;
+  if (row.mailboxId && ctx.tenantMailboxIds.has(row.mailboxId)) return true;
+  const ownerless =
+    !row.mailboxId &&
+    !row.userId &&
+    (meta.mailboxOwnerId === undefined || meta.mailboxOwnerId === null);
+  if (ownerless) return true;
+  if (row.contactId && ctx.contactIds.has(row.contactId)) return true;
+  return typeof meta.leadId === 'string' && ctx.leadIds.has(meta.leadId);
+}
+
 /** The viewer's full Prisma visibility fragment: looks up the logged-to-a-visible-person ids. */
 export async function visibleEmailWhere(
   db: MailVisibilityDb,
