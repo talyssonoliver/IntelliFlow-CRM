@@ -1,21 +1,23 @@
-import {
-  FEW_SIGNALS_LABEL,
-  FEW_SIGNALS_TITLE,
-  LOW_CONFIDENCE_TITLE,
-  leadScoreDisplay,
-} from '@/lib/leads/score-display';
+import { leadScoreDisplay } from '@/lib/leads/score-display';
 
+/**
+ * The score cell of the leads list (desktop table and phone rows).
+ *
+ * Owner 26/11 on the leads list: "These label with ( few signals and ? ) are breaking the ui. On
+ * this page we shouldn't show why on the list page". The list shows the score only, in its usual
+ * badge. Why a score is unsure ("Few signals yet", "Low confidence") is explained on the lead page
+ * (Overview), which renders its own explanation and does not use this badge.
+ */
 export function LeadScoreBadge({
   score,
   scoringStatus,
-  scoreConfidence,
 }: Readonly<{
   score: number;
   scoringStatus?: string | null;
-  /** 0 to 1, when the API supplies it. Decides the flag band; see `leadScoreFlag`. */
+  /** Accepted for the callers' convenience; the list does not show confidence (owner 26/11). */
   scoreConfidence?: number | null;
 }>) {
-  const display = leadScoreDisplay(score, scoringStatus, scoreConfidence);
+  const display = leadScoreDisplay(score, scoringStatus);
   if (display.kind === 'not-scored') {
     return (
       <span
@@ -57,20 +59,6 @@ export function LeadScoreBadge({
     >
       <span className={`size-1.5 rounded-full ${dotClass}`} aria-hidden="true" />
       {score}
-      {display.flag === 'low-confidence' && (
-        <>
-          <span className="sr-only"> ({LOW_CONFIDENCE_TITLE})</span>
-          <span className="font-normal" aria-hidden="true" title={LOW_CONFIDENCE_TITLE}>
-            ?
-          </span>
-        </>
-      )}
-      {display.flag === 'few-signals' && (
-        <span className="font-normal text-slate-600 dark:text-slate-300" title={FEW_SIGNALS_TITLE}>
-          {FEW_SIGNALS_LABEL}
-          <span className="sr-only">. {FEW_SIGNALS_TITLE}</span>
-        </span>
-      )}
     </span>
   );
 }

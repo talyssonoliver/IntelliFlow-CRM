@@ -3,6 +3,7 @@
  * pickWaiting returns, so the list and the dashboard card are built from the same rows.
  */
 
+import { mailViewerOf } from '@intelliflow/db';
 import { createTenantWhereClause, type TenantAwareContext } from '../../security/tenant-context';
 import { loadWaiting } from './waiting-load';
 
@@ -12,12 +13,11 @@ export async function narrowToWaiting(
   filters: { ids?: string[] | undefined; waitingForReply?: boolean | undefined }
 ): Promise<string[] | undefined> {
   if (!filters.waitingForReply) return filters.ids;
-  const { tenantId } = ctx.tenant;
   // Contacts are loaded with the card's scope: a lead and a contact with one email merge their
   // histories, so the filter and the card decide each lead the same way.
   const waiting = await loadWaiting(
     ctx.prismaWithTenant,
-    tenantId,
+    mailViewerOf(ctx.tenant),
     createTenantWhereClause(ctx.tenant),
     createTenantWhereClause(ctx.tenant)
   );

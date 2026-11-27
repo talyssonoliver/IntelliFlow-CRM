@@ -260,7 +260,7 @@ describe('lead activity context for scoring', () => {
         utmSource: 'google',
         referrer: 'https://www.example.invalid/some/path?q=1',
         landingPath: '/pilates?token=abc',
-        outreachSlug: 'pilates-living',
+        outreachSlug: 'studio-pilates-demo',
         tags: ['studio', 'london'],
       },
       [],
@@ -291,7 +291,7 @@ describe('lead activity context for scoring', () => {
     expect(lines).toContain('Referrer: www.example.invalid');
     expect(lines).toContain('Landing Page: /pilates');
     expect(lines).not.toContain('token=abc');
-    expect(lines).toContain('Outreach Concept Page: pilates-living');
+    expect(lines).toContain('Outreach Concept Page: studio-pilates-demo');
     expect(lines).toContain('Tags: studio, london');
   });
 

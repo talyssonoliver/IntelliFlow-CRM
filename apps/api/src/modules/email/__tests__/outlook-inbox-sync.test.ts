@@ -96,7 +96,12 @@ describe('runInboxSync (#1177)', () => {
     await runInboxSync(deps);
 
     expect(prisma.contact.findFirst).toHaveBeenCalledWith({
-      where: { tenantId: TENANT, email: { equals: 'ada@example.invalid', mode: 'insensitive' } },
+      where: {
+        tenantId: TENANT,
+        email: { equals: 'ada@example.invalid', mode: 'insensitive' },
+        // a personal mailbox matches only the people its owner owns (register #64)
+        ownerId: 'user-1',
+      },
       select: { id: true },
     });
   });
@@ -386,7 +391,12 @@ describe('runInboxSync: Sent Items, the other way (#1177)', () => {
 
     expect(prisma.contact.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { tenantId: TENANT, email: { equals: 'ada@example.invalid', mode: 'insensitive' } },
+        where: {
+          tenantId: TENANT,
+          email: { equals: 'ada@example.invalid', mode: 'insensitive' },
+          // a personal mailbox matches only the people its owner owns (register #64)
+          ownerId: 'user-1',
+        },
       })
     );
     const data = (prisma.emailRecord.create.mock.calls[0] as unknown as [{ data: any }])[0].data;

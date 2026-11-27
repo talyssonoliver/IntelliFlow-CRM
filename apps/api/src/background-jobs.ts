@@ -21,6 +21,7 @@ import {
   startApprovalSweep,
   stopApprovalSweep,
 } from './agent/approval-sweep-scheduler';
+import { runWithEgressJob } from '@intelliflow/db';
 import { createDefaultSweepDeps, runApprovalSweep } from './agent/approval-escalation-sweep';
 import {
   bounceScanIntervalFromEnv,
@@ -42,6 +43,13 @@ import {
   startDsarSlaScheduler,
   stopDsarSlaScheduler,
 } from './modules/privacy/dsar-sla-scheduler';
+import {
+  complianceSnapshotIntervalFromEnv,
+  createComplianceSnapshotDb,
+  runComplianceSnapshots,
+  startComplianceSnapshotScheduler,
+  stopComplianceSnapshotScheduler,
+} from './modules/compliance/compliance-snapshot-scheduler';
 import {
   checkBackgroundJobsHeartbeat,
   closeHeartbeatStore,
@@ -89,6 +97,7 @@ export interface StartedBackgroundJobs {
   bounceScan: boolean;
   inboxSync: boolean;
   dsarSla: boolean;
+  complianceSnapshot: boolean;
 }
 
 async function defaultReady(): Promise<unknown> {
@@ -140,7 +149,9 @@ export function startBackgroundJobs({
     log,
     run: async () => {
       await ready();
-      const report = await runApprovalSweep(await createDefaultSweepDeps());
+      const report = await runWithEgressJob('api.approvalSweep', async () =>
+        runApprovalSweep(await createDefaultSweepDeps())
+      );
       await beat('approvalSweep');
       return report;
     },
@@ -152,7 +163,9 @@ export function startBackgroundJobs({
     log,
     run: async () => {
       await ready();
-      const report = await runBounceScan(await createBounceReaderDeps());
+      const report = await runWithEgressJob('api.bounceScan', async () =>
+        runBounceScan(await createBounceReaderDeps())
+      );
       await beat('bounceScan');
       return report;
     },
@@ -166,10 +179,12 @@ export function startBackgroundJobs({
     run: async () => {
       await ready();
       try {
-        return await runInboxSync(await createInboxSyncDeps());
+        return await runWithEgressJob('api.inboxSync', async () =>
+          runInboxSync(await createInboxSyncDeps())
+        );
       } finally {
         // MVP-013: Google Calendar, both ways, in the same tick (it never throws; GOOGLE_CALENDAR_SYNC=off).
-        await runCalendarSyncTick(env, log);
+        await runWithEgressJob('api.calendarSync', () => runCalendarSyncTick(env, log));
       }
     },
   });
@@ -188,14 +203,27 @@ export function startBackgroundJobs({
     log,
     run: async () => {
       await ready();
-      const report = await runDsarSlaSweep(await createDsarSlaDeps());
+      const report = await runWithEgressJob('api.dsarSla', async () =>
+        runDsarSlaSweep(await createDsarSlaDeps())
+      );
       await beat('dsarSla');
       return report;
     },
   });
 
+  // PG-194: the daily compliance snapshots that feed the dashboard's trend. Not a heartbeat job:
+  // a missed tick only delays a trend point, it never leaves a customer waiting.
+  const complianceSnapshot = startComplianceSnapshotScheduler({
+    intervalMs: complianceSnapshotIntervalFromEnv(env),
+    log,
+    run: async () => {
+      await ready();
+      return runComplianceSnapshots(await createComplianceSnapshotDb(), new Date(), log);
+    },
+  });
+
   markJobsRunningHere(approvalSweep || bounceScan || dsarSla);
-  return { approvalSweep, bounceScan, inboxSync, dsarSla };
+  return { approvalSweep, bounceScan, inboxSync, dsarSla, complianceSnapshot };
 }
 
 /**
@@ -208,6 +236,7 @@ export async function stopBackgroundJobs(): Promise<void> {
     stopBounceScanner(),
     stopInboxSync(),
     stopDsarSlaScheduler(),
+    stopComplianceSnapshotScheduler(),
   ]);
   markJobsRunningHere(false);
   // After the ticks drained, so their final heartbeat write is not cut off.

@@ -224,10 +224,12 @@ describe('what the chunks add up to', () => {
     expect(o.message).toMatch(/chunk\(s\) 2, 4 of 4 .*Gate FAIL/);
   });
 
-  it('degrades to SKIPPED_PRECONDITION only when no chunk got a review', () => {
+  it('defers, and so fails the gate, when no chunk got a review: never a silent pass', () => {
     const o = chunkOutcome(2, [1, 2]);
-    expect(o.kind).toBe('skip');
-    expect(o.message).toMatch(/^SKIPPED_PRECONDITION/);
+    expect(o.kind).toBe('deferred');
+    expect(o.message).toMatch(/^REVIEW_DEFERRED/);
+    expect(o.message).toMatch(/Gate FAIL/);
+    expect(o.message).toMatch(/NOT reviewed/);
   });
 });
 
@@ -273,9 +275,18 @@ describe('the codex runner', () => {
       verbose: true,
       log,
     });
-    expect(run('PROMPT')).toEqual({ raw: '{"findings":[]}', status: 0, stderr: '' });
+    expect(run('PROMPT', { model: 'm', effort: 'low' })).toEqual({
+      raw: '{"findings":[]}',
+      status: 0,
+      stderr: '',
+      stdout: 'ignored',
+    });
     expect(fs.rmSync).toHaveBeenCalledWith('/out/last.txt', { force: true });
-    expect(runCodexReviewer).toHaveBeenCalledWith('PROMPT', '/out/last.txt', '/repo', 'SPAWN');
+    // the tier's model and effort reach the runner, so codex is started with them for this run only
+    expect(runCodexReviewer).toHaveBeenCalledWith('PROMPT', '/out/last.txt', '/repo', 'SPAWN', {
+      model: 'm',
+      effort: 'low',
+    });
     expect(log.err).toHaveBeenCalledWith(expect.stringContaining('--- codex stdout ---'));
   });
 
@@ -368,14 +379,29 @@ describe('the whole chunked review', () => {
     expect(r.message).toMatch(/^INCOMPLETE_REVIEW: chunk\(s\) 2 of 2/);
   });
 
-  it('skips only when no chunk got any review', () => {
+  it('defers only when no chunk got any review', () => {
     const r = runChunkedReview({
       ...base,
       scopedFiles: ['a.ts'],
       clearStale: () => undefined,
       review: () => ({ parsed: null, reviewer: null, raw: '' }),
     });
-    expect(r.kind).toBe('skip');
+    expect(r.kind).toBe('deferred');
+  });
+
+  it('reviews only the sections it is handed (the hunks unseen since the last round)', () => {
+    const review = vi.fn(() => ({ parsed: { findings: [] }, reviewer: 'codex', raw: '{}' }));
+    const r = runChunkedReview({
+      ...base,
+      scopedFiles: ['a.ts', 'b.ts'],
+      sections: [{ file: 'b.ts', text: 'diff --git a/b.ts b/b.ts\n@@ -1 +1 @@\n-x\n+y\n' }],
+      clearStale: () => undefined,
+      review,
+    });
+    expect(r.kind).toBe('reviewed');
+    expect(review).toHaveBeenCalledTimes(1);
+    expect(String((review.mock.calls[0] as unknown[])[0])).toContain('b.ts');
+    expect(String((review.mock.calls[0] as unknown[])[0])).not.toContain('a.ts');
   });
 
   it('fails before any review when git returns no diff', () => {

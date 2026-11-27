@@ -77,6 +77,7 @@ export const TENANT_MODELS: Readonly<Record<string, TenantModelInfo>> = {
   ChainVersion: { nullable: false, defaulted: false, relation: 'tenant' },
   ChatConversation: { nullable: false, defaulted: false, relation: 'tenant' },
   ChatMessage: { nullable: false, defaulted: false, relation: 'tenant' },
+  ComplianceSnapshot: { nullable: false, defaulted: false, relation: 'tenant' },
   Contact: { nullable: false, defaulted: false, relation: 'tenant' },
   ContactActivity: { nullable: false, defaulted: false, relation: 'tenant' },
   ContactAIInsight: { nullable: false, defaulted: false, relation: 'tenant' },

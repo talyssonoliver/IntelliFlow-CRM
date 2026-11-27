@@ -278,8 +278,8 @@ The "expected effect" column is judgement, not measurement. No data predicts it.
 2. Re-run the k6 test and record p95. Set up an uptime check that does not
    depend on the PC being on.
 3. Get Sentry read access so the stability test has error data.
-4. Owner says when Aurora is ready for one pilot (Robert at West London Handyman
-   is the candidate).
+4. Owner says when Aurora is ready for one pilot (Sam at Acme Handyman is the
+   candidate).
 5. Re-run the queries in this pack and decide again about 2026-12-21.
 
 ## 12. The binary artifacts in the row

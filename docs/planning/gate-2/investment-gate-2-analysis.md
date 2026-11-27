@@ -48,7 +48,7 @@ Full detail in `docs/planning/financial/ai-roi-report.md` and
 | Insights                  | 40 sales insights, all unopened. 155 lead insight rows.                                                                             |
 | Trust in the score        | 150 of 155 leads show a red "?" (needs review), because the confidence gate is 0.85.                                                |
 | Customer feedback         | None from outside. Owner rated Aurora 2 of 10 on 15/11 and has said no pilots until he says it is ready.                            |
-| Pilot                     | Robert (West London Handyman) is a QUALIFIED lead. No AI feedback from him on file.                                                 |
+| Pilot                     | Sam (Acme Handyman) is a QUALIFIED lead. No AI feedback from him on file.                                                           |
 | Gate test                 | "AI adds measurable value, ROI positive". Cost known, value not measurable yet.                                                     |
 
 ## 4. What £2000 could buy

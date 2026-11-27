@@ -13,6 +13,9 @@
  *   EMAIL activity on its timeline (subject only), and the email keeps both in its metadata.
  * - A person with an active processing restriction is never linked (refused, nothing written).
  * - Only the email's own user (or an email admin) can link it; another tenant's email is not found.
+ * - Personal-mailbox mail is private (register #64): an email admin links the mail they can read
+ *   (the company mailbox's, or what is already logged to a lead or contact they can see), never a
+ *   colleague's personal mail.
  * - Linking an email that is already linked changes nothing.
  */
 import { TRPCError } from '@trpc/server';
@@ -21,7 +24,13 @@ import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { assertTenantContext, createTenantWhereClause } from '../../security/tenant-context';
 import { restrictionReader } from '../privacy/restriction-reader';
-import { isEmailAdmin, type EmailRouterCtx } from './email-access';
+import {
+  emailViewerOf,
+  isEmailAdmin,
+  ownMail,
+  visibleMail,
+  type EmailRouterCtx,
+} from './email-access';
 import { leadEmailEngagement } from './lead-email-engagement';
 
 const emailIdInput = z.object({ emailId: recordIdSchema });
@@ -64,9 +73,15 @@ export function emailAddresses(email: Pick<StoredEmail, 'fromEmail' | 'toEmail' 
     .filter((a) => a.includes('@'));
 }
 
-async function loadEmail(ctx: EmailRouterCtx, emailId: string): Promise<StoredEmail> {
+/** `write`: the caller is about to change the email, so only mail in their own or the company mailbox. */
+async function loadEmail(
+  ctx: EmailRouterCtx,
+  emailId: string,
+  write = false
+): Promise<StoredEmail> {
+  const readable = write ? ownMail(ctx) : await visibleMail(ctx, [emailId]);
   const email: StoredEmail | null = await ctx.prismaWithTenant.emailRecord.findFirst({
-    where: { id: emailId, tenantId: ctx.tenant.tenantId },
+    where: { id: emailId, tenantId: ctx.tenant.tenantId, AND: [readable] },
     select: {
       id: true,
       userId: true,
@@ -187,13 +202,12 @@ export const emailLogRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       assertTenantContext(ctx);
       const c = ctx as unknown as EmailRouterCtx;
-      const { tenantId } = c.tenant;
       const lead = await c.prismaWithTenant.lead.findFirst({
         where: createTenantWhereClause(c.tenant as never, { id: input.leadId }),
         select: { email: true },
       });
       if (!lead?.email) return { sent: 0, opened: 0 };
-      return leadEmailEngagement(c.prismaWithTenant as never, tenantId, lead.email);
+      return leadEmailEngagement(c.prismaWithTenant as never, emailViewerOf(c), lead.email);
     }),
 
   /** Links the email to the lead or contact it is with. */
@@ -202,7 +216,7 @@ export const emailLogRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }): Promise<EmailLinkDto> => {
       assertTenantContext(ctx);
       const c = ctx as unknown as EmailRouterCtx;
-      const email = await loadEmail(c, input.emailId);
+      const email = await loadEmail(c, input.emailId, true);
       if (linkOf(email).logged) return linkOf(email);
       // A draft, a failed send or one not sent yet never reached anyone: it must not appear on a
       // timeline as an email.

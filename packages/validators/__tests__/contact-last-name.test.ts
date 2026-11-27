@@ -17,11 +17,11 @@ describe('contact last name is optional (MVP-003)', () => {
     ])('saves with only a first name when the last name is %s', (_label, extra) => {
       const result = createContactSchema.safeParse({
         email,
-        firstName: 'Pilates Living',
+        firstName: 'Studio Pilates Demo',
         ...extra,
       });
       expect(result.success).toBe(true);
-      expect(result.data).toMatchObject({ firstName: 'Pilates Living', lastName: '' });
+      expect(result.data).toMatchObject({ firstName: 'Studio Pilates Demo', lastName: '' });
     });
 
     it('still keeps a last name that is given, trimmed', () => {
@@ -50,11 +50,11 @@ describe('contact last name is optional (MVP-003)', () => {
     it('lets the last name be cleared to empty', () => {
       const result = updateContactSchema.safeParse({
         id: ID,
-        firstName: 'Pilates Living',
+        firstName: 'Studio Pilates Demo',
         lastName: '',
       });
       expect(result.success).toBe(true);
-      expect(result.data).toMatchObject({ firstName: 'Pilates Living', lastName: '' });
+      expect(result.data).toMatchObject({ firstName: 'Studio Pilates Demo', lastName: '' });
     });
 
     it('leaves the last name out of the update when it is omitted, so it is not wiped', () => {
@@ -72,7 +72,7 @@ describe('contact last name is optional (MVP-003)', () => {
     const base = {
       id: ID,
       email,
-      firstName: 'Pilates Living',
+      firstName: 'Studio Pilates Demo',
       lastName: '',
       title: null,
       phone: null,

@@ -110,6 +110,7 @@ import {
   stepLine,
   advisoryNote,
   depScanNote,
+  reviewSkipNote,
   persistedState,
   finalLine,
 } from './lib/preship-report.mjs';
@@ -828,9 +829,11 @@ const STEPS = [
       'Codex semantic review (OAuth, local-only): correctness/data-integrity/security bugs in diff',
     cmd: ['node', 'scripts/codex-review.mjs'],
     skip_if: () => {
-      // The gate falls back to the Claude Code CLI when codex is missing/unauthed
-      // or hits its usage/tier cap, so whenever `claude` is present the step MUST
-      // run (codex-review.mjs handles the codex→claude selection internally).
+      // Whenever `claude` is present the step MUST run: codex-review.mjs sizes the
+      // review to the diff (docs/tests/generated: a recorded skip, no model), reviews
+      // with Codex, and uses Claude ONLY for a risky diff Codex cannot review. Any
+      // other diff Codex cannot review is "REVIEW_DEFERRED" and FAILS the step; it is
+      // never a silent pass (owner ruling 2026-11-26, scripts/lib/review-policy.mjs).
       if (!commandMissing('claude')) return false;
       // No claude fallback available — require an authed codex, else skip.
       if (commandMissing('codex')) return true;
@@ -1152,6 +1155,14 @@ function isMissingRequired(r) {
   return r.verdict === 'SKIPPED_PRECONDITION' && r.required === true;
 }
 
+function readReviewFindings() {
+  try {
+    return fs.readFileSync(path.join(REPO_ROOT, 'artifacts/codex-review/findings.json'), 'utf8');
+  } catch {
+    return '';
+  }
+}
+
 async function main() {
   ensureDirs();
   const head = gitHead();
@@ -1234,7 +1245,7 @@ async function main() {
     // (not "FAIL") for a non-blocking advisory failure, PASS (after retry) when
     // a step needed more than one attempt.
     process.stdout.write(
-      `${stepLine(r, { allowMissing }, fmtDuration)}\n${advisoryNote(r)}${depScanNote(r, DEP_SCANNER)}`
+      `${stepLine(r, { allowMissing }, fmtDuration)}\n${advisoryNote(r)}${depScanNote(r, DEP_SCANNER)}${reviewSkipNote(r, readReviewFindings())}`
     );
 
     if (r.ci_guard) process.stdout.write(`    ${r.skip_remediation}\n`);

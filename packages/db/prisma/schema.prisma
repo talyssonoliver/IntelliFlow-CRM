@@ -228,6 +228,7 @@ model Tenant {
   memoryPolicy              TenantMemoryPolicy?        // P2.7: per-tenant memory retention
   goalDefault               TenantGoalDefault?         // IFC-211: org-wide default daily goal
   termsAcceptances          TermsAcceptance[]          @relation("TenantTermsAcceptances") @ignore // IFC-309
+  complianceSnapshots       ComplianceSnapshot[]       // PG-194
 
   @@unique([partnerId, externalRef])
   @@index([partnerId])
@@ -3641,6 +3642,31 @@ model AIMonitoringEvent {
   @@index([eventType, model, recordedAt])
   @@index([eventType, severity])
   @@map("ai_monitoring_events")
+}
+
+/// Daily roll-up of AIMonitoringEvent rows older than the retention window (egress audit 1126).
+/// Written only by tools/scripts/ai-monitoring-retention.ts, which is not scheduled and needs the
+/// owner's yes before it deletes anything. tenantKey is the tenant id or '' for a global event;
+/// it is deliberately not a foreign key: a roll-up outlives the tenant row.
+model AIMonitoringDailySummary {
+  id           String   @id @default(cuid())
+  day          DateTime @db.Date
+  eventType    String
+  tenantKey    String   @default("")
+  model        String   @default("")
+  eventCount   Int
+  flaggedCount Int
+  valueSum     Float?
+  valueMin     Float?
+  valueMax     Float?
+  valueP50     Float?
+  valueP95     Float?
+  valueP99     Float?
+  createdAt    DateTime @default(now())
+
+  @@unique([day, eventType, tenantKey, model])
+  @@index([day])
+  @@map("ai_monitoring_daily_summaries")
 }
 
 /// Actor type enum
@@ -7371,4 +7397,28 @@ model TenantUsageCounter {
   @@unique([tenantId, key, period])
   @@index([tenantId])
   @@map("tenant_usage_counters")
+}
+
+/// PG-194 - one row per tenant, UTC day and framework: what the compliance dashboard measured that day.
+/// The only source of the dashboard's trend; a framework with fewer than two days of rows has no trend.
+/// `score` is NULL when nothing about the framework could be measured. Written by the daily job and by
+/// the dashboard's Refresh; never edited by hand. RLS: the tenant-isolation policy in the migration.
+model ComplianceSnapshot {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  /// UTC calendar day the snapshot describes.
+  day          DateTime @db.Date
+  /// gdpr | iso-27001 | iso-42001 | iso-14001 | adr-registry
+  frameworkId  String   @db.VarChar(40)
+  score        Int?
+  passing      Int      @default(0)
+  attention    Int      @default(0)
+  notMeasured  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([tenantId, day, frameworkId])
+  @@index([tenantId, frameworkId, day])
+  @@map("compliance_snapshots")
 }
