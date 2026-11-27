@@ -31,7 +31,7 @@ import { ACTIVITY_FEED_DEFAULT_LIMIT, type ActivityFeedViewer } from '@intellifl
  * caller cannot read.
  */
 async function unreadableMailItems(
-  ctx: { prisma: never; tenant: { tenantId: string; userId: string } },
+  ctx: { prismaWithTenant: never; tenant: { tenantId: string; userId: string } },
   source: string | undefined,
   ids: string[]
 ): Promise<Set<string>> {
@@ -39,7 +39,7 @@ async function unreadableMailItems(
   const mail = ids.filter(isMail);
   if (mail.length === 0) return new Set();
   const records = mail.map((id) => id.replace(/^email_/, ''));
-  const readable = (await (ctx.prisma as any).emailRecord.findMany({
+  const readable = (await (ctx.prismaWithTenant as any).emailRecord.findMany({
     where: { id: { in: records }, tenantId: ctx.tenant.tenantId, AND: [await visibleMail(ctx)] },
     select: { id: true },
   })) as { id: string }[];
