@@ -1,0 +1,94 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "MVP-014",
+  "run_id": "plan-mvp012-014-evidence-2026-11-21",
+  "attestor": "Claude Code (claude-sonnet-5-5), ifc-074 lane (plan evidence for Aurora)",
+  "attestation_timestamp": "2026-11-21T16:45:00Z",
+  "verdict": "PARTIAL",
+  "context_acknowledgment": {
+    "files_read": [],
+    "invariants_acknowledged": [
+      "Shipped and merged: #1468 (the waiting.list query, the 'Waiting for reply' section on the dashboard's Upcoming Tasks card, and the 'Waiting for reply' segment on the leads list, merged 20/11/2026 00:09) and #1472 (the index the waiting reads use, merged 20/11 00:20; additive, Class A). Both are contained in production commit 57f74af53 (api and worker deployed 21/11/2026 07:26).",
+      "What the evidence shows: on 20/11 the Friday flow run got '404 GET /api/trpc/waiting.list' on the dashboard and the leads list (3 of 18 views). On 21/11 the run of the same 18 views, on a local production build of 57f74af53 calling the production API, had zero console errors and zero failed requests, so the deployed API now answers waiting.list.",
+      "What the evidence does NOT show: a waiting enquiry listed, in wait order with its wait time, on the dashboard or the leads list; the count matching the list; the phone layout of the card; or a reply removing the lead. The 21/11 dashboard and leads captures were viewed at full size: the dashboard's Upcoming Tasks card shows Follow-ups due (111) and no 'Waiting for reply' section, and the leads list shows no waiting segment above the fold. The section renders nothing when no one is waiting (WaitingForReplySection returns null for an empty list), so these captures are consistent with nobody waiting and prove nothing about the list itself.",
+      "PR #1468 states its own screens were 'not checked at 390px or 1440px; to be checked on production'. That check has not been recorded.",
+      "The captures are not committed because this repository is public (they show the owner and his data). They are held privately; their SHA-256 hashes are recorded in artifact_hashes."
+    ],
+    "acknowledged_at": "2026-11-21T16:45:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "kpis_met": 0,
+    "kpis_missed": 3
+  },
+  "artifact_hashes": {
+    "ops/reviews/friday-flow-2026-11-21/01-dashboard-desk-full.png": "sha256:ce7da056e95c706af1d96c273f6f194a22add9241f64b546480251fafa6fe253",
+    "ops/reviews/friday-flow-2026-11-21/02-leads-desk-full.png": "sha256:1c68e3c7d93a7a3ec3a6f55d4e7e11eac4923d024c1c7f203d93ee5701b4ec6e",
+    "ops/reviews/friday-flow-2026-11-21/report.json": "sha256:57884a677317239f630642d16394af8afe8455466eeef3adb8c53f121284dd9d"
+  },
+  "manual_verification": {
+    "performed_by": "Claude Code (claude-sonnet-5-5), ifc-074 lane, for Aurora (the flow run was made as the owner, read-only)",
+    "performed_at": "2026-11-21T16:45:00Z",
+    "review_notes": "The cited dashboard and leads captures were viewed at full size. They show no waiting section or segment. The report.json hash is cited for the zero failed requests, not for any waiting content.",
+    "items_checked": [
+      "The waiting.list 404 seen on 20/11 is gone on 21/11 (REPORT.md, 'Changed since 20/11'): 18 views, zero console errors, zero failed requests.",
+      "The 21/11 dashboard (desktop, full page) has no 'Waiting for reply' section; the section is hidden when the list is empty.",
+      "The 21/11 leads list (desktop) shows no waiting segment above the fold; the segment lives in the leads sidebar and at /leads?segment=waiting, which that run did not open."
+    ]
+  },
+  "validation_results": [
+    {
+      "name": "Friday flow, 18 views, production API, signed in as the owner",
+      "command": "friday-flow 2026-11-21 on a local build of 57f74af53 (read-only)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-21T08:44:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "merged-pr-evidence",
+      "passed": true
+    },
+    {
+      "gate_id": "owner-screenshot-of-waiting-list",
+      "passed": false
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Waiting count equals the list length",
+      "target": "equal",
+      "actual": "not shown: no capture with a waiting item",
+      "met": false
+    },
+    {
+      "kpi": "A sent reply removes the lead",
+      "target": "removed",
+      "actual": "not shown on production",
+      "met": false
+    },
+    {
+      "kpi": "No horizontal scroll at 390px",
+      "target": "none",
+      "actual": "the card was not on screen in any phone capture (nobody waiting)",
+      "met": false
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "The deployed API serves the waiting list (waiting.list no longer 404s on the dashboard and the leads list)",
+      "met": true
+    },
+    {
+      "criterion": "The dashboard and the leads list show which enquiries are still waiting for a reply, oldest first with their wait time, on production, proven with a screenshot",
+      "met": false
+    },
+    {
+      "criterion": "A reply removes the lead from the list, on production",
+      "met": false
+    }
+  ],
+  "notes": "Shipped and deployed, but not closed: no evidence yet shows a waiting enquiry on production. To close it: with a real unanswered enquiry (for example a test enquiry to the Leangency mailbox), capture the dashboard card and /leads?segment=waiting at 1440px and 390px showing it with its wait; send a reply; capture both again with the lead gone; attach the captures' hashes here. Then set the row Completed with percent 100 and point evidence_required at this file, as #1445 did for the closed rows."
+}

@@ -5,5 +5,10 @@
  */
 
 export * from './version-loader';
-export { configureVersionLoader, getVersionLoader, CHAIN_TYPE_MAP } from './chain-version-loader';
+export {
+  configureVersionLoader,
+  configureVersionLoaderFromPrisma,
+  getVersionLoader,
+  CHAIN_TYPE_MAP,
+} from './chain-version-loader';
 export type { WorkerChainKey } from './chain-version-loader';

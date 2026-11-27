@@ -6,10 +6,10 @@
 
 **Deciders:** Product Owner (ruling 2026-10-01), Architecture Team
 
-**Technical Story:** nutri-gyn "not a member" incident (2026-10-01). Contract:
-`docs/architecture/contracts/inherited-membership.v1.md`. Extends ADR-070
-(partner API). Portal-side record: `leangency-portal` (open-crm, provision,
-partner assertion signer).
+**Technical Story:** example-clinic "not a member" incident (2026-10-01).
+Contract: `docs/architecture/contracts/inherited-membership.v1.md`. Extends
+ADR-070 (partner API). Portal-side record: `leangency-portal` (open-crm,
+provision, partner assertion signer).
 
 ## Context and Problem Statement
 
@@ -27,13 +27,14 @@ What breaks today (verified in code at `48d30a982`):
   `users.tenantId` (`apps/api/src/context.ts` `resolveDbUserWith`, 60 s
   `USER_SESSION_CACHE`); `User.email` is globally unique; there is no membership
   table (`Team`/`TeamMember` are intra-tenant).
-- **The nutri-gyn incident.** A Portal user of nutri-gyn who already had an
-  IntelliFlow identity (a direct account, or a member of another tenant) clicked
-  "Abrir CRM". `issueLoginLink` requires `users.tenantId === input.tenantId`, so
-  it answered "not a member". `ensureAuthUser` never adopts an existing Auth
-  identity (`CONFLICT EMAIL_IN_USE`), `inviteMember` rejects users of other
-  tenants, and `assertNotOperatorEmail` bans `PLATFORM_ADMIN_EMAILS`. The agency
-  owner can never be let into a client tenant at all.
+- **The example-clinic incident.** A Portal user of example-clinic who already
+  had an IntelliFlow identity (a direct account, or a member of another tenant)
+  clicked "Abrir CRM". `issueLoginLink` requires
+  `users.tenantId === input.tenantId`, so it answered "not a member".
+  `ensureAuthUser` never adopts an existing Auth identity
+  (`CONFLICT EMAIL_IN_USE`), `inviteMember` rejects users of other tenants, and
+  `assertNotOperatorEmail` bans `PLATFORM_ADMIN_EMAILS`. The agency owner can
+  never be let into a client tenant at all.
 - **The login link is a bearer of identity.** The partner API key alone decides
   who is signed in as whom. That was acceptable while links only reached the
   user's single home tenant; it is not acceptable once a link can place a person
@@ -134,9 +135,9 @@ a missed Portal removal sync is bounded.
 
 ## Consequences
 
-**Positive:** the nutri-gyn class of failure goes away; the agency owner works
-in client tenants without a second account; the partner key is demoted from "can
-sign in as anyone" to "provisions"; revocation and audit exist.
+**Positive:** the example-clinic class of failure goes away; the agency owner
+works in client tenants without a second account; the partner key is demoted
+from "can sign in as anyone" to "provisions"; revocation and audit exist.
 
 **Negative / costs:** every tenant reader must use the active tenant (census
 plus a guard test); a pinned session needs a claim step in the web callback;

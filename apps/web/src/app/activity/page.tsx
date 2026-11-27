@@ -10,15 +10,24 @@ import {
   ActivityFeedStatsBar,
   type ActivityFeedTypeFilterValue,
 } from '@/components/shared/activity-feed';
+import { SystemUpdatesGroup } from '@/components/leads/SystemUpdatesGroup';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { useActivityFeed } from '@/hooks/useActivityFeed';
 import { useActivityFeedSearch } from '@/hooks/useActivityFeedSearch';
+import type { ActivityFeedItemProps } from '@/components/shared/activity-feed/ActivityFeedItem';
+import { emptyFeedMessage, splitActivityLog } from '@/lib/activity/activity-log-split';
 import type { ActivityFeedType } from '@intelliflow/domain';
 
 const DEFAULT_FILTER: ActivityFeedTypeFilterValue = 'all';
+/** Keep loading older pages while the person-written feed is this short (the system writes most). */
+const MIN_PERSONAL_ENTRIES = 10;
+/** ...but never request more than this many pages (of 50) just to find them. */
+const MAX_AUTO_PAGES = 10;
 
 export default function ActivityPage() {
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
   const [feedFilter, setFeedFilter] = useState<ActivityFeedTypeFilterValue>(DEFAULT_FILTER);
+  const [mineOnly, setMineOnly] = useState(false);
   const searchParams = useSearchParams();
   const [searchInput, setSearchInput] = useState(searchParams.get('q') ?? '');
   const deferredSearch = useDeferredValue(searchInput);
@@ -34,9 +43,13 @@ export default function ActivityPage() {
     }
   }, [searchParams]);
 
+  // "All Activity" folds the system's entries into one group; picking a type shows that type as is.
+  // The feed is read whole and split here: the API filters by type after limiting each source's
+  // rows, so asking it for "everything but the system's types" could hide older entries.
+  const foldSystem = feedFilter === 'all';
   const feedTypes = useMemo(
-    () => (feedFilter === 'all' ? undefined : [feedFilter as ActivityFeedType]),
-    [feedFilter]
+    () => (foldSystem ? undefined : [feedFilter as ActivityFeedType]),
+    [feedFilter, foldSystem]
   );
 
   const search = useActivityFeedSearch({
@@ -45,12 +58,71 @@ export default function ActivityPage() {
     types: feedTypes,
     enabled: isAuthenticated,
   });
+  const personalFeed = useActivityFeed({
+    limit: 50,
+    types: feedTypes,
+    enabled: isAuthenticated && !search.isSearchActive,
+  });
+  const source: {
+    items: ActivityFeedItemProps[];
+    isLoading: boolean;
+    isError: boolean;
+    error: { message: string } | null;
+    isFetchingNextPage: boolean;
+    hasNextPage: boolean;
+    fetchNextPage: () => void;
+  } = search.isSearchActive ? search : personalFeed;
+  const userId = user?.id ?? null;
+  const userEmail = user?.email ?? null;
+  const { personal: personalItems, system: systemItems } = useMemo(
+    () =>
+      splitActivityLog(source.items, {
+        fold: foldSystem,
+        mine: mineOnly,
+        userId,
+        userEmail,
+      }),
+    [source.items, foldSystem, mineOnly, userId, userEmail]
+  );
 
-  const hasActiveFilter = feedFilter !== DEFAULT_FILTER || searchInput.length > 0;
+  // The system writes most of this workspace's entries, so a page of 50 may hold few or none of
+  // the person-written ones: keep loading older pages (bounded) until the feed has some.
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = source;
+  const personalShort = personalItems.length < MIN_PERSONAL_ENTRIES;
+  // The budget counts the page requests made, not the entries shown: the feed drops entries that
+  // repeat (same title, text and minute), so a count of what is shown would not bound the loading.
+  const [autoPages, setAutoPages] = useState(0);
+  const autoLoadCapReached = autoPages >= MAX_AUTO_PAGES;
+  const viewKey = `${feedFilter}|${mineOnly}|${search.isSearchActive ? deferredSearch : ''}`;
+  useEffect(() => setAutoPages(0), [viewKey]);
+  // A failed page is not retried by itself (it would fail again in a loop): the button below is.
+  const loadFailed = source.isError;
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage || !personalShort || autoLoadCapReached) return;
+    if (loadFailed) return;
+    setAutoPages((n) => n + 1);
+    fetchNextPage();
+  }, [
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    personalShort,
+    autoLoadCapReached,
+    loadFailed,
+  ]);
+  // Past the cap, or after a failure, the empty feed has no Load More of its own: offer one here.
+  const showLoadOlder = hasNextPage && personalShort && (autoLoadCapReached || loadFailed);
+
+  const hasActiveFilter = feedFilter !== DEFAULT_FILTER || searchInput.length > 0 || mineOnly;
+  const deepLinkedSystemId =
+    selectedActivityId && systemItems.some((item) => item.id === selectedActivityId)
+      ? selectedActivityId
+      : null;
 
   const handleClearFilters = useCallback(() => {
     setFeedFilter(DEFAULT_FILTER);
     setSearchInput('');
+    setMineOnly(false);
   }, []);
 
   if (authLoading) {
@@ -109,6 +181,18 @@ export default function ActivityPage() {
                   aria-label="Search activity feed"
                 />
               </div>
+              <button
+                type="button"
+                onClick={() => setMineOnly((v) => !v)}
+                aria-pressed={mineOnly}
+                className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                  mineOnly
+                    ? 'border-[#2a78f6] bg-[#2a78f6]/10 text-[#2a78f6]'
+                    : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                My activity
+              </button>
               <ActivityFeedTypeFilter value={feedFilter} onChange={setFeedFilter} />
             </div>
           </div>
@@ -121,34 +205,53 @@ export default function ActivityPage() {
               showBreakdown
             />
           </div>
-          {search.isSearchActive ? (
-            <ActivityFeed
-              items={search.items}
-              isLoading={search.isLoading}
-              isError={search.isError}
-              error={search.error}
-              isFetchingNextPage={search.isFetchingNextPage}
-              hasNextPage={search.hasNextPage}
-              fetchNextPage={search.fetchNextPage}
-              height={680}
-              className="p-3 sm:p-4"
-              emptyMessage="No activity matches your search"
-              selectedId={selectedActivityId}
-            />
-          ) : (
-            <ActivityFeed
-              limit={50}
-              types={feedTypes}
-              enabled={isAuthenticated}
-              height={680}
-              className="p-3 sm:p-4"
-              emptyMessage={
-                hasActiveFilter
-                  ? 'No activity matches the selected filter'
-                  : 'No activity recorded yet'
-              }
-              selectedId={selectedActivityId}
-            />
+          <ActivityFeed
+            items={personalItems}
+            isLoading={source.isLoading}
+            isError={source.isError}
+            error={source.error}
+            isFetchingNextPage={source.isFetchingNextPage}
+            hasNextPage={source.hasNextPage}
+            fetchNextPage={source.fetchNextPage}
+            height={680}
+            className="p-3 sm:p-4"
+            emptyMessage={emptyFeedMessage({
+              mine: mineOnly,
+              filtered: feedFilter !== DEFAULT_FILTER,
+              searching: search.isSearchActive,
+              systemCount: systemItems.length,
+            })}
+            selectedId={selectedActivityId}
+          />
+          {showLoadOlder && (
+            <div className="px-5 pb-4 text-center">
+              <button
+                type="button"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
+              >
+                {isFetchingNextPage ? 'Loading older activity…' : 'Load older activity'}
+              </button>
+            </div>
+          )}
+          {systemItems.length > 0 && (
+            <div className="p-3 sm:p-4 border-t border-[#e2e8f0] dark:border-[#334155]">
+              <SystemUpdatesGroup
+                count={systemItems.length}
+                more={hasNextPage}
+                deepLinkedId={deepLinkedSystemId}
+              >
+                <ActivityFeed
+                  items={systemItems}
+                  hasNextPage={hasNextPage}
+                  fetchNextPage={fetchNextPage}
+                  isFetchingNextPage={isFetchingNextPage}
+                  height={480}
+                  selectedId={selectedActivityId}
+                />
+              </SystemUpdatesGroup>
+            </div>
           )}
         </Card>
       </div>

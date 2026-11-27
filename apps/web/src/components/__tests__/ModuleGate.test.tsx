@@ -71,4 +71,64 @@ describe('ModuleGate', () => {
     expect(screen.queryByTestId('content')).not.toBeNull();
     expect(screen.queryByTestId('paywall')).toBeNull();
   });
+
+  it('says the module is not part of the workspace (no paywall) when the business type excludes it', () => {
+    mockUseEnabledModules.mockReturnValue({
+      isModuleEnabled: () => false,
+      isLoading: false,
+      isError: false,
+      businessType: 'TRADES_HOME_SERVICES',
+    });
+    renderGate();
+    expect(screen.queryByTestId('workspace-module-notice')).not.toBeNull();
+    expect(screen.getByText(/Not part of your workspace's modules/)).toBeTruthy();
+    expect(screen.queryByTestId('paywall')).toBeNull();
+    expect(screen.queryByTestId('content')).toBeNull();
+  });
+
+  it('treats a workspace with no business type like OTHER (notice, not paywall)', () => {
+    mockUseEnabledModules.mockReturnValue({
+      isModuleEnabled: () => false,
+      isLoading: false,
+      isError: false,
+      businessType: null,
+    });
+    renderGate();
+    expect(screen.queryByTestId('workspace-module-notice')).not.toBeNull();
+  });
+
+  it('still shows the paywall when the business type allows it but the plan does not', () => {
+    mockUseEnabledModules.mockReturnValue({
+      isModuleEnabled: () => false,
+      isLoading: false,
+      isError: false,
+      businessType: 'LAW_FIRM',
+    });
+    renderGate();
+    expect(screen.queryByTestId('paywall')).not.toBeNull();
+    expect(screen.queryByTestId('workspace-module-notice')).toBeNull();
+  });
+
+  it('titles the not-in-workspace notice by the feature the user opened, not the module name', () => {
+    mockUseEnabledModules.mockReturnValue({
+      isModuleEnabled: () => false,
+      isLoading: false,
+      isError: false,
+      businessType: 'TRADES_HOME_SERVICES',
+    });
+    const { unmount } = render(
+      <ModuleGate moduleId={'LEGAL' as never} featureLabel="Cases">
+        <div />
+      </ModuleGate>
+    );
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Cases');
+    expect(screen.queryByText('Legal')).toBeNull();
+    unmount();
+    render(
+      <ModuleGate moduleId={'SUPPORT' as never} featureLabel="Help Center">
+        <div />
+      </ModuleGate>
+    );
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Help Center');
+  });
 });

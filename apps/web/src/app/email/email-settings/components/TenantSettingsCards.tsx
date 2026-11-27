@@ -36,8 +36,17 @@ export function ReplyToCard({
   value,
   onChange,
   error,
+  zohoConnected = false,
   ...ro
-}: Readonly<{ value: string; onChange: (value: string) => void; error?: string } & ReadOnlyProps>) {
+}: Readonly<
+  {
+    value: string;
+    onChange: (value: string) => void;
+    error?: string;
+    /** MVP-001: a Zoho Mail mailbox is connected (Zoho's send API has no reply-to). */
+    zohoConnected?: boolean;
+  } & ReadOnlyProps
+>) {
   const titleId = 'email-settings-reply-to-title';
   return (
     <section aria-labelledby={titleId} className="lg:col-span-6">
@@ -70,6 +79,16 @@ export function ReplyToCard({
           <p id={`${REPLY_TO_ID}-help`} className="text-xs text-muted-foreground">
             Leave empty to send replies to whoever sent the email.
           </p>
+          {zohoConnected && (
+            <p
+              data-testid="reply-to-zoho-note"
+              className="text-xs text-amber-800 dark:text-amber-200"
+            >
+              Mail sent from a Zoho Mail mailbox goes without this reply-to address, because Zoho
+              does not take one when we send for you. To use one there, set a reply-to address in
+              Zoho Mail's own settings.
+            </p>
+          )}
         </div>
       </Card>
     </section>
@@ -136,7 +155,7 @@ export function TrackingCard({
           title="Tracking"
           titleId={titleId}
           headingLevel={2}
-          description="Your choice is saved, but opens and clicks aren't recorded yet."
+          description="Applies to mail sent from Aurora after you switch it on. Opens use a tiny image, so a reader that blocks or preloads images can miss or add an open."
         />
         <SwitchRow
           id="email-settings-track-opens"

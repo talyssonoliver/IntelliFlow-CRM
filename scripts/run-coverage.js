@@ -27,6 +27,7 @@ import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { requireSlot } from './lib/test-slot.mjs';
 import { classifyProjectRun, describeProjectFailure } from './lib/coverage-project-result.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -89,6 +90,8 @@ const PROJECT_COVERAGE_INCLUDE = {
 };
 
 const MERGE_ONLY = process.argv.includes('--merge-only');
+// Coverage runs only inside the test-slot queue; a merge of existing parts is light.
+if (!MERGE_ONLY) requireSlot('test-coverage');
 
 /** @type {string[] | null} null = full run; an array = related mode. */
 const RELATED_FILES = parseRelatedFiles(process.env.COVERAGE_RELATED_FILES);

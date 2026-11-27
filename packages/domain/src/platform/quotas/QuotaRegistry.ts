@@ -14,23 +14,37 @@ export const QUOTA_KEYS = [
   'seats',
   'emailsPerMonth',
   'aiSpendCentsPerMonth',
+  'aiActionsPerMonth',
   'workflowsActive',
 ] as const;
 
 export type QuotaKey = (typeof QUOTA_KEYS)[number];
 
 /** Keys whose usage resets every calendar month (UTC); the rest are live totals. */
-export const MONTHLY_QUOTA_KEYS: readonly QuotaKey[] = ['emailsPerMonth', 'aiSpendCentsPerMonth'];
+export const MONTHLY_QUOTA_KEYS: readonly QuotaKey[] = [
+  'emailsPerMonth',
+  'aiSpendCentsPerMonth',
+  'aiActionsPerMonth',
+];
 
 export type QuotaLimits = Record<QuotaKey, number | null>;
 
-/** Default limits per plan tier. Tenants can diverge via TenantQuotaOverride rows. */
+/**
+ * AI allowance (owner ruling 2026-11-23): the customer-facing AI allowance counts AI ACTIONS
+ * (one per completed model call, free or paid), `aiActionsPerMonth`, and matches the public
+ * pricing page ("1,000 / 10,000 AI predictions/month", Enterprise unlimited). `aiSpendCentsPerMonth`
+ * stays recorded as an internal cost metric only and is no longer the customer allowance:
+ * nothing enforces it.
+ *
+ * Default limits per plan tier. Tenants can diverge via TenantQuotaOverride rows.
+ */
 export const QUOTA_PLAN_MAP: Record<PlanTier, QuotaLimits> = {
   PARTNER_FREE: {
     contacts: 500,
     seats: 2,
     emailsPerMonth: 0,
     aiSpendCentsPerMonth: 0,
+    aiActionsPerMonth: 0,
     workflowsActive: 0,
   },
   STARTER: {
@@ -38,6 +52,7 @@ export const QUOTA_PLAN_MAP: Record<PlanTier, QuotaLimits> = {
     seats: 3,
     emailsPerMonth: 500,
     aiSpendCentsPerMonth: 2000,
+    aiActionsPerMonth: 1000,
     workflowsActive: 3,
   },
   PROFESSIONAL: {
@@ -45,6 +60,7 @@ export const QUOTA_PLAN_MAP: Record<PlanTier, QuotaLimits> = {
     seats: 10,
     emailsPerMonth: 5000,
     aiSpendCentsPerMonth: 20000,
+    aiActionsPerMonth: 10000,
     workflowsActive: 25,
   },
   ENTERPRISE: {
@@ -52,6 +68,7 @@ export const QUOTA_PLAN_MAP: Record<PlanTier, QuotaLimits> = {
     seats: null,
     emailsPerMonth: null,
     aiSpendCentsPerMonth: null,
+    aiActionsPerMonth: null,
     workflowsActive: null,
   },
   CUSTOM: {
@@ -59,6 +76,7 @@ export const QUOTA_PLAN_MAP: Record<PlanTier, QuotaLimits> = {
     seats: null,
     emailsPerMonth: null,
     aiSpendCentsPerMonth: null,
+    aiActionsPerMonth: null,
     workflowsActive: null,
   },
 };

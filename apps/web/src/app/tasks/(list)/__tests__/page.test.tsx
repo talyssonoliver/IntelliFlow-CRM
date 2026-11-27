@@ -38,7 +38,8 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 // ─── 3. Domain mocks ───────────────────────────────────────────
-vi.mock('@intelliflow/domain', () => ({
+vi.mock('@intelliflow/domain', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   TASK_STATUSES: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'ARCHIVED'] as const,
   TASK_PRIORITIES: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const,
 }));
@@ -89,6 +90,25 @@ const mockQueryState = {
   error: null as { message: string } | null,
   refetch: vi.fn(),
 };
+
+// The follow-ups due the page adds to the task table (owner 21/11); none by default.
+const followUpsDue = {
+  leads: [] as Array<{
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    company: string | null;
+    email: string;
+    lastContactedAt: string | null;
+  }>,
+  total: 0,
+  dueToday: 0,
+  dueTodayIsLowerBound: false,
+  isLoading: false,
+};
+vi.mock('@/components/dashboard/widgets/useFollowUpsDue', () => ({
+  useFollowUpsDue: () => followUpsDue,
+}));
 
 // ─── 5. tRPC/API mock ───────────────────────────────────────────
 const mockMutate = vi.fn();
@@ -248,6 +268,58 @@ describe('TasksListPage', () => {
     render(<TasksListPage />);
     expect(screen.getByTestId('page-header')).toBeInTheDocument();
     expect(screen.getByTestId('task-list')).toBeInTheDocument();
+  });
+
+  it('lists the follow-ups due as rows of the same task table, after the tasks (owner 21/11)', () => {
+    followUpsDue.leads = [
+      {
+        id: 'lead-1',
+        firstName: 'Jane',
+        lastName: 'Example',
+        company: null,
+        email: 'jane@example.invalid',
+        lastContactedAt: '2026-11-13T09:00:00.000Z',
+      },
+    ];
+    followUpsDue.total = 3;
+    try {
+      render(<TasksListPage />);
+      const table = screen.getByTestId('task-list');
+      const rows = table.querySelectorAll('[data-testid^="task-item-"]');
+      // Stored tasks first, then the follow-up, in the one table; no second list on the page.
+      expect(rows[rows.length - 1]).toHaveAttribute('data-testid', 'task-item-follow-up:lead-1');
+      expect(rows[rows.length - 1]).toHaveTextContent('Follow up with Jane Example');
+      expect(screen.queryByTestId('tasks-follow-ups')).toBeNull();
+      // 1 of 3 listed: the rest are a link away.
+      expect(
+        screen.getByRole('link', { name: 'See all leads needing a follow-up' })
+      ).toHaveAttribute('href', '/leads?segment=followup');
+    } finally {
+      followUpsDue.leads = [];
+      followUpsDue.total = 0;
+    }
+  });
+
+  it('adds no follow-up rows when the list is filtered', () => {
+    followUpsDue.leads = [
+      {
+        id: 'lead-1',
+        firstName: 'Jane',
+        lastName: 'Example',
+        company: null,
+        email: 'jane@example.invalid',
+        lastContactedAt: '2026-11-13T09:00:00.000Z',
+      },
+    ];
+    followUpsDue.total = 1;
+    try {
+      mockSearchParams = new URLSearchParams('status=OVERDUE');
+      render(<TasksListPage />);
+      expect(screen.queryByTestId('task-item-follow-up:lead-1')).toBeNull();
+    } finally {
+      followUpsDue.leads = [];
+      followUpsDue.total = 0;
+    }
   });
 
   it('renders all task items', () => {

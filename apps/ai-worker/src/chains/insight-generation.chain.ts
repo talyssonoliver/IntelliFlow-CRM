@@ -16,13 +16,18 @@
  */
 
 import { PromptTemplate } from '@langchain/core/prompts';
+import type { RunnableConfig } from '@langchain/core/runnables';
+import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
+import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { z } from 'zod';
 import { aiConfig, type AIProvider } from '../config/ai.config';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
-import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { loadVersionedPrompt, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import { usableVersionedPrompt } from '../versioning/versioned-prompt';
+import { formatPounds } from '../utils/format-pounds';
 import pino from 'pino';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 
 const logger = pino({
   name: 'insight-generation-chain',
@@ -163,7 +168,7 @@ const LLMInsightOutputSchema = z.object({
  * natural language explanations and confidence scores.
  */
 export class InsightGenerationChain {
-  private structuredModel: { invoke(input: unknown): Promise<unknown> };
+  private structuredModel: { invoke(input: unknown, config?: RunnableConfig): Promise<unknown> };
   private readonly prompt: PromptTemplate;
   private readonly tenantId?: string;
   /** Optional provider override (job-level fallback, #324). */
@@ -184,50 +189,7 @@ export class InsightGenerationChain {
     this.structuredModel = (llm as any).withStructuredOutput(LLMInsightOutputSchema);
 
     this.prompt = new PromptTemplate({
-      template: `You are an expert CRM sales coach analyzing a user's pipeline health. Based on the data below, generate actionable insights that explain WHY items need attention and WHAT specific actions to take.
-
-CRM DATA SNAPSHOT:
-
-DEALS AT RISK (no interaction in 14+ days):
-{dealsData}
-
-HOT LEADS (score >= 80, not yet converted):
-{leadsData}
-
-OVERDUE TASKS: {overdueTasksCount}
-
-STALE CONTACTS (30+ days without contact, with open opportunities):
-{contactsData}
-
-ANALYSIS INSTRUCTIONS:
-
-1. For each flagged item, produce ONE insight explaining:
-   - WHY it matters (not just "it's been X days" — explain the business impact)
-   - WHAT specific action to take (not generic "follow up")
-   - Confidence (0.7-0.95 for LLM analysis, based on data quality)
-
-2. Insight types:
-   - "warning": Deal/contact at risk — explain revenue impact
-   - "opportunity": Hot lead — explain buying signals
-   - "reminder": Overdue tasks — explain priority
-
-3. Priority levels:
-   - "critical": Immediate action required (large deal, high-score lead)
-   - "high": Action within 24 hours
-   - "medium": Action within a week
-   - "low": Informational
-
-4. suggestedActions: Provide up to 3 specific, actionable steps
-
-5. If no items are flagged, return an empty insights array. Never write reassurance such as "everything looks good": an empty result is not evidence that all is well
-
-6. Every insight MUST include:
-   - entityId: string or null
-   - entityType: one of opportunity|lead|contact|task|deal, or null
-   - suggestedActions: an array (use [] when no action is needed)
-   - reasoning: one short sentence explaining why the insight was generated
-
-Respond with a structured JSON object containing an insights array.`,
+      template: BUILTIN_CHAIN_TEMPLATES.INSIGHT_GENERATION,
       inputVariables: ['dealsData', 'leadsData', 'overdueTasksCount', 'contactsData'],
     });
 
@@ -237,13 +199,20 @@ Respond with a structured JSON object containing an insights array.`,
   /**
    * Resolve tenant-versioned prompt override (falls back to default on any error).
    */
-  private async resolveVersionedPrompt(): Promise<string | null> {
+  private async resolveVersionedPrompt(): Promise<{
+    text: string;
+    versionId: string | null;
+  } | null> {
     if (!this.tenantId) return null;
     try {
-      const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.INSIGHT_GENERATION, {
-        tenantId: this.tenantId,
-      });
-      return usableVersionedPrompt('INSIGHT_GENERATION', config.prompt, this.prompt.inputVariables);
+      const chosen = await loadVersionedPrompt(CHAIN_TYPE_MAP.INSIGHT_GENERATION, this.tenantId);
+      const text = usableVersionedPrompt(
+        'INSIGHT_GENERATION',
+        chosen.prompt,
+        this.prompt.inputVariables
+      );
+      // The version is kept with its prompt, so the recorded run names the version it sent.
+      return text ? { text, versionId: chosen.versionId } : null;
     } catch {
       logger.warn(
         {
@@ -302,7 +271,7 @@ Respond with a structured JSON object containing an insights array.`,
                 (d) =>
                   `- ${sanitizeStringField(d.name, 200)} (ID: ${d.id}): ${d.daysSinceUpdate} days since last update` +
                   (d.stage ? `, stage: ${sanitizeStringField(d.stage, 100)}` : '') +
-                  (d.value ? `, value: $${d.value.toLocaleString('en-GB')}` : '')
+                  (d.value ? `, value: ${formatPounds(d.value)}` : '')
               )
               .join('\n')
           : 'No deals at risk';
@@ -333,7 +302,8 @@ Respond with a structured JSON object containing an insights array.`,
           : 'No stale contacts';
 
       // Resolve tenant-versioned prompt if tenantId is available; fall back to default
-      const versionedText = await this.resolveVersionedPrompt();
+      const chosen = await this.resolveVersionedPrompt();
+      const versionedText = chosen?.text ?? null;
       const activePrompt = versionedText
         ? new PromptTemplate({
             template: versionedText,
@@ -349,9 +319,12 @@ Respond with a structured JSON object containing an insights array.`,
       });
 
       // Use structured output model — returns typed object directly
-      const parsed = (await this.structuredModel.invoke(formattedPrompt)) as z.infer<
-        typeof LLMInsightOutputSchema
-      >;
+      const parsed = (await recordedChainRun(
+        'INSIGHT_GENERATION',
+        this.tenantId,
+        chosen?.versionId ?? null,
+        (callbacks) => this.structuredModel.invoke(formattedPrompt, { callbacks })
+      )) as z.infer<typeof LLMInsightOutputSchema>;
 
       const executionTimeMs = Date.now() - startTime;
 
@@ -379,6 +352,8 @@ Respond with a structured JSON object containing an insights array.`,
         executionTimeMs,
       };
     } catch (error) {
+      // The plan's AI actions are used up: fail with that reason, never answer with a heuristic.
+      if (isAiActionsExhausted(error)) throw error;
       const executionTimeMs = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
 

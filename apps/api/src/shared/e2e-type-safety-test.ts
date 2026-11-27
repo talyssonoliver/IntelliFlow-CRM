@@ -67,6 +67,7 @@ function demonstratePrismaTypes() {
     outreachSlugEventAt: null,
     scoringStatus: 'NONE' as const,
     scoredAt: null,
+    scoreConfidence: null,
     accountId: null, // IFC-227
   };
 

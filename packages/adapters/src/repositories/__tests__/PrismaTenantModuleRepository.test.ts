@@ -17,6 +17,10 @@ function createMockPrisma(): Record<string, any> {
   return {
     $queryRaw: vi.fn(),
     tenant: { findUnique: vi.fn(), update: vi.fn().mockResolvedValue({}) },
+    // Row counts that decide which modules hold data a business-type change must not hide.
+    case: { count: vi.fn().mockResolvedValue(0) },
+    caseDocument: { count: vi.fn().mockResolvedValue(0) },
+    ticket: { count: vi.fn().mockResolvedValue(0) },
     // Array-form transaction used by syncModulesToPlan: the operation promises
     // are already created when the array is built, so just await them.
     $transaction: vi.fn().mockImplementation(async (ops: Promise<unknown>[]) => Promise.all(ops)),
@@ -35,11 +39,16 @@ function createMockPrisma(): Record<string, any> {
 
 const TENANT_ID = 'tenant-module-test';
 
-function makeModuleRecord(moduleId: string, enabled: boolean) {
+function makeModuleRecord(
+  moduleId: string,
+  enabled: boolean,
+  origin: 'PLAN' | 'OVERRIDE' = 'OVERRIDE'
+) {
   return {
     tenantId: TENANT_ID,
     moduleId,
     enabled,
+    origin,
     enabledAt: new Date('2025-01-01T00:00:00Z'),
     disabledAt: null,
   };
@@ -67,7 +76,7 @@ describe('PrismaTenantModuleRepository.getTenantPlan', () => {
     expect(mockPrisma.tenant.findUnique).toHaveBeenCalledTimes(1);
     expect(mockPrisma.tenant.findUnique).toHaveBeenCalledWith({
       where: { id: TENANT_ID },
-      select: { plan: true },
+      select: { plan: true, businessType: true },
     });
   });
 
@@ -105,17 +114,55 @@ describe('PrismaTenantModuleRepository.getEnabledModules', () => {
     repo = new PrismaTenantModuleRepository(mockPrisma as unknown as PrismaClient);
   });
 
-  it('returns plan defaults when there are no overrides', async () => {
-    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER' });
+  it('returns plan modules intersected with the business type when there are no overrides', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER', businessType: 'AGENCY' });
     mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+
+    expect(await repo.getEnabledModules(TENANT_ID)).toEqual([
+      'CORE_CRM',
+      'SUPPORT',
+      'AI_INTELLIGENCE',
+      'ANALYTICS',
+    ]);
+  });
+
+  it('a workspace with no business type gets the core set only (gated like OTHER)', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'PROFESSIONAL', businessType: null });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+
+    expect(await repo.getEnabledModules(TENANT_ID)).toEqual([
+      'CORE_CRM',
+      'AI_INTELLIGENCE',
+      'ANALYTICS',
+    ]);
+  });
+
+  it('a trades business never gets LEGAL or SUPPORT, even when plan-sync rows say enabled', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'TRADES_HOME_SERVICES',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([
+      makeModuleRecord('LEGAL', true, 'PLAN'),
+      makeModuleRecord('SUPPORT', true, 'PLAN'),
+    ]);
 
     const modules = await repo.getEnabledModules(TENANT_ID);
 
-    // STARTER includes CORE_CRM, SUPPORT, AI_INTELLIGENCE, ANALYTICS (from MODULE_PLAN_MAP)
-    expect(modules).toContain('CORE_CRM');
-    expect(modules).toContain('SUPPORT');
-    expect(modules).toContain('AI_INTELLIGENCE');
-    expect(modules).toContain('ANALYTICS');
+    expect(modules).not.toContain('LEGAL');
+    expect(modules).not.toContain('SUPPORT');
+  });
+
+  it('an explicit OVERRIDE row keeps a module on outside the business type (existing data)', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'TRADES_HOME_SERVICES',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([
+      makeModuleRecord('LEGAL', true, 'OVERRIDE'),
+    ]);
+
+    expect(await repo.getEnabledModules(TENANT_ID)).toContain('LEGAL');
   });
 
   it('applies enabled override to add a module not in plan', async () => {
@@ -128,7 +175,10 @@ describe('PrismaTenantModuleRepository.getEnabledModules', () => {
   });
 
   it('applies disabled override to remove a module from plan', async () => {
-    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'PROFESSIONAL' });
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'LAW_FIRM',
+    });
     mockPrisma.tenantModule.findMany.mockResolvedValue([makeModuleRecord('LEGAL', false)]);
 
     const modules = await repo.getEnabledModules(TENANT_ID);
@@ -197,34 +247,40 @@ describe('PrismaTenantModuleRepository.isModuleEnabled', () => {
     expect(mockPrisma.tenant.findUnique).not.toHaveBeenCalled();
   });
 
-  it('returns override value when explicit override exists', async () => {
-    mockPrisma.tenantModule.findUnique.mockResolvedValue({ enabled: true });
+  it('returns true when an explicit OVERRIDE row switches the module on', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER', businessType: null });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([makeModuleRecord('LEGAL', true)]);
 
-    const result = await repo.isModuleEnabled(TENANT_ID, 'LEGAL');
-
-    expect(result).toBe(true);
-    expect(mockPrisma.tenant.findUnique).not.toHaveBeenCalled();
+    expect(await repo.isModuleEnabled(TENANT_ID, 'LEGAL')).toBe(true);
   });
 
-  it('falls back to plan tier when no override exists', async () => {
-    mockPrisma.tenantModule.findUnique.mockResolvedValue(null);
-    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'PROFESSIONAL' });
+  it('returns true when plan and business type both include the module', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'LAW_FIRM',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
 
-    // LEGAL is included in PROFESSIONAL
-    const result = await repo.isModuleEnabled(TENANT_ID, 'LEGAL');
-
-    expect(result).toBe(true);
+    expect(await repo.isModuleEnabled(TENANT_ID, 'LEGAL')).toBe(true);
     expect(mockPrisma.tenant.findUnique).toHaveBeenCalledTimes(1);
   });
 
-  it('returns false when module not in plan and no override', async () => {
-    mockPrisma.tenantModule.findUnique.mockResolvedValue(null);
-    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER' });
+  it('returns false when the plan includes the module but the business type does not', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'TRADES_HOME_SERVICES',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
 
-    // LEGAL is not included in STARTER
-    const result = await repo.isModuleEnabled(TENANT_ID, 'LEGAL');
+    expect(await repo.isModuleEnabled(TENANT_ID, 'LEGAL')).toBe(false);
+    expect(await repo.isModuleEnabled(TENANT_ID, 'SUPPORT')).toBe(false);
+  });
 
-    expect(result).toBe(false);
+  it('returns false when the business type allows it but the plan does not', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER', businessType: 'LAW_FIRM' });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+
+    expect(await repo.isModuleEnabled(TENANT_ID, 'LEGAL')).toBe(false);
   });
 });
 
@@ -251,6 +307,9 @@ describe('PrismaTenantModuleRepository.enableModule', () => {
     const call = mockPrisma.tenantModule.upsert.mock.calls[0][0];
     expect(call.create.enabled).toBe(true);
     expect(call.update.enabled).toBe(true);
+    // An explicit enable is an OVERRIDE: it can switch a module on outside the business type.
+    expect(call.create.origin).toBe('OVERRIDE');
+    expect(call.update.origin).toBe('OVERRIDE');
     expect(result.enabled).toBe(true);
     expect(result.moduleId).toBe('LEGAL');
   });
@@ -310,6 +369,9 @@ describe('PrismaTenantModuleRepository.disableModule', () => {
     const call = mockPrisma.tenantModule.upsert.mock.calls[0][0];
     expect(call.create.enabled).toBe(false);
     expect(call.update.enabled).toBe(false);
+    // Switching a module off hands the row back to the plan, so a later plan sync cannot revive an
+    // OVERRIDE or EXISTING_DATA grant outside the business type.
+    expect(call.update.origin).toBe('PLAN');
     expect(result.enabled).toBe(false);
   });
 });
@@ -369,5 +431,185 @@ describe('PrismaTenantModuleRepository.syncModulesToPlan', () => {
 
     expect(Array.isArray(result)).toBe(true);
     expect(result).toContain('CORE_CRM');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// business type
+// ---------------------------------------------------------------------------
+
+describe('PrismaTenantModuleRepository business type', () => {
+  let repo: PrismaTenantModuleRepository;
+  let mockPrisma: ReturnType<typeof createMockPrisma>;
+
+  beforeEach(() => {
+    mockPrisma = createMockPrisma();
+    repo = new PrismaTenantModuleRepository(mockPrisma as unknown as PrismaClient);
+  });
+
+  it('getBusinessType returns the stored type', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER', businessType: 'AGENCY' });
+    expect(await repo.getBusinessType(TENANT_ID)).toBe('AGENCY');
+  });
+
+  it('getBusinessType returns null when none is chosen, or the value is unknown', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER', businessType: null });
+    expect(await repo.getBusinessType(TENANT_ID)).toBeNull();
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER', businessType: 'PLUMBER' });
+    expect(await repo.getBusinessType(TENANT_ID)).toBeNull();
+  });
+
+  it('setBusinessType writes the type on the tenant', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'LAW_FIRM',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+
+    const protectedModules = await repo.setBusinessType(TENANT_ID, 'LAW_FIRM');
+
+    expect(mockPrisma.tenant.update).toHaveBeenCalledWith({
+      where: { id: TENANT_ID },
+      data: { businessType: 'LAW_FIRM' },
+    });
+    expect(protectedModules).toEqual([]);
+    expect(mockPrisma.tenantModule.upsert).not.toHaveBeenCalled();
+  });
+
+  it('a change that would hide a module holding data writes an EXISTING_DATA override', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'TRADES_HOME_SERVICES',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+    mockPrisma.ticket.count.mockResolvedValue(12);
+    mockPrisma.caseDocument.count.mockResolvedValue(3);
+    mockPrisma.tenantModule.upsert.mockResolvedValue({});
+
+    const protectedModules = await repo.setBusinessType(TENANT_ID, 'TRADES_HOME_SERVICES');
+
+    expect(protectedModules).toEqual(['LEGAL', 'SUPPORT']);
+    expect(mockPrisma.tenantModule.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { tenantId_moduleId: { tenantId: TENANT_ID, moduleId: 'SUPPORT' } },
+        create: expect.objectContaining({ enabled: true, origin: 'EXISTING_DATA' }),
+        update: expect.objectContaining({
+          enabled: true,
+          origin: 'EXISTING_DATA',
+          disabledAt: null,
+        }),
+      })
+    );
+  });
+
+  it('writes the new type and the data protection in one transaction, protection computed for the new type', async () => {
+    // The stored type is still the OLD one (LAW_FIRM) when the change is requested.
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'LAW_FIRM',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+    mockPrisma.case.count.mockResolvedValue(4);
+    mockPrisma.tenantModule.upsert.mockResolvedValue({});
+    mockPrisma.$transaction.mockClear();
+
+    const protectedModules = await repo.setBusinessType(TENANT_ID, 'TRADES_HOME_SERVICES');
+
+    expect(protectedModules).toEqual(['LEGAL']);
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+    expect((mockPrisma.$transaction.mock.calls[0][0] as unknown[]).length).toBe(2);
+  });
+
+  it('a failing read leaves the business type unchanged', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'PROFESSIONAL', businessType: null });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+    mockPrisma.ticket.count.mockRejectedValue(new Error('pool timeout'));
+    mockPrisma.tenant.update.mockClear();
+
+    await expect(repo.setBusinessType(TENANT_ID, 'TRADES_HOME_SERVICES')).rejects.toThrow(
+      'pool timeout'
+    );
+    expect(mockPrisma.tenant.update).not.toHaveBeenCalled();
+  });
+
+  it('legal documents alone (no cases) keep LEGAL on for a trades business', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'TRADES_HOME_SERVICES',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+    mockPrisma.caseDocument.count.mockResolvedValue(5);
+    mockPrisma.tenantModule.upsert.mockResolvedValue({});
+
+    expect(await repo.setBusinessType(TENANT_ID, 'TRADES_HOME_SERVICES')).toEqual(['LEGAL']);
+    expect(mockPrisma.caseDocument.count).toHaveBeenCalledWith({
+      where: { tenantId: TENANT_ID, deletedAt: null },
+    });
+  });
+
+  it('a module the new business type already has is not overridden even with data', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'AGENCY',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+    mockPrisma.ticket.count.mockResolvedValue(12);
+
+    expect(await repo.setBusinessType(TENANT_ID, 'AGENCY')).toEqual([]);
+    expect(mockPrisma.tenantModule.upsert).not.toHaveBeenCalled();
+  });
+});
+
+describe('PrismaTenantModuleRepository.syncModulesToPlan downgrade', () => {
+  it('switches off every enabled above-plan row, whatever its origin (no paid-module leak)', async () => {
+    const mockPrisma = createMockPrisma();
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER', businessType: 'AGENCY' });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+    mockPrisma.tenantModule.upsert.mockResolvedValue({});
+    const repo = new PrismaTenantModuleRepository(mockPrisma as unknown as PrismaClient);
+
+    await repo.syncModulesToPlan(TENANT_ID, 'STARTER');
+
+    const call = mockPrisma.tenantModule.updateMany.mock.calls[0][0];
+    expect(call.where).toEqual({
+      tenantId: TENANT_ID,
+      enabled: true,
+      moduleId: { notIn: expect.any(Array) },
+    });
+    expect(call.where.origin).toBeUndefined();
+  });
+});
+
+describe('PrismaTenantModuleRepository.protectExistingData leaves decisions to a human', () => {
+  let repo: PrismaTenantModuleRepository;
+  let mockPrisma: ReturnType<typeof createMockPrisma>;
+
+  beforeEach(() => {
+    mockPrisma = createMockPrisma();
+    mockPrisma.tenantModule.upsert.mockResolvedValue({});
+    repo = new PrismaTenantModuleRepository(mockPrisma as unknown as PrismaClient);
+  });
+
+  it('does not hand out a module the plan does not include, even with data (downgrade)', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER', businessType: 'LAW_FIRM' });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+    mockPrisma.case.count.mockResolvedValue(8);
+
+    expect(await repo.setBusinessType(TENANT_ID, 'LAW_FIRM')).toEqual([]);
+    expect(mockPrisma.tenantModule.upsert).not.toHaveBeenCalled();
+  });
+
+  it('does not undo an admin who deliberately switched a module off', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'TRADES_HOME_SERVICES',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([
+      makeModuleRecord('SUPPORT', false, 'PLAN'),
+    ]);
+    mockPrisma.ticket.count.mockResolvedValue(12);
+
+    expect(await repo.setBusinessType(TENANT_ID, 'TRADES_HOME_SERVICES')).toEqual([]);
+    expect(mockPrisma.tenantModule.upsert).not.toHaveBeenCalled();
   });
 });

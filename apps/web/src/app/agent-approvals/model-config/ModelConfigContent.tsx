@@ -16,6 +16,7 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
 import { errorCode } from '@/lib/trpc-errors';
 import { PageHeader, type PageAction } from '@/components/shared/page-header';
+import { OwnKeySection } from './components/OwnKeySection';
 import { PurposeCard } from './components/PurposeCard';
 import {
   buildResetPayload,
@@ -395,6 +396,8 @@ export default function ModelConfigContent() {
       )}
 
       <HowItApplies />
+
+      <OwnKeySection />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
         {rows.map((row) => (

@@ -7,6 +7,7 @@ import { act, renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useLogout } from '../useLogout';
+import { AUTH_STATUS_CACHE_KEY } from '@/lib/auth/auth-status-snapshot';
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 
@@ -51,5 +52,20 @@ describe('useLogout, with the real cleanup', () => {
     expect(localStorage.getItem('refreshToken')).toBeNull();
     expect(localStorage.getItem('sb-project-auth-token')).toBeNull();
     expect(replace).toHaveBeenCalledWith('/');
+  });
+
+  it('removes the stored auth status snapshot too (MVP-007), so no identity outlives the sign-out', async () => {
+    localStorage.setItem('accessToken', 'a-token');
+    localStorage.setItem(
+      AUTH_STATUS_CACHE_KEY,
+      JSON.stringify({ sub: 'user-1', tenant: null, user: { id: 'u1' }, emailVerified: true })
+    );
+    const { result } = renderHook(() => useLogout(), { wrapper });
+
+    await act(async () => {
+      await result.current.logout();
+    });
+
+    expect(localStorage.getItem(AUTH_STATUS_CACHE_KEY)).toBeNull();
   });
 });

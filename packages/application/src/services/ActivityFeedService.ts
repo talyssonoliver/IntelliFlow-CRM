@@ -18,6 +18,7 @@ import type {
   ActivityFeedPage,
   ActivityFeedCursor,
   ActivityFeedFilters,
+  ActivityFeedViewer,
   ActivityFeedType,
   ActivityFeedSource,
   ActivityFeedEntityType,
@@ -52,6 +53,7 @@ export class ActivityFeedService {
       entityId?: string;
       after?: Date;
       before?: Date;
+      viewer?: ActivityFeedViewer;
     }
   ): Promise<ActivityFeedPage> {
     const cursor = cursorStr ? decodeCursor(cursorStr) : null;
@@ -123,7 +125,8 @@ export class ActivityFeedService {
     entityId: string,
     limit: number,
     cursorStr: string | null | undefined,
-    types?: ActivityFeedType[]
+    types?: ActivityFeedType[],
+    viewer?: ActivityFeedViewer
   ): Promise<ActivityFeedPage> {
     const cursor = cursorStr ? decodeCursor(cursorStr) : null;
 
@@ -132,7 +135,8 @@ export class ActivityFeedService {
       entityType,
       entityId,
       limit + 1,
-      cursor
+      cursor,
+      viewer
     );
 
     // Deduplicate by id and content (same pattern as unified feed)
@@ -172,7 +176,11 @@ export class ActivityFeedService {
   async getStats(
     tenantId: string,
     timeWindow: ActivityFeedTimeWindow,
-    filters?: { sources?: ActivityFeedSource[]; entityType?: ActivityFeedEntityType }
+    filters?: {
+      sources?: ActivityFeedSource[];
+      entityType?: ActivityFeedEntityType;
+      viewer?: ActivityFeedViewer;
+    }
   ) {
     const windowEnd = new Date();
     const windowStart = resolveWindowStart(timeWindow, windowEnd);
@@ -181,7 +189,8 @@ export class ActivityFeedService {
     const filterHash = filters
       ? `${(filters.sources || []).join(',')}:${filters.entityType || ''}`
       : '';
-    const cacheKey = `activity-stats:${tenantId}:${timeWindow}:${filterHash}`;
+    // The email count depends on who is asking (register #64): one cache entry per viewer.
+    const cacheKey = `activity-stats:${tenantId}:${viewerKey(filters?.viewer)}:${timeWindow}:${filterHash}`;
     const cached = await this.cache.get<
       {
         timeWindow: ActivityFeedTimeWindow;
@@ -223,6 +232,7 @@ export class ActivityFeedService {
       types?: ActivityFeedType[];
       sources?: ActivityFeedSource[];
       entityType?: ActivityFeedEntityType;
+      viewer?: ActivityFeedViewer;
     }
   ): Promise<ActivityFeedPage> {
     const cursor = cursorStr ? decodeCursor(cursorStr) : null;
@@ -263,7 +273,8 @@ export class ActivityFeedService {
     cursor: ActivityFeedCursor | null,
     filters: ActivityFeedFilters
   ): string {
-    const parts = [`activity-feed:${tenantId}`, `l:${limit}`];
+    // Mail rows depend on who is reading (register #64): the page is cached per viewer.
+    const parts = [`activity-feed:${tenantId}`, `v:${viewerKey(filters.viewer)}`, `l:${limit}`];
     if (cursor) parts.push(`c:${cursor.id}`);
     if (filters.types?.length) parts.push(`t:${filters.types.join(',')}`);
     if (filters.sources?.length) parts.push(`s:${filters.sources.join(',')}`);
@@ -271,6 +282,16 @@ export class ActivityFeedService {
     if (filters.entityId) parts.push(`eid:${filters.entityId}`);
     return parts.join(':');
   }
+}
+
+/**
+ * What a cached feed or stats entry depends on besides the tenant: who is reading (their user and
+ * the lead scope they see). No viewer is its own entry (personal mail left out).
+ */
+function viewerKey(viewer?: ActivityFeedViewer): string {
+  if (!viewer) return 'none';
+  const team = [...(viewer.teamMemberIds ?? [])].sort((a, b) => a.localeCompare(b)).join(',');
+  return `${viewer.userId}/${viewer.role ?? ''}/${team}`;
 }
 
 /**

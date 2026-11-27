@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { processPmEvent, type ProcessPmEventInput } from '../process-pm-event';
+import { processPmEvent, sameSecret, type ProcessPmEventInput } from '../process-pm-event';
 import { InMemoryInboundPmEventStore } from '../inbound-store';
 
 // Test bearer fixture (NOT a real credential — a fixed >=16-char stub).
@@ -12,7 +12,7 @@ function envelope(over: Record<string, unknown> = {}): string {
   return JSON.stringify({
     eventId: EVENT_ID,
     sequence: 42,
-    tenantSlug: 'nutri-gyn',
+    tenantSlug: 'example-clinic',
     category: 'project',
     type: 'stage_changed',
     occurredAt: '2026-06-20T10:00:00Z',
@@ -52,6 +52,32 @@ describe('processPmEvent — auth', () => {
   });
   it('accepts a valid bearer', async () => {
     expect((await processPmEvent(input())).statusCode).toBe(202);
+  });
+  it('401 for a bearer of the same length that differs in one character', async () => {
+    const sameLength = `${BEARER.slice(0, -1)}2`;
+    expect(sameLength).toHaveLength(BEARER.length);
+    const r = await processPmEvent(input({ authorizationHeader: `Bearer ${sameLength}` }));
+    expect(r).toEqual({ statusCode: 401, body: { accepted: false, error: 'unauthorized' } });
+  });
+  it.each([
+    ['a prefix of it', BEARER.slice(0, -1)],
+    ['it with extra characters', `${BEARER}0`],
+    ['an empty token', ''],
+  ])('401 for a bearer of a different length: %s', async (_label, token) => {
+    const r = await processPmEvent(input({ authorizationHeader: `Bearer ${token}` }));
+    expect(r.statusCode).toBe(401);
+  });
+});
+
+describe('sameSecret', () => {
+  it('is true only for the identical token', () => {
+    expect(sameSecret(BEARER, BEARER)).toBe(true);
+    expect(sameSecret(`${BEARER.slice(0, -1)}2`, BEARER)).toBe(false);
+  });
+  it('compares tokens of any length without throwing', () => {
+    expect(sameSecret('x', BEARER)).toBe(false);
+    expect(sameSecret(`${BEARER}${BEARER}`, BEARER)).toBe(false);
+    expect(sameSecret(undefined, BEARER)).toBe(false);
   });
 });
 
@@ -155,7 +181,7 @@ describe('processPmEvent — leakage', () => {
   it('every response is aggregate-only and never leaks payload/tenant/secret/raw error', async () => {
     const throwingStore = {
       get: async () => {
-        throw new Error('SENSITIVE: tenant nutri-gyn row 42 bearer=' + BEARER);
+        throw new Error('SENSITIVE: tenant example-clinic row 42 bearer=' + BEARER);
       },
       put: async () => ({ created: true }),
     };
@@ -171,7 +197,7 @@ describe('processPmEvent — leakage', () => {
       expect(Object.keys(r.body).every((k) => allowed.has(k))).toBe(true);
       const s = JSON.stringify(r.body);
       expect(s).not.toContain(BEARER);
-      expect(s).not.toContain('nutri-gyn');
+      expect(s).not.toContain('example-clinic');
       expect(s).not.toMatch(/payload|tenant|row 42|connection refused|5432/i);
     }
   });

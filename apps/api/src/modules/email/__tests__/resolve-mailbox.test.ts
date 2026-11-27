@@ -1,6 +1,6 @@
 /**
  * Inbound mail is routed only by an exact recipient match against the
- * provider-proven account address of an ACTIVE Google or Microsoft mailbox.
+ * provider-proven account address of an ACTIVE Google, Microsoft or Zoho mailbox.
  * These tests pin that: no domain matching, no fallback bucket, no typed-in
  * SMTP address, and no guessing when an address belongs to more than one place.
  */
@@ -42,7 +42,7 @@ describe('resolveMailboxForInboundEmail', () => {
     expect(findMany.mock.calls[0][0].where).toEqual({
       status: 'ACTIVE',
       // An SMTP mailbox's address is typed in, not proven: it never routes inbound mail.
-      kind: { in: ['GMAIL', 'MICROSOFT'] },
+      kind: { in: ['GMAIL', 'MICROSOFT', 'ZOHO'] },
       accountAddress: { in: ['sales@a.example.invalid'], mode: 'insensitive' },
     });
   });

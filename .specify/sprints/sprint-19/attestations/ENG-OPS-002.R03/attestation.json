@@ -41,6 +41,20 @@
       "passed": true,
       "timestamp": "2026-11-12T14:29:59Z",
       "stdout_hash": "1c6cd4a9f563e0f5877058db658c0e09ff23be12d25032ab790b396a55309ea2"
+    },
+    {
+      "name": "Format, prettier",
+      "command": "npx prettier --check CLAUDE.md .specify/sprints/sprint-18/_summary.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:58:02Z"
+    },
+    {
+      "name": "Attestation JSON schema validation (ajv, attestation.schema.json)",
+      "command": "node ajv-validate attestation.schema.json .specify/sprints/sprint-19/attestations/ENG-OPS-002.R03/attestation.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:58:02Z"
     }
   ],
   "gate_results": [
@@ -85,7 +99,9 @@
       "evidence": "exit 0, 'every target doc cites the canonical totals and aggregates'."
     }
   ],
-  "dependencies_verified": ["ENG-OPS-002"],
+  "dependencies_verified": [
+    "ENG-OPS-002"
+  ],
   "environment": {
     "os": "win32",
     "node_version": "v25.2.1",

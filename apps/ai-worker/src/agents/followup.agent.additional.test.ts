@@ -537,7 +537,7 @@ describe('FollowupAgent - Execution', () => {
       expect(humanMsg).toContain('85/100');
       expect(humanMsg).toContain('5');
       expect(humanMsg).toContain('Alice Johnson');
-      expect(humanMsg).toContain('150,000');
+      expect(humanMsg).toContain('Deal Value: £150,000');
       expect(humanMsg).toContain('2026-06-30');
       expect(humanMsg).toContain('Initial outreach email');
       expect(humanMsg).toContain('Opened');

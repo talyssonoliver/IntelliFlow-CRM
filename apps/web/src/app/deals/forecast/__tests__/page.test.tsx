@@ -195,6 +195,7 @@ describe('DealForecastPage', () => {
     expect(screen.getByText('88%')).toBeInTheDocument();
     // Pipeline value (en-GB GBP: £450,000).
     expect(screen.getByText('£450,000')).toBeInTheDocument();
+    expect(document.body.textContent).not.toContain('$');
   });
 
   it('renders auth loading skeleton', () => {

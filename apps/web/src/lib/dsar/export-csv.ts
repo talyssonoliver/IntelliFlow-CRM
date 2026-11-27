@@ -15,11 +15,22 @@ export const UTF8_BOM = '\uFEFF';
 
 /**
  * Text a spreadsheet would run as a formula (OWASP CSV injection): it starts with =, +, -, @, a
- * tab or a carriage return. Such text gets a leading single quote, so it shows as typed. Numbers
- * are data, not text, and are written as they are (a score of -5 stays -5); a string such as a
+ * tab, a carriage return or a line feed. Such text gets a leading single quote, so it shows as
+ * typed. Numbers are data, not text, and are written as they are (a score of -5 stays -5); a string such as a
  * phone number "+44..." is text and gets the quote.
  */
-const FORMULA_START = /^[=+\-@\t\r]/;
+const FORMULA_START = /^[=+\-@\t\r\n]/;
+
+/**
+ * Excel turns the text "00123" into 123 and rounds a number of more than 15 significant digits.
+ * Such text gets the same leading single quote, so a phone number, postcode or reference keeps
+ * every digit; the JSON file keeps the exact text either way.
+ */
+function losesPrecisionInSpreadsheet(text: string): boolean {
+  if (/^-?0\d+(?:\.\d+)?$/.test(text)) return true;
+  const m = /^-?(\d+)(?:\.(\d+))?$/.exec(text);
+  return m !== null && (m[1]! + (m[2] ?? '')).replace(/^0+/, '').length > 15;
+}
 
 /** One CSV field: formula-safe, RFC 4180 quoting, objects as JSON, empty for null and undefined. */
 function field(value: unknown): string {
@@ -28,7 +39,9 @@ function field(value: unknown): string {
     return String(value);
   }
   const raw = typeof value === 'object' ? JSON.stringify(value) : String(value);
-  const text = FORMULA_START.test(raw) ? `'${raw}` : raw;
+  const isText = typeof value === 'string';
+  const protect = FORMULA_START.test(raw) || (isText && losesPrecisionInSpreadsheet(raw));
+  const text = protect ? `'${raw}` : raw;
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 

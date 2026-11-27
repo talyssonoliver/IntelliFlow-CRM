@@ -76,13 +76,75 @@ const metrics: LeadMetrics = {
 };
 
 describe('LeadDetail', () => {
+  it('shows a lead named after its company once: the company line is hidden when it repeats the name', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({ firstName: '', lastName: '', company: 'Acme Handyman Ltd' })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.getAllByText('Acme Handyman Ltd')).toHaveLength(1);
+  });
+
+  it('keeps the way to the account when the company repeats the name: the name is the link', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({
+          firstName: '',
+          lastName: '',
+          company: 'Acme Handyman Ltd',
+          accountId: 'acc-1',
+          account: { id: 'acc-1', name: 'Acme Handyman Ltd' },
+        })}
+        leadMetrics={metrics}
+      />
+    );
+    const links = screen.getAllByRole('link', { name: 'Acme Handyman Ltd' });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', '/accounts/acc-1');
+    expect(screen.getAllByText('Acme Handyman Ltd')).toHaveLength(1);
+  });
+
+  it('links the company line to the account when the name is a person', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({
+          company: 'Acme Corp',
+          accountId: 'acc-2',
+          account: { id: 'acc-2', name: 'Acme Corp' },
+        })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.getByRole('link', { name: 'Acme Corp' })).toHaveAttribute(
+      'href',
+      '/accounts/acc-2'
+    );
+    expect(screen.getByRole('heading', { level: 2, name: 'John Doe' })).toBeInTheDocument();
+  });
+
+  it('matches the company to the name ignoring case and spaces', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({ firstName: 'Pilates', lastName: 'Living', company: ' pilates  LIVING ' })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.getAllByText(/pilates\s+living/i)).toHaveLength(1);
+  });
+
+  it('keeps the company line when it differs from the name', () => {
+    render(<LeadDetail lead={makeLead()} leadMetrics={metrics} />);
+    expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+  });
   it('renders identity and contact details (AC-001)', () => {
     render(<LeadDetail lead={makeLead()} leadMetrics={metrics} />);
     expect(screen.getByText('John Doe')).toBeInTheDocument();
     expect(screen.getByText('CTO')).toBeInTheDocument();
     expect(screen.getByText('john@example.com')).toBeInTheDocument();
     expect(screen.getByText('+1 555-0101')).toBeInTheDocument();
-    expect(screen.getByText('London, UK')).toBeInTheDocument();
+    // Once in the Location row and once on the map card (pin plus the address, with a real link).
+    expect(screen.getAllByText('London, UK')).toHaveLength(2);
     expect(screen.getByText('acme.com')).toBeInTheDocument();
     expect(screen.getByText('enterprise')).toBeInTheDocument();
   });
@@ -90,19 +152,28 @@ describe('LeadDetail', () => {
   it('shows a tracking-URL website as its clean host, linked without tracking (#1277)', () => {
     render(
       <LeadDetail
-        lead={makeLead({ website: 'http://www.energym.co.uk/?utm_source=google&utm_medium=wix' })}
+        lead={makeLead({
+          website:
+            'http://www.northfield-fitness.example.invalid/?utm_source=google&utm_medium=wix',
+        })}
         leadMetrics={metrics}
       />
     );
-    const link = screen.getByRole('link', { name: 'energym.co.uk (opens in new tab)' });
-    expect(link).toHaveTextContent('energym.co.uk');
-    expect(link).toHaveAttribute('href', 'http://www.energym.co.uk/');
+    const link = screen.getByRole('link', {
+      name: 'northfield-fitness.example.invalid (opens in new tab)',
+    });
+    expect(link).toHaveTextContent('northfield-fitness.example.invalid');
+    expect(link).toHaveAttribute('href', 'http://www.northfield-fitness.example.invalid/');
   });
 
-  it('shows a dash, not "£0", for a lead with no estimated value (#1277)', () => {
+  it('offers "Add value", not "£0", for a lead with no estimated value (#1277, MVP-003)', () => {
     render(<LeadDetail lead={makeLead()} leadMetrics={{ ...metrics, estimatedValue: 0 }} />);
     expect(screen.queryByText('£0')).not.toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
+    // The link opens the edit form, which focuses the value field from this hash.
+    expect(screen.getByRole('link', { name: 'Add value' })).toHaveAttribute(
+      'href',
+      '/leads/lead-1/edit#estimatedValue'
+    );
   });
 
   it('shows no website row when the lead has none (#1277)', () => {
@@ -162,10 +233,48 @@ describe('LeadDetail', () => {
     expect(notScored.nextElementSibling?.textContent).toBe('Lead Score');
   });
 
-  it('marks a low-confidence score as needing review in the profile card (#1218)', () => {
+  it('shows "Few signals yet" in the profile card for a NEEDS_REVIEW lead with unknown confidence', () => {
     render(<LeadDetail lead={makeLead({ scoringStatus: 'NEEDS_REVIEW' })} leadMetrics={metrics} />);
-    const flag = screen.getByText('needs review');
-    expect(flag.parentElement?.textContent).toBe('75needs review');
+    const flag = screen.getByTitle(/little activity/);
+    expect(flag.textContent).toMatch(/^Few signals yet\. This score is based on little activity/);
+    expect(flag.parentElement?.textContent).toMatch(/^75Few signals yet/);
+  });
+
+  it('shows "Low confidence" only when the stored confidence is below 0.6', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({ scoringStatus: 'NEEDS_REVIEW', scoreConfidence: 0.4 })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.getByText('Low confidence')).toBeTruthy();
+    expect(screen.queryByText('Few signals yet')).toBeNull();
+  });
+
+  it.each([
+    [0.59, 'Low confidence', 'Few signals yet'],
+    [0.6, 'Few signals yet', 'Low confidence'],
+    [0.84, 'Few signals yet', 'Low confidence'],
+  ])('shows only the right flag for a stored confidence of %s', (confidence, shown, hidden) => {
+    render(
+      <LeadDetail
+        lead={makeLead({ scoringStatus: 'NEEDS_REVIEW', scoreConfidence: confidence })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.getByText(shown, { exact: false })).toBeTruthy();
+    expect(screen.queryByText(hidden, { exact: false })).toBeNull();
+  });
+
+  it('shows no flag at a stored confidence of 0.85 or more', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({ scoringStatus: 'SCORED', scoreConfidence: 0.85 })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.queryByText('Few signals yet', { exact: false })).toBeNull();
+    expect(screen.queryByText('Low confidence', { exact: false })).toBeNull();
   });
 
   it('links the company to its account when accountId is present (IFC-227 parity)', () => {

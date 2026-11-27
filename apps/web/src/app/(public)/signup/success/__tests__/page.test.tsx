@@ -84,7 +84,7 @@ vi.mock('@/components/shared/onboarding-flow', () => ({
       title: 'Complete your profile',
       description: 'Add your company details.',
       icon: 'person',
-      action: { label: 'Complete profile', href: '/settings/profile' },
+      action: { label: 'Complete profile', href: '/settings/account' },
     },
     {
       id: 'import-contacts',
@@ -223,7 +223,8 @@ describe('SignUpSuccessPage', () => {
     const dashboardLink = screen.getByText('Go to Dashboard').closest('a');
     const profileLink = screen.getByText('Complete Profile').closest('a');
     expect(dashboardLink?.getAttribute('href')).toBe('/dashboard');
-    expect(profileLink?.getAttribute('href')).toBe('/settings/profile');
+    // /settings/profile never existed; profile settings are /settings/account.
+    expect(profileLink?.getAttribute('href')).toBe('/settings/account');
   });
 
   // TC#9: AC-012

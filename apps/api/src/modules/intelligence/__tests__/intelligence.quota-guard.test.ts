@@ -1,6 +1,6 @@
 /**
  * Per-tenant metering: intelligence.triggerPrediction must respect the
- * `aiSpendCentsPerMonth` budget. The guard only asserts; spend is recorded elsewhere.
+ * `aiActionsPerMonth` budget. The guard only asserts; spend is recorded elsewhere.
  */
 
 import { describe, it, expect, vi } from 'vitest';
@@ -27,20 +27,20 @@ const input = {
 };
 
 describe('intelligence.triggerPrediction quota guard', () => {
-  it('rejects before enqueueing when the AI budget is exhausted', async () => {
+  it('rejects before enqueueing when the AI actions allowance is exhausted', async () => {
     mockQueueAdd.mockReset();
     const ctx = createTestContext({
-      services: { ...mockServices, quota: overQuota('aiSpendCentsPerMonth', 2000, 2000) as never },
+      services: { ...mockServices, quota: overQuota('aiActionsPerMonth', 1000, 1000) as never },
     });
 
     await expect(
       intelligenceRouter.createCaller(ctx).triggerPrediction(input)
-    ).rejects.toMatchObject(quotaRejection('aiSpendCentsPerMonth', 2000, 2000));
+    ).rejects.toMatchObject(quotaRejection('aiActionsPerMonth', 1000, 1000));
     expect(mockQueueAdd).not.toHaveBeenCalled();
     expect(prismaMock.lead.findFirst).not.toHaveBeenCalled();
   });
 
-  it('enqueues the prediction when the budget has headroom', async () => {
+  it('enqueues the prediction when the allowance has headroom', async () => {
     mockQueueAdd.mockReset();
     mockQueueAdd.mockResolvedValue({ id: 'job-123' });
     prismaMock.lead.findFirst.mockResolvedValue({ id: TEST_UUIDS.lead1 } as never);
@@ -50,11 +50,7 @@ describe('intelligence.triggerPrediction quota guard', () => {
     const result = await intelligenceRouter.createCaller(ctx).triggerPrediction(input);
 
     expect(result.status).toBe('QUEUED');
-    expect(quota.assertWithinQuota).toHaveBeenCalledWith(
-      TEST_UUIDS.tenant,
-      'aiSpendCentsPerMonth',
-      1
-    );
+    expect(quota.assertWithinQuota).toHaveBeenCalledWith(TEST_UUIDS.tenant, 'aiActionsPerMonth', 1);
     expect(mockQueueAdd).toHaveBeenCalledTimes(1);
   });
 });

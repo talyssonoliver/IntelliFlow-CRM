@@ -2,7 +2,9 @@ import type { Embeddings } from '@langchain/core/embeddings';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { createEmbeddings } from '../lib/llm-factory';
+import { openRouterEmbeddingModel } from '../lib/openrouter-embedding-model';
 import { embeddingDimensions } from '../lib/embedding-dimensions';
+import { handledFallback } from '../lib/handled-fallback';
 import pino from 'pino';
 
 const logger = pino({
@@ -54,7 +56,13 @@ export class EmbeddingChain {
 
   constructor() {
     // All embedding providers routed through createEmbeddings factory
-    this.modelName = process.env.EMBEDDING_MODEL || 'rag-free';
+    // The label follows the model createEmbeddings('free') really calls (OpenRouter's current
+    // default), not a hard-coded name; the LiteLLM route keeps its 'rag-free' alias.
+    this.modelName =
+      process.env.EMBEDDING_MODEL ||
+      (aiConfig.provider !== 'mock' && process.env.EMBEDDING_PROVIDER === 'openrouter'
+        ? openRouterEmbeddingModel()
+        : 'rag-free');
     this.dimensions = embeddingDimensions();
     this.embeddings = createEmbeddings('free');
 
@@ -100,13 +108,17 @@ export class EmbeddingChain {
 
       return result;
     } catch (error) {
-      logger.error(
-        {
-          textLength: input.text.length,
-          error: error instanceof Error ? error.message : String(error),
-        },
-        'Embedding generation failed'
-      );
+      const failure = {
+        textLength: input.text.length,
+        error: error instanceof Error ? error.message : String(error),
+      };
+      // A caller that falls back (semantic search to full-text) logs this as a warning: an error
+      // line here would page the owner for a search that still returned results.
+      if (handledFallback()) {
+        logger.warn(failure, 'Embedding generation failed');
+      } else {
+        logger.error(failure, 'Embedding generation failed');
+      }
 
       throw new Error(
         `Failed to generate embedding: ${error instanceof Error ? error.message : 'Unknown error'}`,

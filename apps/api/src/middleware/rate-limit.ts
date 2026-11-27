@@ -25,7 +25,7 @@ export interface RateLimitTier {
   name: string;
 }
 
-interface WindowState {
+export interface WindowState {
   count: number;
   windowStart: number;
 }
@@ -62,13 +62,134 @@ export const rateLimitConfig = {
 // Core helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * A request as the limiter sees it: a Fetch `Request` (`headers` is a `Headers`) or a Node/Fastify
+ * request (`headers` is a plain object of lower-cased names; a repeated header is an array).
+ */
+export type RequestWithHeaders = {
+  headers?: { get?: (name: string) => string | null } | Record<string, unknown> | null;
+};
+
+/** One header as a string, from either header shape; undefined when absent. */
+export function readHeader(req: RequestWithHeaders, name: string): string | undefined {
+  const headers = req.headers;
+  if (!headers) return undefined;
+  const key = name.toLowerCase();
+  if (typeof (headers as { get?: unknown }).get === 'function') {
+    return (headers as { get: (n: string) => string | null }).get(key) ?? undefined;
+  }
+  const value = (headers as Record<string, unknown>)[key];
+  if (Array.isArray(value)) return typeof value[0] === 'string' ? value.join(', ') : undefined;
+  return typeof value === 'string' ? value : undefined;
+}
+
+/**
+ * Client IP for anonymous callers, from headers the edge sets, never from one the client can
+ * write.
+ *
+ * 1. `x-real-ip`: set by the Railway/Vercel edge to the connecting client.
+ * 2. `x-forwarded-for`: a client can PREPEND hops to it but cannot append, so the entry
+ *    `TRUSTED_PROXY_HOPS` from the right (default 1: the hop our own edge added) is the
+ *    address our edge saw. The leftmost entry is client-controlled and is not read.
+ *
+ * Without a usable header the key is 'unknown', so those callers share one bucket (the safe
+ * side: an unidentifiable caller is limited with the other unidentifiable callers).
+ */
+export function getRateLimitClientId(req: RequestWithHeaders | undefined): string {
+  if (!req) return 'unknown';
+  const realIp = readHeader(req, 'x-real-ip')?.trim();
+  if (realIp) return realIp;
+  const hops = (readHeader(req, 'x-forwarded-for') ?? '')
+    .split(',')
+    .map((hop) => hop.trim())
+    .filter(Boolean);
+  const trusted = Math.max(1, Number.parseInt(process.env.TRUSTED_PROXY_HOPS ?? '1', 10) || 1);
+  return hops[hops.length - trusted] || 'unknown';
+}
+
+/**
+ * Who a request is counted against. A signed-in call is counted per tenant AND user, whatever
+ * the network path: many users behind one proxy, or one user on several devices, never share
+ * or split a bucket by address. Only an anonymous call falls back to the client address.
+ */
+export function rateLimitSubject(ctx: Context): string {
+  if (ctx.user?.userId) return `user:${ctx.user.tenantId ?? '-'}:${ctx.user.userId}`;
+  return `ip:${getRateLimitClientId(ctx.req)}`;
+}
+
 function getKey(ctx: Context): string {
-  return ctx.user?.userId || 'anonymous';
+  return rateLimitSubject(ctx);
+}
+
+/** Whole seconds from now until `resetAt` (epoch ms), at least 1. */
+function secondsUntil(resetAt: number): number {
+  return Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
+}
+
+/** `retryAfter` (seconds) a rate-limit rejection carries in its cause, or null for any other error. */
+export function retryAfterFromCause(cause: unknown): number | null {
+  if (!cause || typeof cause !== 'object') return null;
+  const value = (cause as { retryAfter?: unknown }).retryAfter;
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
 }
 
 function getRetryAfterSeconds(windowStart: number, windowMs: number): number {
   const elapsed = Date.now() - windowStart;
   return Math.max(1, Math.ceil((windowMs - elapsed) / 1000));
+}
+
+/** Most windows one in-memory limiter keeps; anonymous callers are keyed per address. */
+export const MAX_TRACKED_KEYS = 10_000;
+
+/** Key of the shared window new callers are counted in once the store is full of live windows. */
+export const OVERFLOW_KEY = 'overflow';
+
+/**
+ * The windows of one in-memory limiter, kept bounded. A key used to be removed only when the same
+ * caller came back, so with one key per anonymous address the store grew with every address ever
+ * seen. Now, once per window (and whenever the store is full), expired windows are dropped. A
+ * window that has NOT expired is never dropped, so a caller who is limited stays limited. If the
+ * store is still full of live windows, a new caller is counted in one shared overflow window
+ * instead of getting a window of its own: a flood of new addresses is limited together, and
+ * nobody's existing count is lost.
+ */
+export function createWindowStore(windowMs: number) {
+  const store = new Map<string, WindowState>();
+  let lastSweep = Date.now();
+
+  const live = (key: string, now: number): WindowState | undefined => {
+    const state = store.get(key);
+    if (state && now - state.windowStart >= windowMs) {
+      store.delete(key);
+      return undefined;
+    }
+    return state;
+  };
+
+  return {
+    size: () => store.size,
+    windowFor(key: string, now: number): WindowState {
+      const existing = live(key, now);
+      if (existing) return existing;
+      // A caller counted in the overflow window stays in it until it ends, even if room has
+      // opened up since: starting a window of its own would hand it a fresh quota early.
+      const overflow = live(OVERFLOW_KEY, now);
+      if (overflow) return overflow;
+
+      if (now - lastSweep >= windowMs || store.size >= MAX_TRACKED_KEYS) {
+        lastSweep = now;
+        for (const [k, state] of store) {
+          if (now - state.windowStart >= windowMs) store.delete(k);
+        }
+      }
+      const slot = store.size >= MAX_TRACKED_KEYS ? OVERFLOW_KEY : key;
+      const shared = live(slot, now);
+      if (shared) return shared;
+      const fresh: WindowState = { count: 0, windowStart: now };
+      store.set(slot, fresh);
+      return fresh;
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -80,24 +201,10 @@ function getRetryAfterSeconds(windowStart: number, windowMs: number): number {
  * Each call creates an independent in-memory store (closure-scoped Map).
  */
 export function createRateLimitMiddleware(limit = 100, windowMs = 60000) {
-  const store = new Map<string, WindowState>();
+  const windows = createWindowStore(windowMs);
 
   return async ({ ctx, next }: MiddlewareOpts) => {
-    const key = getKey(ctx);
-    const now = Date.now();
-
-    let state = store.get(key);
-
-    // Reset window if expired
-    if (state && now - state.windowStart >= windowMs) {
-      state = undefined;
-      store.delete(key);
-    }
-
-    if (!state) {
-      state = { count: 0, windowStart: now };
-      store.set(key, state);
-    }
+    const state = windows.windowFor(getKey(ctx), Date.now());
 
     // Check limit BEFORE incrementing: if count > 0 and count >= limit, reject
     if (state.count > 0 && state.count >= limit) {
@@ -131,23 +238,10 @@ export function createLenientRateLimitMiddleware() {
  * Tiered rate limiter with tier metadata in error cause.
  */
 export function createTieredRateLimitMiddleware(tier: RateLimitTier) {
-  const store = new Map<string, WindowState>();
+  const windows = createWindowStore(tier.windowMs);
 
   return async ({ ctx, next }: MiddlewareOpts) => {
-    const key = getKey(ctx);
-    const now = Date.now();
-
-    let state = store.get(key);
-
-    if (state && now - state.windowStart >= tier.windowMs) {
-      state = undefined;
-      store.delete(key);
-    }
-
-    if (!state) {
-      state = { count: 0, windowStart: now };
-      store.set(key, state);
-    }
+    const state = windows.windowFor(getKey(ctx), Date.now());
 
     if (state.count > 0 && state.count >= tier.limit) {
       const retryAfter = getRetryAfterSeconds(state.windowStart, tier.windowMs);
@@ -243,13 +337,26 @@ export class RedisRateLimiter {
   }
 
   async checkLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
+    return (await this.checkLimitWithReset(key, limit, windowMs)).allowed;
+  }
+
+  /**
+   * Like checkLimit, plus when the bucket this call was counted in ends. The end comes from the
+   * bucket chosen BEFORE the Redis round trip, so a slow answer that lands after the window
+   * rolled over never reports a wait for a restriction that has already lifted.
+   */
+  async checkLimitWithReset(
+    key: string,
+    limit: number,
+    windowMs: number
+  ): Promise<{ allowed: boolean; resetAt: number }> {
     const redis = await this.getRedis();
-    const windowKey = `rl:${key}:${Math.floor(Date.now() / windowMs)}`;
-    const count = await redis.incr(windowKey);
+    const bucket = Math.floor(Date.now() / windowMs);
+    const count = await redis.incr(`rl:${key}:${bucket}`);
     if (count === 1) {
-      await redis.pexpire(windowKey, windowMs);
+      await redis.pexpire(`rl:${key}:${bucket}`, windowMs);
     }
-    return count <= limit;
+    return { allowed: count <= limit, resetAt: (bucket + 1) * windowMs };
   }
 }
 
@@ -407,31 +514,9 @@ export function isDistributedRateLimitEnabled(): boolean {
   return !!url && /^rediss:\/\//i.test(url);
 }
 
-/**
- * Client identifier for anonymous rate-limit keys. Prefers x-real-ip (set by the
- * Vercel/Railway edge to the real client IP), then the LEFTMOST x-forwarded-for
- * hop, then 'unknown'.
- *
- * NOTE: this deliberately differs from public-feedback's extractClientIp, which
- * takes the RIGHTMOST (edge) hop to throttle suspicious traffic HARDER on that
- * one low-volume endpoint. For a GENERAL per-client limiter the rightmost hop is
- * the shared edge IP — keying on it would drop ALL anonymous traffic into one
- * bucket and throttle the whole public API at once. x-real-ip / leftmost give a
- * per-client bucket (spoofable — the inherent limitation of IP rate limiting).
- */
-function getRateLimitClientId(req: Request | undefined): string {
-  if (!req) return 'unknown';
-  const realIp = req.headers.get('x-real-ip');
-  if (realIp?.trim()) return realIp.trim();
-  const forwarded = req.headers.get('x-forwarded-for');
-  const first = forwarded?.split(',')[0]?.trim();
-  return first || 'unknown';
-}
-
-/** Per-tier rate-limit key: authenticated → userId; otherwise client IP. */
+/** Per-tier rate-limit key: signed-in → tenant + user; otherwise client IP (see rateLimitSubject). */
 function distributedKey(ctx: Context, tier: RateLimitTier): string {
-  const id = ctx.user?.userId || getRateLimitClientId(ctx.req);
-  return `${tier.name}:${id}`;
+  return `${tier.name}:${rateLimitSubject(ctx)}`;
 }
 
 export interface DistributedRateLimitOptions {
@@ -465,16 +550,17 @@ export function createDistributedRateLimitMiddleware(
     }
 
     try {
-      const allowed = await getSharedRedisLimiter().checkLimit(
+      const { allowed, resetAt } = await getSharedRedisLimiter().checkLimitWithReset(
         distributedKey(ctx, tier),
         tier.limit,
         tier.windowMs
       );
       if (!allowed) {
+        const retryAfter = secondsUntil(resetAt);
         throw new TRPCError({
           code: 'TOO_MANY_REQUESTS',
-          message: `Rate limit exceeded. Try again in ${Math.ceil(tier.windowMs / 1000)} seconds.`,
-          cause: { tier: tier.name, limit: tier.limit, windowMs: tier.windowMs },
+          message: `Rate limit exceeded. Try again in ${retryAfter} seconds.`,
+          cause: { tier: tier.name, retryAfter, limit: tier.limit, windowMs: tier.windowMs },
         });
       }
       return next();

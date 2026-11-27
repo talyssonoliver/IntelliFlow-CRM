@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MailboxTransportError } from '@intelliflow/adapters';
 import { prismaMock, createTestContext, createAdminContext, TEST_UUIDS } from '../../../test/setup';
 
@@ -56,10 +56,10 @@ function makeTransports() {
         'openid',
         'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/gmail.send',
-        'https://www.googleapis.com/auth/gmail.readonly',
       ],
     })),
     accountAddress: vi.fn(async () => 'me@gmail.example'),
+    accountSubject: vi.fn(async (): Promise<string | null> => null),
     revoke: vi.fn(async () => undefined),
     refresh: vi.fn(async () => ({
       accessToken: 'at2',
@@ -75,7 +75,7 @@ function makeTransports() {
       smtp: { send: vi.fn(), verify: vi.fn(async () => undefined) },
       imap: { read: vi.fn(), verify: vi.fn(async () => undefined) },
       oauth: vi.fn((p: string) => (p === 'GMAIL' ? oauthClient : null)),
-      oauthConfigured: { GMAIL: true, MICROSOFT: false },
+      oauthConfigured: { GMAIL: true, MICROSOFT: false, ZOHO: false },
     },
   };
 }
@@ -118,7 +118,7 @@ describe('emailMailbox.getMine / getTenant', () => {
   it('returns my mailbox (no secrets) and which OAuth providers are configured', async () => {
     (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(smtpRow());
     const result = await member().getMine();
-    expect(result.providersAvailable).toEqual({ GMAIL: true, MICROSOFT: false });
+    expect(result.providersAvailable).toEqual({ GMAIL: true, MICROSOFT: false, ZOHO: false });
     expect(result.mailbox?.hasSmtpPassword).toBe(true);
     expect(JSON.stringify(result)).not.toContain(secret);
     expect(prismaMock.emailMailbox.findFirst).toHaveBeenCalledWith({
@@ -159,6 +159,23 @@ describe('emailMailbox.saveSmtp', () => {
     expect(JSON.stringify(dto)).not.toContain(storedCiphertext);
     expect(JSON.stringify(logAction.mock.calls)).not.toContain(secret);
     expect(logAction.mock.calls[0][4].afterState).toMatchObject({ smtpPassword: 'set' });
+  });
+
+  it('signs in before saving, and saves a mailbox that cannot sign in as ERROR with its code', async () => {
+    t.transports.smtp.verify.mockRejectedValueOnce(new MailboxTransportError('TIMEOUT'));
+    await member().saveSmtp(saveInput);
+    expect(t.transports.smtp.verify).toHaveBeenCalledWith(
+      expect.objectContaining({ host: 'smtp.mail.example.com', username: 'me@mail.example.com' })
+    );
+    expect(prismaMock.emailMailbox.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ status: 'ERROR', lastErrorCode: 'TIMEOUT' }),
+    });
+  });
+
+  it('limits the sign-ins a save makes, like the settings test (each is an outbound connection)', async () => {
+    for (let i = 0; i < 5; i++) await member().saveSmtp(saveInput);
+    await expect(member().saveSmtp(saveInput)).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
+    expect(t.transports.smtp.verify).toHaveBeenCalledTimes(5);
   });
 
   it('keeps the stored password when none is sent and updates in place', async () => {
@@ -577,7 +594,7 @@ describe('emailMailbox OAuth connect', () => {
     expect(t.oauthClient.exchangeCode).not.toHaveBeenCalled();
   });
 
-  it('refuses (and revokes) a grant missing the send or read permission', async () => {
+  it('refuses (and revokes) a grant missing the send permission', async () => {
     (prismaMock.emailOAuthState.findFirst as any).mockResolvedValue({
       id: 'st1',
       scope: 'USER',
@@ -589,7 +606,8 @@ describe('emailMailbox OAuth connect', () => {
       accessToken: 'at',
       refreshToken: secret,
       expiresAt: new Date(Date.UTC(2030, 0, 1)),
-      scopes: ['openid', 'https://www.googleapis.com/auth/gmail.send'],
+      // Gmail needs gmail.send only now (owner decision 14/11); without it nothing can be sent.
+      scopes: ['openid', 'email'],
     });
     await expect(
       member().oauthComplete({ provider: 'GMAIL', code: 'c'.repeat(20), state: 's'.repeat(43) })
@@ -621,6 +639,91 @@ describe('emailMailbox OAuth connect', () => {
     const data = (prismaMock.emailMailbox.update as any).mock.calls[0][0].data;
     expect(data.tokenVersion).toEqual({ increment: 1 });
     expect(data).toMatchObject({ status: 'ACTIVE', failureCount: 0 });
+    // New credentials may be another account: the Outlook sync starts it afresh (#1177).
+    expect(data).toMatchObject({
+      syncCursor: null,
+      syncSentCursor: null,
+      syncedAt: null,
+      nextSyncAt: null,
+      syncFailureCount: 0,
+    });
+    // MVP-011: and the history look-back starts over for it (the last 90 days, every lead and contact).
+    expect(data).toMatchObject({
+      lookbackWatermark: null,
+      lookbackUntil: null,
+      lookbackCursor: null,
+      lookbackSentCursor: null,
+    });
+    // The sync lease is left alone: a running round ends on its own (no two syncs at once).
+    expect(data).not.toHaveProperty('syncLockedUntil');
+  });
+
+  describe('the Google account id (MVP-013)', () => {
+    const connect = async () => {
+      (prismaMock.emailOAuthState.findFirst as any).mockResolvedValue({
+        id: 'st1',
+        scope: 'USER',
+        codeVerifier: 'v'.repeat(43),
+        expiresAt: new Date(Date.now() + 60_000),
+      });
+      (prismaMock.emailOAuthState.deleteMany as any).mockResolvedValue({ count: 1 });
+      await member().oauthComplete({
+        provider: 'GMAIL',
+        code: 'c'.repeat(20),
+        state: 's'.repeat(43),
+      });
+    };
+
+    it('stores the id captured at connect, and leaves the calendar status alone', async () => {
+      t.oauthClient.accountSubject.mockResolvedValueOnce('x'.repeat(255));
+      await connect();
+      const data = (prismaMock.emailMailbox.create as any).mock.calls[0][0].data;
+      expect(data.oauthAccountId).toBe('x'.repeat(255));
+      expect(data).not.toHaveProperty('calendarStatus');
+    });
+
+    it('keeps the mail but turns the calendar off when the id cannot be read', async () => {
+      await connect();
+      const data = (prismaMock.emailMailbox.create as any).mock.calls[0][0].data;
+      expect(data).toMatchObject({
+        status: 'ACTIVE',
+        oauthAccountId: null,
+        calendarStatus: 'NEEDS_RECONNECT',
+      });
+    });
+
+    it('does not inherit the stored id by address when a reconnect cannot read it', async () => {
+      (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+        smtpRow({
+          kind: 'GMAIL',
+          smtpPassword: null,
+          refreshToken: secret,
+          accountAddress: 'me@gmail.example',
+          oauthAccountId: 'stored-id',
+        })
+      );
+      await connect();
+      const data = (prismaMock.emailMailbox.update as any).mock.calls[0][0].data;
+      expect(data.oauthAccountId).toBeNull();
+      expect(data.calendarStatus).toBe('NEEDS_RECONNECT');
+      expect(data.status).toBe('ACTIVE');
+    });
+
+    it('does not carry an id over to another address', async () => {
+      (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+        smtpRow({
+          kind: 'GMAIL',
+          smtpPassword: null,
+          refreshToken: secret,
+          accountAddress: 'other@gmail.example',
+          oauthAccountId: 'stored-id',
+        })
+      );
+      await connect();
+      const data = (prismaMock.emailMailbox.update as any).mock.calls[0][0].data;
+      expect(data.oauthAccountId).toBeNull();
+      expect(data.calendarStatus).toBe('NEEDS_RECONNECT');
+    });
   });
 
   it('gives the new grant back when a racing save wins the reconnect (CONFLICT)', async () => {
@@ -757,5 +860,147 @@ describe('emailMailbox.disconnect', () => {
     await expect(member().disconnect({ scope: 'TENANT' })).rejects.toMatchObject({
       code: 'FORBIDDEN',
     });
+  });
+});
+
+// Customer issue register #58: a tenant mailbox allowlist and the personal-mailbox confirmation.
+describe('mailbox connect policy (allowlist and personal mailbox)', () => {
+  const allowlistVar = `MAILBOX_CONNECT_ALLOWLIST_${tenantId.toUpperCase().replaceAll(/[^A-Z0-9]/g, '_')}`;
+  const savedState = (acceptPersonal = false) => ({
+    id: 'st1',
+    scope: 'USER',
+    codeVerifier: 'v'.repeat(43),
+    acceptPersonal,
+    expiresAt: new Date(Date.now() + 60_000),
+  });
+  const complete = () =>
+    member().oauthComplete({ provider: 'GMAIL', code: 'c'.repeat(20), state: 's'.repeat(43) });
+
+  beforeEach(() => {
+    (prismaMock.emailOAuthState.deleteMany as any).mockResolvedValue({ count: 1 });
+  });
+
+  afterEach(() => {
+    vi.stubEnv(allowlistVar, '');
+  });
+
+  it('refuses, server side, an SMTP mailbox that is not on the tenant allowlist', async () => {
+    vi.stubEnv(allowlistVar, 'talysson@leangency.com');
+    await expect(
+      member().saveSmtp({ ...saveInput, fromAddress: 'someone@mail.example.com' })
+    ).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+      message: expect.stringMatching(/^MAILBOX_NOT_ALLOWED/),
+    });
+    expect(prismaMock.emailMailbox.create).not.toHaveBeenCalled();
+    await member().saveSmtp({
+      ...saveInput,
+      fromAddress: 'Talysson@Leangency.com',
+      ...smtpAccountFields('talysson@leangency.com', secret),
+    });
+    expect(prismaMock.emailMailbox.create).toHaveBeenCalled();
+  });
+
+  it('refuses a sign-in whose account is not on the allowlist, gives the grant back and stores nothing', async () => {
+    vi.stubEnv(allowlistVar, 'talysson@leangency.com');
+    (prismaMock.emailOAuthState.findFirst as any).mockResolvedValue(savedState(true));
+    await expect(complete()).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+      message: expect.stringMatching(/^MAILBOX_NOT_ALLOWED/),
+    });
+    expect(t.oauthClient.revoke).toHaveBeenCalledWith(secret);
+    expect(prismaMock.emailMailbox.create).not.toHaveBeenCalled();
+    expect(prismaMock.emailMailbox.update).not.toHaveBeenCalled();
+  });
+
+  it('leaves a tenant without an allowlist alone', async () => {
+    (prismaMock.emailOAuthState.findFirst as any).mockResolvedValue(savedState());
+    await complete();
+    expect(prismaMock.emailMailbox.create).toHaveBeenCalled();
+  });
+
+  it('asks before connecting a personal Gmail and connects once confirmed', async () => {
+    t.oauthClient.accountAddress.mockResolvedValue('someone@gmail.com');
+    (prismaMock.emailOAuthState.findFirst as any).mockResolvedValue(savedState(false));
+    await expect(complete()).rejects.toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message: expect.stringMatching(/^PERSONAL_MAILBOX:USER: This looks like a personal mailbox/),
+    });
+    expect(t.oauthClient.revoke).toHaveBeenCalledWith(secret);
+    expect(prismaMock.emailMailbox.create).not.toHaveBeenCalled();
+
+    (prismaMock.emailOAuthState.findFirst as any).mockResolvedValue(savedState(true));
+    await complete();
+    expect(prismaMock.emailMailbox.create).toHaveBeenCalled();
+  });
+
+  it('records the confirmation on the sign-in it starts', async () => {
+    (prismaMock.emailOAuthState.create as any).mockResolvedValue({});
+    await member().oauthStart({ provider: 'GMAIL', scope: 'USER', acceptPersonal: true });
+    expect((prismaMock.emailOAuthState.create as any).mock.calls[0][0].data.acceptPersonal).toBe(
+      true
+    );
+  });
+
+  it('also checks an address-shaped login, so a personal account cannot hide behind the from address', async () => {
+    vi.stubEnv(allowlistVar, 'talysson@leangency.com');
+    await expect(
+      member().saveSmtp({
+        ...saveInput,
+        fromAddress: 'talysson@leangency.com',
+        ...smtpAccountFields('personal@mail.example.com', secret),
+      })
+    ).rejects.toMatchObject({ message: expect.stringMatching(/^MAILBOX_NOT_ALLOWED/) });
+    expect(prismaMock.emailMailbox.create).not.toHaveBeenCalled();
+  });
+
+  it('a connection test also refuses a mailbox whose login is not on the allowlist', async () => {
+    vi.stubEnv(allowlistVar, 'talysson@leangency.com');
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+      smtpRow({
+        status: 'ERROR',
+        fromAddress: 'talysson@leangency.com',
+        ...smtpAccountFields('personal@mail.example.com', secret),
+      })
+    );
+    await expect(member().testConnection({ scope: 'USER' })).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+    });
+    expect(prismaMock.emailMailbox.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('a passing connection test does not bring back a mailbox that is not on the allowlist', async () => {
+    vi.stubEnv(allowlistVar, 'talysson@leangency.com');
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+      smtpRow({ status: 'ERROR', fromAddress: 'personal@mail.example.com' })
+    );
+    await expect(member().testConnection({ scope: 'USER' })).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+    });
+    expect(prismaMock.emailMailbox.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('asks for the confirmation when a personal login hides behind a business from address', async () => {
+    await expect(
+      member().saveSmtp({
+        ...saveInput,
+        fromAddress: 'me@business.example.com',
+        ...smtpAccountFields('someone@gmail.com', secret),
+      })
+    ).rejects.toMatchObject({ message: expect.stringMatching(/^PERSONAL_MAILBOX:USER:/) });
+    expect(prismaMock.emailMailbox.create).not.toHaveBeenCalled();
+  });
+
+  it('asks before saving an SMTP mailbox on a consumer domain', async () => {
+    await expect(
+      member().saveSmtp({ ...saveInput, fromAddress: 'someone@yahoo.co.uk' })
+    ).rejects.toMatchObject({ message: expect.stringMatching(/^PERSONAL_MAILBOX:USER:/) });
+    expect(prismaMock.emailMailbox.create).not.toHaveBeenCalled();
+    await member().saveSmtp({
+      ...saveInput,
+      fromAddress: 'someone@yahoo.co.uk',
+      acceptPersonal: true,
+    });
+    expect(prismaMock.emailMailbox.create).toHaveBeenCalled();
   });
 });

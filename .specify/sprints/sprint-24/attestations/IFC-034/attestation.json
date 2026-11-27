@@ -1,0 +1,64 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-034",
+  "run_id": "ifc034-gate3-decision-2026-11-22",
+  "attestor": "Claude Code (claude-sonnet-5-5), ifc-034 lane",
+  "attestation_timestamp": "2026-11-22T11:51:35Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [],
+    "invariants_acknowledged": [
+      "Decision recorded 2026-11-22 (about 11:10): the owner, Talysson, chose HOLD in Aurora's modal ('Hold (Recommended)'): no scaling spend now; close the stability gaps (main CI pass rate 82.5%, load test 1.1 s against 200 ms, 13 open register rows); get a first outside customer; review about 2026-12-21 together with Gate 2.",
+      "The evidence pack merged in PR #1526; the decision is written in the 'Decision' section of docs/planning/gate-3/investment-gate-3-analysis.md.",
+      "The binary artifacts named in the row (xlsx, pdf, pptx) are not produced; the owner accepted the markdown pack, as for Gates 1 and 2 (section 12 of the pack).",
+      "Not readable and stated in section 8 of the pack: Sentry data, uptime before 17/11, Railway process restarts, invoices."
+    ],
+    "acknowledged_at": "2026-11-22T11:51:35Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "kpis_met": 1,
+    "kpis_missed": 0
+  },
+  "artifact_hashes": {
+    "docs/planning/gate-3/investment-gate-3-analysis.md": "sha256:0d182ff5fdde70eb46620c5a47338819a57dc3d4cd3c70f4cb41db4e7cd4c876"
+  },
+  "validation_results": [
+    {
+      "name": "Prettier format check, gate 3 analysis",
+      "command": "npx prettier --check docs/planning/gate-3/investment-gate-3-analysis.md",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T11:51:36Z"
+    },
+    {
+      "name": "Attestation JSON schema validation (ajv, attestation.schema.json)",
+      "command": "node ajv-validate attestation.schema.json .specify/sprints/sprint-24/attestations/IFC-034/attestation.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T11:51:44Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "owner-decision-recorded",
+      "passed": true
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Scale/hold/cut decision on the £3000 tranche recorded by the owner",
+      "target": "decision recorded",
+      "actual": "HOLD, recorded 2026-11-22",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Scale decision with modern stack validated, with the evidence pack",
+      "met": true
+    }
+  ],
+  "notes": "COMPLETE: the owner decided HOLD on 2026-11-22; review about 2026-12-21 with Gate 2. Supersedes the PARTIAL attestation from PR #1526 (evidence pack, decision pending). No binary artifact (xlsx, pdf, pptx) was produced; the owner accepted the markdown pack (section 12). Checks recorded: prettier on the analysis doc and the ajv schema check of this file, both re-run on 2026-11-22."
+}

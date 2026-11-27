@@ -699,6 +699,54 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
     });
   });
 
+  describe('marketingBlocked: who gets no marketing email (IFC-315)', () => {
+    it('names only active marketing objections of the firm, and erased placeholders', async () => {
+      const objected = `${RUN}-mk-obj@example.invalid`;
+      const restrictedOnly = `${RUN}-mk-res@example.invalid`;
+      const lifted = `${RUN}-mk-lift@example.invalid`;
+      const otherFirm = `${RUN}-mk-b@example.invalid`;
+      const free = `${RUN}-mk-free@example.invalid`;
+      const erased = 'erased-mk@erased.invalid';
+      const restrict = (
+        tenantId: string,
+        subjectEmail: string,
+        blocksMarketing: boolean,
+        id: string
+      ) =>
+        restrictions.restrict({
+          tenantId,
+          subjectEmail,
+          blocksMarketing,
+          dsarRequestId: id,
+          createdById: null,
+        });
+      await restrict(TENANT_A, objected, true, 'req-mk-1');
+      await restrict(TENANT_A, restrictedOnly, false, 'req-mk-2');
+      await restrict(TENANT_A, lifted, true, 'req-mk-3');
+      await restrictions.liftForRequest({
+        tenantId: TENANT_A,
+        dsarRequestId: 'req-mk-3',
+        liftedById: ADMIN_A,
+        note: 'Objection withdrawn',
+      });
+      await restrict(TENANT_B, otherFirm, true, 'req-mk-4');
+
+      const blocked = await restrictions.marketingBlocked(TENANT_A, [
+        objected.toUpperCase(),
+        restrictedOnly,
+        lifted,
+        otherFirm,
+        free,
+        erased,
+      ]);
+      expect([...blocked].sort()).toEqual([erased, objected].sort());
+      // The other firm's objection holds in that firm only.
+      await expect(restrictions.marketingBlocked(TENANT_B, [otherFirm])).resolves.toEqual(
+        new Set([otherFirm])
+      );
+    });
+  });
+
   describe('restrictions follow a record to its new address (codex HIGH x2)', () => {
     const restrict = (subjectEmail: string, dsarRequestId: string) =>
       restrictions.restrict({

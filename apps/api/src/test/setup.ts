@@ -177,6 +177,13 @@ beforeEach(() => {
   // PG-203: nobody is restricted by a data request unless a test says so (the reset above
   // leaves the deep mock answering undefined, which the restriction checks treat as a failure).
   mockAdapters.processingRestrictionRepository.status.mockResolvedValue(NOT_RESTRICTED);
+  // Register #64: no personal mail is logged to a lead or contact the reader can see, unless a
+  // test says so (the visibility policy reads that list with a raw query).
+  (
+    prismaMock.$queryRaw as unknown as { mockResolvedValue: (v: unknown) => void }
+  ).mockResolvedValue([]);
+  // IFC-315: nobody objected to marketing unless a test says so.
+  mockAdapters.processingRestrictionRepository.marketingBlocked.mockResolvedValue(new Set());
 });
 
 /**
@@ -409,6 +416,8 @@ export function createTestContext(overrides?: Partial<BaseContext>): BaseContext
           isModuleEnabled: async () => true,
           getEnabledModules: async () => [],
           getTenantPlan: async () => 'ENTERPRISE',
+          getBusinessType: async () => 'OTHER',
+          setBusinessType: async () => [],
         }
       : undefined
   );
@@ -598,6 +607,7 @@ export const mockLead = {
   outreachSlugEventAt: null,
   scoringStatus: 'NONE' as const,
   scoredAt: null,
+  scoreConfidence: null,
   // Lead 360 fields
   location: null,
   website: null,
@@ -683,13 +693,13 @@ export const mockOpportunity = {
   contactId: TEST_UUIDS.contact1,
   ownerId: TEST_UUIDS.user1,
   sourceLeadId: null,
+  createdContactId: null,
   deliveryTier: null,
   tenantSlug: null,
   stripeCustomerId: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };
-
 export const mockTask = {
   id: TEST_UUIDS.task1,
   tenantId: TEST_UUIDS.tenant,

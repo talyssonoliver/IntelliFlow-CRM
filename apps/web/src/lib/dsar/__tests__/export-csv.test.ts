@@ -158,6 +158,26 @@ describe('CSV export (IFC-317)', () => {
     );
   });
 
+  it('keeps leading zeros and long digit strings as typed, and leaves ordinary text and numbers alone', () => {
+    const csv = body(
+      toCsv([
+        {
+          phone: '07700900000',
+          postcode: '00123',
+          ref: '12345678901234567',
+          decimal: '0.5',
+          year: '2026',
+          count: 7,
+          code: 'AB007',
+        },
+      ])
+    );
+    expect(csv).toBe(
+      'phone,postcode,ref,decimal,year,count,code\r\n' +
+        "'07700900000,'00123,'12345678901234567,0.5,2026,7,AB007\r\n"
+    );
+  });
+
   it('starts every file with a UTF-8 byte-order mark, so accents survive in Excel', () => {
     const bytes = zipStore({ 'a.csv': toCsv([{ name: 'Zoë Müller' }]) });
     const view = new DataView(bytes.buffer);

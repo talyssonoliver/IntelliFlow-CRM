@@ -6,10 +6,10 @@
 | ----------------- | ----------------------------------------------- |
 | **Feature Name**  | Legal Pages                                     |
 | **Owner**         | Legal Counsel (STOA-Foundation)                 |
-| **Status**        | Draft                                           |
+| **Status**        | Updated                                         |
 | **Target Sprint** | Sprint 17                                       |
 | **Created Date**  | 2026-03-08                                      |
-| **Last Updated**  | 2026-04-13                                      |
+| **Last Updated**  | 2026-11-22                                      |
 | **Related Tasks** | PG-050, PG-051, PG-052, PG-053, PG-054, IFC-309 |
 
 ## Problem Statement
@@ -92,6 +92,11 @@ task chain.
 - The implementation reuses public-site visual patterns (hero, sticky sidebar
   nav, section cards).
 - The route is covered by unit tests and `PAGE_MAP_AND_FLOWS.md` is updated.
+- **Shipped:** IFC-309 shipped the server-side acceptance record. The tRPC
+  procedures are `termsAcceptance.accept` and `termsAcceptance.getAcceptance`.
+  Client-supplied `ipAddress`, `userAgent`, `userId`, `tenantId` and
+  `acceptedAt` are stripped by the input schema and ignored; the stored values
+  are always set server-side.
 
 ## Technical Requirements
 
@@ -178,4 +183,4 @@ task chain.
 This PRD was created during `PG-050` specification and updated during `PG-051`
 to include terms-specific acceptance criteria, and updated during `PG-054` to
 add AUP acceptance criteria. Covers legal page delivery for PG-050 through
-PG-054.
+PG-054. IFC-309 added the server-side terms acceptance record (2026-11-22).

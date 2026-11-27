@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable, TableRowActions, type BulkAction, Skeleton, EmptyState } from '@intelliflow/ui';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
@@ -22,6 +23,8 @@ export interface TaskListItem {
   readonly lead: { id: string; firstName: string | null; lastName: string | null } | null;
   readonly contact: { id: string; firstName: string; lastName: string } | null;
   readonly opportunity: { id: string; name: string; stage: string } | null;
+  /** A follow-up due on a lead (derived, not stored): see `follow-up-rows.ts`. */
+  readonly followUp?: boolean;
 }
 
 export interface TaskListProps {
@@ -37,6 +40,8 @@ export interface TaskListProps {
   readonly onBulkArchive: (ids: string[]) => void;
   /** Opens the screen's create-task flow; the empty state offers it when given. */
   readonly onCreate?: () => void;
+  /** A filter or search is on: the empty state says "try adjusting your filters". */
+  readonly filtered?: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -104,6 +109,7 @@ function createColumns(
     onEdit: (task: TaskListItem) => void;
     onDelete: (id: string) => void;
     onArchive: (id: string) => void;
+    onOpenLead: (leadId: string) => void;
   },
   timezone: string = 'Europe/London'
 ): ColumnDef<TaskListItem>[] {
@@ -115,7 +121,9 @@ function createColumns(
       cell: ({ row }) => {
         const task = row.original;
         return (
-          <div className="flex flex-col">
+          // Capped on desktop so a long lead name truncates instead of pushing Owner and
+          // Actions off the right of the table.
+          <div className="flex min-w-0 flex-col md:max-w-[22rem]">
             <span className="text-sm font-medium text-foreground truncate">{task.title}</span>
             {task.description && (
               <span className="text-xs text-muted-foreground truncate">{task.description}</span>
@@ -132,7 +140,7 @@ function createColumns(
         const style = STATUS_STYLES[row.original.status] ?? STATUS_STYLES.PENDING;
         return (
           <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${style}`}
+            className={`inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${style}`}
           >
             {row.original.status.replaceAll('_', ' ')}
           </span>
@@ -183,7 +191,9 @@ function createColumns(
           <a
             href={entity.href}
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+            // Capped so a long company name truncates instead of pushing Owner and Actions off
+            // the right of the table (owner 21/11, follow-up rows carry long lead names).
+            className="inline-flex max-w-full items-center gap-1 text-sm text-primary hover:underline md:max-w-[14rem]"
           >
             <span className="material-symbols-outlined text-sm" aria-hidden="true">
               {ENTITY_ICONS[entity.type]}
@@ -198,6 +208,7 @@ function createColumns(
       header: 'Owner',
       size: 120,
       cell: ({ row }) => {
+        if (row.original.followUp) return <span className="text-sm text-muted-foreground">—</span>;
         const owner = row.original.owner;
         return (
           <span className="text-sm text-muted-foreground truncate">
@@ -212,6 +223,21 @@ function createColumns(
       size: 100,
       cell: ({ row }) => {
         const task = row.original;
+        if (task.followUp && task.lead) {
+          const leadId = task.lead.id;
+          return (
+            <TableRowActions
+              quickActions={[
+                {
+                  icon: 'open_in_new',
+                  label: 'Open lead',
+                  onClick: () => handlers.onOpenLead(leadId),
+                },
+              ]}
+              dropdownActions={[]}
+            />
+          );
+        }
         return (
           <TableRowActions
             quickActions={
@@ -257,6 +283,11 @@ function createColumns(
   ];
 }
 
+/** Follow-ups are not stored tasks: bulk complete, archive and delete never send their ids. */
+function stored(rows: readonly TaskListItem[]): TaskListItem[] {
+  return rows.filter((t) => !t.followUp);
+}
+
 export function TaskList({
   tasks,
   isLoading,
@@ -269,11 +300,23 @@ export function TaskList({
   onBulkDelete,
   onBulkArchive,
   onCreate,
+  filtered = true,
 }: Readonly<TaskListProps>) {
   const { timezone } = useTimezoneContext();
+  const router = useRouter();
   const columns = useMemo(
-    () => createColumns({ onComplete, onEdit, onDelete, onArchive }, timezone),
-    [onComplete, onEdit, onDelete, onArchive, timezone]
+    () =>
+      createColumns(
+        {
+          onComplete,
+          onEdit,
+          onDelete,
+          onArchive,
+          onOpenLead: (id) => router.push(`/leads/${id}`),
+        },
+        timezone
+      ),
+    [onComplete, onEdit, onDelete, onArchive, router, timezone]
   );
 
   const bulkActions: BulkAction<TaskListItem>[] = useMemo(
@@ -281,14 +324,14 @@ export function TaskList({
       {
         label: 'Mark Complete',
         icon: 'check_circle',
-        onExecute: (selected) => onBulkComplete(selected.map((t) => t.id)),
+        onExecute: (selected) => onBulkComplete(stored(selected).map((t) => t.id)),
       },
       {
         label: 'Archive',
         icon: 'archive',
         onExecute: (selected) =>
           onBulkArchive(
-            selected
+            stored(selected)
               .filter((t) => t.status === 'COMPLETED' || t.status === 'CANCELLED')
               .map((t) => t.id)
           ),
@@ -299,7 +342,7 @@ export function TaskList({
         variant: 'destructive' as const,
         onExecute: (selected) =>
           onBulkDelete(
-            selected
+            stored(selected)
               .filter(
                 (t) =>
                   t.status !== 'COMPLETED' && t.status !== 'CANCELLED' && t.status !== 'ARCHIVED'
@@ -326,7 +369,7 @@ export function TaskList({
       <div data-testid="task-list-empty">
         <EmptyState
           entity="tasks"
-          variant="filtered"
+          variant={filtered ? 'filtered' : 'empty'}
           showCta={Boolean(onCreate)}
           onCtaClick={onCreate}
         />
@@ -339,8 +382,15 @@ export function TaskList({
       columns={columns}
       data={tasks as TaskListItem[]}
       entity="tasks"
-      onRowClick={(row) => onRowClick(row.id)}
+      // One page: the server pages the stored tasks, and the follow-ups after them must not be
+      // pushed to client pages 2-4 behind Previous/Next.
+      pageSize={Math.max(10, tasks.length)}
+      onRowClick={(row) =>
+        row.followUp && row.lead ? router.push(`/leads/${row.lead.id}`) : onRowClick(row.id)
+      }
       enableRowSelection
+      // Follow-ups are not stored tasks: nothing to complete, archive or delete in bulk.
+      canSelectRow={(row) => !row.followUp}
       bulkActions={bulkActions}
     />
   );

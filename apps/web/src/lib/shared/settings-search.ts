@@ -5,6 +5,9 @@
  * Part of PG-104 (Settings Home).
  */
 
+import type { ModuleId } from '@intelliflow/domain';
+import { isSettingsItemAvailable } from '@/lib/modules/module-visibility';
+
 const PASSWORD_KEYWORD = 'password';
 
 export interface SettingItem {
@@ -36,6 +39,15 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     icon: 'person',
     color: 'bg-primary',
     keywords: ['profile', PASSWORD_KEYWORD, 'email', 'name', 'avatar', '2fa', 'sessions'],
+  },
+  {
+    id: 'workspace',
+    title: 'Workspace',
+    description: 'Your business type, which decides the tools your workspace gets',
+    href: '/settings/workspace',
+    icon: 'storefront',
+    color: 'bg-primary/85',
+    keywords: ['business type', 'industry', 'modules', 'tools', 'law firm', 'agency', 'trades'],
   },
   {
     id: 'team',
@@ -215,7 +227,7 @@ export const SETTINGS_CATEGORIES: SettingCategory[] = [
   {
     id: 'account-profile',
     title: 'Account & Profile',
-    itemIds: ['account', 'team'],
+    itemIds: ['account', 'workspace', 'team'],
   },
   {
     id: 'ai-automation',
@@ -328,9 +340,14 @@ export function highlightMatch(
  * Optionally filters by search query.
  */
 export function getResolvedCategories(
-  searchQuery?: string
+  searchQuery?: string,
+  /** When given, a settings card for a module the workspace does not have is left out. */
+  isModuleEnabled?: (moduleId: ModuleId) => boolean
 ): { id: string; title: string; items: SettingItem[] }[] {
-  const filteredItems = searchQuery ? filterSettings(searchQuery, SETTINGS_ITEMS) : SETTINGS_ITEMS;
+  const available = isModuleEnabled
+    ? SETTINGS_ITEMS.filter((item) => isSettingsItemAvailable(item.id, isModuleEnabled))
+    : SETTINGS_ITEMS;
+  const filteredItems = searchQuery ? filterSettings(searchQuery, available) : available;
 
   const filteredIds = new Set(filteredItems.map((i) => i.id));
 

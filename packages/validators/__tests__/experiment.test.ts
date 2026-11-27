@@ -360,6 +360,24 @@ describe('Experiment Validators', () => {
     });
   });
 
+  describe('calculateRequiredSampleSize float parameters', () => {
+    it('treats alpha and power that differ only by float noise as the standard values', () => {
+      expect(calculateRequiredSampleSize(0.5, 0.8 + 1e-12, 0.05 - 1e-12)).toBe(
+        calculateRequiredSampleSize(0.5, 0.8, 0.05)
+      );
+      expect(calculateRequiredSampleSize(0.5, 0.9 - 1e-12, 0.01 + 1e-12)).toBe(
+        calculateRequiredSampleSize(0.5, 0.9, 0.01)
+      );
+    });
+
+    it('keeps the z-scores of the standard alpha and power values', () => {
+      // n = ceil(2 * ((zAlpha + zBeta) / d)^2) with z = 1.96 + 0.84 at d = 0.5
+      expect(calculateRequiredSampleSize(0.5, 0.8, 0.05)).toBe(Math.ceil(2 * (2.8 / 0.5) ** 2));
+      // z = 2.576 + 1.28 at d = 0.5
+      expect(calculateRequiredSampleSize(0.5, 0.9, 0.01)).toBe(Math.ceil(2 * (3.856 / 0.5) ** 2));
+    });
+  });
+
   describe('hasSufficientSamples', () => {
     it('should return true when both groups meet minimum', () => {
       expect(hasSufficientSamples(30, 30)).toBe(true);

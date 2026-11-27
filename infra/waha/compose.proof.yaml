@@ -1,0 +1,6 @@
+# Override used only by infra/waha/sandbox-proof.mjs (IFC-035): lets the container reach a fake
+# webhook receiver running on the developer's machine. Local proof only; never used in production.
+services:
+  waha:
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'

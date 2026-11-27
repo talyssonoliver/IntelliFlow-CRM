@@ -36,6 +36,7 @@ import {
   isStaleLatencyData,
 } from '@/lib/ai-monitoring/latency-utils';
 import { LatencyAlerts } from './LatencyAlerts';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 const LatencyTrendChart = lazy(() => import('./LatencyTrendChart'));
 
@@ -45,42 +46,6 @@ const BREADCRUMBS = [
 ];
 
 const TIME_RANGES = ['1h', '6h', '24h'] as const;
-
-function StatCard({
-  label,
-  value,
-  icon,
-  colorClass,
-  isLoading,
-}: Readonly<{
-  label: string;
-  value: string | number;
-  icon: string;
-  colorClass: string;
-  isLoading: boolean;
-}>) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', colorClass)}>
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">
-              {icon}
-            </span>
-          </div>
-          <div>
-            {isLoading ? (
-              <Skeleton className="h-6 w-10" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground">{value}</p>
-            )}
-            <p className="text-xs text-muted-foreground">{label}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export function LatencyMonitorDashboard() {
   const [timeRange, setTimeRange] = useState<LatencyFilters['timeRange']>('1h');
@@ -197,37 +162,41 @@ export function LatencyMonitorDashboard() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
-        <StatCard
+        <KpiCard
+          framed
           label="Sample Count"
           value={sampleCount.toLocaleString('en-GB')}
           icon="analytics"
-          colorClass="bg-blue-100 dark:bg-blue-900/30"
-          isLoading={isLoading}
+          iconClassName="bg-blue-100 dark:bg-blue-900/30"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="P95 Latency"
           value={formatLatencyMs(percentiles.p95)}
           icon="timer"
-          colorClass="bg-amber-100 dark:bg-amber-900/30"
-          isLoading={isLoading}
+          iconClassName="bg-amber-100 dark:bg-amber-900/30"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="P99 Latency"
           value={formatLatencyMs(percentiles.p99)}
           icon="speed"
-          colorClass="bg-red-100 dark:bg-red-900/30"
-          isLoading={isLoading}
+          iconClassName="bg-red-100 dark:bg-red-900/30"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="SLO Status"
           value={getSLOStatusLabel(sloCompliance.overallCompliant)}
           icon={sloCompliance.overallCompliant ? 'verified' : 'cancel'}
-          colorClass={
+          iconClassName={
             sloCompliance.overallCompliant
               ? 'bg-green-100 dark:bg-green-900/30'
               : 'bg-red-100 dark:bg-red-900/30'
           }
-          isLoading={isLoading}
+          loading={isLoading}
         />
       </div>
 

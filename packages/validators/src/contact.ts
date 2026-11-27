@@ -45,11 +45,19 @@ export const logActivitySchema = z.object({
 });
 export type LogActivityInput = z.infer<typeof logActivitySchema>;
 
+// MVP-003: the last name may be empty. A contact created from a lead with only a company is named
+// after the company (empty last name), and its form and API must be able to save it. The first
+// name stays required.
+const lastNameSchema = z
+  .string()
+  .max(100)
+  .transform((val) => val.trim());
+
 // Base contact fields schema (DRY - used by create and update)
 const baseContactFieldsSchema = z.object({
   email: emailSchema,
   firstName: nameSchema,
-  lastName: nameSchema,
+  lastName: lastNameSchema,
   title: nameSchema.optional(),
   phone: phoneSchema,
   department: nameSchema.optional(),
@@ -66,18 +74,28 @@ const baseContactFieldsSchema = z.object({
   contactNotes: z.string().max(5000).optional(),
 });
 
-// Create Contact Schema
-export const createContactSchema = baseContactFieldsSchema;
+// Create Contact Schema (an omitted last name is empty; update stays partial: omitted = unchanged)
+export const createContactSchema = baseContactFieldsSchema.extend({
+  lastName: lastNameSchema.default(''),
+});
 
 export type CreateContactInput = z.infer<typeof createContactSchema>;
 
 // Update Contact Schema - all fields optional except id
 // Email is omitted: use updateContactEmail service method for email changes
-export const updateContactSchema = baseContactFieldsSchema.omit({ email: true }).partial().extend({
-  id: idSchema,
-  accountId: idSchema.optional().nullable(), // Allow unsetting account
-  contactType: contactTypeKeySchema.nullable().optional(), // PG-205: null removes the type
-});
+export const updateContactSchema = baseContactFieldsSchema
+  .omit({ email: true })
+  .partial()
+  .extend({
+    id: idSchema,
+    // MVP-003 (#28): a field cleared in the edit form is saved empty, never ignored. Title and
+    // department may be "" (stored empty); a cleared phone is null (the number is removed).
+    title: z.union([z.literal(''), nameSchema]).optional(),
+    department: z.union([z.literal(''), nameSchema]).optional(),
+    phone: z.union([z.literal('').transform(() => null), z.null(), phoneSchema]).optional(),
+    accountId: idSchema.optional().nullable(), // Allow unsetting account
+    contactType: contactTypeKeySchema.nullable().optional(), // PG-205: null removes the type
+  });
 
 export type UpdateContactInput = z.infer<typeof updateContactSchema>;
 
@@ -123,7 +141,7 @@ export const contactResponseSchema = z.object({
   id: idSchema,
   email: emailSchema,
   firstName: nameSchema,
-  lastName: nameSchema,
+  lastName: z.string(), // may be empty (MVP-003)
   title: nameSchema.nullable(),
   phone: z.string().nullable(), // Plain string for response (VO transform only in input schemas)
   department: nameSchema.nullable(),
@@ -327,13 +345,18 @@ export const contactListReplyDraftsInputSchema = z.object({
 });
 export type ContactListReplyDraftsInput = z.infer<typeof contactListReplyDraftsInputSchema>;
 
+/** A reply draft: written by Aurora (always DRAFT, ADR-037), then acted on once by the user. */
+export const REPLY_DRAFT_STATUSES = ['DRAFT', 'SENDING', 'SENT', 'EDITED', 'DISMISSED'] as const;
+export type ReplyDraftStatus = (typeof REPLY_DRAFT_STATUSES)[number];
+
 export const contactReplyDraftSchema = z.object({
   id: z.string(),
   contactId: z.string(),
   draftSubject: z.string(),
   draftBody: z.string(),
   tone: z.string().nullable(),
-  status: z.enum(['DRAFT', 'DISMISSED', 'SENT']),
+  // MVP-012: SENDING while a send runs, EDITED once taken into Compose.
+  status: z.enum(REPLY_DRAFT_STATUSES),
   confidence: z.number(),
   modelVersion: z.string(),
   createdAt: z.date(),

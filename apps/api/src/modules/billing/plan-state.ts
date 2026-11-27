@@ -5,6 +5,8 @@
  *   Stripe webhook writes after a purchase. The badge and the gates can't disagree.
  * - A live subscription (ACTIVE or PAST_DUE) means a paid plan: no trial.
  * - PARTNER_FREE is granted by a partner (ADR-070): never on a trial clock.
+ * - CUSTOM is a contract plan an operator assigns (invoiced or agreed outside self-serve
+ *   checkout, so there is no Stripe subscription): active, never on a trial clock.
  * - Otherwise the workspace is on its trial, which ends at `Tenant.trialEndsAt` (created + 14
  *   days for rows not yet backfilled). Once that passes the status is TRIAL_ENDED, and stays
  *   so until a plan is bought: an ended trial is never shown as "0 days left".
@@ -31,6 +33,14 @@ export type PlanState =
   | {
       source: 'partner';
       tier: 'PARTNER_FREE';
+      status: 'ACTIVE';
+      currentPeriodEnd: null;
+      trialEndsAt: null;
+      daysLeft: null;
+    }
+  | {
+      source: 'contract';
+      tier: 'CUSTOM';
       status: 'ACTIVE';
       currentPeriodEnd: null;
       trialEndsAt: null;
@@ -64,6 +74,17 @@ export function resolvePlanState({ activeSub, tenant, now }: PlanStateInput): Pl
     return {
       source: 'partner',
       tier: 'PARTNER_FREE',
+      status: 'ACTIVE',
+      currentPeriodEnd: null,
+      trialEndsAt: null,
+      daysLeft: null,
+    };
+  }
+
+  if (plan === 'CUSTOM') {
+    return {
+      source: 'contract',
+      tier: 'CUSTOM',
       status: 'ACTIVE',
       currentPeriodEnd: null,
       trialEndsAt: null,

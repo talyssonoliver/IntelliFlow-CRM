@@ -1,0 +1,36 @@
+# WAHA (WhatsApp HTTP API), NOWEB engine: tenant isolation spike (IFC-322, ADR-089).
+#
+# Local only. The published port is bound to 127.0.0.1, never to 0.0.0.0, so nothing outside
+# this machine can reach it. No secret lives in this file: the admin key comes from the
+# environment at start time (see infra/waha/isolation-spike.mjs, which builds one at runtime).
+#
+#   WAHA_ADMIN_KEY=<random> docker compose -f infra/waha/compose.yaml up -d
+#
+# Production (IFC-331) uses the same image and settings on a private network with no `ports:` at all.
+name: ifc322-waha
+
+services:
+  waha:
+    # Pinned by tag AND digest: the tag is readable, the digest is what actually runs.
+    image: devlikeapro/waha:noweb-2026.10.1@sha256:0d64cce14a922f61bb9a620474086d1f5695f2522e7e1088704e6eca3a085d0c
+    container_name: ifc322-waha-a
+    restart: 'no'
+    ports:
+      - '127.0.0.1:${WAHA_PORT:-3322}:3000'
+    environment:
+      # Admin key: stored as a sha512 hash is the documented recommended form; plain is fine for a throwaway spike.
+      WAHA_API_KEY: ${WAHA_ADMIN_KEY:?set WAHA_ADMIN_KEY to a random value}
+      WAHA_DASHBOARD_ENABLED: 'false'
+      WHATSAPP_SWAGGER_ENABLED: 'false'
+      WHATSAPP_DEFAULT_ENGINE: NOWEB
+      WAHA_PRINT_QR: 'false'
+      WAHA_LOG_LEVEL: warn
+    volumes:
+      - waha-sessions:/app/.sessions
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+volumes:
+  waha-sessions:

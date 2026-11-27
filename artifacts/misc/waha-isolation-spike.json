@@ -1,0 +1,293 @@
+{
+  "task": "IFC-322",
+  "generatedAt": "2026-11-21T18:53:28.895Z",
+  "note": "Sessions are created and started but never paired to a WhatsApp number: they sit at SCAN_QR_CODE. That is enough for the isolation checks (authorisation runs before the engine); it does not measure a paired, chatting session, so memory below is a floor.",
+  "container": {
+    "name": "ifc322-waha-a",
+    "waha": {
+      "version": "2026.10.1",
+      "engine": "NOWEB",
+      "tier": "CORE",
+      "browser": null,
+      "platform": "linux/x64",
+      "worker": {
+        "id": null
+      }
+    }
+  },
+  "exposure": {
+    "portBindings": {
+      "3000/tcp": [
+        "127.0.0.1:3322"
+      ]
+    },
+    "nonLoopbackReachable": false,
+    "nonLoopbackError": "ECONNREFUSED",
+    "nonLoopbackProbe": "a non-loopback IPv4 of this host (address not recorded)",
+    "noKeyStatus": 401,
+    "wrongKeyStatus": 401,
+    "dashboardStatusWithoutLogin": 404,
+    "rootStatusWithoutKey": 404
+  },
+  "controls": [
+    {
+      "label": "A reads A",
+      "method": "GET",
+      "path": "/api/sessions/{A}",
+      "status": 200,
+      "pass": true,
+      "excerpt": "{\"name\":\"tenant-a-a22549\",\"status\":\"SCAN_QR_CODE\",\"config\":{},\"me\":null,\"presence\":null,\"timestamps\":{\"activity\":null},\"engine\":{\"engine\":\"NOWEB\"}}"
+    },
+    {
+      "label": "B reads B",
+      "method": "GET",
+      "path": "/api/sessions/{B}",
+      "status": 200,
+      "pass": true,
+      "excerpt": "{\"name\":\"tenant-b-a22549\",\"status\":\"SCAN_QR_CODE\",\"config\":{},\"me\":null,\"presence\":null,\"timestamps\":{\"activity\":null},\"engine\":{\"engine\":\"NOWEB\"}}"
+    },
+    {
+      "label": "no key is refused",
+      "method": "GET",
+      "path": "/api/sessions/{A}",
+      "status": 401,
+      "pass": true,
+      "excerpt": "{\"message\":\"Unauthorized\",\"statusCode\":401}"
+    },
+    {
+      "label": "admin lists",
+      "method": "GET",
+      "path": "/api/sessions",
+      "status": 200,
+      "pass": true,
+      "excerpt": "[{\"name\":\"tenant-a-a22549\",\"status\":\"SCAN_QR_CODE\",\"config\":{},\"me\":null,\"presence\":null,\"timestamps\":{\"activity\":null},\"assignedWorker\":\"\"},{\"name\":\"tenant-b-a"
+    }
+  ],
+  "crossTenant": [
+    {
+      "action": "list sessions (does B appear?)",
+      "method": "GET",
+      "path": "/api/sessions",
+      "status": 200,
+      "crossTenantSuccess": false,
+      "excerpt": "[{\"name\":\"tenant-a-a22549\",\"status\":\"SCAN_QR_CODE\",\"config\":{},\"me\":null,\"presence\":null,\"timestamps\":{\"activity\":null},\"assignedWorker\":\"\"}]"
+    },
+    {
+      "action": "list sessions incl. stopped",
+      "method": "GET",
+      "path": "/api/sessions?all=true",
+      "status": 200,
+      "crossTenantSuccess": false,
+      "excerpt": "[{\"name\":\"tenant-a-a22549\",\"status\":\"SCAN_QR_CODE\",\"config\":{},\"me\":null,\"presence\":null,\"timestamps\":{\"activity\":null},\"assignedWorker\":\"\"}]"
+    },
+    {
+      "action": "read B session",
+      "method": "GET",
+      "path": "/api/sessions/{B}",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "read B identity",
+      "method": "GET",
+      "path": "/api/sessions/{B}/me",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "read B chats",
+      "method": "GET",
+      "path": "/api/{B}/chats",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "read B messages",
+      "method": "GET",
+      "path": "/api/messages?session={B}&chatId=447700900000%40c.us",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "read B contacts",
+      "method": "GET",
+      "path": "/api/contacts/all?session={B}",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "read B pairing QR",
+      "method": "GET",
+      "path": "/api/{B}/auth/qr",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "read B screenshot",
+      "method": "GET",
+      "path": "/api/screenshot?session={B}",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "send text from B",
+      "method": "POST",
+      "path": "/api/sendText",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "send seen from B",
+      "method": "POST",
+      "path": "/api/sendSeen",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "stop B",
+      "method": "POST",
+      "path": "/api/sessions/{B}/stop",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "restart B",
+      "method": "POST",
+      "path": "/api/sessions/{B}/restart",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "logout B",
+      "method": "POST",
+      "path": "/api/sessions/{B}/logout",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "reconfigure B (webhook to attacker)",
+      "method": "PUT",
+      "path": "/api/sessions/{B}",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "delete B",
+      "method": "DELETE",
+      "path": "/api/sessions/{B}",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "list keys (would expose B and admin keys)",
+      "method": "GET",
+      "path": "/api/keys",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "mint an admin key",
+      "method": "POST",
+      "path": "/api/keys",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "mint a key for B",
+      "method": "POST",
+      "path": "/api/keys",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "create a new session",
+      "method": "POST",
+      "path": "/api/sessions",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    },
+    {
+      "action": "read B session with A key in the query string",
+      "method": "GET",
+      "path": "/api/sessions/{B}?x-api-key=<A key>",
+      "status": 403,
+      "crossTenantSuccess": false,
+      "excerpt": "{\"message\":\"Forbidden\",\"statusCode\":403}"
+    }
+  ],
+  "tamperCheck": {
+    "sessionBBefore": "SCAN_QR_CODE",
+    "sessionBAfter": "SCAN_QR_CODE",
+    "sessionBStillExists": true,
+    "sessionBConfigUntouched": true,
+    "sessionBStateUnchanged": true,
+    "keyCountAfter": 2,
+    "keyCountExpected": 2
+  },
+  "resources": {
+    "idleNoSessions": [
+      {
+        "memUsage": "321.9MiB / 1GiB",
+        "memPercentOfLimit": "31.44%",
+        "cpu": "0.05%"
+      },
+      {
+        "memUsage": "321.9MiB / 1GiB",
+        "memPercentOfLimit": "31.44%",
+        "cpu": "0.05%"
+      },
+      {
+        "memUsage": "321.9MiB / 1GiB",
+        "memPercentOfLimit": "31.44%",
+        "cpu": "0.06%"
+      }
+    ],
+    "twoSessionsUnpaired": [
+      {
+        "memUsage": "339.6MiB / 1GiB",
+        "memPercentOfLimit": "33.16%",
+        "cpu": "0.06%"
+      },
+      {
+        "memUsage": "339.6MiB / 1GiB",
+        "memPercentOfLimit": "33.16%",
+        "cpu": "0.06%"
+      },
+      {
+        "memUsage": "339.6MiB / 1GiB",
+        "memPercentOfLimit": "33.16%",
+        "cpu": "0.10%"
+      }
+    ]
+  },
+  "summary": {
+    "crossTenantCalls": 21,
+    "crossTenantSucceeded": 0,
+    "refusedWith401or403or404": 19,
+    "otherStatuses": [
+      "list sessions (does B appear?): 200",
+      "list sessions incl. stopped: 200"
+    ],
+    "positiveControlsPass": true,
+    "sessionBUntouched": true,
+    "portLoopbackOnly": true
+  }
+}

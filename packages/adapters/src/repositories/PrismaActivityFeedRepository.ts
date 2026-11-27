@@ -7,63 +7,38 @@
  * and applies cursor-based pagination for efficient feed loading.
  */
 
-import { PrismaClient, Prisma } from '@intelliflow/db';
+import {
+  PrismaClient,
+  Prisma,
+  emailActivitySql,
+  emailActivityWhere,
+  emailVisibilityWhere,
+  loggedPersonalMailIds,
+  type MailViewer,
+} from '@intelliflow/db';
 import type { ActivityFeedRepositoryPort } from '@intelliflow/application';
 import type {
   UnifiedActivityItem,
   ActivityFeedCursor,
   ActivityFeedFilters,
+  ActivityFeedViewer,
   ActivityFeedSource,
   ActivityFeedType,
   ActivityFeedStats,
   ActivityFeedEntityType,
 } from '@intelliflow/domain';
+import {
+  LEAD_ACTIVITY_TYPE_MAP,
+  CONTACT_ACTIVITY_TYPE_MAP,
+  OPPORTUNITY_EVENT_TYPE_MAP,
+  TICKET_ACTIVITY_TYPE_MAP,
+  sourceServesType,
+  sourceTypeWhere,
+} from './activity-feed-type-maps';
+import { toTicketActivityItem } from './ticket-activity-item';
 
-/**
- * Maps from source-specific activity types to normalized feed types.
- */
-const LEAD_ACTIVITY_TYPE_MAP: Record<string, ActivityFeedType> = {
-  WEB_FORM: 'SYSTEM',
-  EMAIL: 'EMAIL',
-  CALL: 'CALL',
-  MEETING: 'MEETING',
-  NOTE: 'NOTE',
-  SCORE_UPDATE: 'SCORE_UPDATE',
-  STATUS_CHANGE: 'STATUS_CHANGE',
-  QUALIFICATION: 'QUALIFICATION',
-};
-
-const CONTACT_ACTIVITY_TYPE_MAP: Record<string, ActivityFeedType> = {
-  EMAIL: 'EMAIL',
-  CALL: 'CALL',
-  MEETING: 'MEETING',
-  CHAT: 'CHAT',
-  DOCUMENT: 'DOCUMENT',
-  DEAL: 'DEAL',
-  TICKET: 'TICKET',
-  NOTE: 'NOTE',
-};
-
-const OPPORTUNITY_EVENT_TYPE_MAP: Record<string, ActivityFeedType> = {
-  EMAIL: 'EMAIL',
-  CALL: 'CALL',
-  MEETING: 'MEETING',
-  NOTE: 'NOTE',
-  TASK: 'TASK',
-  STAGE_CHANGE: 'STAGE_CHANGE',
-  AGENT_ACTION: 'AGENT_ACTION',
-  SYSTEM: 'SYSTEM',
-};
-
-const TICKET_ACTIVITY_TYPE_MAP: Record<string, ActivityFeedType> = {
-  CUSTOMER_MESSAGE: 'SYSTEM',
-  AGENT_REPLY: 'SYSTEM',
-  INTERNAL_NOTE: 'NOTE',
-  SYSTEM_EVENT: 'SYSTEM',
-  SLA_ALERT: 'SLA_ALERT',
-  ASSIGNMENT: 'ASSIGNMENT',
-  STATUS_CHANGE: 'STATUS_CHANGE',
-};
+/** A viewer id no user has: with no viewer the feed shows only mail that belongs to nobody. */
+const NO_VIEWER_ID = 'no-viewer:nobody';
 
 /**
  * Lead label in the feed: person, then company, then email (#1223). Synced
@@ -135,13 +110,15 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     entityType: string,
     entityId: string,
     limit: number,
-    cursor: ActivityFeedCursor | null
+    cursor: ActivityFeedCursor | null,
+    viewer?: ActivityFeedViewer
   ): Promise<UnifiedActivityItem[]> {
     const cursorCondition = cursor ? { timestamp: cursor.timestamp, id: cursor.id } : null;
 
     const filters: ActivityFeedFilters = {
       entityType: entityType as any,
       entityId,
+      viewer,
     };
 
     // Determine which sources to query based on entity type
@@ -210,9 +187,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     return merged.slice(0, limit);
   }
 
-  /**
-   * Build ILIKE search conditions for a set of fields.
-   */
+  /** Build ILIKE search conditions for a set of fields. */
   private buildSearchConditions(query: string, fields: string[]): Record<string, unknown>[] {
     return fields.map((field) => ({
       [field]: { contains: query, mode: 'insensitive' },
@@ -270,6 +245,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       });
     }
     if (filters.entityId) where.leadId = filters.entityId;
+    where.AND.push(emailActivityWhere('lead', filters.viewer));
 
     const rows = await this.prisma.leadActivity.findMany({
       where,
@@ -322,6 +298,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       });
     }
     if (filters.entityId) where.contactId = filters.entityId;
+    where.AND.push(emailActivityWhere('contact', filters.viewer));
 
     const rows = await this.prisma.contactActivity.findMany({
       where,
@@ -377,6 +354,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       include: { opportunity: { select: { id: true, name: true } } },
     });
 
+    const names = await this.userNamesFor(rows);
+
     return rows.map((r) => ({
       id: `opp_${r.id}`,
       source: 'OPPORTUNITY_EVENT' as const,
@@ -384,7 +363,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       title: r.title,
       description: r.description,
       timestamp: r.timestamp,
-      actor: r.userId ? { id: r.userId, name: r.agentName || 'System' } : null,
+      actor: r.userId
+        ? { id: r.userId, name: r.agentName || names.get(r.userId) || 'System' }
+        : null,
       entity: r.opportunity
         ? { id: r.opportunity.id, type: 'OPPORTUNITY' as const, name: r.opportunity.name }
         : null,
@@ -423,23 +404,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       include: { ticket: { select: { id: true, subject: true, ticketNumber: true } } },
     });
 
-    return rows.map((r) => ({
-      id: `ticket_${r.id}`,
-      source: 'TICKET_ACTIVITY' as const,
-      type: TICKET_ACTIVITY_TYPE_MAP[r.type] || 'SYSTEM',
-      title: r.content.length > 100 ? r.content.slice(0, 100) + '...' : r.content,
-      description: r.isInternal ? '[Internal note]' : null,
-      timestamp: r.timestamp,
-      actor: { id: null, name: r.authorName },
-      entity: r.ticket
-        ? {
-            id: r.ticket.id,
-            type: 'TICKET' as const,
-            name: `${r.ticket.ticketNumber}: ${r.ticket.subject}`,
-          }
-        : null,
-      metadata: r.systemEventData as Record<string, unknown> | null,
-    }));
+    return rows.map(toTicketActivityItem);
   }
 
   private async searchEmailRecords(
@@ -451,7 +416,10 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
   ): Promise<UnifiedActivityItem[]> {
     const where: any = {
       tenantId,
-      AND: [{ OR: this.buildSearchConditions(query, ['subject', 'fromEmail', 'toEmail']) }],
+      AND: [
+        { OR: this.buildSearchConditions(query, ['subject', 'fromEmail', 'toEmail']) },
+        await this.emailVisibility(tenantId, filters.viewer),
+      ],
     };
     if (cursor) {
       where.AND.push({
@@ -644,6 +612,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     if (filters.after) where.timestamp = { ...where.timestamp, gte: filters.after };
     if (filters.before) where.timestamp = { ...where.timestamp, lte: filters.before };
 
+    const typeWhere = sourceTypeWhere(LEAD_ACTIVITY_TYPE_MAP, filters.types);
+    if (typeWhere === null) return [];
+    where.AND = [...(typeWhere ? [typeWhere] : []), emailActivityWhere('lead', filters.viewer)];
     const rows = await this.prisma.leadActivity.findMany({
       where,
       orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
@@ -692,6 +663,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     if (filters.after) where.timestamp = { ...where.timestamp, gte: filters.after };
     if (filters.before) where.timestamp = { ...where.timestamp, lte: filters.before };
 
+    const typeWhere = sourceTypeWhere(CONTACT_ACTIVITY_TYPE_MAP, filters.types);
+    if (typeWhere === null) return [];
+    where.AND = [...(typeWhere ? [typeWhere] : []), emailActivityWhere('contact', filters.viewer)];
     const rows = await this.prisma.contactActivity.findMany({
       where,
       orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
@@ -735,12 +709,17 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     if (filters.after) where.timestamp = { ...where.timestamp, gte: filters.after };
     if (filters.before) where.timestamp = { ...where.timestamp, lte: filters.before };
 
+    const typeWhere = sourceTypeWhere(OPPORTUNITY_EVENT_TYPE_MAP, filters.types);
+    if (typeWhere === null) return [];
+    if (typeWhere) where.AND = [typeWhere];
     const rows = await this.prisma.activityEvent.findMany({
       where,
       orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
       take: limit,
       include: { opportunity: { select: { id: true, name: true } } },
     });
+
+    const names = await this.userNamesFor(rows);
 
     return rows.map((r) => ({
       id: `opp_${r.id}`,
@@ -749,7 +728,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       title: r.title,
       description: r.description,
       timestamp: r.timestamp,
-      actor: r.userId ? { id: r.userId, name: r.agentName || 'System' } : null,
+      actor: r.userId
+        ? { id: r.userId, name: r.agentName || names.get(r.userId) || 'System' }
+        : null,
       entity: r.opportunity
         ? { id: r.opportunity.id, type: 'OPPORTUNITY' as const, name: r.opportunity.name }
         : null,
@@ -758,6 +739,29 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
           ? { stageFrom: r.stageFrom, stageTo: r.stageTo, confidenceScore: r.confidenceScore }
           : null,
     }));
+  }
+
+  /**
+   * Display names for the people behind opportunity events (a stage move records who moved it).
+   * An agent's own name wins, so only rows without one are looked up; a failed lookup leaves the
+   * actor as "System" rather than hiding the entry.
+   */
+  private async userNamesFor(
+    rows: ReadonlyArray<{ userId: string | null; agentName: string | null }>
+  ): Promise<Map<string, string>> {
+    const ids = [...new Set(rows.filter((r) => r.userId && !r.agentName).map((r) => r.userId!))];
+    const names = new Map<string, string>();
+    if (ids.length === 0) return names;
+    try {
+      const users = await this.prisma.user.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, name: true },
+      });
+      for (const u of users) if (u.name) names.set(u.id, u.name);
+    } catch {
+      // keep "System": the feed still lists the entry
+    }
+    return names;
   }
 
   private async queryTicketActivities(
@@ -777,6 +781,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     if (filters.after) where.timestamp = { ...where.timestamp, gte: filters.after };
     if (filters.before) where.timestamp = { ...where.timestamp, lte: filters.before };
 
+    const typeWhere = sourceTypeWhere(TICKET_ACTIVITY_TYPE_MAP, filters.types);
+    if (typeWhere === null) return [];
+    if (typeWhere) where.AND = [typeWhere];
     const rows = await this.prisma.ticketActivity.findMany({
       where,
       orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
@@ -784,23 +791,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       include: { ticket: { select: { id: true, subject: true, ticketNumber: true } } },
     });
 
-    return rows.map((r) => ({
-      id: `ticket_${r.id}`,
-      source: 'TICKET_ACTIVITY' as const,
-      type: TICKET_ACTIVITY_TYPE_MAP[r.type] || 'SYSTEM',
-      title: r.content.length > 100 ? r.content.slice(0, 100) + '...' : r.content,
-      description: r.isInternal ? '[Internal note]' : null,
-      timestamp: r.timestamp,
-      actor: { id: null, name: r.authorName },
-      entity: r.ticket
-        ? {
-            id: r.ticket.id,
-            type: 'TICKET' as const,
-            name: `${r.ticket.ticketNumber}: ${r.ticket.subject}`,
-          }
-        : null,
-      metadata: r.systemEventData as Record<string, unknown> | null,
-    }));
+    return rows.map(toTicketActivityItem);
   }
 
   private async queryEmailRecords(
@@ -809,7 +800,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     cursor: { timestamp: Date; id: string } | null,
     filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
-    const where: any = { tenantId };
+    if (!sourceServesType('EMAIL', filters.types)) return [];
+    const where: any = { tenantId, AND: [await this.emailVisibility(tenantId, filters.viewer)] };
     if (cursor) {
       where.OR = [
         { createdAt: { lt: cursor.timestamp } },
@@ -850,6 +842,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     cursor: { timestamp: Date; id: string } | null,
     filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
+    if (!sourceServesType('CALL', filters.types)) return [];
     const where: any = { tenantId };
     if (cursor) {
       where.OR = [
@@ -895,6 +888,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     cursor: { timestamp: Date; id: string } | null,
     filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
+    if (!sourceServesType('CHAT', filters.types)) return [];
     const where: any = { tenantId };
     if (cursor) {
       where.OR = [
@@ -955,7 +949,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     tenantId: string,
     windowStart: Date | null,
     windowEnd: Date,
-    filters: { sources?: ActivityFeedSource[]; entityType?: ActivityFeedEntityType }
+    filters: {
+      sources?: ActivityFeedSource[];
+      entityType?: ActivityFeedEntityType;
+      viewer?: ActivityFeedViewer;
+    }
   ): Promise<ActivityFeedStats> {
     // Determine which sources to query
     let sourcesToQuery: ActivityFeedSource[] = [
@@ -1023,7 +1021,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
           windowEnd,
           typeMaps,
           sourceCountMap,
-          typeCountMap
+          typeCountMap,
+          filters.viewer
         )
       );
     }
@@ -1036,7 +1035,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
           windowStart,
           windowEnd,
           sourceCountMap,
-          typeCountMap
+          typeCountMap,
+          filters.viewer
         )
       );
     }
@@ -1116,7 +1116,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     windowEnd: Date,
     typeMaps: Partial<Record<ActivityFeedSource, Record<string, ActivityFeedType>>>,
     sourceCountMap: Record<string, number>,
-    typeCountMap: Record<string, number>
+    typeCountMap: Record<string, number>,
+    viewer?: ActivityFeedViewer
   ): Promise<void> {
     // Map each source to its underlying Postgres table name
     const tableForSource: Record<string, string> = {
@@ -1135,6 +1136,12 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     // tenantId parameter and date boundaries (prevents SQL injection), while
     // only the table/source names (validated against the static map above)
     // are interpolated as literals via Prisma.raw.
+    // A lead's or contact's EMAIL entries are counted only for the people the viewer can see.
+    const emailScope = (source: ActivityFeedSource): Prisma.Sql => {
+      if (source === 'LEAD_ACTIVITY') return emailActivitySql('lead', tenantId, viewer);
+      if (source === 'CONTACT_ACTIVITY') return emailActivitySql('contact', tenantId, viewer);
+      return Prisma.empty;
+    };
     const arms: Prisma.Sql[] = sources.map((source) => {
       const table = tableForSource[source];
       const timeCondition = windowStart
@@ -1148,6 +1155,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
         FROM ${Prisma.raw(`"${table}"`)}
         WHERE "tenantId" = ${tenantId}
           ${timeCondition}
+          ${emailScope(source)}
         GROUP BY "type"`;
     });
 
@@ -1176,7 +1184,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     windowStart: Date | null,
     windowEnd: Date,
     sourceCountMap: Record<string, number>,
-    typeCountMap: Record<string, number>
+    typeCountMap: Record<string, number>,
+    viewer?: ActivityFeedViewer
   ): Promise<void> {
     const modelName = this.getModelForSource(source);
     const timestampField = source === 'CALL' ? 'startedAt' : 'createdAt'; // EMAIL and CHAT both use createdAt
@@ -1184,13 +1193,40 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     if (source === 'EMAIL') feedType = 'EMAIL';
     else if (source === 'CALL') feedType = 'CALL';
     else feedType = 'CHAT';
-    const where = this.buildTimeRangeWhere(tenantId, timestampField, windowStart, windowEnd);
-    return (this.prisma as any)[modelName].count({ where }).then((count: number) => {
-      sourceCountMap[source] = count;
-      if (count > 0) {
-        typeCountMap[feedType] = (typeCountMap[feedType] || 0) + count;
-      }
-    });
+    const where: any = this.buildTimeRangeWhere(tenantId, timestampField, windowStart, windowEnd);
+    const counted =
+      source === 'EMAIL'
+        ? this.emailVisibility(tenantId, viewer).then((visible) => ({
+            ...where,
+            AND: [...(where.AND ?? []), visible],
+          }))
+        : Promise.resolve(where);
+    return counted
+      .then((scoped) => (this.prisma as any)[modelName].count({ where: scoped }))
+      .then((count: number) => {
+        sourceCountMap[source] = count;
+        if (count > 0) {
+          typeCountMap[feedType] = (typeCountMap[feedType] || 0) + count;
+        }
+      });
+  }
+
+  /**
+   * Register #64: email rows are read through the mail visibility policy (packages/db). With no
+   * viewer the feed is fail-closed: only mail that belongs to nobody in particular is shown.
+   */
+  private async emailVisibility(tenantId: string, viewer?: ActivityFeedViewer) {
+    if (!viewer) return emailVisibilityWhere(NO_VIEWER_ID);
+    const mailViewer: MailViewer = {
+      tenantId,
+      userId: viewer.userId,
+      role: viewer.role ?? null,
+      teamMemberIds: viewer.teamMemberIds ?? null,
+    };
+    return emailVisibilityWhere(
+      viewer.userId,
+      await loggedPersonalMailIds(this.prisma as never, mailViewer)
+    );
   }
 
   private getModelForSource(source: ActivityFeedSource): string {
