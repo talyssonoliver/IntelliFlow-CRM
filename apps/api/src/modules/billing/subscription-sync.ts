@@ -80,6 +80,12 @@ export interface SubscriptionSyncDeps {
     push: PortalSubscriptionPush,
     ctx: { tenantId: string; subscriptionId: string }
   ) => Promise<void>;
+  /**
+   * Called once a subscription is persisted as canceled/ended (Stripe `.deleted`, or a status of
+   * canceled). Queues the whole-workspace data export (agreement clause 5). Throws when the
+   * request cannot be recorded, so the webhook 5xxs and Stripe redelivers.
+   */
+  onSubscriptionEnded?: (info: { tenantId: string; subscriptionId: string }) => Promise<void>;
   logger: LoggerLike;
 }
 
@@ -137,6 +143,18 @@ async function enqueuePush(
   }
 }
 
+/** The customer is leaving: their data export starts now, not at the end of the 14 days. */
+async function startExportWhenEnded(
+  deps: Pick<SubscriptionSyncDeps, 'onSubscriptionEnded'>,
+  rawStatus: string,
+  tenantId: string,
+  subscriptionId: string
+): Promise<void> {
+  if (rawStatus.toLowerCase() === 'canceled' && deps.onSubscriptionEnded) {
+    await deps.onSubscriptionEnded({ tenantId, subscriptionId });
+  }
+}
+
 export function createSubscriptionSyncHandler(deps: SubscriptionSyncDeps) {
   return async (event: SubscriptionWebhookEvent): Promise<SubscriptionSyncResult> => {
     if (!SUBSCRIPTION_EVENT_TYPES.has(event.type)) {
@@ -164,6 +182,8 @@ export function createSubscriptionSyncHandler(deps: SubscriptionSyncDeps) {
       tenantId: event.tenantId,
       tenantSlug: event.tenantSlug ?? null,
     });
+
+    await startExportWhenEnded(deps, rawStatus, event.tenantId, event.subscriptionId);
 
     // Engine subscription → reflect status on the portal. Via the outbox the push
     // is durable and retried by the events-worker; an enqueue failure throws so the

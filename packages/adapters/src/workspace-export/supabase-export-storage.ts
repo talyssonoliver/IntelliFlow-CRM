@@ -1,0 +1,290 @@
+/**
+ * Supabase Storage for the workspace export: reads a tenant's files, keeps the finished ZIP in a
+ * private bucket and issues signed download links.
+ *
+ * Reads are streamed (a short-lived signed URL fetched as a web stream) so a large file is never
+ * held in memory; the archive is uploaded by streaming the local temp file the same way. The
+ * bucket is private; the only way in is a signed link.
+ */
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createReadStream } from 'node:fs';
+import { stat } from 'node:fs/promises';
+import { Readable } from 'node:stream';
+import { ExportFileMissingError, type ExportFileStorage } from './export-workspace';
+
+export const WORKSPACE_EXPORT_BUCKET = 'workspace-exports';
+/** Time allowed for a storage download to start answering. */
+const OPEN_FILE_HEADERS_TIMEOUT_MS = 60_000;
+/** The link and the archive live for 14 days (agreement clause 5). */
+export const EXPORT_LINK_TTL_SECONDS = 14 * 24 * 60 * 60;
+
+/** How many times a folder is listed at most while waiting for two passes to agree. */
+const LISTING_MAX_PASSES = 4;
+
+function sameListing(
+  a: Map<string, { size: number | null }>,
+  b: Map<string, { size: number | null }>
+): boolean {
+  if (a.size !== b.size) return false;
+  for (const [path, obj] of a) if (!b.has(path) || b.get(path)!.size !== obj.size) return false;
+  return true;
+}
+
+export interface ExportArchiveStorage {
+  /** Create the private bucket on first use. */
+  ensureBucket(): Promise<void>;
+  /** Upload the local file to `path` (replacing a half-finished earlier attempt). */
+  uploadArchive(path: string, localPath: string, contentType?: string): Promise<void>;
+  /** A link that works for `expiresInSeconds` and then stops. */
+  signedDownloadUrl(path: string, expiresInSeconds: number, downloadName: string): Promise<string>;
+  /** Remove the archive (after its 14 days). */
+  removeArchive(path: string): Promise<void>;
+  /** Objects last written before `olderThan`, any tenant, at most `limit` (storage reconciliation). */
+  /** Every object of attempt `attempt` of a request (all parts and the manifest). */
+  removeAttemptObjects?(tenantId: string, requestId: string, attempt: number): Promise<void>;
+  listArchivesOlderThan?(olderThan: Date, limit: number): Promise<string[]>;
+}
+
+interface StorageListEntry {
+  id?: string | null;
+  name: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+function entryTime(e: StorageListEntry): Date {
+  return new Date(e.updated_at ?? e.created_at ?? Date.now());
+}
+
+export class SupabaseExportStorage implements ExportFileStorage, ExportArchiveStorage {
+  private readonly client: SupabaseClient;
+  private bucketReady: Promise<void> | null = null;
+
+  constructor(
+    private readonly supabaseUrl: string,
+    private readonly serviceKey: string,
+    private readonly exportBucket: string = WORKSPACE_EXPORT_BUCKET
+  ) {
+    this.client = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+  }
+
+  // ---- reading the tenant's files ----------------------------------------------------------
+
+  /**
+   * The folder is listed in full BEFORE anything is yielded or downloaded, and again until two
+   * passes agree. Offset paging over a live folder can skip or repeat an object when an upload or
+   * a delete lands between two pages, and the walk used to be lazy (a page was read only after
+   * the previous 100 files had been downloaded), so that window could last minutes.
+   */
+  async *listFiles(
+    bucket: string,
+    tenantId: string
+  ): AsyncGenerator<{ path: string; size: number | null }> {
+    let previous = await this.snapshot(bucket, tenantId);
+    for (let pass = 1; pass < LISTING_MAX_PASSES; pass += 1) {
+      const next = await this.snapshot(bucket, tenantId);
+      const agreed = sameListing(previous, next);
+      previous = next;
+      if (agreed) break;
+    }
+    yield* previous.values();
+  }
+
+  /** Every object under `folder`, by path (so a repeat collapses into one entry). */
+  private async snapshot(
+    bucket: string,
+    folder: string
+  ): Promise<Map<string, { path: string; size: number | null }>> {
+    const found = new Map<string, { path: string; size: number | null }>();
+    for await (const obj of this.walk(bucket, folder)) found.set(obj.path, obj);
+    return found;
+  }
+
+  /** One page of a folder; a bucket the tenant never used may not exist: nothing to copy. */
+  private async listPage(
+    bucket: string,
+    folder: string,
+    offset: number,
+    limit: number
+  ): Promise<Array<{ name: string; id: string | null; metadata: unknown }>> {
+    const { data, error } = await this.client.storage.from(bucket).list(folder, {
+      limit,
+      offset,
+      sortBy: { column: 'name', order: 'asc' },
+    });
+    if (error) {
+      if (/not.?found|does not exist/i.test(error.message)) return [];
+      throw new Error(`Listing ${bucket}/${folder} failed: ${error.message}`);
+    }
+    return data ?? [];
+  }
+
+  private async *walk(
+    bucket: string,
+    folder: string
+  ): AsyncGenerator<{ path: string; size: number | null }> {
+    const limit = 100;
+    for (let offset = 0; ; offset += limit) {
+      const page = await this.listPage(bucket, folder, offset, limit);
+      for (const item of page) {
+        const path = `${folder}/${item.name}`;
+        // Folders have no id; objects do.
+        if (item.id === null || item.id === undefined) yield* this.walk(bucket, path);
+        else yield { path, size: (item.metadata as { size?: number } | null)?.size ?? null };
+      }
+      if (page.length < limit) return;
+    }
+  }
+
+  async openFile(bucket: string, path: string): Promise<Readable> {
+    const { data, error } = await this.client.storage.from(bucket).createSignedUrl(path, 300);
+    if (error || !data) {
+      // Only a confirmed missing object is skippable; anything else is a storage failure.
+      const status = (error as { statusCode?: string | number } | null)?.statusCode;
+      if (String(status) === '404' || /not.?found/i.test(error?.message ?? '')) {
+        throw new ExportFileMissingError(`${bucket}/${path} not found`);
+      }
+      throw new Error(`Link for ${bucket}/${path} failed: ${error?.message ?? 'no link'}`);
+    }
+    // A hung connection must not stall the job: the timeout covers the response headers only, so
+    // a large file is still allowed to stream for as long as it needs.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), OPEN_FILE_HEADERS_TIMEOUT_MS);
+    try {
+      const res = await fetch(data.signedUrl, { signal: controller.signal });
+      if (res.status === 404) throw new ExportFileMissingError(`${bucket}/${path} not found`);
+      if (!res.ok || !res.body) {
+        throw new Error(`Download of ${bucket}/${path} failed (${res.status})`);
+      }
+      return Readable.fromWeb(res.body as never);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // ---- the finished archive ----------------------------------------------------------------
+
+  ensureBucket(): Promise<void> {
+    this.bucketReady ??= (async () => {
+      // The archives hold a customer's whole workspace: the bucket must be private, or a public
+      // URL would bypass the 14-day signed link. A bucket that already exists is checked, and
+      // made private when it is not.
+      let { data } = await this.client.storage.getBucket(this.exportBucket);
+      if (!data) {
+        const { error } = await this.client.storage.createBucket(this.exportBucket, {
+          public: false,
+        });
+        if (error && !/already exists/i.test(error.message)) {
+          this.bucketReady = null;
+          throw new Error(`Export bucket unavailable: ${error.message}`);
+        }
+        // Someone else may have created it first (with any visibility): read it back.
+        data = (await this.client.storage.getBucket(this.exportBucket)).data;
+      }
+      if (data?.public !== false) {
+        const { error } = await this.client.storage.updateBucket(this.exportBucket, {
+          public: false,
+        });
+        if (error) {
+          this.bucketReady = null;
+          throw new Error(`Export bucket is not private and could not be fixed: ${error.message}`);
+        }
+      }
+    })();
+    return this.bucketReady;
+  }
+
+  async uploadArchive(
+    path: string,
+    localPath: string,
+    contentType = 'application/zip'
+  ): Promise<void> {
+    await this.ensureBucket();
+    const { size } = await stat(localPath);
+    const url = `${this.supabaseUrl.endsWith('/') ? this.supabaseUrl.slice(0, -1) : this.supabaseUrl}/storage/v1/object/${this.exportBucket}/${path
+      .split('/')
+      .map(encodeURIComponent)
+      .join('/')}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.serviceKey}`,
+        apikey: this.serviceKey,
+        'Content-Type': contentType,
+        'Content-Length': String(size),
+        'x-upsert': 'true',
+      },
+      body: Readable.toWeb(createReadStream(localPath)) as never,
+      // Node's fetch needs this to send a streamed body.
+      duplex: 'half',
+    } as RequestInit);
+    if (!res.ok) {
+      const hint = res.status === 413 ? ' (raise the Supabase Storage file size limit)' : '';
+      throw new Error(`Archive upload failed (${res.status})${hint}`);
+    }
+  }
+
+  async signedDownloadUrl(
+    path: string,
+    expiresInSeconds: number,
+    downloadName: string
+  ): Promise<string> {
+    const { data, error } = await this.client.storage
+      .from(this.exportBucket)
+      .createSignedUrl(path, expiresInSeconds, { download: downloadName });
+    if (error || !data) throw new Error('Export link could not be created');
+    return data.signedUrl;
+  }
+
+  /** Every entry under `folder`, page by page (stops early when `stop()` says so). */
+  private async *listPages(folder: string): AsyncGenerator<StorageListEntry> {
+    const bucket = this.client.storage.from(this.exportBucket);
+    const PAGE = 100;
+    for (let offset = 0; ; offset += PAGE) {
+      const { data, error } = await bucket.list(folder, { limit: PAGE, offset });
+      if (error) throw new Error(`Export bucket listing failed: ${error.message}`);
+      for (const entry of (data ?? []) as StorageListEntry[]) yield entry;
+      if (!data || data.length < PAGE) return;
+    }
+  }
+
+  /**
+   * Archive objects last written before `olderThan`, tenant-agnostic, at most `limit`. Walks
+   * `<tenantId>/<file>` and stops as soon as the limit is reached.
+   */
+  async listArchivesOlderThan(olderThan: Date, limit: number): Promise<string[]> {
+    const found: string[] = [];
+    for await (const folder of this.listPages('')) {
+      for await (const obj of this.listPages(folder.name)) {
+        if (found.length >= limit) return found;
+        if (obj.id && entryTime(obj) < olderThan) found.push(`${folder.name}/${obj.name}`);
+      }
+      if (found.length >= limit) break;
+    }
+    return found;
+  }
+
+  /** Removes `<requestId>-<attempt>.zip`, its `-pN.zip` parts and its manifest, if any. */
+  async removeAttemptObjects(tenantId: string, requestId: string, attempt: number): Promise<void> {
+    const prefix = `${requestId}-${attempt}`;
+    const own = new RegExp(
+      `^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\.zip|-p\\d+\\.zip|-manifest\\.json)$`
+    );
+    const paths: string[] = [];
+    for await (const entry of this.listPages(tenantId)) {
+      if (own.test(entry.name)) paths.push(`${tenantId}/${entry.name}`);
+    }
+    // Supabase deletes at most 1000 objects per request.
+    for (let i = 0; i < paths.length; i += 1000) {
+      const { error } = await this.client.storage
+        .from(this.exportBucket)
+        .remove(paths.slice(i, i + 1000));
+      if (error) throw new Error(`Export archive could not be removed: ${error.message}`);
+    }
+  }
+
+  async removeArchive(path: string): Promise<void> {
+    const { error } = await this.client.storage.from(this.exportBucket).remove([path]);
+    if (error) throw new Error(`Export archive could not be removed: ${error.message}`);
+  }
+}

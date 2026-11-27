@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  emailTeamVisibleWhere,
+  isTeamVisibleEmail,
   emailVisibilityWhere,
   emailVisibleSql,
   loggedPersonalMailIds,
@@ -141,5 +143,79 @@ describe('mailViewerOf', () => {
     expect(
       mailViewerOf({ tenantId: 't', userId: 'u', role: 'MANAGER', teamMemberIds: ['a'] })
     ).toEqual({ tenantId: 't', userId: 'u', role: 'MANAGER', teamMemberIds: ['a'] });
+  });
+});
+
+describe('emailTeamVisibleWhere (mail with no personal viewer)', () => {
+  const where = emailTeamVisibleWhere();
+  const [drafts, mailboxes] = where.AND as [{ OR: unknown[] }, { OR: Record<string, unknown>[] }];
+
+  it('never lets a draft through: no branch names a writer', () => {
+    expect(JSON.stringify(drafts)).not.toContain('userId');
+    expect(drafts.OR).toHaveLength(2);
+  });
+
+  it('opens the company mailbox, ownerless inbound mail and mail logged to a lead or contact', () => {
+    expect(mailboxes.OR).toContainEqual({ mailbox: { is: { scope: 'TENANT' } } });
+    expect(mailboxes.OR).toContainEqual(expect.objectContaining({ mailboxId: null, userId: null }));
+    expect(mailboxes.OR).toContainEqual({ contactId: { not: null } });
+    expect(mailboxes.OR).toContainEqual({ metadata: { path: ['leadId'], string_starts_with: '' } });
+  });
+
+  it('has no branch for a personal mailbox, a viewer or a role', () => {
+    const text = JSON.stringify(where);
+    expect(text).not.toContain('"USER"');
+    expect(text).not.toMatch(/ADMIN|role/);
+    expect(emailTeamVisibleWhere.length).toBe(0);
+  });
+});
+
+describe('isTeamVisibleEmail (the exact form, with the existence check)', () => {
+  const ctx = {
+    tenantMailboxIds: new Set(['mb_company']),
+    contactIds: new Set(['c1']),
+    leadIds: new Set(['l1']),
+  };
+  const row = (over: Record<string, unknown>) => ({
+    mailboxId: null,
+    userId: null,
+    contactId: null,
+    metadata: null,
+    ...over,
+  });
+
+  it('lets through company mail, ownerless inbound mail and mail logged to a live lead or contact', () => {
+    expect(isTeamVisibleEmail(row({ mailboxId: 'mb_company' }), ctx)).toBe(true);
+    expect(isTeamVisibleEmail(row({}), ctx)).toBe(true);
+    expect(
+      isTeamVisibleEmail(row({ mailboxId: 'mb_me', userId: 'u1', contactId: 'c1' }), ctx)
+    ).toBe(true);
+    expect(
+      isTeamVisibleEmail(row({ mailboxId: 'mb_me', userId: 'u1', metadata: { leadId: 'l1' } }), ctx)
+    ).toBe(true);
+  });
+
+  it('keeps personal mail private when its lead or contact no longer exists', () => {
+    expect(
+      isTeamVisibleEmail(row({ mailboxId: 'mb_me', userId: 'u1', contactId: 'gone' }), ctx)
+    ).toBe(false);
+    expect(
+      isTeamVisibleEmail(
+        row({ mailboxId: 'mb_me', userId: 'u1', metadata: { leadId: 'gone' } }),
+        ctx
+      )
+    ).toBe(false);
+  });
+
+  it('never lets a draft through, and never mail that is only personal', () => {
+    expect(
+      isTeamVisibleEmail(row({ mailboxId: 'mb_company', metadata: { isDraft: true } }), ctx)
+    ).toBe(false);
+    expect(isTeamVisibleEmail(row({ contactId: 'c1', metadata: { isDraft: true } }), ctx)).toBe(
+      false
+    );
+    expect(isTeamVisibleEmail(row({ mailboxId: 'mb_me', userId: 'u1' }), ctx)).toBe(false);
+    expect(isTeamVisibleEmail(row({ userId: 'u1' }), ctx)).toBe(false);
+    expect(isTeamVisibleEmail(row({ metadata: { mailboxOwnerId: 'u1' } }), ctx)).toBe(false);
   });
 });
