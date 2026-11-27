@@ -217,7 +217,7 @@ function RevenueComparison({
     return <ChartUnavailable message="Couldn't load booked revenue." onRetry={trend.retry} />;
   }
   if (trend.pending) return <div className="h-[220px] animate-pulse rounded-lg bg-muted" />;
-  if (trend.points.every((p) => p.current === 0 && !p.previous)) {
+  if (trend.points.every((p) => !p.current && !p.previous)) {
     return (
       <ChartEmptyState
         message="No revenue booked in this period yet"

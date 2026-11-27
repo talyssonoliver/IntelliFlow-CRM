@@ -1028,3 +1028,13 @@ waivers:
     author: ui-partner lane (MVP-012)
     date: '2026-11-27'
     expires: '2026-12-27'
+  - fingerprint: 13848275f70975a0bf09d88fb06efbb074caac461e78d793ed9ba82ce53ce96d
+    reason: >-
+      Approvals preview draft failures. Fixed in c94bf034a (PR #1576, merged into this branch)
+      below the flagged line: isLoading includes draftsQuery.isLoading, and a failed draft load
+      shows a 'drafts-error' alert with Retry saying drafts are missing from the list and the
+      pending count. Test: preview page.test.tsx 'says the AI drafts could not load instead of
+      showing an empty queue'. #1576's own review passed with this fix.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-27'
+    expires: '2026-12-27'

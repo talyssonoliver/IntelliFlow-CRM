@@ -56,6 +56,23 @@ describe('alignPeriods', () => {
   });
 });
 
+describe('alignPeriods, previous period longer (codex 27/11)', () => {
+  it('keeps every previous bucket, with no current value where this period has none', () => {
+    expect(
+      alignPeriods(
+        [{ periodLabel: '1 Nov', value: 0 }],
+        [
+          { periodLabel: '2 Oct', value: 0 },
+          { periodLabel: '3 Oct', value: 100 },
+        ]
+      )
+    ).toEqual([
+      { label: '1 Nov', current: 0, previous: 0 },
+      { label: '3 Oct', current: null, previous: 100 },
+    ]);
+  });
+});
+
 describe('performanceChanges', () => {
   it('only reports KPIs both periods have', () => {
     const k = performanceKpis(

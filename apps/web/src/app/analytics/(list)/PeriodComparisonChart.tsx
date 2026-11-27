@@ -20,7 +20,8 @@ import {
 
 export interface PeriodPoint {
   label: string;
-  current: number;
+  /** Null where this period has no bucket at that position (the previous period was longer). */
+  current: number | null;
   previous: number | null;
 }
 

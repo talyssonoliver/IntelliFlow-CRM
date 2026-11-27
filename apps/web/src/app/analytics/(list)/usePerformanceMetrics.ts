@@ -66,15 +66,19 @@ export function performanceKpis(
   };
 }
 
-/** Lines up the two periods bucket by bucket (the previous period may have fewer buckets). */
+/** Lines up the two periods bucket by bucket; either period may have fewer buckets. */
 export function alignPeriods(
   now: readonly { periodLabel: string; value: number }[] | undefined,
   before: readonly { periodLabel: string; value: number }[] | undefined
 ): PeriodPoint[] {
-  return (now ?? []).map((point, i) => ({
-    label: point.periodLabel,
-    current: point.value,
-    previous: before?.[i]?.value ?? null,
+  // Over the longer series (codex 27/11): a previous period with more buckets keeps them, so its
+  // revenue is never dropped. A missing bucket is null, never a recorded 0.
+  const current = now ?? [];
+  const previous = before ?? [];
+  return Array.from({ length: Math.max(current.length, previous.length) }, (_, i) => ({
+    label: current[i]?.periodLabel ?? previous[i]?.periodLabel ?? '',
+    current: current[i]?.value ?? null,
+    previous: previous[i]?.value ?? null,
   }));
 }
 

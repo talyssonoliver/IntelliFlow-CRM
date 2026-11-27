@@ -18,6 +18,8 @@ export function useUtcDay(): string {
 
   useEffect(() => {
     const now = new Date();
+    // Midnight may have passed between the first render and this effect (codex 27/11).
+    setDay(utcDayOf(now));
     const untilMidnight = DAY_MS - (now.getTime() % DAY_MS) + 50;
     const timer = setTimeout(() => setDay(utcDayOf(new Date())), untilMidnight);
     const onVisible = () => {
