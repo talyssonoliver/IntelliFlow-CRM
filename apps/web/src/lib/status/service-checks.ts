@@ -57,7 +57,8 @@ async function timedGet(fetchFn: Fetch, url: string, headers?: HeadersInit): Pro
   try {
     const res = await fetchFn(url, {
       headers,
-      cache: 'no-store',
+      // No `cache: 'no-store'` here: it would opt the /api/status route out of its shared
+      // 5-minute cache. Each answer is already as fresh as that route's revalidate window.
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     return { ms: Date.now() - started, res };

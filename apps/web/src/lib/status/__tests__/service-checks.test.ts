@@ -15,7 +15,7 @@ describe('checkApi', () => {
     expect(typeof result.ms).toBe('number');
     expect(fetchFn).toHaveBeenCalledWith(
       'https://api.example.invalid/health/ready',
-      expect.objectContaining({ cache: 'no-store' })
+      expect.not.objectContaining({ cache: expect.anything() })
     );
   });
 

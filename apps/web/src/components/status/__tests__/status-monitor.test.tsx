@@ -59,4 +59,20 @@ describe('StatusMonitor', () => {
     render(<StatusMonitor />);
     expect(await screen.findByTestId('service-checks-failed')).toBeInTheDocument();
   });
+
+  it('asks the server once per page view and never polls', async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchMock = vi.fn(async () => new Response(JSON.stringify({ services: [] })));
+      vi.stubGlobal('fetch', fetchMock);
+      render(<StatusMonitor />);
+      await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      // A plain request, so the server's shared 5-minute answer can be reused.
+      expect(fetchMock).toHaveBeenCalledWith('/api/status');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

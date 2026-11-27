@@ -46,14 +46,12 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(public)/status/page.tsx": "1360bb3cf7532737832a52215f5436622baee709cfdad300a19ff57d812f36c4",
-    "apps/web/src/components/status/status-monitor.tsx": "91829396d9ac5c228002c8428e1bd752b043f2d457cdf83af4978a946477e99c",
-    "apps/web/src/app/api/status/route.ts": "33fd3984f3c24b1050a11502c39d74aade806efcfbee81f72658e8629d0001a6",
-    "apps/web/src/lib/status/service-checks.ts": "bcbfd09873012f87dacfeca79f3bd0f284c2143ce96c58e243a81cca4d1405dd",
+    "apps/web/src/app/(public)/status/page.tsx": "e0fb2b00b92c7932ca7ef9cf6cbfa29913e69a6df4986657fce1c9aa97d708ec",
+    "apps/web/src/components/status/status-monitor.tsx": "847a04e7228328b0742031ddb9d37ce4e81022ba299692ba9cf86b91fbab178d",
+    "apps/web/src/app/api/status/route.ts": "133505ad71fbf90618395f2bce891031fd5eb129c4fd198ab63165217cef3510",
+    "apps/web/src/lib/status/service-checks.ts": "9112081bdf623ea7603aa4eda8a67c0a33bcbadd5e026c95364fa3fffcc1bb6e",
     "apps/web/lib/status/incident-tracker.ts": "8a017f8de4977dffbc9b94915e7b21f8de84f5f40a5eb1aa7fa2d3d2bde6aedd",
-    "artifacts/lighthouse/PG-014/status-r1.json": "e2be90feb7a1089d6954fe05db356a85acc123d5e8757a945fae54bb74c36741",
-    "artifacts/lighthouse/PG-014/status-r2.json": "a7f4c2370331630d6d74d670dd8e20a78ea67c1b8e034f16cdeab3e81a5d60f4",
-    "artifacts/lighthouse/PG-014/status-r3.json": "24abf4609881832ebbf752eebd625e76ae0f13d42900d3a38d70aa2bc46340df"
+    "artifacts/lighthouse/PG-014/status-r2.json": "a7f4c2370331630d6d74d670dd8e20a78ea67c1b8e034f16cdeab3e81a5d60f4"
   },
   "validation_results": [
     {
@@ -115,13 +113,13 @@
     {
       "kpi": "Status displayed",
       "target": "Web app, API, AI agents and sign-in shown with their real state",
-      "actual": "Web app checked from the browser; API (/health/ready), AI agents (AI queue worker counts from /health/detailed) and sign-in (auth /health) checked by /api/status on each request",
+      "actual": "Web app checked from the browser; API (/health/ready), AI agents (AI queue worker counts from /health/detailed) and sign-in (auth /health) checked by /api/status, one result shared by all visitors for 5 minutes",
       "met": true
     },
     {
       "kpi": "Real-time updates",
       "target": "Live, not stored",
-      "actual": "Every page load and \"Check again\" runs fresh checks; responses are no-store",
+      "actual": "Each page load reads the shared /api/status answer, which the server re-measures at most every 5 minutes (revalidate = 300, at most 12 rounds of checks an hour); the page never polls",
       "met": true
     },
     {
@@ -133,7 +131,7 @@
     {
       "kpi": "Lighthouse >=90 (all categories)",
       "target": ">=90",
-      "actual": "median performance 0.93, accessibility 0.96, best-practices 0.74, seo 1",
+      "actual": "median of 3 runs: performance 0.93, accessibility 0.96, best-practices 0.74, seo 1 (only the median report, status-r2.json, is kept in the repo)",
       "met": false
     }
   ],

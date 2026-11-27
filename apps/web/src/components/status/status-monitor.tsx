@@ -40,7 +40,9 @@ export function StatusMonitor() {
   const run = React.useCallback(async () => {
     setLoad({ state: 'loading' });
     try {
-      const res = await fetch('/api/status', { cache: 'no-store' });
+      // One request per page view, never polled. The server shares one answer across all
+      // visitors for 5 minutes (see the route), so "Try again" may return the same result.
+      const res = await fetch('/api/status');
       if (!res.ok) throw new Error(String(res.status));
       const body = (await res.json()) as { services?: ServiceCheck[] };
       setLoad(
