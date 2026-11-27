@@ -13,16 +13,34 @@
  * Kept apart from codex-review.mjs (which runs on import) so tests can check them in-process.
  */
 
-/** Argv for `codex exec`: the prompt on stdin, the last message to `lastMessagePath`. */
-export function codexExecArgs(lastMessagePath) {
-  return ['exec', '-', '--ephemeral', '-s', 'read-only', '-o', lastMessagePath];
+/**
+ * Argv for `codex exec`: the prompt on stdin, the last message to `lastMessagePath`. `model` and
+ * `effort` (from lib/review-tier.mjs) are passed as `-m` and `-c model_reasoning_effort=` for this
+ * run only; the user's global ~/.codex/config.toml is never edited. Either may be null: codex then
+ * uses its configured value.
+ */
+export function codexExecArgs(lastMessagePath, { model = null, effort = null } = {}) {
+  const args = ['exec', '-', '--ephemeral', '-s', 'read-only'];
+  if (model) args.push('-m', model);
+  if (effort) args.push('-c', `model_reasoning_effort=${effort}`);
+  args.push('-o', lastMessagePath);
+  return args;
 }
 
-/** Argv for the Claude Code CLI fallback: one headless turn, JSON output, no shell tools. */
+/**
+ * Argv for the Claude Code CLI fallback (used only for a risky diff when Codex cannot review, see
+ * lib/review-policy.mjs): one headless turn, JSON output, read-only tools, no MCP servers, no slash
+ * commands, no shell tools.
+ */
 export const CLAUDE_REVIEW_ARGS = Object.freeze([
   '-p',
   '--output-format',
   'json',
+  // Only what a read-only review uses (task tiering 26/11/2026): about half the cost per call.
+  '--strict-mcp-config',
+  '--disable-slash-commands',
+  '--tools',
+  'Read,Grep,Glob',
   '--disallowedTools',
   'Bash',
   'PowerShell',
@@ -43,8 +61,8 @@ export function reviewerSpawnOptions(input, cwd, platform = process.platform, en
 }
 
 /** Runs the codex reviewer in the read-only sandbox. spawn is child_process.spawnSync. */
-export function runCodexReviewer(input, lastMessagePath, cwd, spawn) {
-  return spawn('codex', codexExecArgs(lastMessagePath), reviewerSpawnOptions(input, cwd));
+export function runCodexReviewer(input, lastMessagePath, cwd, spawn, tier = {}) {
+  return spawn('codex', codexExecArgs(lastMessagePath, tier), reviewerSpawnOptions(input, cwd));
 }
 
 /** Runs the Claude fallback reviewer with no shell tools. spawn is child_process.spawnSync. */
