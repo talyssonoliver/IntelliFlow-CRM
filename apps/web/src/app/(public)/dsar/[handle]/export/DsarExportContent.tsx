@@ -6,13 +6,14 @@
  *
  * The emailed link's fragment is read once and stripped. Each "Get my data" press is one
  * of the limited downloads. The data is shown as a plain summary (React text nodes only,
- * never injected HTML) and can be saved as a JSON file; it stays in memory and is never
- * written to browser storage.
+ * never injected HTML) and can be saved as a JSON file or as CSV files in a zip (IFC-317); it
+ * stays in memory and is never written to browser storage.
  */
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@intelliflow/ui';
 import type { DsarExportDto } from '@intelliflow/validators/dsar';
 import { trpc } from '@/lib/trpc';
+import { saveExportCsv } from '@/lib/dsar/export-csv';
 import {
   DsarNotice,
   DsarPage,
@@ -195,9 +196,14 @@ export default function DsarExportContent() {
               data.generatedAt
             ).toLocaleString('en-GB')}.`}
           </p>
-          <Button type="button" className="mt-4" onClick={() => saveExport(data)}>
-            Save as a file
-          </Button>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button type="button" onClick={() => saveExport(data)}>
+              Save as a file
+            </Button>
+            <Button type="button" variant="outline" onClick={() => saveExportCsv(data)}>
+              Save as spreadsheets (CSV)
+            </Button>
+          </div>
           <Summary data={data} />
         </>
       ) : (
