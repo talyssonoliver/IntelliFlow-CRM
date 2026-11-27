@@ -25,7 +25,12 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Only a newer push to the same PR cancels its older run. A run on main is never cancelled:
+  # production deploys wait for a green "CI Pipeline" on the exact main commit, and on a busy
+  # day every merge cancelled the previous commit's run, so no main commit ever went green
+  # (the deploy of 19-20/11/2026 stopped twice on a cancelled run). Runs on main queue behind
+  # each other instead; the group is per ref, so PRs are unaffected.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -353,6 +358,16 @@ jobs:
       - name: Setup database
         run: |
           pnpm --filter @intelliflow/db db:migrate
+        env:
+          DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
+
+      # MVP-007 (register #35): the database the migrations just built must equal schema.prisma. A
+      # constraint or index created by raw SQL but not declared there would be DROPPED by the next
+      # migration generated from the schema; this fails with the SQL that would do it. Declare the
+      # object in schema.prisma (see packages/db/prisma/schema.prisma, PG-203 block) or add a
+      # migration; locally: pnpm run db:drift.
+      - name: Schema drift guard
+        run: pnpm --filter @intelliflow/db db:drift
         env:
           DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
 

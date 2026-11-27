@@ -578,11 +578,11 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 
 **Files to Create:**
 - `apps/ai-worker/src/monitoring/drift-stats.ts`. Pure functions with no OTel import (NF-006):
-  - `fixedBins`, with smoothing;
-  - `excessPsi`;
-  - `ksTwoSample(a, b) → {d, p}`, tie-aware, using the full Kolmogorov series;
-  - `severityFrom`;
-  - `isDetectedTick`.
+  - exports `fixedEdges` and `binCounts` (built as `fixedEdges` + `binCounts`, which replaced the planned name `fixedBins`), with smoothing;
+  - exports `excessPsi`;
+  - exports `ksTwoSample(a, b) → {d, p}`, tie-aware, using the full Kolmogorov series;
+  - exports `severityFrom`;
+  - exports `isDetectedTick`.
 
 **Files to Modify:**
 - `apps/ai-worker/src/monitoring/drift-detector.ts`:
@@ -612,8 +612,8 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 
 **Files to Create:**
 - `apps/ai-worker/src/monitoring/drift-scheduler.ts`. `DriftDetectionScheduler(detector, { intervalMs, log })`:
-  - `start()` and `stop()`;
-  - `setInterval(...).unref()`;
+  - methods `start()` and `stop()`;
+  - timer via `setInterval(...).unref()`;
   - a re-entrancy guard and try/catch;
   - each tick calls `pruneOnTick` → `detectAllDrift` (metrics `score_distribution` and `confidence_level` only) →
     `recordDriftTick` → a fixed-field log.
@@ -627,11 +627,11 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 
 **Files to Modify:**
 - `apps/ai-worker/src/monitoring/chain-monitor.ts`:
-  - `MonitoringContext` gains `chain`, `valueType` and `recordDrift`;
+  - interface `MonitoringContext` gains `chain`, `valueType` and `recordDrift`;
   - `HallucinationOutcome` and `ChainId` are imported from `./otel-ai-types`, never redefined;
   - the recorders are called as specified;
   - `computeTokenCost` returns `number | null`;
-  - `HallucinationOutcome`;
+  - type `HallucinationOutcome`;
   - `MonitoredResult.metrics.hallucinated`;
   - score/100;
   - the hard-coded `lead_scored` is removed and replaced by a debug log when `valueType` is absent.

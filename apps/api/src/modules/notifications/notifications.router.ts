@@ -36,7 +36,9 @@ import {
   type Notification,
   type NotificationEvent,
   NOTIFICATION_TYPES,
+  isNotificationTypeEnabled,
 } from '@intelliflow/validators';
+import { buildNotification, recipientWantsType } from './notification-type-gate';
 
 // =============================================================================
 // Event Emitter for Real-time Updates
@@ -565,7 +567,7 @@ export const notificationsRouter = createTRPCRouter({
 
     const defaultPreferences = NOTIFICATION_TYPES.map((type) => ({
       type,
-      enabled: categoryPrefs[type]?.enabled ?? true,
+      enabled: isNotificationTypeEnabled(categoryPrefs, type),
       channels: channelPrefs[type]?.channels || ['in_app'],
       frequency: categoryPrefs[type]?.frequency || 'instant',
     }));
@@ -763,6 +765,10 @@ export async function createNotification(
   params: CreateNotificationParams,
   orchestrator?: any
 ): Promise<Notification> {
+  // The recipient's per-type choice (AI score notices off by default) applies on every path.
+  if (!(await recipientWantsType(prisma, params))) {
+    return buildNotification(params, { id: '', status: 'filtered' as any, createdAt: new Date() });
+  }
   // When orchestrator is available, use the full delivery pipeline
   if (orchestrator && typeof orchestrator.send === 'function') {
     try {
@@ -785,26 +791,11 @@ export async function createNotification(
         },
       });
 
-      const notification: Notification = {
+      const notification = buildNotification(params, {
         id: result.notificationId,
-        type: params.type,
-        title: params.title,
-        body: params.body,
-        priority: params.priority || 'normal',
         status: result.status === 'filtered' ? ('filtered' as any) : 'pending',
-        isRead: false,
-        readAt: null,
         createdAt: new Date(),
-        expiresAt: params.expiresAt || null,
-        entityType: params.entityType || null,
-        entityId: params.entityId || null,
-        entityName: params.entityName || null,
-        actionUrl: params.actionUrl || null,
-        actionLabel: params.actionLabel || null,
-        actor: null,
-        groupId: null,
-        metadata: params.metadata || null,
-      };
+      });
 
       if (result.status !== 'filtered') {
         emitNotificationEvent({
@@ -846,26 +837,12 @@ export async function createNotification(
     },
   });
 
-  const notification: Notification = {
+  const notification = buildNotification(params, {
     id: record.id,
-    type: params.type,
-    title: params.title,
-    body: params.body,
-    priority: params.priority || 'normal',
     status: 'pending',
-    isRead: false,
-    readAt: null,
     createdAt: record.createdAt,
-    expiresAt: params.expiresAt || null,
-    entityType: params.entityType || null,
-    entityId: params.entityId || null,
-    entityName: params.entityName || null,
-    actionUrl: params.actionUrl || null,
-    actionLabel: params.actionLabel || null,
-    actor: null,
-    groupId: null,
-    metadata: record.metadata as any,
-  };
+    metadata: record.metadata,
+  });
 
   emitNotificationEvent({
     userId: params.userId,

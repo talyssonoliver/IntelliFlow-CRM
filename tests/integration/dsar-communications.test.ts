@@ -205,6 +205,34 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         modelVersion: 'm',
       },
     });
+    // Aurora also drafts replies to a lead with no contact (MVP-012).
+    await prisma.contactReplyDraft.create({
+      data: {
+        ...t,
+        leadId: lead.id,
+        draftSubject: 'Re lead',
+        draftBody: 'Dear Ada, a lead reply',
+        confidence: 0.8,
+        modelVersion: 'm',
+      },
+    });
+    // A bounce report names the recipient by address (mail look-back and bounce reader).
+    const mailbox = await prisma.emailMailbox.create({
+      data: { ...t, scope: 'TENANT', kind: 'SMTP', status: 'DISCONNECTED', fromAddress: OTHER },
+    });
+    await prisma.emailBounceReceipt.create({
+      data: {
+        ...t,
+        mailboxId: mailbox.id,
+        dsnKey: `${RUN}-dsn`,
+        recipient: SUBJECT,
+        kind: 'HARD',
+        statusCode: '5.1.1',
+        diagnostic: 'mailbox unavailable',
+        matchConfidence: 'HIGH',
+        receivedAt: new Date(),
+      },
+    });
     await prisma.calendarEvent.create({
       data: {
         ...t,
@@ -251,7 +279,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       feedbackSurveys: 1,
       notifications: 1,
       autoResponseDrafts: 1,
-      contactReplyDrafts: 1,
+      contactReplyDrafts: 2,
       calendarEvents: 1,
     });
     expect(preview.checklist).toMatchObject({
@@ -328,6 +356,10 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     for (const text of ['Ada', 'custody', SUBJECT]) expect(leftovers).not.toContain(text);
     expect(await prisma.autoResponseDraft.count({ where: { tenantId: TENANT } })).toBe(0);
     expect(await prisma.contactReplyDraft.count({ where: { tenantId: TENANT } })).toBe(0);
+    const bounce = await prisma.emailBounceReceipt.findMany({ where: { tenantId: TENANT } });
+    expect(bounce).toHaveLength(1);
+    expect(bounce[0].diagnostic).toBeNull();
+    expect(bounce[0].recipient).not.toContain('ada');
 
     // Previewed again, nothing about the person is left to erase.
     const after = await subjects.previewErasure(TENANT, SUBJECT);

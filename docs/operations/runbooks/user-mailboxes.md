@@ -10,7 +10,7 @@ an IntelliFlow address. Each user can have one personal mailbox, and each tenant
 one company mailbox. A mailbox is one of three kinds:
 
 - SMTP, plus IMAP for reading bounces.
-- Gmail, connected with OAuth.
+- Gmail, connected with OAuth, send-only.
 - Microsoft, connected with OAuth.
 
 The API process runs a bounce scanner that reads delivery reports back from each
@@ -37,15 +37,60 @@ Both carry only the mailbox id and an error code.
 
 ## Configuration
 
-| Variable                                                                  | Default             | Purpose                                                                                                                                                                                                       |
-| ------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PRISMA_FIELD_ENCRYPTION_KEY`                                             | (required in prod)  | Encrypts SMTP/IMAP passwords and OAuth refresh tokens at rest. Saving a secret without it returns `PRECONDITION_FAILED`. The production API already refuses to boot without it (M4).                          |
-| `EMAIL_OAUTH_REDIRECT_URI`                                                | unset               | `https://<app>/email/oauth/callback`. Needed for either OAuth provider.                                                                                                                                       |
-| `EMAIL_OAUTH_GOOGLE_CLIENT_ID` / `EMAIL_OAUTH_GOOGLE_CLIENT_SECRET`       | unset               | Google OAuth app. Unset: "Connect Google" is disabled with the reason shown. `gmail.readonly` is a restricted scope and needs Google's security assessment before public launch.                              |
-| `EMAIL_OAUTH_MICROSOFT_CLIENT_ID` / `EMAIL_OAUTH_MICROSOFT_CLIENT_SECRET` | unset               | Microsoft (multi-tenant) app registration. Unset: "Connect Microsoft" is disabled.                                                                                                                            |
-| `EMAIL_ATTACHMENTS_BUCKET`                                                | `email-attachments` | Private Supabase bucket for compose attachments. Created on first upload when it does not exist.                                                                                                              |
-| `EMAIL_BOUNCE_SCAN_INTERVAL_MS`                                           | `60000`             | Bounce scanner interval. `0` disables it. It is always off under tests and on serverless runtimes.                                                                                                            |
-| `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS`                                       | empty               | Comma-separated `imap.host=authserv-id` pairs: receivers trusted to stamp `Authentication-Results` for the custom SMTP/IMAP mailbox on that IMAP host only. Empty means fail closed. See the procedure below. |
+| Variable                                                                  | Default             | Purpose                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PRISMA_FIELD_ENCRYPTION_KEY`                                             | (required in prod)  | Encrypts SMTP/IMAP passwords and OAuth refresh tokens at rest. Saving a secret without it returns `PRECONDITION_FAILED`. The production API already refuses to boot without it (M4).                                |
+| `EMAIL_OAUTH_REDIRECT_URI`                                                | unset               | `https://<app>/email/oauth/callback`. Needed for either OAuth provider.                                                                                                                                             |
+| `EMAIL_OAUTH_GOOGLE_CLIENT_ID` / `EMAIL_OAUTH_GOOGLE_CLIENT_SECRET`       | unset               | Google OAuth app, `gmail.send` + identity only (owner decision 14/11). Unset: "Connect Google" is disabled with the reason shown. Nothing is read from Gmail on the server, so Gmail mailboxes have no bounce scan. |
+| `EMAIL_OAUTH_MICROSOFT_CLIENT_ID` / `EMAIL_OAUTH_MICROSOFT_CLIENT_SECRET` | unset               | Microsoft (multi-tenant) app registration. Unset: "Connect Microsoft" is disabled.                                                                                                                                  |
+| `EMAIL_ATTACHMENTS_BUCKET`                                                | `email-attachments` | Private Supabase bucket for compose attachments. Created on first upload when it does not exist.                                                                                                                    |
+| `EMAIL_BOUNCE_SCAN_INTERVAL_MS`                                           | `60000`             | Bounce scanner interval. `0` disables it. It is always off under tests and on serverless runtimes.                                                                                                                  |
+| `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS`                                       | empty               | Comma-separated `imap.host=authserv-id` pairs: receivers trusted to stamp `Authentication-Results` for the custom SMTP/IMAP mailbox on that IMAP host only. Empty means fail closed. See the procedure below.       |
+| `EMAIL_INBOX_SYNC`                                                        | on                  | `off` stops the Outlook inbox sync (#1177) in this process. The bounce scan is a separate timer and keeps running.                                                                                                  |
+| `EMAIL_INBOX_SYNC_INTERVAL_MS`                                            | `60000`             | Inbox sync tick interval. `0` disables it. Always off under tests and on serverless runtimes.                                                                                                                       |
+
+## Zoho Mail reply sync (MVP-001)
+
+A Zoho Mail mailbox is read by the same sync once it grants
+`ZohoMail.messages.READ` and `ZohoMail.folders.READ` (asked for on Connect Zoho
+Mail since MVP-001). A mailbox connected before that shows "Replies from leads
+and contacts are not logged yet" with a **Reconnect to log replies** button on
+its Email Settings card; one reconnect grants the read permission. Replies join
+the thread of the mail they answer (Zoho's thread id), and mail with a lead also
+shows on the lead's timeline.
+
+## Outlook / Microsoft 365 inbox sync (#1177)
+
+Its own timer (`apps/api/src/modules/email/inbox-sync-scheduler.ts`, separate
+from the bounce scan) reads connected Microsoft mailboxes that granted
+`Mail.Read`, Inbox and Sent Items both, through Graph's delta query
+(`apps/api/src/modules/email/outlook-inbox-sync.ts`,
+`packages/adapters/src/messaging/email/graph-mail-delta.ts`). Each mailbox is
+read at most every 5 minutes. The first read covers the last 30 days. Each Graph
+request gives up after 30 seconds, one mailbox's reads stop after a minute (the
+rest is read next time), and a tick stops taking mailboxes after two minutes.
+
+What is logged, and what never is:
+
+- Only mail with an existing lead or contact of the mailbox's tenant is stored
+  (from them, or sent from Outlook to them), as an `EmailRecord` linked to that
+  contact (a lead is noted in its metadata). Personal mail never reaches the
+  CRM. An erased person keeps only a placeholder address, so they are never
+  matched and their mail cannot come back.
+- Nothing from a sender with an active processing restriction.
+- Nothing twice: Graph's message id is the dedupe key per mailbox, and mail the
+  CRM itself sent is matched by its Message-ID.
+- Mail deleted in Outlook stays logged: the CRM keeps the user's log.
+
+A sync failure backs the mailbox off (up to 6 hours) and never changes its
+status, so sending is not affected. Watch for `[email-inbox-sync] tick failed`
+and `[email] inbox sync failed` (mailbox id and error code only).
+
+The Microsoft app registration (owner, Entra): a multi-tenant app with the
+delegated `offline_access`, `User.Read`, `Mail.Send` and `Mail.Read`
+permissions, the web redirect `EMAIL_OAUTH_REDIRECT_URI`, and a client secret.
+Its id and secret go in `EMAIL_OAUTH_MICROSOFT_CLIENT_ID` /
+`EMAIL_OAUTH_MICROSOFT_CLIENT_SECRET`. Nothing in the code holds either value.
 
 ## Bounce trust (#961, owner ruling Q12)
 

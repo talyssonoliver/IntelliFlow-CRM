@@ -200,6 +200,23 @@ export interface AnalyticsRepository {
   countOpportunitiesInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number>;
 
   /**
+   * Count the workspace's open deals right now: not won, not lost, not archived (deletedAt null).
+   * This is the one "open deals" definition. The dashboard Active Deals tile and the Pipeline
+   * Summary ("open across N deals", opportunity.getPipeline) must both agree with it.
+   * @param tenantId - Tenant to filter by
+   */
+  countOpenOpportunities(tenantId: string): Promise<number>;
+
+  /**
+   * Count the deals that were open at a past moment: created by then, and not yet won, lost or
+   * archived. Used to turn the open-deal count into a real change since the previous period.
+   * A won or lost deal counts as open then only when its closedAt is after the moment.
+   * @param tenantId - Tenant to filter by
+   * @param asOf - The moment to look back to
+   */
+  countOpenOpportunitiesAsOf(tenantId: string, asOf: Date): Promise<number>;
+
+  /**
    * Count contacts created in date range
    * @param tenantId - Tenant to filter by
    * @param dateRange - Date range to query

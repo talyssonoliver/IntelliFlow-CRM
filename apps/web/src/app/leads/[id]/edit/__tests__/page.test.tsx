@@ -231,10 +231,20 @@ describe('EditLeadPage', () => {
     expect(mockBack).toHaveBeenCalled();
   });
 
+  it("focuses the value field when opened from the lead's 'Add value' link", () => {
+    window.history.replaceState(null, '', '#estimatedValue');
+    try {
+      render(<EditLeadPage />);
+      expect(document.activeElement).toBe(screen.getByLabelText('Estimated Value (£)'));
+    } finally {
+      window.history.replaceState(null, '', ' ');
+    }
+  });
+
   it('converts estimatedValue from cents to dollars for display', () => {
     render(<EditLeadPage />);
 
-    const valueInput = screen.getByLabelText('Estimated Value ($)') as HTMLInputElement;
+    const valueInput = screen.getByLabelText('Estimated Value (£)') as HTMLInputElement;
     // 5000 cents = 50.00 dollars
     expect(valueInput.value).toBe('50');
   });

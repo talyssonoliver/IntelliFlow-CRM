@@ -1,0 +1,30 @@
+{
+  "task": "PG-196",
+  "command": "lhci collect (desktop preset, onlyCategories performance+accessibility, 3 runs, puppeteerScript tools/lighthouse/lhci-auth.js)",
+  "startedAt": "2026-11-22T15:18:52Z",
+  "finishedAt": "2026-11-22T15:19:51Z",
+  "exitCode": 0,
+  "target": "http://localhost:3400 (local production build, local Supabase, ephemeral DB)",
+  "runs": {
+    "http://localhost:3400/accounts/account-tiers": [
+      {
+        "performance": 0.93,
+        "accessibility": 0.95,
+        "fetchTime": "2026-11-22T15:18:58.269Z"
+      },
+      {
+        "performance": 0.93,
+        "accessibility": 0.95,
+        "fetchTime": "2026-11-22T15:19:16.881Z"
+      },
+      {
+        "performance": 0.93,
+        "accessibility": 0.95,
+        "fetchTime": "2026-11-22T15:19:36.460Z"
+      }
+    ]
+  },
+  "median_reports": [
+    "accounts-account-tiers-auth.report.json"
+  ]
+}

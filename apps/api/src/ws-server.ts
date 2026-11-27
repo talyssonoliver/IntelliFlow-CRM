@@ -10,7 +10,7 @@
 
 // Must stay the first import: refuses to start in production without a valid license key.
 import '@intelliflow/validators/enforce-license';
-import type { IncomingMessage } from 'node:http';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { appRouter } from './router';
@@ -43,10 +43,31 @@ const WS_PORT = Number(process.env.WS_PORT ?? process.env.PORT ?? 3001);
 // ============================================================================
 
 /**
+ * Answer plain HTTP requests (anything that is not a WebSocket upgrade) (MVP-004).
+ *
+ * GET/HEAD /health returns 200 so uptime checks can tell the service is running. Every other
+ * request keeps the 426 Upgrade Required that the bare WebSocket server answered before.
+ */
+export function handleHttpRequest(req: IncomingMessage, res: ServerResponse): void {
+  const path = (req.url ?? '/').split('?')[0];
+  if (path === '/health' && (req.method === 'GET' || req.method === 'HEAD')) {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(req.method === 'HEAD' ? undefined : JSON.stringify({ status: 'ok' }));
+    return;
+  }
+  res.writeHead(426, { 'Content-Type': 'text/plain' });
+  res.end('Upgrade Required');
+}
+
+/**
  * Create and configure the WebSocket server for tRPC subscriptions
  */
 export function createWebSocketServer(port: number = WS_PORT): WebSocketServer {
-  const wss = new WebSocketServer({ port });
+  // One HTTP server on the port: /health for plain requests, WebSocket upgrades for tRPC.
+  // The WebSocket server re-emits the HTTP server's 'listening' and 'error' events.
+  const server = createServer(handleHttpRequest);
+  const wss = new WebSocketServer({ server });
+  server.listen(port);
 
   // Apply tRPC WebSocket handler
   const handler = applyWSSHandler({
@@ -114,8 +135,11 @@ export function createWebSocketServer(port: number = WS_PORT): WebSocketServer {
     console.log('[WS] Shutting down WebSocket server...');
     handler.broadcastReconnectNotification();
     wss.close(() => {
-      console.log('[WS] WebSocket server closed');
-      process.exit(0);
+      // wss.close() leaves a server it was given open, so close the HTTP server too.
+      server.close(() => {
+        console.log('[WS] WebSocket server closed');
+        process.exit(0);
+      });
     });
   });
 

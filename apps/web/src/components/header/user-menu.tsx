@@ -79,6 +79,8 @@ export function UserMenu({
         className="flex items-center gap-2 p-1 rounded-lg hover:bg-accent transition-colors"
         aria-expanded={isOpen}
         aria-haspopup="true"
+        // The name is shortened on narrow desktops; the button keeps it whole (label in name).
+        aria-label={`${user.name}, account menu`}
       >
         <AppAvatar
           name={user.name}
@@ -128,6 +130,7 @@ export function UserMenu({
           {/* Menu Items */}
           <div className="py-1">
             <Link
+              prefetch={false}
               href="/profile"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
@@ -139,6 +142,7 @@ export function UserMenu({
             </Link>
 
             <Link
+              prefetch={false}
               href="/settings"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
@@ -150,6 +154,7 @@ export function UserMenu({
             </Link>
 
             <Link
+              prefetch={false}
               href="/governance"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
@@ -162,6 +167,7 @@ export function UserMenu({
 
             {showHelpCenter && (
               <Link
+                prefetch={false}
                 href="/help-center"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"

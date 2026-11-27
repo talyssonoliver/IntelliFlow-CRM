@@ -31,6 +31,7 @@ import { useLeadScoringDashboard } from '@/lib/lead-scoring/hooks';
 import type { LeadScoringFilters } from '@/lib/lead-scoring/hooks';
 import type { ScoredLead } from '@/lib/lead-scoring/types';
 import { formatModelVersion, formatScoredAt } from '@/lib/lead-scoring/lead-scoring-utils';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 const LeadScoringTrendChart = lazy(() => import('./LeadScoringTrendChart'));
 
@@ -75,50 +76,6 @@ function getFactorBarColor(impact: number) {
   if (impact >= 5) return 'bg-blue-500';
   if (impact >= 0) return 'bg-slate-400';
   return 'bg-red-400';
-}
-
-// ============================================
-// Stats Card (internal) — with left border accent
-// ============================================
-
-function StatCard({
-  label,
-  value,
-  icon,
-  iconBgClass,
-  borderClass,
-  isLoading,
-}: Readonly<{
-  label: string;
-  value: number | string;
-  icon: string;
-  iconBgClass: string;
-  borderClass?: string;
-  isLoading: boolean;
-}>) {
-  return (
-    <div
-      className={cn(
-        'bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm',
-        borderClass && `border-l-4 ${borderClass}`
-      )}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <span
-          className={cn('material-symbols-outlined p-2 rounded-lg', iconBgClass)}
-          aria-hidden="true"
-        >
-          {icon}
-        </span>
-      </div>
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
-      {isLoading ? (
-        <Skeleton className="h-7 w-14 mt-1" />
-      ) : (
-        <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{value}</p>
-      )}
-    </div>
-  );
 }
 
 // ============================================
@@ -380,44 +337,49 @@ export function LeadScoringDashboard() {
 
       {/* Stats Row — matching sentiment mockup card style */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <StatCard
+        <KpiCard
+          framed
           label="Total Scored"
           value={stats?.total ?? 0}
           icon="leaderboard"
-          iconBgClass="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-          isLoading={isLoading}
+          iconClassName="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Hot Leads"
           value={stats?.hot ?? 0}
           icon="local_fire_department"
-          iconBgClass="bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400"
-          borderClass="border-l-green-500"
-          isLoading={isLoading}
+          iconClassName="bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400"
+          accentClassName="border-l-4 border-l-green-500"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Warm Leads"
           value={stats?.warm ?? 0}
           icon="wb_sunny"
-          iconBgClass="bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400"
-          borderClass="border-l-orange-500"
-          isLoading={isLoading}
+          iconClassName="bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400"
+          accentClassName="border-l-4 border-l-orange-500"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Cold Leads"
           value={stats?.cold ?? 0}
           icon="ac_unit"
-          iconBgClass="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-          borderClass="border-l-slate-400"
-          isLoading={isLoading}
+          iconClassName="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+          accentClassName="border-l-4 border-l-slate-400"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Avg Score"
           value={stats?.avgScore ?? 0}
           icon="analytics"
-          iconBgClass="bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400"
-          borderClass="border-l-indigo-500"
-          isLoading={isLoading}
+          iconClassName="bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400"
+          accentClassName="border-l-4 border-l-indigo-500"
+          loading={isLoading}
         />
       </div>
 

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { isEmptySeries } from '@/lib/charts/empty-series';
-import { ChartEmptyState, ChartUnavailable } from '@/components/shared/ChartEmptyState';
+import { EmptyState } from '@intelliflow/ui';
+import { ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import { useAuth } from '@/lib/auth/AuthContext';
 import {
   DASHBOARD_REFETCH_INTERVAL_MS,
@@ -11,6 +12,7 @@ import {
   computeBarHeightPercent,
 } from '@/lib/dashboard/kpi-calculator';
 import type { WidgetProps } from './index';
+import { WidgetHeader } from '../WidgetHeader';
 
 interface DealsWonData {
   month: string;
@@ -50,7 +52,7 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
   // No answer yet (a disabled or not-yet-run query) is pending, not an empty period.
   if (isLoading || authLoading || (chartData === undefined && !isError)) {
     return (
-      <div className="p-6 h-full flex flex-col animate-pulse">
+      <div className="p-4 sm:p-6 h-full flex flex-col animate-pulse">
         <div className="flex items-center justify-between mb-6">
           <div className="h-7 w-48 rounded bg-muted" />
           <div className="h-8 w-32 rounded bg-muted" />
@@ -72,22 +74,25 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
   const maxValue = chartMax(rows.map((d) => d.value));
 
   return (
-    <div className="p-6 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-foreground">Deals Won</h3>
-        <select
-          aria-label="Select deals-won time range"
-          value={months}
-          onChange={(e) => setMonths(Number(e.target.value) as DealsWonMonths)}
-          className="px-2 py-1 text-sm border border-border rounded bg-card text-foreground"
-        >
-          {DEALS_WON_RANGES.map((r) => (
-            <option key={r.months} value={r.months}>
-              {r.label}
-            </option>
-          ))}
-        </select>
-      </div>
+    <div className="p-4 sm:p-6 h-full flex flex-col">
+      <WidgetHeader
+        title="Deals Won"
+        className="mb-6"
+        actions={
+          <select
+            aria-label="Select deals-won time range"
+            value={months}
+            onChange={(e) => setMonths(Number(e.target.value) as DealsWonMonths)}
+            className="px-2 py-1 text-sm border border-border rounded bg-card text-foreground"
+          >
+            {DEALS_WON_RANGES.map((r) => (
+              <option key={r.months} value={r.months}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        }
+      />
 
       {/* Bar Chart */}
       {isError && (
@@ -99,7 +104,16 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
         />
       )}
       {!isError && empty && (
-        <ChartEmptyState className="h-48" message="No deals won in this period yet" />
+        // The dashboard's other zero states (Pipeline "No open deals", tasks) use the illustrated
+        // EmptyState; this one used the chart placeholder, which also stretched to the height of
+        // the card beside it on desktop and so looked different on a phone (owner 21/11).
+        <EmptyState
+          entity="deals"
+          showCta={false}
+          title="No deals won in this period yet"
+          description="Deals you win show here by month, for the period you pick."
+          className="flex-1 justify-center py-2"
+        />
       )}
       {!isError && !empty && (
         <div

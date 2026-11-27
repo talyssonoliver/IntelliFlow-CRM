@@ -201,20 +201,20 @@ nothing changes.
 
 **Erased automatically** (anonymised in place, scoped to the firm and email):
 
-| Data                         | Result                                                                                                                                                                                    |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Leads                        | Email becomes `erased-<row id>@erased.invalid`. Names, company, phone, location, qualification fields, UTM and referrer fields, tags and embedding are cleared, and the score is reset.   |
-| Contacts                     | Same address rule. First and last name become `Erased`. Contact details, notes field, tags and embedding are cleared.                                                                     |
-| Lead and contact notes       | Text replaced with a marker. Embedding and search vector cleared.                                                                                                                         |
-| Lead and contact activities  | Title replaced, description and metadata cleared.                                                                                                                                         |
-| Lead files                   | File name cleared. The storage location is kept so the stored object can be found and deleted by hand.                                                                                    |
-| AI scores and insights       | Deleted: lead scores, lead and contact insights, and insights about the person's deals.                                                                                                   |
-| Bookings made with the email | Booker name, email, answers and consent fields cleared. The slot stays in the firm's calendar.                                                                                            |
-| Email records (IFC-316)      | Subject and body replaced. The person's address is replaced in From, To, CC and BCC; other recipients stay. Attachment names cleared, storage locations kept.                             |
-| Tickets and chats            | Subject, description and every message's text replaced; the person's name and address removed. Staff names stay. Ticket AI insights deleted; attachment names and inline content cleared. |
-| Feedback, notifications      | Comments, follow-up notes, notification text and the person's address and phone cleared.                                                                                                  |
-| Calendar events              | Title, description, location and attendees cleared.                                                                                                                                       |
-| Drafts and experiments       | Auto-response drafts, contact reply drafts and experiment assignments deleted.                                                                                                            |
+| Data                         | Result                                                                                                                                                                                                                                    |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Leads                        | Email becomes `erased-<row id>@erased.invalid`. Names, company, phone, location, qualification fields, UTM and referrer fields, tags and embedding are cleared, and the score is reset.                                                   |
+| Contacts                     | Same address rule. First and last name become `Erased`. Contact details, notes field, tags and embedding are cleared.                                                                                                                     |
+| Lead and contact notes       | Text replaced with a marker. Embedding and search vector cleared.                                                                                                                                                                         |
+| Lead and contact activities  | Title replaced, description and metadata cleared.                                                                                                                                                                                         |
+| Lead files                   | File name cleared. The storage location is kept so the stored object can be found and deleted by hand.                                                                                                                                    |
+| AI scores and insights       | Deleted: lead scores, lead and contact insights, and insights about the person's deals.                                                                                                                                                   |
+| Bookings made with the email | Booker name, email, answers and consent fields cleared. The slot stays in the firm's calendar.                                                                                                                                            |
+| Email records (IFC-316)      | Subject and body replaced. The person's address is replaced in From, To, CC and BCC; other recipients stay. Attachment names cleared, storage locations kept. A bounce report's recipient address is replaced and its diagnostic cleared. |
+| Tickets and chats            | Subject, description and every message's text replaced; the person's name and address removed. Staff names stay. Ticket AI insights deleted; attachment names and inline content cleared.                                                 |
+| Feedback, notifications      | Comments, follow-up notes, notification text and the person's address and phone cleared.                                                                                                                                                  |
+| Calendar events              | Title, description, location and attendees cleared.                                                                                                                                                                                       |
+| Drafts and experiments       | Auto-response drafts, reply drafts (to a contact or a lead) and experiment assignments deleted.                                                                                                                                           |
 
 Database triggers then stop AI-derived rows being written for an erased lead or
 contact, and stop an old edit from writing the erased address back.
@@ -275,11 +275,32 @@ under the person's row lock:
 The lead and contact pages show a banner "Processing restricted (data request)".
 A marketing objection shows "Do not send marketing (data request)".
 
-**Marketing objection (Article 21(3)).** It is absolute, but the system does not
-stop marketing by itself. To complete it the admin must tick that marketing to
-the person has been stopped and say how (at least 10 characters). The person's
-email then says the firm has confirmed that marketing has stopped. Automated
-outreach suppression is not built (see Known gaps).
+**Marketing objection (Article 21(3)).** It is absolute, and the CRM stops
+marketing email by itself (IFC-315). Completing the objection writes a
+restriction with `blocksMarketing`. From then on:
+
+- An email marked **Marketing email** in compose is not sent to that address, in
+  To, Cc or Bcc. The rest of the recipients still get it. If nobody is left,
+  nothing is sent and the sender sees why. Each withheld send is audited
+  (`email_message`, `EmailMarketingObjectionApplied`) with counts only, and the
+  email record lists the addresses left out.
+- An email not marked either way is not sent at all if any recipient objected.
+  Compose says who objected and asks: **Send as a service email** (it is about
+  their matter, such as a reply or a notice) or **Send as marketing** (they are
+  left out).
+- An erased record's placeholder address is treated the same way.
+- Service email (a reply the sender marks as service, a booking confirmation, a
+  data request notice) still reaches the person: the objection is to marketing
+  only.
+- Auto-response drafts and the agent's draft tool already refuse anyone with an
+  active restriction, and a marketing objection is one.
+
+No workflow, automation or campaign step sends email, so there is no other send
+path to guard. The admin no longer confirms a manual stop. If the firm also
+markets outside the CRM (a newsletter tool, for example), the admin can record
+how that was stopped (optional, at least 10 characters). The person's email says
+the firm's CRM will no longer send them marketing email, which is what the CRM
+enforces.
 
 ## Completion and refusal
 
@@ -372,8 +393,7 @@ track training. The previous training record was fabricated and was removed (see
 | Conversations and messages carry no person key, so RAG, export and erasure cannot reach them.                                                                                                           | #1015               |
 | An access request completed at verification can later withhold data added before the download, with the wrong note.                                                                                     | #1020               |
 | AI search can return too few results when many matches are restricted (filtered after the row limit; fail-safe).                                                                                        | #1021               |
-| Email suppressions and bounce receipts are not in the export or the erasure checklist.                                                                                                                  | #956                |
-| Outreach and marketing suppression is manual. The system only records a restriction that blocks marketing.                                                                                              | IFC-315 (Sprint 19) |
+| Email suppressions and bounce receipts are not in the export (bounce receipts of the person are anonymised by the erasure; suppressions are kept so a bounced address is never mailed again).           | #956                |
 | Erasure of communications (emails, tickets, chats, feedback, notifications, drafts) and stored files is manual.                                                                                         | IFC-316 (Sprint 19) |
 | No CSV export and no direct transfer to another controller (Article 20(2)).                                                                                                                             | IFC-317 (Sprint 19) |
 | No Article 19 notice to recipients of erased, corrected or restricted data.                                                                                                                             | IFC-318 (Sprint 19) |

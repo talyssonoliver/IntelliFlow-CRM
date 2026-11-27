@@ -10,6 +10,9 @@ export * from './config';
 // Base composable schemas (DRY principle)
 export * from './base-schemas';
 
+// Activity text without machine ids (register row 42)
+export * from './activity-text';
+
 // Entity Schemas
 export * from './lead';
 
@@ -110,6 +113,7 @@ export * from './account-tiers';
 export * from './account-territories';
 export * from './approval-policies';
 export * from './model-config'; // PG-199
+export * from './ai-provider-key'; // PG-199 BYOK
 
 // Deal Settings Schemas (PG-184)
 export * from './deal-settings';

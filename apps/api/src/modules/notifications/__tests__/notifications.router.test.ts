@@ -564,9 +564,10 @@ describe('notificationsRouter', () => {
       expect(result.defaultChannels).toEqual(['in_app', 'email']);
       expect(result.preferences).toBeDefined();
       expect(result.preferences.length).toBeGreaterThan(0);
-      // All preferences enabled by default with in_app channel
+      // Every preference on by default with the in_app channel, except AI lead-score notices,
+      // which stay off until the user turns them on (MVP-005).
       result.preferences.forEach((pref) => {
-        expect(pref.enabled).toBe(true);
+        expect(pref.enabled).toBe(pref.type !== 'lead_scored');
         expect(pref.channels).toEqual(['in_app']);
       });
     });
@@ -915,6 +916,53 @@ describe('notificationsRouter', () => {
   // createNotification helper
   // ===========================================================================
   describe('createNotification', () => {
+    describe('per-type preferences at delivery (MVP-005)', () => {
+      const scored = {
+        userId: USER_ID,
+        tenantId: TENANT_ID,
+        type: 'lead_scored' as const,
+        title: 'Lead scored by AI',
+        body: 'Lead scored 82 (HOT)',
+      };
+
+      it('does not deliver an AI score notice to a user who never turned it on', async () => {
+        prismaMock.notificationPreference.findUnique.mockResolvedValue(null);
+        const orchestrator = { send: vi.fn() };
+
+        const result = await createNotification(prismaMock as any, scored, orchestrator);
+
+        expect(result.status).toBe('filtered');
+        expect(orchestrator.send).not.toHaveBeenCalled();
+        expect(prismaMock.notification.create).not.toHaveBeenCalled();
+      });
+
+      it('delivers it once the user turned "Lead Scored" on', async () => {
+        prismaMock.notificationPreference.findUnique.mockResolvedValue({
+          categoryPreferences: { lead_scored: { enabled: true } },
+        } as any);
+        prismaMock.notification.create.mockResolvedValue(createMockNotification() as any);
+
+        const result = await createNotification(prismaMock as any, scored);
+
+        expect(result.status).toBe('pending');
+        expect(prismaMock.notification.create).toHaveBeenCalledTimes(1);
+      });
+
+      it('honours a type the user turned off', async () => {
+        prismaMock.notificationPreference.findUnique.mockResolvedValue({
+          categoryPreferences: { lead_assigned: { enabled: false } },
+        } as any);
+
+        const result = await createNotification(prismaMock as any, {
+          ...scored,
+          type: 'lead_assigned',
+        });
+
+        expect(result.status).toBe('filtered');
+        expect(prismaMock.notification.create).not.toHaveBeenCalled();
+      });
+    });
+
     it('should create notification in Notification table', async () => {
       const mockRecord = createMockNotification({ id: 'cuid-generated-id' });
       prismaMock.notification.create.mockResolvedValue(mockRecord as any);

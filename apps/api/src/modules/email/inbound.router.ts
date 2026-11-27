@@ -36,6 +36,7 @@ import { sendUserEmailInputSchema, type SendUserEmailResultDto } from '@intellif
 import * as adapters from '@intelliflow/adapters';
 import { emailAttachmentStorage, emailRuntimeDeps, type EmailRouterCtx } from './email-access';
 import { dispatchUserMail } from './mailbox-sender';
+import { sendComposedEmail } from '../contact/reply-draft-compose';
 const InboundEmailParser = (adapters as any).InboundEmailParser;
 
 /**
@@ -533,6 +534,9 @@ export const inboundEmailRouter = createTRPCRouter({
               to: [forwardTo],
               subject: `Fwd: ${existing.subject}`,
               htmlBody: existing.body,
+              // IFC-315: forwarding an existing email is a service action, not marketing, and
+              // this action has no way to ask the user, so it names its purpose explicitly.
+              purpose: 'SERVICE',
             }),
             emailRuntimeDeps(ctx as unknown as EmailRouterCtx),
             { metadata: { isForward: true, originalEmailId: emailId } }
@@ -670,13 +674,12 @@ export const inboundEmailRouter = createTRPCRouter({
    * Resolution, suppression, quota, attachments, MIME and the send itself are
    * `dispatchUserMail`; refusals carry `data.emailSendError` for compose.
    */
-  // SECURITY (2026-06-16): gated to email-verified users only — prevents
-  // unverified accounts from using IntelliFlow as a spam relay.
+  // SECURITY (2026-06-16): email-verified users only, so IntelliFlow is never a spam relay.
   sendEmail: verifiedTenantProcedure
     .input(sendUserEmailInputSchema)
     .mutation(async ({ input, ctx }): Promise<SendUserEmailResultDto> => {
       const c = ctx as unknown as EmailRouterCtx;
-      return dispatchUserMail(c, input, emailRuntimeDeps(c));
+      return sendComposedEmail(c, input, emailRuntimeDeps(c)); // MVP-012: links a drafted reply
     }),
 
   /**
@@ -1256,13 +1259,13 @@ function normaliseRecipients(toAddresses: string[]): string[] {
 }
 
 /** Mailbox kinds whose address the provider proved at connect (OAuth sign-in). */
-const ROUTABLE_MAILBOX_KINDS = ['GMAIL', 'MICROSOFT'] as const;
+const ROUTABLE_MAILBOX_KINDS = ['GMAIL', 'MICROSOFT', 'ZOHO'] as const;
 
 /**
  * Find the mailbox an inbound email was sent to.
  *
  * Only an exact recipient match counts, and only against the account address of
- * an ACTIVE mailbox whose provider proved who owns it (Google or Microsoft
+ * an ACTIVE mailbox whose provider proved who owns it (Google, Microsoft or Zoho
  * sign-in). An SMTP mailbox's address is typed in and not proven, so it never
  * routes: otherwise anyone could claim another customer's address and receive,
  * or block, their mail. The recipient's domain, other users' addresses and the

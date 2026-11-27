@@ -10,9 +10,12 @@
  *    in. "Signed in" here means a usable `accessToken` cookie; it is a redirect
  *    hint, not access control. The API checks every call, and roles come from
  *    the database there.
- * 2. Every response carries the report-only Content Security Policy from
+ * 2. A signed-in visit to `/` is rewritten to the signed-in home. Signed out,
+ *    `/` is the prerendered landing page, served from the CDN (see
+ *    `lib/auth/home-paths`).
+ * 3. Every response carries the report-only Content Security Policy from
  *    `lib/security/csp`.
- * 3. A request id is kept or created and passed on (ADR-053).
+ * 4. A request id is kept or created and passed on (ADR-053).
  *
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/proxy
  */
@@ -20,6 +23,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { isTokenUsable } from '@/lib/auth/jwt';
 import { matchesRoutePrefix, PROTECTED_ROUTE_PREFIXES } from '@/lib/auth/route-protection';
+import { SIGNED_IN_HOME_PATH } from '@/lib/auth/home-paths';
 import { buildReportOnlyCsp, cspEnvFromProcess } from '@/lib/security/csp';
 
 export const CSP_REPORT_ONLY_HEADER = 'Content-Security-Policy-Report-Only';
@@ -52,7 +56,14 @@ export function proxy(request: NextRequest): NextResponse {
   } else {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('x-request-id', requestId);
-    response = NextResponse.next({ request: { headers: requestHeaders } });
+    if (signedIn && pathname === '/') {
+      // The browser keeps `/`; the query (a React Server Components fetch included) goes along.
+      const home = request.nextUrl.clone();
+      home.pathname = SIGNED_IN_HOME_PATH;
+      response = NextResponse.rewrite(home, { request: { headers: requestHeaders } });
+    } else {
+      response = NextResponse.next({ request: { headers: requestHeaders } });
+    }
   }
 
   // An expired token cookie only causes redirects and stale reads; drop it.
@@ -63,10 +74,18 @@ export function proxy(request: NextRequest): NextResponse {
 }
 
 /**
- * Every path except API routes, Next.js assets and static files.
+ * `/` only when the request carries the access-token cookie, and every other path except API
+ * routes, Next.js assets and static files.
+ *
+ * A signed-out `/` skips the proxy: it is the prerendered landing page, served from the CDN with
+ * no function at all (an uptime monitor fetches it every minute). Nothing here would change for
+ * it: no redirect, no rewrite, no cookie to drop. Its report-only CSP comes from `next.config.js`.
+ * With the cookie, `/` still runs the proxy: a usable token is rewritten to the signed-in home and
+ * an expired one is dropped.
  */
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).*)',
+    { source: '/', has: [{ type: 'cookie', key: 'accessToken' }] },
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).+)', // NOSONAR: Next.js parses `config` statically and needs a plain string literal here, not String.raw
   ],
 };

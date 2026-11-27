@@ -11,6 +11,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, EmptyState, Skeleton } from '@intelliflow/ui';
 import { useRouting } from '@/app/settings/routing/hooks/useRouting';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 /** Format a date as relative time (e.g., "5 minutes ago") */
 function formatTimeAgo(date: Readonly<Date>): string {
@@ -22,37 +23,6 @@ function formatTimeAgo(date: Readonly<Date>): string {
   if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
   const days = Math.floor(hours / 24);
   return `${days} day${days > 1 ? 's' : ''} ago`;
-}
-
-interface StatsCardProps {
-  icon: string;
-  label: string;
-  value: string | number;
-  loading?: boolean;
-}
-
-function StatsCard({ icon, label, value, loading }: Readonly<StatsCardProps>) {
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-4">
-          <Skeleton className="h-10 w-full" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardContent className="p-4 flex items-center gap-3">
-        <span className="material-symbols-outlined text-[24px] text-primary">{icon}</span>
-        <div>
-          <p className="text-2xl font-semibold">{value}</p>
-          <p className="text-sm text-muted-foreground">{label}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
 }
 
 export function AssignmentDashboard() {
@@ -73,15 +43,16 @@ export function AssignmentDashboard() {
         aria-live="polite"
         aria-label="Assignment statistics"
       >
-        <StatsCard
+        <KpiCard
+          framed
           icon="assignment_turned_in"
           label="Assigned Today"
           value={todayAssignments.length}
           loading={loading}
         />
-        <StatsCard icon="timer" label="Avg Assignment Time" value="< 1s" loading={loading} />
-        <StatsCard icon="rule" label="Active Rules" value={activeRules} loading={loading} />
-        <StatsCard icon="person_off" label="Unassigned Leads" value="—" loading={loading} />
+        <KpiCard framed icon="timer" label="Avg Assignment Time" value="< 1s" loading={loading} />
+        <KpiCard framed icon="rule" label="Active Rules" value={activeRules} loading={loading} />
+        <KpiCard framed icon="person_off" label="Unassigned Leads" value="—" loading={loading} />
       </div>
 
       <Card>

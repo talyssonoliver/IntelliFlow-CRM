@@ -7,19 +7,31 @@ import { AppAvatar } from '@/components/shared/app-avatar';
 import { ContactMapPreview } from '@/components/contacts/ContactMapPreview';
 import {
   formatEstimatedValue,
+  isSameName,
   leadDisplayName,
   leadWebsite,
   openRateLabel,
   visibleTags,
 } from '@/lib/leads/lead-format';
-import { leadScoreDisplay } from '@/lib/leads/score-display';
+import {
+  FEW_SIGNALS_LABEL,
+  FEW_SIGNALS_TITLE,
+  LOW_CONFIDENCE_LABEL,
+  LOW_CONFIDENCE_TITLE,
+  leadScoreDisplay,
+} from '@/lib/leads/score-display';
 
 /** #1218: the profile card's score, or "Not scored" when no real AI score exists. */
 function ProfileScoreValue({
   score,
   scoringStatus,
-}: Readonly<{ score: number; scoringStatus?: string | null }>) {
-  const display = leadScoreDisplay(score, scoringStatus);
+  scoreConfidence,
+}: Readonly<{
+  score: number;
+  scoringStatus?: string | null;
+  scoreConfidence?: number | null;
+}>) {
+  const display = leadScoreDisplay(score, scoringStatus, scoreConfidence);
   if (display.kind === 'not-scored') {
     return (
       <p className="text-lg font-bold text-slate-500 dark:text-slate-400" title={display.title}>
@@ -30,12 +42,21 @@ function ProfileScoreValue({
   return (
     <p className="text-lg font-bold text-slate-900 dark:text-white">
       {display.score}
-      {display.needsReview && (
+      {display.flag === 'low-confidence' && (
         <span
-          className="ml-1 text-xs font-normal text-amber-600 dark:text-amber-400"
-          title="Low confidence: needs review"
+          className="ml-1 text-xs font-normal text-red-600 dark:text-red-400"
+          title={LOW_CONFIDENCE_TITLE}
         >
-          needs review
+          {LOW_CONFIDENCE_LABEL}
+        </span>
+      )}
+      {display.flag === 'few-signals' && (
+        <span
+          className="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400"
+          title={FEW_SIGNALS_TITLE}
+        >
+          {FEW_SIGNALS_LABEL}
+          <span className="sr-only">. {FEW_SIGNALS_TITLE}</span>
         </span>
       )}
     </p>
@@ -203,6 +224,8 @@ export interface LeadProfileData {
   score: number;
   /** #1218: whether `score` is a real AI score (NONE / FAILED show as not scored). */
   scoringStatus?: string | null;
+  /** 0 to 1 when the API supplies it; decides the score flag band. */
+  scoreConfidence?: number | null;
   temperature: LeadTemperature;
   createdAt: string | Date;
   lastContactedAt: string | Date;
@@ -224,6 +247,44 @@ export interface LeadMetrics {
 
 // ─── Profile / owner cards ───────────────────────────────────────────────────
 
+/**
+ * The profile card's name, title and company. A lead named after its company shows the name once,
+ * not again as the company line; when that company is a linked account the name itself is the link
+ * to the account, so the way to the account is not lost with the duplicate line.
+ */
+function LeadProfileTitle({ lead }: Readonly<{ lead: LeadProfileData }>) {
+  const name = leadDisplayName(lead);
+  const accountHref = lead.accountId && lead.account ? `/accounts/${lead.accountId}` : null;
+  const nameIsCompany = isSameName(lead.company, name);
+  return (
+    <>
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+        {nameIsCompany && accountHref ? (
+          <Link href={accountHref} className="hover:underline">
+            {name}
+          </Link>
+        ) : (
+          name
+        )}
+      </h2>
+      <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
+      {lead.company && !nameIsCompany && (
+        <div className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1">
+          <span aria-hidden="true" className="material-symbols-outlined !text-sm">
+            domain
+          </span>
+          {accountHref ? (
+            <Link href={accountHref} className="hover:underline">
+              {lead.company}
+            </Link>
+          ) : (
+            <span>{lead.company}</span>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
 export function LeadProfileCard({
   lead,
   leadMetrics,
@@ -244,22 +305,7 @@ export function LeadProfileCard({
           />
         </div>
         <div className="mb-4">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-            {leadDisplayName(lead)}
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
-          <div className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1">
-            <span aria-hidden="true" className="material-symbols-outlined !text-sm">
-              domain
-            </span>
-            {lead.accountId && lead.account ? (
-              <Link href={`/accounts/${lead.accountId}`} className="hover:underline">
-                {lead.company}
-              </Link>
-            ) : (
-              <span>{lead.company}</span>
-            )}
-          </div>
+          <LeadProfileTitle lead={lead} />
         </div>
         <div className="flex flex-wrap gap-2 mb-6">
           <LeadStatusBadge status={lead.status} />
@@ -350,16 +396,28 @@ export function LeadProfileCard({
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <p className="text-lg font-bold text-slate-900 dark:text-white">
-              {/* 0 is the unset default, not a valuation: show a dash, not "£0". */}
-              {leadMetrics.estimatedValue > 0
-                ? formatEstimatedValue(leadMetrics.estimatedValue)
-                : '—'}
-            </p>
+            {/* 0 is the unset default, not a valuation: offer to add one instead of "£0" or a dash
+                (MVP-003). The link opens the edit form focused on the value field. */}
+            {leadMetrics.estimatedValue > 0 ? (
+              <p className="text-lg font-bold text-slate-900 dark:text-white">
+                {formatEstimatedValue(leadMetrics.estimatedValue)}
+              </p>
+            ) : (
+              <Link
+                href={`/leads/${lead.id}/edit#estimatedValue`}
+                className="block text-base font-semibold text-[#2a78f6] hover:underline leading-7"
+              >
+                Add value
+              </Link>
+            )}
             <p className="text-xs text-slate-500">Est. Value</p>
           </div>
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <ProfileScoreValue score={lead.score} scoringStatus={lead.scoringStatus} />
+            <ProfileScoreValue
+              score={lead.score}
+              scoringStatus={lead.scoringStatus}
+              scoreConfidence={lead.scoreConfidence}
+            />
             <p className="text-xs text-slate-500">Lead Score</p>
           </div>
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">

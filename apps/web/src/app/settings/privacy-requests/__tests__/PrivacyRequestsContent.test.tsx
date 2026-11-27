@@ -166,7 +166,26 @@ describe('PrivacyRequestsContent', () => {
     expect(within(dialog).getByText('This request has changed.')).toBeTruthy();
   });
 
-  it('requires the marketing stop for a marketing objection', async () => {
+  it('completes a marketing objection with no manual stop: the CRM stops its marketing (IFC-315)', async () => {
+    h.list.data = [request({ type: 'OBJECTION', objectionScope: 'MARKETING' })];
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Complete: Objection/ }));
+    const dialog = await screen.findByRole('dialog');
+    expect(
+      within(dialog).getByText('Completing this stops marketing email from the CRM to this person.')
+    ).toBeTruthy();
+    expect(within(dialog).queryByRole('checkbox')).toBeNull();
+    fireEvent.change(within(dialog).getByLabelText('Note for the record'), {
+      target: { value: 'Done' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Complete request' }));
+    await waitFor(() => expect(h.mutations.complete!.mutateAsync).toHaveBeenCalled());
+    const sent = h.mutations.complete!.mutateAsync.mock.calls[0][0];
+    expect(sent).not.toHaveProperty('marketingStoppedConfirmed');
+    expect(sent).not.toHaveProperty('marketingStopMethod');
+  });
+
+  it('sends how marketing outside the CRM was stopped when the admin gives it', async () => {
     h.list.data = [request({ type: 'OBJECTION', objectionScope: 'MARKETING' })];
     render(<PrivacyRequestsContent />);
     fireEvent.click(screen.getByRole('button', { name: /^Complete: Objection/ }));
@@ -174,10 +193,9 @@ describe('PrivacyRequestsContent', () => {
     fireEvent.change(within(dialog).getByLabelText('Note for the record'), {
       target: { value: 'Done' },
     });
-    fireEvent.change(within(dialog).getByLabelText('How marketing was stopped'), {
+    fireEvent.change(within(dialog).getByLabelText('Marketing outside the CRM (optional)'), {
       target: { value: 'Removed from the newsletter list' },
     });
-    fireEvent.click(within(dialog).getByRole('checkbox'));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Complete request' }));
     await waitFor(() =>
       expect(h.mutations.complete!.mutateAsync).toHaveBeenCalledWith(
@@ -469,26 +487,25 @@ describe('accessibility of validation and focus', () => {
     expect(h.mutations.reject!.mutateAsync).not.toHaveBeenCalled();
   });
 
-  it('flags the marketing stop method and the confirmation separately', async () => {
+  it('flags a stop method that is too short, but not an empty one', async () => {
     h.list.data = [request({ type: 'OBJECTION', objectionScope: 'MARKETING' })];
     render(<PrivacyRequestsContent />);
     fireEvent.click(screen.getByRole('button', { name: /^Complete: Objection/ }));
     const dialog = await screen.findByRole('dialog');
-    const stop = within(dialog).getByLabelText('How marketing was stopped');
+    const stop = within(dialog).getByLabelText('Marketing outside the CRM (optional)');
     expect(describedText(stop)).toContain('At least 10 characters');
     fireEvent.change(within(dialog).getByLabelText('Note for the record'), {
       target: { value: 'Done' },
     });
+    fireEvent.change(stop, { target: { value: 'Removed' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Complete request' }));
     await waitFor(() => expect(document.activeElement).toBe(stop));
     expectFieldError(stop, within(dialog).getByRole('alert'));
+    expect(h.mutations.complete!.mutateAsync).not.toHaveBeenCalled();
 
-    fireEvent.change(stop, { target: { value: 'Removed from the newsletter list' } });
+    fireEvent.change(stop, { target: { value: '' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Complete request' }));
-    const box = within(dialog).getByRole('checkbox');
-    await waitFor(() => expect(document.activeElement).toBe(box));
-    expectFieldError(box, within(dialog).getByRole('alert'));
-    expect(stop.getAttribute('aria-invalid')).toBeNull();
+    await waitFor(() => expect(h.mutations.complete!.mutateAsync).toHaveBeenCalled());
   });
 
   it('flags the reason field in the lift dialog', async () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   addSuppressionInputSchema,
+  listSuppressionsInputSchema,
   removeSuppressionInputSchema,
   sendUserEmailInputSchema,
   updateEmailSettingsInputSchema,
@@ -61,6 +62,22 @@ describe('suppression inputs', () => {
     expect(removeSuppressionInputSchema.safeParse({ id: '' }).success).toBe(false);
     expect(removeSuppressionInputSchema.safeParse({ id: 'c' + 'x'.repeat(24) }).success).toBe(true);
   });
+
+  // #1402: tRPC's useInfiniteQuery adds cursor (null on the first page) and direction itself.
+  it('accepts the list input exactly as useInfiniteQuery sends it', () => {
+    expect(
+      listSuppressionsInputSchema.parse({ limit: 25, cursor: null, direction: 'forward' })
+    ).toEqual({ limit: 25, cursor: null, direction: 'forward' });
+    const next = 'c' + 'x'.repeat(24);
+    expect(
+      listSuppressionsInputSchema.parse({ limit: 25, cursor: next, direction: 'forward' })?.cursor
+    ).toBe(next);
+  });
+
+  it('still refuses keys it does not know and a bad direction', () => {
+    expect(listSuppressionsInputSchema.safeParse({ limit: 25, tenantId: 't' }).success).toBe(false);
+    expect(listSuppressionsInputSchema.safeParse({ direction: 'sideways' }).success).toBe(false);
+  });
 });
 
 describe('uploadEmailAttachmentInputSchema', () => {
@@ -105,6 +122,17 @@ describe('sendUserEmailInputSchema', () => {
 
   it('accepts a minimal message', () => {
     expect(sendUserEmailInputSchema.safeParse(base).success).toBe(true);
+  });
+
+  it('takes an optional purpose, SERVICE or MARKETING only (IFC-315)', () => {
+    expect(sendUserEmailInputSchema.parse(base).purpose).toBeUndefined();
+    expect(sendUserEmailInputSchema.parse({ ...base, purpose: 'MARKETING' }).purpose).toBe(
+      'MARKETING'
+    );
+    expect(sendUserEmailInputSchema.safeParse({ ...base, purpose: 'SERVICE' }).success).toBe(true);
+    expect(sendUserEmailInputSchema.safeParse({ ...base, purpose: 'NEWSLETTER' }).success).toBe(
+      false
+    );
   });
 
   it('rejects CR/LF in the subject and an over-long subject', () => {

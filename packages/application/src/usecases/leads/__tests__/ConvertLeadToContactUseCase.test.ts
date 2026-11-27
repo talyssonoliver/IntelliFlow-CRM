@@ -261,8 +261,8 @@ describe('ConvertLeadToContactUseCase', () => {
       expect(result.isSuccess).toBe(true);
       const savedContact = contactRepository.savedContact;
       expect(savedContact!.email.value).toBe('minimal@example.com');
-      expect(savedContact!.firstName).toBe('Unknown'); // Default for missing firstName
-      expect(savedContact!.lastName).toBe('Unknown'); // Default for missing lastName
+      expect(savedContact!.firstName).toBe('minimal@example.com'); // no name, no company: the address
+      expect(savedContact!.lastName).toBe(''); // never an invented "Unknown"
     });
   });
 

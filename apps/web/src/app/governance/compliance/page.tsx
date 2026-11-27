@@ -1,7 +1,15 @@
 'use client';
 
+/**
+ * Compliance dashboard (PG-194).
+ *
+ * Every score, status, trend and detail line on this page comes from the `compliance` tRPC router,
+ * which computes it from evidence in the firm's own data. Nothing here is typed in: a framework the
+ * product cannot measure says "Not measured" and what it would need. A test fails if a literal
+ * score appears in this file.
+ */
 import { useState } from 'react';
-import { Card } from '@intelliflow/ui';
+import { Card, toast } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import {
@@ -10,120 +18,103 @@ import {
   ComplianceDetailPanel,
   ExportReportButton,
 } from './components';
+import {
+  STATUS_LABEL,
+  STATUS_STYLE,
+  overallTrend,
+  scoreText,
+  trendDirection,
+  trendText,
+  type FrameworkView,
+  type TrendView,
+} from './components/compliance-view';
+
+const TREND_ICON = {
+  up: 'trending_up',
+  down: 'trending_down',
+  flat: 'remove',
+  pending: 'schedule',
+} as const;
+
+const TREND_COLOR = {
+  up: 'text-emerald-600',
+  down: 'text-red-600',
+  flat: 'text-muted-foreground',
+  pending: 'text-muted-foreground',
+} as const;
+
+function TrendLabel({ trend }: Readonly<{ trend: TrendView }>) {
+  const direction = trendDirection(trend);
+  return (
+    <span className={`text-sm font-medium flex items-center ${TREND_COLOR[direction]}`}>
+      <span className="material-symbols-outlined text-base mr-1">{TREND_ICON[direction]}</span>
+      {trendText(trend)}
+    </span>
+  );
+}
 
 interface ComplianceCardProps {
-  title: string;
-  subtitle: string;
-  icon: string;
-  score: number;
-  trend: number;
-  status: 'compliant' | 'critical' | 'attention';
-  details: { label: string; value: string }[];
-  standardId: string;
+  framework: FrameworkView;
   onSelect: (id: string) => void;
 }
 
-function ComplianceCard({
-  title,
-  subtitle,
-  icon,
-  score,
-  trend,
-  status,
-  details,
-  standardId,
-  onSelect,
-}: Readonly<ComplianceCardProps>) {
-  const statusConfig = {
-    compliant: {
-      badge: 'Compliant',
-      badgeClass:
-        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
-      dotClass: 'bg-emerald-500 animate-pulse',
-      iconBg: 'bg-emerald-50 dark:bg-emerald-900/20',
-      iconColor: 'text-emerald-600 dark:text-emerald-400',
-      progressColor: 'bg-emerald-500',
-    },
-    critical: {
-      badge: 'Critical',
-      badgeClass:
-        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
-      dotClass: 'bg-red-500',
-      iconBg: 'bg-red-50 dark:bg-red-900/20',
-      iconColor: 'text-red-600 dark:text-red-400',
-      progressColor: 'bg-red-500',
-    },
-    attention: {
-      badge: 'Attention',
-      badgeClass:
-        'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800',
-      dotClass: 'bg-amber-500',
-      iconBg: 'bg-amber-50 dark:bg-amber-900/20',
-      iconColor: 'text-amber-600 dark:text-amber-400',
-      progressColor: 'bg-amber-500',
-    },
-  };
-
-  const config = statusConfig[status];
+function ComplianceCard({ framework, onSelect }: Readonly<ComplianceCardProps>) {
+  const style = STATUS_STYLE[framework.status];
+  const { score } = framework;
 
   return (
     <Card
-      className="p-6 h-full hover:shadow-md transition-shadow cursor-pointer"
-      onClick={() => onSelect(standardId)}
+      className="relative p-6 h-full hover:shadow-md transition-shadow focus-within:ring-2 focus-within:ring-primary"
+      data-testid={`framework-${framework.id}`}
     >
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3">
+      <button
+        type="button"
+        aria-label={`${framework.title} details`}
+        className="absolute inset-0 z-10 rounded-[inherit] cursor-pointer focus:outline-none"
+        onClick={() => onSelect(framework.id)}
+      />
+      <div className="flex justify-between items-start gap-2 mb-4">
+        <div className="flex items-center gap-3 min-w-0">
           <div
-            className={`w-10 h-10 rounded-lg ${config.iconBg} ${config.iconColor} flex items-center justify-center`}
+            className={`w-10 h-10 shrink-0 rounded-lg ${style.iconBg} ${style.iconColor} flex items-center justify-center`}
           >
-            <span className="material-symbols-outlined">{icon}</span>
+            <span className="material-symbols-outlined">{framework.icon}</span>
           </div>
-          <div>
-            <h3 className="font-bold text-foreground text-lg">{title}</h3>
+          <div className="min-w-0">
+            <h3 className="font-bold text-foreground text-lg">{framework.title}</h3>
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-              {subtitle}
+              {framework.subtitle}
             </p>
           </div>
         </div>
         <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${config.badgeClass} border`}
+          className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-bold ${style.badge} border`}
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${config.dotClass}`} />
-          {config.badge}
+          <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+          {STATUS_LABEL[framework.status]}
         </span>
       </div>
 
-      <div className="flex items-baseline gap-2 mb-2">
-        <span className="text-4xl font-bold text-foreground">{score}%</span>
-        <span
-          className={`text-sm font-medium flex items-center ${(() => {
-            if (trend > 0) return 'text-emerald-600';
-            if (trend < 0) return 'text-red-600';
-            return 'text-muted-foreground';
-          })()}`}
-        >
-          <span className="material-symbols-outlined text-base">
-            {(() => {
-              if (trend > 0) return 'trending_up';
-              if (trend < 0) return 'trending_down';
-              return 'remove';
-            })()}
-          </span>{' '}
-          {trend > 0 ? '+' : ''}
-          {trend}%
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
+        <span className={`font-bold text-foreground ${score === null ? 'text-2xl' : 'text-4xl'}`}>
+          {scoreText(score)}
         </span>
+        <TrendLabel trend={framework.trend} />
       </div>
 
-      <div className="w-full bg-muted rounded-full h-2.5 mb-6 overflow-hidden">
-        <div
-          className={`${config.progressColor} h-2.5 rounded-full transition-all`}
-          style={{ width: `${score}%` }}
-        />
+      <div className="w-full bg-muted rounded-full h-2.5 mb-3 overflow-hidden">
+        {score !== null && (
+          <div
+            className={`${style.progress} h-2.5 rounded-full transition-all`}
+            style={{ width: `${score}%` }}
+          />
+        )}
       </div>
+      <p className="text-xs text-muted-foreground mb-4">{framework.scope}</p>
 
       <div className="grid grid-cols-2 gap-4 text-sm border-t border-border pt-4">
-        {details.map((detail) => (
-          <div key={detail.label}>
+        {framework.details.map((detail) => (
+          <div key={detail.label} className="min-w-0">
             <p className="text-muted-foreground mb-0.5">{detail.label}</p>
             <p className="font-semibold text-foreground">{detail.value}</p>
           </div>
@@ -133,7 +124,19 @@ function ComplianceCard({
   );
 }
 
-function OverallScoreCard() {
+interface OverallScoreCardProps {
+  overall: {
+    score: number | null;
+    measuredFrameworks: number;
+    totalFrameworks: number;
+    actionItems: number;
+    notMeasuredControls: number;
+  };
+  trend: TrendView;
+}
+
+function OverallScoreCard({ overall, trend }: Readonly<OverallScoreCardProps>) {
+  const direction = trendDirection(trend);
   return (
     <Card className="p-6 bg-slate-900 dark:bg-slate-800 border-slate-700 relative overflow-hidden">
       <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
@@ -162,43 +165,53 @@ function OverallScoreCard() {
                 stroke="currentColor"
                 strokeWidth="3"
               />
-              <path
-                className="text-primary"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none"
-                stroke="currentColor"
-                strokeDasharray="74.6, 100"
-                strokeLinecap="round"
-                strokeWidth="3"
-                style={{ filter: 'drop-shadow(0 0 10px rgba(42, 120, 246, 0.5))' }}
-              />
+              {overall.score !== null && (
+                <path
+                  className="text-primary"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeDasharray={`${overall.score}, 100`}
+                  strokeLinecap="round"
+                  strokeWidth="3"
+                  style={{ filter: 'drop-shadow(0 0 10px rgba(42, 120, 246, 0.5))' }}
+                />
+              )}
             </svg>
-            <div className="absolute inset-0 flex items-center justify-center flex-col">
-              <span className="text-3xl font-bold text-white">74.6</span>
-              <span className="text-xs text-slate-400">Score</span>
+            <div className="absolute inset-0 flex items-center justify-center flex-col text-center">
+              <span
+                className={`font-bold text-white ${overall.score === null ? 'text-sm' : 'text-3xl'}`}
+              >
+                {overall.score === null ? 'Not measured' : overall.score}
+              </span>
+              {overall.score !== null && <span className="text-xs text-slate-400">Score</span>}
             </div>
           </div>
         </div>
+        <p className="text-center text-xs text-slate-400">
+          {overall.measuredFrameworks} of {overall.totalFrameworks} frameworks measured
+        </p>
 
-        <div className="grid grid-cols-2 gap-4 text-sm pt-4 mt-2 border-t border-white/10">
-          <div className="text-center border-r border-white/10">
-            <p className="text-slate-400 mb-0.5 text-xs">Quarterly Trend</p>
-            <p className="font-bold text-white flex items-center justify-center gap-1">
-              <span className="material-symbols-outlined text-emerald-400 text-base">
-                arrow_upward
-              </span>{' '}
-              Positive
+        <div className="grid grid-cols-2 gap-4 text-sm pt-4 mt-4 border-t border-white/10">
+          <div className="text-center border-r border-white/10 px-1">
+            <p className="text-slate-400 mb-0.5 text-xs">Trend</p>
+            <p className="font-bold text-white flex items-center justify-center gap-1 text-xs">
+              <span className="material-symbols-outlined text-slate-300 text-base">
+                {TREND_ICON[direction]}
+              </span>
+              {trendText(trend)}
             </p>
           </div>
-          <div className="text-center">
+          <div className="text-center px-1">
             <p className="text-slate-400 mb-0.5 text-xs">Action Items</p>
-            <p className="font-bold text-white">16 Total</p>
+            <p className="font-bold text-white">{overall.actionItems} to review</p>
           </div>
         </div>
 
-        <button className="w-full mt-5 py-2 px-4 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors backdrop-blur-sm">
-          Download Full Report
-        </button>
+        <ExportReportButton
+          label="Download Full Report"
+          className="w-full mt-5 whitespace-nowrap bg-white/10 hover:bg-white/20 text-white"
+        />
       </div>
     </Card>
   );
@@ -221,20 +234,107 @@ function formatActivityTime(date: Date | string, timezone: string = 'Europe/Lond
   });
 }
 
+function errorCode(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object' || !('data' in error)) return undefined;
+  const data = (error as { data?: { code?: unknown } }).data;
+  return typeof data?.code === 'string' ? data.code : undefined;
+}
+
+function CardsSkeleton() {
+  return (
+    <div
+      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8"
+      aria-busy="true"
+      aria-label="Loading compliance data"
+    >
+      {Array.from({ length: 6 }, (_, i) => (
+        <Card key={i} className="p-6 h-64 animate-pulse bg-muted/40" />
+      ))}
+    </div>
+  );
+}
+
 export default function ComplianceDashboardPage() {
   const { timezone } = useTimezoneContext();
+  const utils = trpc.useUtils();
   const [selectedStandard, setSelectedStandard] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const { data: recentActivity = [] } = trpc.analytics.recentActivity.useQuery({ limit: 10 });
+  const overviewQuery = trpc.compliance.overview.useQuery();
+  const refresh = trpc.compliance.refresh.useMutation({
+    onSuccess: async (result) => {
+      await utils.compliance.overview.invalidate();
+      await utils.compliance.history.invalidate();
+      toast(
+        result.stored === 0
+          ? {
+              title: 'Today\u2019s snapshot was not stored',
+              description: 'Some evidence could not be read. The figures shown are current.',
+              variant: 'destructive',
+            }
+          : { title: 'Compliance data refreshed' }
+      );
+    },
+    onError: () => {
+      toast({
+        title: 'Refresh failed',
+        description: 'The compliance figures could not be refreshed. Try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const overview = overviewQuery.data;
+  const forbidden = errorCode(overviewQuery.error) === 'FORBIDDEN';
+  const selected = overview?.frameworks.find((f) => f.id === selectedStandard) ?? null;
 
   const handleSelectStandard = (id: string) => {
     setSelectedStandard(id);
     setDetailOpen(true);
   };
 
+  const renderCards = () => {
+    if (forbidden) {
+      return (
+        <Card className="p-6 mb-8">
+          <p className="text-foreground">
+            Compliance figures are visible to administrators and managers.
+          </p>
+        </Card>
+      );
+    }
+    if (overviewQuery.isError) {
+      return (
+        <Card className="p-6 mb-8 flex flex-wrap items-center justify-between gap-3" role="alert">
+          <p className="text-foreground">The compliance figures could not be loaded.</p>
+          <button
+            type="button"
+            onClick={() => overviewQuery.refetch()}
+            className="inline-flex items-center gap-2 px-4 py-2 whitespace-nowrap bg-card border border-border rounded-lg text-foreground text-sm font-semibold hover:bg-accent transition-colors"
+          >
+            <span className="material-symbols-outlined text-lg">refresh</span> Try again
+          </button>
+        </Card>
+      );
+    }
+    if (!overview) return <CardsSkeleton />;
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+        {overview.frameworks.map((framework) => (
+          <ComplianceCard
+            key={framework.id}
+            framework={framework}
+            onSelect={handleSelectStandard}
+          />
+        ))}
+        <OverallScoreCard overall={overview.overall} trend={overallTrend(overview.frameworks)} />
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="mx-auto">
+      <div className="mx-auto w-full">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
@@ -244,96 +344,37 @@ export default function ComplianceDashboardPage() {
             <p className="text-muted-foreground mt-1">
               Monitor adherence to international standards and internal policies.
             </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Readiness checks on what this product can see in your firm. Not a certification or
+              legal advice.
+            </p>
           </div>
-          <div className="flex items-center gap-3">
-            <button className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-foreground text-sm font-semibold hover:bg-accent transition-colors shadow-sm">
-              <span className="material-symbols-outlined text-lg">refresh</span> Refresh Data
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => refresh.mutate()}
+              disabled={refresh.isPending || forbidden}
+              className="inline-flex items-center gap-2 px-4 py-2 whitespace-nowrap bg-card border border-border rounded-lg text-foreground text-sm font-semibold hover:bg-accent transition-colors shadow-sm disabled:opacity-60"
+            >
+              <span
+                className={`material-symbols-outlined text-lg ${refresh.isPending ? 'animate-spin' : ''}`}
+              >
+                refresh
+              </span>{' '}
+              Refresh Data
             </button>
-            <ExportReportButton />
+            <ExportReportButton className="whitespace-nowrap" disabled={forbidden} />
           </div>
         </div>
 
         {/* Compliance Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-          <ComplianceCard
-            title="ISO 27001"
-            subtitle="InfoSec"
-            icon="security"
-            score={92}
-            trend={2.4}
-            status="compliant"
-            standardId="iso-27001"
-            onSelect={handleSelectStandard}
-            details={[
-              { label: 'Controls Passed', value: '104 / 114' },
-              { label: 'Next Audit', value: 'Oct 24, 2023' },
-            ]}
-          />
+        {renderCards()}
 
-          <ComplianceCard
-            title="ISO 42001"
-            subtitle="AI Mgmt"
-            icon="smart_toy"
-            score={45}
-            trend={-5.1}
-            status="critical"
-            standardId="iso-42001"
-            onSelect={handleSelectStandard}
-            details={[
-              { label: 'Risk Level', value: 'High' },
-              { label: 'Open Issues', value: '12 Pending' },
-            ]}
-          />
-
-          <ComplianceCard
-            title="ISO 14001"
-            subtitle="Environment"
-            icon="eco"
-            score={78}
-            trend={0}
-            status="attention"
-            standardId="iso-14001"
-            onSelect={handleSelectStandard}
-            details={[
-              { label: 'Cert Status', value: 'Expiring Soon' },
-              { label: 'Policy Review', value: 'Required' },
-            ]}
-          />
-
-          <ComplianceCard
-            title="GDPR"
-            subtitle="Data Protection"
-            icon="gavel"
-            score={98}
-            trend={0.5}
-            status="compliant"
-            standardId="gdpr"
-            onSelect={handleSelectStandard}
-            details={[
-              { label: 'Data Incidents', value: '0 Reported' },
-              { label: 'DPIA Status', value: 'Up to date' },
-            ]}
-          />
-
-          <ComplianceCard
-            title="ADR Registry"
-            subtitle="Architecture"
-            icon="architecture"
-            score={60}
-            trend={-12}
-            status="attention"
-            standardId="adr-registry"
-            onSelect={handleSelectStandard}
-            details={[
-              { label: 'Documentation', value: 'Incomplete' },
-              { label: 'Decision Log', value: '4 Pending' },
-            ]}
-          />
-
-          <OverallScoreCard />
-        </div>
-
-        {/* Risk Heat Map & Timeline */}
+        {/* Risk Heat Map & Timeline: the platform's own register and calendar, not per firm */}
+        <p className="text-xs text-muted-foreground mb-3">
+          The risk register and the compliance calendar below are platform-wide, not specific to
+          your firm.
+        </p>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
           <RiskHeatMap />
           <ComplianceTimeline />
@@ -343,7 +384,7 @@ export default function ComplianceDashboardPage() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-foreground text-lg">Recent Compliance Activity</h3>
-            <button className="text-sm font-semibold text-primary hover:underline">
+            <button className="text-sm font-semibold text-primary hover:underline whitespace-nowrap">
               View All History
             </button>
           </div>
@@ -374,7 +415,7 @@ export default function ComplianceDashboardPage() {
 
         {/* Compliance Detail Panel (slide-out sheet) */}
         <ComplianceDetailPanel
-          standardId={selectedStandard}
+          framework={selected}
           open={detailOpen}
           onClose={() => setDetailOpen(false)}
         />

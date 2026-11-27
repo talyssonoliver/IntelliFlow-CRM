@@ -1,36 +1,36 @@
 {
-  "generated_at": "2026-10-23T15:37:20.795Z",
+  "generated_at": "2026-11-26T10:55:13.639Z",
   "tool_version": "1.2.0",
   "routes": [
     {
       "route": "/",
-      "file_path": "apps/web/src/app/(public)/(home)/page.tsx",
+      "file_path": "apps/web/src/app/(landing)/page.tsx",
       "access_tier": "public",
       "metadata": {
         "title": {
           "value": "Aurora, the AI CRM that asks before it acts",
-          "source": "page"
+          "source": "root-layout"
         },
         "description": {
-          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Nothing goes out until a person says yes.",
-          "source": "page",
-          "length": 126
+          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
+          "source": "root-layout",
+          "length": 131
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
-          "source": "page"
+          "source": "root-layout"
         },
         "og_description": {
-          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Nothing goes out until a person says yes.",
-          "source": "page"
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
         },
         "og_url": {
           "value": "https://intelli-flow-crm-web.vercel.app",
-          "source": "page"
+          "source": "root-layout"
         },
         "og_site_name": {
           "value": "Aurora",
-          "source": "page"
+          "source": "root-layout"
         },
         "og_image": {
           "value": null,
@@ -38,15 +38,15 @@
         },
         "twitter_card": {
           "value": "summary_large_image",
-          "source": "page"
+          "source": "root-layout"
         },
         "twitter_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
-          "source": "page"
+          "source": "root-layout"
         },
         "twitter_description": {
           "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
-          "source": "page"
+          "source": "root-layout"
         },
         "robots_noindex": false
       },
@@ -2165,8 +2165,8 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Report Settings — Aurora",
-          "source": "page"
+          "value": "Analytics",
+          "source": "layout"
         },
         "description": {
           "value": "Configure the default date range and display currency for analytics reports.",
@@ -3362,8 +3362,8 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Billing Settings — Aurora",
-          "source": "page"
+          "value": "Billing",
+          "source": "layout"
         },
         "description": {
           "value": "Manage your billing information, tax ID, and invoice contact.",
@@ -3618,16 +3618,16 @@
           "source": "page"
         },
         "description": {
-          "value": "Insights on AI-first CRM, sales automation, governance, and customer success strategies.",
+          "value": "Posts from the Aurora team on AI-first CRM, sales automation and governance.",
           "source": "page",
-          "length": 88
+          "length": 76
         },
         "og_title": {
           "value": "Aurora Blog",
           "source": "page"
         },
         "og_description": {
-          "value": "Expert insights on AI-powered sales, governance-ready automation, and CRM best practices.",
+          "value": "Posts from the Aurora team on AI-first CRM, sales automation and governance.",
           "source": "page"
         },
         "og_url": {
@@ -3663,13 +3663,13 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "stale",
+        "classification": "static-by-design",
         "patterns_found": [
-          "percentage",
-          "year-reference",
-          "placeholder"
+          "data-import"
         ],
-        "data_sources": []
+        "data_sources": [
+          "@/data/blog-posts"
+        ]
       },
       "ghost_links": [],
       "broken_inpage_links": [],
@@ -3723,9 +3723,9 @@
         },
         "robots_noindex": false
       },
-      "seo_score": 90,
-      "in_sitemap": true,
-      "sitemap_last_modified_method": "data-field",
+      "seo_score": 80,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
       "http_status": null,
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
@@ -5634,10 +5634,8 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "static-by-design-dated",
-        "patterns_found": [
-          "percentage"
-        ],
+        "classification": "none",
+        "patterns_found": [],
         "data_sources": []
       },
       "ghost_links": [],
@@ -6154,8 +6152,8 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Developer Apps | Aurora",
-          "source": "page"
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
         },
         "description": {
           "value": "Manage your developer applications, API keys, and webhook configurations",
@@ -6343,8 +6341,8 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Create New App | Developer Apps | Aurora",
-          "source": "page"
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
         },
         "description": {
           "value": "Register a new developer application with OAuth credentials, API scope selection, and optional webhook configuration.",
@@ -6469,8 +6467,8 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "API Reference | Aurora",
-          "source": "page"
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
         },
         "description": {
           "value": "Interactive tRPC API documentation with 25 routers and 235+ typed procedures",
@@ -6532,8 +6530,8 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Architecture | Aurora",
-          "source": "page"
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
         },
         "description": {
           "value": "Architecture Decision Records (ADRs) for Aurora — browse decisions on system design, data management, AI integration, and platform infrastructure",
@@ -6595,11 +6593,11 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Authentication | Aurora",
-          "source": "page"
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
         },
         "description": {
-          "value": "Authentication guides for Aurora — OAuth 2.0, JWT tokens, MFA setup, session management, and API key reference.",
+          "value": "Authentication guides for Aurora — OAuth 2.0, JWT tokens, session management, and the planned MFA and API keys.",
           "source": "page",
           "length": 111
         },
@@ -6658,8 +6656,8 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Changelog | Aurora",
-          "source": "page"
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
         },
         "description": {
           "value": "Release notes, version history, and breaking change notifications for Aurora platform updates",
@@ -6721,8 +6719,8 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "CLI Reference | Aurora",
-          "source": "page"
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
         },
         "description": {
           "value": "CLI documentation for Aurora — monorepo development commands for setup, testing, database management, and AI development",
@@ -6784,8 +6782,8 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Developer Guides | Aurora",
-          "source": "page"
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
         },
         "description": {
           "value": "Developer guides for Aurora — getting started, development workflows, testing strategies, AI development, deployment, and best practices",
@@ -6847,8 +6845,8 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Integration Resources | Aurora",
-          "source": "page"
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
         },
         "description": {
           "value": "Webhooks, SDK guides, authentication, and third-party connector documentation",
@@ -6910,8 +6908,8 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "SDK Guides | Aurora",
-          "source": "page"
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
         },
         "description": {
           "value": "SDK documentation for Aurora — TypeScript client libraries, React hooks, installation guides, and quickstart examples",
@@ -6973,8 +6971,8 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Webhooks | Aurora",
-          "source": "page"
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
         },
         "description": {
           "value": "Webhook documentation for Aurora — event types, signature verification, retry policies, and interactive endpoint testing",
@@ -7675,8 +7673,8 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Email | Aurora",
-          "source": "page"
+          "value": "Email",
+          "source": "layout"
         },
         "description": {
           "value": "Email compose and history",
@@ -7738,8 +7736,8 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Email | Aurora",
-          "source": "page"
+          "value": "Email",
+          "source": "layout"
         },
         "description": {
           "value": "Email thread view",
@@ -7801,8 +7799,8 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Compose Email | Aurora",
-          "source": "page"
+          "value": "Email",
+          "source": "layout"
         },
         "description": {
           "value": "Compose a new email or reply to a conversation",
@@ -7864,8 +7862,8 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Email Settings — Aurora",
-          "source": "page"
+          "value": "Email",
+          "source": "layout"
         },
         "description": {
           "value": "Connect the mailbox your email is sent from, and set the reply-to address, tracking and bounce handling.",
@@ -7927,8 +7925,8 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Connecting Mailbox — Aurora",
-          "source": "page"
+          "value": "Email",
+          "source": "layout"
         },
         "description": {
           "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
@@ -7990,8 +7988,8 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Signatures — Aurora",
-          "source": "page"
+          "value": "Email",
+          "source": "layout"
         },
         "description": {
           "value": "Personal and organisation email signatures, added when you write a new email.",
@@ -8120,16 +8118,16 @@
           "source": "page"
         },
         "description": {
-          "value": "What Aurora does: AI agents that score leads and draft follow-ups for your approval, one approval queue, your pipeline, cases, email and calendar, six connectors and security on from day one.",
+          "value": "What Aurora does: AI agents that score leads and draft follow-ups for your approval, one approval queue, your pipeline, cases, email and calendar, your own mailbox and security on from day one.",
           "source": "page",
-          "length": 191
+          "length": 193
         },
         "og_title": {
           "value": "Aurora features: agents that do the work, with you in charge",
           "source": "page"
         },
         "og_description": {
-          "value": "Lead scoring, drafted follow-ups, one approval queue, pipeline, cases, email and calendar, and six connectors.",
+          "value": "Lead scoring, drafted follow-ups, one approval queue, pipeline, cases, email and calendar, and your own mailbox.",
           "source": "page"
         },
         "og_url": {
@@ -8153,7 +8151,7 @@
           "source": "page"
         },
         "twitter_description": {
-          "value": "Lead scoring, drafted follow-ups, one approval queue, pipeline, cases and six connectors. 14-day free trial.",
+          "value": "Lead scoring, drafted follow-ups, one approval queue, pipeline, cases and your own mailbox. 14-day free trial.",
           "source": "page"
         },
         "robots_noindex": false
@@ -9652,9 +9650,9 @@
           "source": "layout"
         },
         "description": {
-          "value": "Sign in to Aurora. Access your sales pipeline, AI-powered lead scores, and team dashboard. Supports Google, Microsoft, and enterprise SSO.",
+          "value": "Sign in to Aurora. Access your sales pipeline, AI-powered lead scores, and team dashboard. Sign in with email or Google.",
           "source": "layout",
-          "length": 138
+          "length": 120
         },
         "og_title": {
           "value": "Sign In to Aurora",
@@ -9685,7 +9683,7 @@
           "source": "layout"
         },
         "twitter_description": {
-          "value": "Log in to your Aurora. Google SSO, Microsoft SSO, and enterprise SAML supported.",
+          "value": "Log in to Aurora with email or Google.",
           "source": "layout"
         },
         "robots_noindex": false
@@ -10227,16 +10225,16 @@
           "source": "page"
         },
         "description": {
-          "value": "Join our partner ecosystem. Integrate your solution, resell Aurora, or become a certified consultant. API access, co-marketing, and revenue share programs available.",
+          "value": "Join our partner ecosystem. Integrate your solution, resell Aurora, or consult with Aurora. API access, co-marketing, and revenue share programs available.",
           "source": "page",
-          "length": 165
+          "length": 155
         },
         "og_title": {
           "value": "Partner with Aurora",
           "source": "page"
         },
         "og_description": {
-          "value": "Technology integrations, reseller programs, and consultant certifications. Build with our API, earn revenue share, and grow your business.",
+          "value": "Technology integrations, reseller programs, and consulting. Build with our API, earn revenue share, and grow your business.",
           "source": "page"
         },
         "og_url": {
@@ -10260,12 +10258,12 @@
           "source": "page"
         },
         "twitter_description": {
-          "value": "Join our ecosystem: Technology partners, resellers, and certified consultants. API access and revenue share programs.",
+          "value": "Join our ecosystem: Technology partners, resellers, and consultants. API access and revenue share programs.",
           "source": "page"
         },
         "robots_noindex": false
       },
-      "seo_score": 70,
+      "seo_score": 90,
       "in_sitemap": true,
       "sitemap_last_modified_method": "STATIC_LAST_MODIFIED",
       "http_status": null,
@@ -10294,16 +10292,16 @@
           "source": "page"
         },
         "description": {
-          "value": "Latest news, press releases, and media resources from Aurora. Download our media kit for brand assets and company information.",
+          "value": "News and press releases from Aurora, and how to reach us for media enquiries.",
           "source": "page",
-          "length": 126
+          "length": 77
         },
         "og_title": {
           "value": "Press & Media",
           "source": "page"
         },
         "og_description": {
-          "value": "Latest news and press releases from Aurora. AI-powered CRM for modern sales teams.",
+          "value": "News and press releases from Aurora.",
           "source": "page"
         },
         "og_url": {
@@ -10327,7 +10325,7 @@
           "source": "page"
         },
         "twitter_description": {
-          "value": "Latest news and press releases from Aurora. AI-powered CRM for modern sales teams.",
+          "value": "News and press releases from Aurora.",
           "source": "page"
         },
         "robots_noindex": false
@@ -10399,9 +10397,9 @@
         },
         "robots_noindex": false
       },
-      "seo_score": 90,
-      "in_sitemap": true,
-      "sitemap_last_modified_method": "data-field",
+      "seo_score": 80,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
       "http_status": null,
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
@@ -10810,9 +10808,9 @@
           "source": "page"
         },
         "description": {
-          "value": "Aurora's security, on from day one: no AI action goes out without a person's approval, each workspace's data is kept apart, multi-factor sign-in is available on every account and every change is logged.",
+          "value": "Aurora's security, on from day one: no AI action goes out without a person's approval, each workspace's data is kept apart and every change is logged.",
           "source": "page",
-          "length": 202
+          "length": 150
         },
         "og_title": {
           "value": "Aurora security: on from day one",
@@ -10848,7 +10846,7 @@
         },
         "robots_noindex": false
       },
-      "seo_score": 70,
+      "seo_score": 90,
       "in_sitemap": true,
       "sitemap_last_modified_method": "STATIC_LAST_MODIFIED",
       "http_status": null,
@@ -12569,6 +12567,134 @@
       "notes": ""
     },
     {
+      "route": "/settings/workspace",
+      "file_path": "apps/web/src/app/settings/workspace/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
+          "source": "root-layout",
+          "length": 131
+        },
+        "og_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelli-flow-crm-web.vercel.app",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "Aurora",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "static-by-design-dated",
+        "patterns_found": [
+          "year-reference"
+        ],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/signed-in-home",
+      "file_path": "apps/web/src/app/(public)/signed-in-home/page.tsx",
+      "access_tier": "public",
+      "metadata": {
+        "title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
+          "source": "root-layout",
+          "length": 131
+        },
+        "og_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelli-flow-crm-web.vercel.app",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "Aurora",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": 80,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/signup",
       "file_path": "apps/web/src/app/(public)/signup/page.tsx",
       "access_tier": "public",
@@ -12587,7 +12713,7 @@
           "source": "layout"
         },
         "og_description": {
-          "value": "Get started with AI-powered CRM. Lead scoring, deal tracking, workflow automation, and enterprise-grade security. No credit card required.",
+          "value": "Get started with AI-powered CRM. Lead scoring, deal tracking and enterprise-grade security. No credit card required.",
           "source": "layout"
         },
         "og_url": {
@@ -12650,7 +12776,7 @@
           "source": "layout"
         },
         "og_description": {
-          "value": "Get started with AI-powered CRM. Lead scoring, deal tracking, workflow automation, and enterprise-grade security. No credit card required.",
+          "value": "Get started with AI-powered CRM. Lead scoring, deal tracking and enterprise-grade security. No credit card required.",
           "source": "layout"
         },
         "og_url": {
@@ -13152,9 +13278,9 @@
           "source": "layout"
         },
         "description": {
-          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
-          "source": "root-layout",
-          "length": 131
+          "value": "Rules that create, assign and announce tasks when CRM events happen, on a schedule or from a signed webhook.",
+          "source": "page",
+          "length": 108
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -13197,8 +13323,10 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "none",
-        "patterns_found": [],
+        "classification": "stale",
+        "patterns_found": [
+          "placeholder"
+        ],
         "data_sources": []
       },
       "ghost_links": [],
@@ -13211,8 +13339,8 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Task Settings — Aurora",
-          "source": "page"
+          "value": "Tasks",
+          "source": "layout"
         },
         "description": {
           "value": "Configure default due-date offset, reminder defaults, and task templates for the Tasks module.",
@@ -13970,13 +14098,13 @@
     }
   ],
   "summary": {
-    "total_routes": 220,
-    "public_routes": 36,
-    "auth_gated_routes": 170,
+    "total_routes": 222,
+    "public_routes": 37,
+    "auth_gated_routes": 171,
     "developer_routes": 14,
-    "routes_with_seo_score": 36,
-    "routes_pending_runtime_measurement": 220,
-    "average_seo_score_public": 84,
+    "routes_with_seo_score": 37,
+    "routes_pending_runtime_measurement": 222,
+    "average_seo_score_public": 85,
     "legal_pages_missing": [],
     "ghost_link_count": 0
   },

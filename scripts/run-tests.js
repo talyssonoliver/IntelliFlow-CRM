@@ -16,6 +16,9 @@
 const { spawn } = require('child_process');
 const path = require('path');
 
+// The full suite runs only inside the test-slot queue (scripts/lib/test-slot.mjs).
+require('./lib/test-slot.mjs').requireSlot('test-suite');
+
 // Track test results from stdout
 let output = '';
 let testsPassedCount = 0;

@@ -19,7 +19,6 @@ import {
   opportunityQuerySchema,
   idSchema,
   moveStageSchema,
-  type MoveStageInput,
   opportunityHistoryQuerySchema,
   opportunityProductsQuerySchema,
   opportunityPipelineQuerySchema,
@@ -31,6 +30,7 @@ import {
   bulkUpdateStageSchema,
   bulkDeleteDealsSchema,
 } from '@intelliflow/validators/opportunity';
+import { executeMoveStage } from './move-stage';
 import {
   performDealReassign,
   emitDealReassignSideEffects,
@@ -43,6 +43,7 @@ import { type Context } from '../../context';
 import { getTenantContext, createTenantWhereClause } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
 import { getAuditLogger } from '../../security/audit-logger';
+import { recordStageMove } from './stage-move-record';
 import {
   loadDealAutomation,
   capitalizeDealName,
@@ -567,51 +568,6 @@ function buildWinRateTrend(
     const rate = monthDeals.length > 0 ? Math.round((monthWon / monthDeals.length) * 100) : 0;
     return { month, rate: rate || overallWinRate, isProjected: monthDeals.length === 0 };
   });
-}
-
-// ── moveStage helpers ──
-
-async function executeMoveStage(
-  ctx: Context,
-  input: Pick<MoveStageInput, 'id' | 'targetStage' | 'reason'>,
-  userId: string,
-  tenantId: string
-) {
-  if (input.targetStage === 'CLOSED_WON') {
-    // IFC-065: Route through CloseDealWonUseCase for enriched event + notification
-    const closeDealWonService = ctx.services?.closeDealWon;
-    if (!closeDealWonService) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'CloseDealWon service not available',
-      });
-    }
-    return closeDealWonService.execute({
-      opportunityId: input.id,
-      closedBy: userId,
-      tenantId,
-    });
-  }
-
-  if (input.targetStage === 'CLOSED_LOST') {
-    // IFC-066: Route through CloseDealLostUseCase for enriched event + notification
-    const closeDealLostService = ctx.services?.closeDealLost;
-    if (!closeDealLostService) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'CloseDealLost service not available',
-      });
-    }
-    return closeDealLostService.execute({
-      opportunityId: input.id,
-      reason: input.reason || '',
-      closedBy: userId,
-      tenantId,
-    });
-  }
-
-  const opportunityService = getOpportunityService(ctx);
-  return opportunityService.changeStage(input.id, input.targetStage, userId, tenantId);
 }
 
 /** dealForecast input: the opportunity's record id (a cuid). */
@@ -1185,15 +1141,8 @@ export const opportunityRouter = createTRPCRouter({
       ctx.services?.notificationOrchestrator
     ).catch((err) => console.error('[opportunity.router] Notification failed:', err));
 
-    // IFC-281: Fire-and-forget audit logging with stage transition metadata
-    const auditLogger = getAuditLogger(ctx.prisma);
-    auditLogger
-      .logAction('UPDATE', 'opportunity', result.value.id.value, typedCtx.tenant.tenantId, {
-        actorId: typedCtx.tenant.userId,
-        metadata: { targetStage: input.targetStage, previousStage },
-        afterState: { name: result.value.name, stage: result.value.stage },
-      })
-      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+    // IFC-281 audit row plus the deal's activity entry (#31); never fails the move itself.
+    await recordStageMove(ctx, result.value, previousStage, input.targetStage, typedCtx.tenant);
 
     return mapOpportunityToResponse(result.value);
   }),

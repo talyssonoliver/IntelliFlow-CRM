@@ -40,6 +40,7 @@ import {
   getUrgencyBadgeClass,
 } from '@/lib/sentiment/sentiment-utils';
 import { SENTIMENT_LABELS, URGENCY_LEVELS } from '@intelliflow/domain';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 const SentimentTrend = lazy(() => import('./SentimentTrend'));
 
@@ -53,46 +54,6 @@ const BREADCRUMBS = [
 ];
 
 const SENTIMENT_SKELETON_KEYS = ['senti-0', 'senti-1', 'senti-2'] as const;
-
-// ============================================
-// Stats Card (internal)
-// ============================================
-
-function StatCard({
-  label,
-  value,
-  icon,
-  colorClass,
-  isLoading,
-}: Readonly<{
-  label: string;
-  value: number;
-  icon: string;
-  colorClass: string;
-  isLoading: boolean;
-}>) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', colorClass)}>
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">
-              {icon}
-            </span>
-          </div>
-          <div>
-            {isLoading ? (
-              <Skeleton className="h-6 w-10" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground">{value}</p>
-            )}
-            <p className="text-xs text-muted-foreground">{label}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 // ============================================
 // Filter options
@@ -386,40 +347,45 @@ export function SentimentDashboard() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatCard
+        <KpiCard
+          framed
           label="Total"
           value={stats?.total ?? 0}
           icon="analytics"
-          colorClass="bg-primary/10 text-primary"
-          isLoading={isLoading}
+          iconClassName="bg-primary/10 text-primary"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Positive"
           value={stats?.positive ?? 0}
           icon="thumb_up"
-          colorClass="bg-success/10 text-success"
-          isLoading={isLoading}
+          iconClassName="bg-success/10 text-success"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Negative"
           value={stats?.negative ?? 0}
           icon="thumb_down"
-          colorClass="bg-destructive/10 text-destructive"
-          isLoading={isLoading}
+          iconClassName="bg-destructive/10 text-destructive"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Neutral"
           value={stats?.neutral ?? 0}
           icon="remove_circle_outline"
-          colorClass="bg-muted text-muted-foreground"
-          isLoading={isLoading}
+          iconClassName="bg-muted text-muted-foreground"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Urgent"
           value={stats?.urgentCount ?? 0}
           icon="priority_high"
-          colorClass="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-          isLoading={isLoading}
+          iconClassName="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+          loading={isLoading}
         />
       </div>
 

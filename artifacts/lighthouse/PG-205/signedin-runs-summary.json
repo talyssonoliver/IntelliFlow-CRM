@@ -1,0 +1,48 @@
+{
+  "task": "PG-205",
+  "command": "lhci collect (desktop preset, onlyCategories performance+accessibility, 3 runs, puppeteerScript tools/lighthouse/lhci-auth.js)",
+  "startedAt": "2026-11-22T15:26:17Z",
+  "finishedAt": "2026-11-22T15:27:54Z",
+  "exitCode": 0,
+  "target": "http://localhost:3400 (local production build, local Supabase, ephemeral DB)",
+  "runs": {
+    "http://localhost:3400/contacts/contact-types": [
+      {
+        "performance": 0.92,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:26:23.981Z"
+      },
+      {
+        "performance": 0.92,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:26:57.637Z"
+      },
+      {
+        "performance": 0.93,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:26:41.596Z"
+      }
+    ],
+    "http://localhost:3400/contacts/new": [
+      {
+        "performance": 0.94,
+        "accessibility": 0.91,
+        "fetchTime": "2026-11-22T15:27:13.397Z"
+      },
+      {
+        "performance": 0.94,
+        "accessibility": 0.91,
+        "fetchTime": "2026-11-22T15:27:28.063Z"
+      },
+      {
+        "performance": 0.95,
+        "accessibility": 0.91,
+        "fetchTime": "2026-11-22T15:27:42.606Z"
+      }
+    ]
+  },
+  "median_reports": [
+    "contacts-contact-types-auth.report.json",
+    "contacts-new-auth.report.json"
+  ]
+}

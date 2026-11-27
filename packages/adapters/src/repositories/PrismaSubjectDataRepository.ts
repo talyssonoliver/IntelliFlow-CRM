@@ -30,6 +30,7 @@ import {
   type Db,
   type SubjectIds,
 } from './subject-communications';
+import { replyDraftsOf } from './subject-reply-drafts';
 import type {
   ErasureOutcome,
   ErasureResult,
@@ -443,7 +444,7 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
       }),
       db.leadFile.count({ where: where.leadOwned }),
       // Reply drafts written to the person are message bodies: withheld and counted (codex).
-      db.contactReplyDraft.count({ where: where.contactOwned }),
+      db.contactReplyDraft.count({ where: replyDraftsOf(tenantId, { leadIds, contactIds }) }),
       db.autoResponseDraft.count({
         where: { tenantId, OR: [{ leadId: { in: leadIds } }, { id: { in: byAddress.drafts } }] },
       }),

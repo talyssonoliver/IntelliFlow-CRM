@@ -10,6 +10,8 @@
 import { describe, it, expect } from 'vitest';
 
 import {
+  isNotificationTypeEnabled,
+  NOTIFICATION_TYPES_OFF_BY_DEFAULT,
   NOTIFICATION_TYPES,
   NOTIFICATION_PRIORITIES,
   NOTIFICATION_CHANNELS,
@@ -882,5 +884,21 @@ describe('Notifications Validators', () => {
       });
       expect(result.success).toBe(false);
     });
+  });
+});
+
+describe('notification type defaults (MVP-005)', () => {
+  it('keeps AI lead-score notices off until the user turns them on', () => {
+    expect(NOTIFICATION_TYPES_OFF_BY_DEFAULT.has('lead_scored')).toBe(true);
+    expect(isNotificationTypeEnabled(undefined, 'lead_scored')).toBe(false);
+    expect(isNotificationTypeEnabled({}, 'lead_scored')).toBe(false);
+    expect(isNotificationTypeEnabled({ lead_scored: { enabled: true } }, 'lead_scored')).toBe(true);
+  });
+
+  it('leaves every other type on by default and honours a stored choice', () => {
+    expect(isNotificationTypeEnabled(null, 'task_overdue')).toBe(true);
+    expect(isNotificationTypeEnabled({ task_overdue: { enabled: false } }, 'task_overdue')).toBe(
+      false
+    );
   });
 });

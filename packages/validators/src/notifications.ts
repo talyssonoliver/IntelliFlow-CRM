@@ -111,6 +111,20 @@ export const NOTIFICATION_TYPES = [
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
+/**
+ * Types a user receives only after turning them on (owner, MVP-005): AI score notices fired on
+ * every rescore and buried the notifications that need action. They stay in the settings.
+ */
+export const NOTIFICATION_TYPES_OFF_BY_DEFAULT: ReadonlySet<string> = new Set(['lead_scored']);
+
+/** Whether a user receives `type`, from their stored per-type preferences (or the default). */
+export function isNotificationTypeEnabled(categoryPreferences: unknown, type: string): boolean {
+  const stored = (
+    categoryPreferences as Record<string, { enabled?: boolean }> | null | undefined
+  )?.[type]?.enabled;
+  return stored ?? !NOTIFICATION_TYPES_OFF_BY_DEFAULT.has(type);
+}
+
 export const notificationTypeSchema = z.enum(NOTIFICATION_TYPES);
 
 // =============================================================================

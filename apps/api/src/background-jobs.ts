@@ -1,6 +1,6 @@
 /**
  * Background jobs the API process can run on timers (approval sweep, email
- * bounce scan, DSAR deadline alerts).
+ * bounce scan, Outlook inbox sync with the Google Calendar sync, DSAR deadline alerts).
  *
  * Idle-sleep (Railway App Sleeping): a process that makes outbound traffic while
  * idle never sleeps, and these timers are the traffic. They are therefore behind
@@ -11,7 +11,7 @@
  *
  * Running the jobs in the api AND the combined worker, or in several replicas,
  * is safe: the approval sweep takes a transaction-scoped Postgres advisory lock
- * per tick, the bounce scan claims each mailbox with a lease, and the DSAR alerts
+ * per tick, the bounce scan and the inbox sync claim each mailbox with a lease, and the DSAR alerts
  * take an advisory lock and claim each request with SKIP LOCKED. All are
  * database-level, so they hold across processes.
  */
@@ -21,6 +21,7 @@ import {
   startApprovalSweep,
   stopApprovalSweep,
 } from './agent/approval-sweep-scheduler';
+import { runWithEgressJob } from '@intelliflow/db';
 import { createDefaultSweepDeps, runApprovalSweep } from './agent/approval-escalation-sweep';
 import {
   bounceScanIntervalFromEnv,
@@ -28,6 +29,13 @@ import {
   stopBounceScanner,
 } from './modules/email/bounce-scheduler';
 import { createBounceReaderDeps, runBounceScan } from './modules/email/bounce-reader';
+import { calendarSyncEnabled, runCalendarSyncTick } from './modules/calendar/google-calendar-sync';
+import { createInboxSyncDeps, runInboxSync } from './modules/email/outlook-inbox-sync';
+import {
+  inboxSyncIntervalFromEnv,
+  startInboxSync,
+  stopInboxSync,
+} from './modules/email/inbox-sync-scheduler';
 import {
   createDsarSlaDeps,
   dsarSlaIntervalFromEnv,
@@ -35,6 +43,13 @@ import {
   startDsarSlaScheduler,
   stopDsarSlaScheduler,
 } from './modules/privacy/dsar-sla-scheduler';
+import {
+  complianceSnapshotIntervalFromEnv,
+  createComplianceSnapshotDb,
+  runComplianceSnapshots,
+  startComplianceSnapshotScheduler,
+  stopComplianceSnapshotScheduler,
+} from './modules/compliance/compliance-snapshot-scheduler';
 import {
   checkBackgroundJobsHeartbeat,
   closeHeartbeatStore,
@@ -80,7 +95,9 @@ export interface StartBackgroundJobsOptions {
 export interface StartedBackgroundJobs {
   approvalSweep: boolean;
   bounceScan: boolean;
+  inboxSync: boolean;
   dsarSla: boolean;
+  complianceSnapshot: boolean;
 }
 
 async function defaultReady(): Promise<unknown> {
@@ -132,7 +149,9 @@ export function startBackgroundJobs({
     log,
     run: async () => {
       await ready();
-      const report = await runApprovalSweep(await createDefaultSweepDeps());
+      const report = await runWithEgressJob('api.approvalSweep', async () =>
+        runApprovalSweep(await createDefaultSweepDeps())
+      );
       await beat('approvalSweep');
       return report;
     },
@@ -144,11 +163,38 @@ export function startBackgroundJobs({
     log,
     run: async () => {
       await ready();
-      const report = await runBounceScan(await createBounceReaderDeps());
+      const report = await runWithEgressJob('api.bounceScan', async () =>
+        runBounceScan(await createBounceReaderDeps())
+      );
       await beat('bounceScan');
       return report;
     },
   });
+
+  // #1177: Outlook inbox sync, on its own timer so a slow Graph read never holds the bounce scan. MVP-013:
+  // the Google Calendar sync runs in the same tick, so it shares this timer and its off switch.
+  const inboxSync = startInboxSync({
+    intervalMs: inboxSyncIntervalFromEnv(env),
+    log,
+    run: async () => {
+      await ready();
+      try {
+        return await runWithEgressJob('api.inboxSync', async () =>
+          runInboxSync(await createInboxSyncDeps())
+        );
+      } finally {
+        // MVP-013: Google Calendar, both ways, in the same tick (it never throws; GOOGLE_CALENDAR_SYNC=off).
+        await runWithEgressJob('api.calendarSync', () => runCalendarSyncTick(env, log));
+      }
+    },
+  });
+
+  // The calendar sync rides on the inbox timer: with that timer off (its interval 0) it does not run.
+  if (!inboxSync && calendarSyncEnabled(env)) {
+    log.info(
+      '[calendar-sync] not running: the inbox sync timer is off, and the calendar sync runs in its tick'
+    );
+  }
 
   // PG-203 D8: DSAR deadline alerts to each firm's admins, and the purge of
   // expired unconfirmed requests.
@@ -157,14 +203,27 @@ export function startBackgroundJobs({
     log,
     run: async () => {
       await ready();
-      const report = await runDsarSlaSweep(await createDsarSlaDeps());
+      const report = await runWithEgressJob('api.dsarSla', async () =>
+        runDsarSlaSweep(await createDsarSlaDeps())
+      );
       await beat('dsarSla');
       return report;
     },
   });
 
+  // PG-194: the daily compliance snapshots that feed the dashboard's trend. Not a heartbeat job:
+  // a missed tick only delays a trend point, it never leaves a customer waiting.
+  const complianceSnapshot = startComplianceSnapshotScheduler({
+    intervalMs: complianceSnapshotIntervalFromEnv(env),
+    log,
+    run: async () => {
+      await ready();
+      return runComplianceSnapshots(await createComplianceSnapshotDb(), new Date(), log);
+    },
+  });
+
   markJobsRunningHere(approvalSweep || bounceScan || dsarSla);
-  return { approvalSweep, bounceScan, dsarSla };
+  return { approvalSweep, bounceScan, inboxSync, dsarSla, complianceSnapshot };
 }
 
 /**
@@ -172,7 +231,13 @@ export function startBackgroundJobs({
  * mid-flight (SIGTERM, tests). The caller's shutdown timeout still caps the wait.
  */
 export async function stopBackgroundJobs(): Promise<void> {
-  await Promise.all([stopApprovalSweep(), stopBounceScanner(), stopDsarSlaScheduler()]);
+  await Promise.all([
+    stopApprovalSweep(),
+    stopBounceScanner(),
+    stopInboxSync(),
+    stopDsarSlaScheduler(),
+    stopComplianceSnapshotScheduler(),
+  ]);
   markJobsRunningHere(false);
   // After the ticks drained, so their final heartbeat write is not cut off.
   await closeHeartbeatStore().catch(() => undefined);

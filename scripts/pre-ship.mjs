@@ -110,6 +110,7 @@ import {
   stepLine,
   advisoryNote,
   depScanNote,
+  reviewSkipNote,
   persistedState,
   finalLine,
 } from './lib/preship-report.mjs';
@@ -124,6 +125,11 @@ import {
 } from './lib/preship-run-metrics.mjs';
 import { testStepEnv } from './lib/preship-build.mjs';
 import { AFFECTED_ENV, resolveAffected } from './lib/preship-affected.mjs';
+import {
+  ciGuardLine,
+  localBuildIsCiOnly,
+  localFullSuiteIsCiOnly,
+} from './lib/preship-ci-only.mjs';
 
 // Throwaway stub credentials for the build-time env mirror below (never a real DB).
 const STUB_DB_USER = 'stub';
@@ -325,6 +331,19 @@ const AFFECTED = resolveAffected({ cwd: REPO_ROOT });
 const AFFECTED_ENV_VALUE = JSON.stringify(AFFECTED);
 const CI_ONLY_REMEDIATION =
   'Needs the full suite, which runs on CI. Run it locally with PRESHIP_FULL_TESTS=1.';
+// Owner ruling 2026-11-19: full builds and the full test suite run in GitHub Actions (free,
+// repo public); this PC keeps only quick scoped checks. Locally the `build` step (next build,
+// tsup of the apps) and any full-suite widening (a lockfile or config change that turns the
+// related-only scope into the whole suite) are CI-only, recorded in the gate output as
+// "skipped locally, CI is the guard". PRESHIP_FULL_BUILD=1 and PRESHIP_FULL_TESTS=1 force them.
+const BUILD_CI_ONLY = localBuildIsCiOnly({ isCI: IS_CI, env: process.env });
+const FULL_SUITE_CI_ONLY = localFullSuiteIsCiOnly({
+  isCI: IS_CI,
+  env: process.env,
+  scope: TEST_SCOPE.scope,
+});
+// The whole-repo gates (ratchet floor, silent-skip) never run over a related-only lcov.
+const WHOLE_REPO_TESTS_CI_ONLY = SCOPED_TESTS || FULL_SUITE_CI_ONLY;
 
 // Step plan — fail-first token gate + steps from audit doc §8, plus the
 // OSV/Trivy dependency-scan parity gate (#485). Each step has:
@@ -377,8 +396,9 @@ const STEPS = [
   {
     id: 'library-build',
     description: 'turbo run build for library packages (typecheck/test depend on dist/)',
-    // Locally: the affected libraries and the dependencies of affected apps
-    // (scripts/lib/preship-affected.mjs). CI / PRESHIP_FULL_BUILD=1: every library.
+    // Locally: only the dependency closure of the affected packages, i.e. the dist/ their
+    // typecheck and related tests read (scripts/lib/preship-affected.mjs). CI /
+    // PRESHIP_FULL_BUILD=1: every library.
     cmd: ['node', 'scripts/run-library-build.mjs'],
     env: { [AFFECTED_ENV]: AFFECTED_ENV_VALUE, ...TURBO_STABLE_DB_ENV },
     required: true,
@@ -516,6 +536,8 @@ const STEPS = [
       : 'vitest run --project=!integration — full suite',
     cmd: ['node', 'scripts/run-unit-tests-scoped.mjs'],
     env: { [SCOPE_ENV]: SCOPE_ENV_VALUE, ...testStepEnv({ isCI: IS_CI, env: process.env }) },
+    ci_only: () => FULL_SUITE_CI_ONLY,
+    ci_guard: 'Unit Tests (sharded)',
     required: true,
   },
   {
@@ -548,6 +570,8 @@ const STEPS = [
     // Needs a local test DB (the merged run includes the integration project).
     // Without one, degrade to MISSING-required rather than hard-fail against a
     // possibly-wrong/prod DB.
+    ci_only: () => FULL_SUITE_CI_ONLY,
+    ci_guard: 'Unit Tests (sharded) / Merge Coverage Gate',
     skip_if: dbStackUnavailable,
     skip_remediation:
       'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis` and point DATABASE_URL at the LOCAL test DB (never prod). Then re-run, or set PRESHIP_ALLOW_MISSING=1 to acknowledge the gap for this push.',
@@ -565,11 +589,11 @@ const STEPS = [
     // Depends on the lcov from `coverage`; if that was skipped, skip too.
     // A whole-repo ratchet is meaningless over a related-only lcov, so in a
     // scoped run this is CI-only: an honest advisory skip, recorded as such.
-    skip_if: () => SCOPED_TESTS || lcovMissing(),
-    skip_remediation: SCOPED_TESTS
+    skip_if: () => WHOLE_REPO_TESTS_CI_ONLY || lcovMissing(),
+    skip_remediation: WHOLE_REPO_TESTS_CI_ONLY
       ? CI_ONLY_REMEDIATION
       : 'Run the `coverage` step first (needs the local test DB).',
-    required: !SCOPED_TESTS,
+    required: !WHOLE_REPO_TESTS_CI_ONLY,
   },
   {
     // #755: Python tooling (tools/audit, tools/plan, tools/scripts) is in
@@ -613,14 +637,18 @@ const STEPS = [
     cmd: ['pnpm', 'tsx', 'tools/scripts/infra-skip-gate.ts'],
     // Reconciles every collected suite, so it needs the full run: CI-only when
     // the local run is scoped.
-    skip_if: () => SCOPED_TESTS || skipManifestMissing(),
-    skip_remediation: SCOPED_TESTS
+    skip_if: () => WHOLE_REPO_TESTS_CI_ONLY || skipManifestMissing(),
+    skip_remediation: WHOLE_REPO_TESTS_CI_ONLY
       ? CI_ONLY_REMEDIATION
       : 'Run the `coverage` step first (needs the local test DB) so the per-project vitest JSON exists.',
-    required: !SCOPED_TESTS,
+    required: !WHOLE_REPO_TESTS_CI_ONLY,
   },
   {
     id: 'build',
+    // Locally CI-only (owner ruling 2026-11-19): next build, tsup and every app build run in
+    // CI's required `Build` job. PRESHIP_FULL_BUILD=1 runs it here, scoped as before.
+    ci_only: () => BUILD_CI_ONLY,
+    ci_guard: 'Build',
     description: IS_CI
       ? 'pnpm run build (full prod build — catches Next.js page-data collection issues)'
       : 'turbo run build --concurrency=1, 2 Next page workers, 4 GB heap (full prod build; #1111)',
@@ -801,9 +829,11 @@ const STEPS = [
       'Codex semantic review (OAuth, local-only): correctness/data-integrity/security bugs in diff',
     cmd: ['node', 'scripts/codex-review.mjs'],
     skip_if: () => {
-      // The gate falls back to the Claude Code CLI when codex is missing/unauthed
-      // or hits its usage/tier cap, so whenever `claude` is present the step MUST
-      // run (codex-review.mjs handles the codex→claude selection internally).
+      // Whenever `claude` is present the step MUST run: codex-review.mjs sizes the
+      // review to the diff (docs/tests/generated: a recorded skip, no model), reviews
+      // with Codex, and uses Claude ONLY for a risky diff Codex cannot review. Any
+      // other diff Codex cannot review is "REVIEW_DEFERRED" and FAILS the step; it is
+      // never a silent pass (owner ruling 2026-11-26, scripts/lib/review-policy.mjs).
       if (!commandMissing('claude')) return false;
       // No claude fallback available — require an authed codex, else skip.
       if (commandMissing('codex')) return true;
@@ -1037,6 +1067,18 @@ async function runStep(step, prev) {
     return { id: step.id, verdict: 'SKIPPED_NOT_FULL', duration_ms: 0 };
   }
 
+  // Owner ruling 2026-11-19: heavy work belongs to CI. An honest, non-required skip.
+  if (step.ci_only && step.ci_only()) {
+    return {
+      id: step.id,
+      verdict: 'SKIPPED_PRECONDITION',
+      duration_ms: 0,
+      required: false,
+      ci_guard: step.ci_guard,
+      skip_remediation: ciGuardLine(step.ci_guard),
+    };
+  }
+
   if (step.skip_if && step.skip_if()) {
     return {
       id: step.id,
@@ -1111,6 +1153,14 @@ function sliceVerdict(list, allowMissing) {
 // good earlier) and non-required SKIPPED_PRECONDITION are honest skips.
 function isMissingRequired(r) {
   return r.verdict === 'SKIPPED_PRECONDITION' && r.required === true;
+}
+
+function readReviewFindings() {
+  try {
+    return fs.readFileSync(path.join(REPO_ROOT, 'artifacts/codex-review/findings.json'), 'utf8');
+  } catch {
+    return '';
+  }
 }
 
 async function main() {
@@ -1195,8 +1245,10 @@ async function main() {
     // (not "FAIL") for a non-blocking advisory failure, PASS (after retry) when
     // a step needed more than one attempt.
     process.stdout.write(
-      `${stepLine(r, { allowMissing }, fmtDuration)}\n${advisoryNote(r)}${depScanNote(r, DEP_SCANNER)}`
+      `${stepLine(r, { allowMissing }, fmtDuration)}\n${advisoryNote(r)}${depScanNote(r, DEP_SCANNER)}${reviewSkipNote(r, readReviewFindings())}`
     );
+
+    if (r.ci_guard) process.stdout.write(`    ${r.skip_remediation}\n`);
 
     if (isMissingRequired(r)) {
       if (allowMissing) {

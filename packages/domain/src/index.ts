@@ -25,6 +25,7 @@ export * from './crm/lead/LeadEvents';
 export * from './crm/lead/LeadRepository';
 export * from './crm/lead/LeadConversionAudit';
 export * from './crm/lead/LeadActivityConstants';
+export * from './crm/lead/LeadContactName';
 export * from './crm/lead/attribution';
 
 // CRM Domain - Contacts
@@ -34,6 +35,7 @@ export * from './crm/contact/ContactEvents';
 export * from './crm/contact/ContactRepository';
 export * from './crm/contact/CrossTenantOrNotFoundError';
 export * from './crm/contact/contact-type-defaults';
+export * from './crm/contact/reply-drafting';
 
 // CRM Domain - Accounts
 export * from './crm/account/Account';
@@ -179,3 +181,6 @@ export * from './workflow/node-catalog';
 
 // PG-207 (ADR-085): user mailbox sending, bounce rules and signature defaults.
 export * from './email';
+
+// IFC-320: WhatsApp channel vocabulary, E.164 normalisation, status rules.
+export * from './communication/whatsapp';

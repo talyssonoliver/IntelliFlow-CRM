@@ -11,6 +11,8 @@ export interface Lead {
   score: number;
   /** #1218: whether `score` is a real AI score (NONE / FAILED show as not scored). */
   scoringStatus?: 'NONE' | 'SCORED' | 'NEEDS_REVIEW' | 'FAILED' | null;
+  /** 0 to 1 when the API supplies it; decides the score flag band (register #49). */
+  scoreConfidence?: number | null;
   createdAt: Date | string;
   phone?: string | null;
   source?: string;

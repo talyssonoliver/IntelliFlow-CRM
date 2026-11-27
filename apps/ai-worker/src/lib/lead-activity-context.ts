@@ -17,9 +17,20 @@
  * outbound ("Follow-up email sent"). Any other email is counted as unknown direction rather
  * than guessed.
  *
- * TODO(#1177): once the mail bridge stores email_records for leads, count those too.
+ * Register #49: the prompt also gets the lead's enquiry data (qualification answers, campaign,
+ * landing page; lead-engagement-signals.ts), the CRM's email records for its address (tracked
+ * sends, opens, clicks, mail received) and how many notes it has (a count, never the text).
  */
 import { sanitizeStringField } from '../utils/input-sanitizer';
+import {
+  ENQUIRY_SELECT,
+  emailTrackingLines,
+  enquiryLines,
+  loadEmailTracking,
+  type EmailTracking,
+  type EnquiryFields,
+  type RawReader,
+} from './lead-engagement-signals';
 
 /**
  * The engagement counts cover the lead's whole history of emails, calls and meetings, up to a
@@ -30,6 +41,7 @@ const LISTED_ACTIVITIES = 15;
 const TITLE_MAX = 120;
 const COA_SYNC_SOURCE = 'coa-pipeline-sync';
 const DAY_MS = 24 * 60 * 60 * 1000;
+const ACTIVITY_PROMPT_MAX = 8000;
 
 export type ActivityDirection = 'inbound' | 'outbound';
 
@@ -40,9 +52,11 @@ export interface ActivityRow {
   metadata: unknown;
 }
 
-export interface LeadRow {
+export interface LeadRow extends EnquiryFields {
   status: string | null;
   lastContactedAt: Date | null;
+  /** The lead's address, to find its email records. */
+  email?: string | null;
 }
 
 export interface LeadActivityContext {
@@ -58,6 +72,10 @@ export interface LeadActivityContext {
   };
   /** The counts stopped at the safety cap: they cover only the latest activities. */
   countsCapped: boolean;
+  /** Enquiry data and attribution, as prompt lines (empty when the lead has none). */
+  enquiry: string[];
+  emailTracking: EmailTracking | null;
+  noteCount: number;
   recent: Array<{ type: string; direction: ActivityDirection | null; at: Date; title: string }>;
 }
 
@@ -129,7 +147,13 @@ function countEngagement(rows: ActivityRow[]): LeadActivityContext['counts'] {
 export function buildLeadActivityContext(
   lead: LeadRow,
   rows: ActivityRow[],
-  sources: { stageRows?: ActivityRow[]; countRows?: ActivityRow[]; countsCapped?: boolean } = {}
+  sources: {
+    stageRows?: ActivityRow[];
+    countRows?: ActivityRow[];
+    countsCapped?: boolean;
+    emailTracking?: EmailTracking | null;
+    noteCount?: number;
+  } = {}
 ): LeadActivityContext {
   const counts = countEngagement(sources.countRows ?? rows);
   const stageRows = sources.stageRows ?? rows;
@@ -149,6 +173,9 @@ export function buildLeadActivityContext(
     pipelineStage: latestPipelineStage(stageRows),
     counts,
     countsCapped: sources.countsCapped === true,
+    enquiry: enquiryLines(lead),
+    emailTracking: sources.emailTracking ?? null,
+    noteCount: sources.noteCount ?? 0,
     recent,
   };
 }
@@ -186,6 +213,9 @@ export function formatLeadActivityContext(context: LeadActivityContext, now: Dat
   lines.push(
     `Engagement${scope}: ${emailsSent} emails sent to the lead, ${replies} replies from the lead${unknown}, ${calls} calls, ${meetings} meetings`
   );
+  lines.push(...emailTrackingLines(context.emailTracking, now));
+  if (context.noteCount > 0) lines.push(`Notes: ${context.noteCount} written by the team`);
+  lines.push(...context.enquiry);
   if (context.recent.length === 0) {
     lines.push('Recent Activity: none recorded');
   } else {
@@ -195,7 +225,9 @@ export function formatLeadActivityContext(context: LeadActivityContext, now: Dat
       lines.push(`- ${isoDay(item.at)} ${item.type}${direction}: ${item.title}`);
     }
   }
-  return lines.join('\n');
+  // The chain's `activity` input is capped at 8000 characters (scoring.chain.ts); past it the
+  // scoring would fail validation, so the tail is dropped instead.
+  return lines.join('\n').slice(0, ACTIVITY_PROMPT_MAX);
 }
 
 interface ActivityReader {
@@ -206,6 +238,18 @@ interface ActivityReader {
     findMany(args: unknown): Promise<ActivityRow[]>;
     findFirst(args: unknown): Promise<ActivityRow | null>;
   };
+  /** Optional: without them the notes count and the email tracking are left out. */
+  leadNote?: { count(args: unknown): Promise<number> };
+  $queryRaw?: RawReader['$queryRaw'];
+}
+
+/** A failed extra read leaves its lines out; it never stops the scoring. */
+async function optional<T>(read: () => Promise<T>): Promise<T | undefined> {
+  try {
+    return await read();
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -219,10 +263,10 @@ export async function loadLeadActivityContext(
 ): Promise<LeadActivityContext | undefined> {
   try {
     const select = { type: true, title: true, timestamp: true, metadata: true };
-    const [lead, rows, countRows, stage] = await Promise.all([
+    const [lead, rows, countRows, stage, noteCount] = await Promise.all([
       prisma.lead.findFirst({
         where: { id: leadId, tenantId },
-        select: { status: true, lastContactedAt: true },
+        select: { status: true, lastContactedAt: true, email: true, ...ENQUIRY_SELECT },
       }),
       // The latest activities for the list. Score updates are left out before the limit.
       prisma.leadActivity.findMany({
@@ -249,13 +293,25 @@ export async function loadLeadActivityContext(
         orderBy: { timestamp: 'desc' },
         select,
       }),
+      prisma.leadNote
+        ? optional(() => prisma.leadNote!.count({ where: { leadId, tenantId } }))
+        : undefined,
     ]);
     if (!lead) return undefined;
+    const raw = prisma.$queryRaw;
+    const emailTracking =
+      raw && lead.email
+        ? await optional(() =>
+            loadEmailTracking({ $queryRaw: raw.bind(prisma) }, tenantId, lead.email!)
+          )
+        : undefined;
     const countsCapped = countRows.length > COUNTED_ACTIVITIES_CAP;
     return buildLeadActivityContext(lead, rows, {
       stageRows: stage ? [stage] : [],
       countRows: countsCapped ? countRows.slice(0, COUNTED_ACTIVITIES_CAP) : countRows,
       countsCapped,
+      emailTracking,
+      noteCount: noteCount ?? 0,
     });
   } catch {
     return undefined;

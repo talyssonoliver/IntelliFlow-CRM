@@ -73,6 +73,12 @@ vi.mock('../../versioning/chain-version-loader', () => ({
     AUTO_RESPONSE: 'EMAIL_WRITER',
   },
   configureVersionLoader: vi.fn(),
+  // The chains read prompts through loadVersionedPrompt; it delegates to the mocked loader.
+  loadVersionedPrompt: vi.fn(async (type: string, tenantId: string) => {
+    const { getVersionLoader } = await import('../../versioning/chain-version-loader');
+    const config = await getVersionLoader().getChainConfig(type as never, { tenantId });
+    return { prompt: config?.prompt ?? null, versionId: null };
+  }),
 }));
 
 import {
@@ -126,6 +132,24 @@ describe('InsightGenerationChain', () => {
         expect(insight.confidence).toBeGreaterThanOrEqual(0);
         expect(insight.confidence).toBeLessThanOrEqual(1);
       });
+    });
+
+    it('shows the model a deal value in pounds, never dollars', async () => {
+      const chain = new InsightGenerationChain();
+      const invoke = vi.fn().mockResolvedValue({ insights: [] });
+      (chain as any).structuredModel = { invoke };
+
+      await chain.generateInsights(
+        createInput({
+          dealsAtRisk: [
+            { id: 'deal-1', name: 'Enterprise Renewal', daysSinceUpdate: 18, value: 12500 },
+          ],
+        })
+      );
+
+      const prompt = String(invoke.mock.calls[0][0]);
+      expect(prompt).toContain('value: £12,500');
+      expect(prompt).not.toContain('$12,500');
     });
 
     it('should fall back to heuristics when LLM throws timeout', async () => {

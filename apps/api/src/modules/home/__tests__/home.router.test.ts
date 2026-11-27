@@ -470,7 +470,7 @@ describe('Home Router', () => {
       expect(result.goal.currentValue).toBe(2500);
       expect(result.goal.progress).toBe(50);
       expect(result.goal.remainingToTarget).toBe(2500);
-      expect(result.goal.remainingFormatted).toBe('$2,500');
+      expect(result.goal.remainingFormatted).toBe('£2,500');
     });
 
     it('should cap progress at 100%', async () => {
@@ -696,7 +696,7 @@ describe('Home Router', () => {
 
       const result = await caller.getDailyGoal();
 
-      expect(result.goal.remainingFormatted).toBe('$2,200');
+      expect(result.goal.remainingFormatted).toBe('£2,200');
     });
 
     it('should format calls remaining as "N calls"', async () => {

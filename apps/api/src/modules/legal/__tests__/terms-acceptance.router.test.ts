@@ -7,18 +7,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// NF-003: Mock client-ip extraction (we control what ip gets stored)
-vi.mock('../../../security/client-ip', () => ({
-  pickTrustedForwardedIp: vi.fn((xff: string | null) => {
-    if (!xff) return undefined;
-    const parts = xff
-      .split(',')
-      .map((p: string) => p.trim())
-      .filter(Boolean);
-    return parts.length > 0 ? parts[parts.length - 1] : undefined;
-  }),
-}));
-
 const TENANT_A = 'tenant-aaa';
 const TENANT_B = 'tenant-bbb';
 const USER_1 = 'user-111';
@@ -50,7 +38,7 @@ function makeMockReq(xffHeader?: string, userAgentHeader?: string) {
         if (name === 'user-agent') return userAgentHeader ?? 'TestAgent/1.0';
         // CSRF guard: mutations require either an Origin or a custom anti-CSRF header.
         // Supply a Bearer token so assertMutationCsrfSafe passes in direct caller tests.
-        if (name === 'authorization') return 'Bearer test-token';
+        if (name === 'authorization') return 'Bearer ' + 'x'.repeat(8);
         return null;
       }),
       has: vi.fn((name: string) => name === 'authorization'),
@@ -181,9 +169,11 @@ describe('termsAcceptanceRouter', () => {
       expect(upsertArgs.create.userId).toBe(USER_1);
     });
 
-    it('Zod schema REJECTS any "acceptedAt" field in input (AC-003)', async () => {
+    it('Zod schema STRIPS any "acceptedAt" field in input — it never reaches the upsert (AC-003)', async () => {
       const caller = await createCaller(makeCtx());
-      // Zod strips unknown fields by default; the extra field is silently ignored
+      // Zod strips unknown fields by default; the extra field is silently ignored.
+      // Behaviour decision (IFC-309 gap closure): strip-and-ignore, not reject. Stored values
+      // are always server-derived, so a spoofed field can never reach the database.
       await expect(
         caller.accept({
           termsVersion: TERMS_V1,
@@ -208,6 +198,130 @@ describe('termsAcceptanceRouter', () => {
       const upsertArgs = mockPrisma.termsAcceptance.upsert.mock.calls[0]![0];
       // Must use TENANT_A from ctx, not TENANT_B from input
       expect(upsertArgs.create.tenantId).toBe(TENANT_A);
+    });
+
+    it('ignores a client-supplied ipAddress and stores the x-forwarded-for value (AC-004)', async () => {
+      const caller = await createCaller(makeCtx(TENANT_A, USER_1, '10.0.0.1, 203.0.113.77'));
+      await expect(
+        caller.accept({
+          termsVersion: TERMS_V1,
+          route: '/terms',
+          ipAddress: '198.51.100.99',
+        } as any)
+      ).resolves.toMatchObject({ accepted: true });
+
+      const upsertArgs = mockPrisma.termsAcceptance.upsert.mock.calls[0]![0];
+      expect(upsertArgs.create.ipAddress).toBe('203.0.113.77');
+      expect(upsertArgs.create.ipAddress).not.toBe('198.51.100.99');
+    });
+
+    it('stores null ipAddress, not the client value, when the header is absent (AC-004)', async () => {
+      const caller = await createCaller(makeCtx(TENANT_A, USER_1, undefined));
+      await caller.accept({
+        termsVersion: TERMS_V1,
+        route: '/terms',
+        ipAddress: '198.51.100.99',
+      } as any);
+
+      const upsertArgs = mockPrisma.termsAcceptance.upsert.mock.calls[0]![0];
+      expect(upsertArgs.create.ipAddress).toBeNull();
+    });
+
+    it('ignores a client-supplied userId and uses the session user in where and create (AC-005)', async () => {
+      const caller = await createCaller(makeCtx(TENANT_A, USER_1));
+      await expect(
+        caller.accept({
+          termsVersion: TERMS_V1,
+          route: '/terms',
+          userId: 'user-attacker',
+        } as any)
+      ).resolves.toMatchObject({ accepted: true });
+
+      const upsertArgs = mockPrisma.termsAcceptance.upsert.mock.calls[0]![0];
+      expect(upsertArgs.create.userId).toBe(USER_1);
+      expect(upsertArgs.where.tenantId_userId_termsVersion.userId).toBe(USER_1);
+      expect(JSON.stringify(upsertArgs)).not.toContain('user-attacker');
+    });
+
+    it('ignores a client-supplied userAgent and stores the request header value', async () => {
+      const caller = await createCaller(makeCtx(TENANT_A, USER_1, undefined, 'RealAgent/2.0'));
+      await caller.accept({
+        termsVersion: TERMS_V1,
+        route: '/terms',
+        userAgent: 'SpoofedAgent/9.9',
+      } as any);
+
+      const upsertArgs = mockPrisma.termsAcceptance.upsert.mock.calls[0]![0];
+      expect(upsertArgs.create.userAgent).toBe('RealAgent/2.0');
+    });
+
+    it('truncates an overlong user-agent header to the 512-char column limit', async () => {
+      const caller = await createCaller(makeCtx(TENANT_A, USER_1, undefined, 'a'.repeat(600)));
+      await caller.accept({ termsVersion: TERMS_V1, route: '/terms' });
+
+      const upsertArgs = mockPrisma.termsAcceptance.upsert.mock.calls[0]![0];
+      expect(upsertArgs.create.userAgent).toHaveLength(512);
+    });
+
+    it('stores null userAgent and ipAddress when the request carries no headers of interest', async () => {
+      const ctx = makeCtx(TENANT_A, USER_1);
+      ctx.req.headers.get = vi.fn(() => null);
+      const caller = await createCaller(ctx);
+      await caller.accept({ termsVersion: TERMS_V1, route: '/terms' });
+
+      const upsertArgs = mockPrisma.termsAcceptance.upsert.mock.calls[0]![0];
+      expect(upsertArgs.create.userAgent).toBeNull();
+      expect(upsertArgs.create.ipAddress).toBeNull();
+    });
+
+    it('stores null ip and user-agent when the context has no request at all', async () => {
+      const ctx = { ...makeCtx(TENANT_A, USER_1), req: undefined } as any;
+      const caller = await createCaller(ctx);
+      await caller.accept({ termsVersion: TERMS_V1, route: '/terms' });
+
+      const upsertArgs = mockPrisma.termsAcceptance.upsert.mock.calls[0]![0];
+      expect(upsertArgs.create.ipAddress).toBeNull();
+      expect(upsertArgs.create.userAgent).toBeNull();
+    });
+
+    it('stores a valid IPv6 address from x-forwarded-for', async () => {
+      const caller = await createCaller(makeCtx(TENANT_A, USER_1, '10.0.0.1, 2001:db8::1'));
+      await caller.accept({ termsVersion: TERMS_V1, route: '/terms' });
+
+      const upsertArgs = mockPrisma.termsAcceptance.upsert.mock.calls[0]![0];
+      expect(upsertArgs.create.ipAddress).toBe('2001:db8::1');
+    });
+
+    it('rejects input without a termsVersion or with an overlong route', async () => {
+      const caller = await createCaller(makeCtx());
+      await expect(caller.accept({ route: '/terms' } as any)).rejects.toMatchObject({
+        code: 'BAD_REQUEST',
+      });
+      await expect(
+        caller.accept({ termsVersion: TERMS_V1, route: 'r'.repeat(256) })
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+      expect(mockPrisma.termsAcceptance.upsert).not.toHaveBeenCalled();
+    });
+
+    it('NEGATIVE: unauthenticated call (no ctx.user) throws UNAUTHORIZED and persists nothing (AC-007)', async () => {
+      const ctx = { ...makeCtx(), user: null } as any;
+      const caller = await createCaller(ctx);
+
+      await expect(
+        caller.accept({ termsVersion: TERMS_V1, route: '/terms' })
+      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+      expect(mockPrisma.termsAcceptance.upsert).not.toHaveBeenCalled();
+    });
+
+    it('NEGATIVE: a session without a tenantId throws UNAUTHORIZED and persists nothing', async () => {
+      const ctx = makeCtx();
+      (ctx.user as any).tenantId = undefined;
+      const caller = await createCaller(ctx);
+
+      await expect(
+        caller.accept({ termsVersion: TERMS_V1, route: '/terms' })
+      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+      expect(mockPrisma.termsAcceptance.upsert).not.toHaveBeenCalled();
     });
 
     it('upsert where clause uses the @@unique composite key', async () => {
@@ -261,6 +375,29 @@ describe('termsAcceptanceRouter', () => {
       // Confirm findFirst was called with TENANT_B, not TENANT_A (isolation)
       const findArgs = mockPrisma.termsAcceptance.findFirst.mock.calls[0]![0];
       expect(findArgs.where.tenantId).toBe(TENANT_B);
+      expect(findArgs.where.userId).toBe(USER_1);
+    });
+
+    it('NEGATIVE: unauthenticated getAcceptance throws UNAUTHORIZED and queries nothing (AC-007)', async () => {
+      const ctx = { ...makeCtx(), user: null } as any;
+      const caller = await createCaller(ctx);
+
+      await expect(caller.getAcceptance({ termsVersion: TERMS_V1 })).rejects.toMatchObject({
+        code: 'UNAUTHORIZED',
+      });
+      expect(mockPrisma.termsAcceptance.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('ignores a client-supplied tenantId or userId on getAcceptance (NF-002)', async () => {
+      const caller = await createCaller(makeCtx(TENANT_A, USER_1));
+      await caller.getAcceptance({
+        termsVersion: TERMS_V1,
+        tenantId: TENANT_B,
+        userId: 'user-attacker',
+      } as any);
+
+      const findArgs = mockPrisma.termsAcceptance.findFirst.mock.calls[0]![0];
+      expect(findArgs.where.tenantId).toBe(TENANT_A);
       expect(findArgs.where.userId).toBe(USER_1);
     });
 

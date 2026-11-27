@@ -50,27 +50,27 @@
   ],
   "definition_of_done_items": [
     {
-      "item": "Every running Railway service pushes traces, metrics and logs to Grafana Cloud",
+      "criterion": "Every running Railway service pushes traces, metrics and logs to Grafana Cloud",
       "met": true,
       "evidence": "Railway production runs api and combined-worker only (ws and the standalone workers have no deployment). Tempo and Loki hold exactly these two service names over 7 days (api; ai-worker = the combined worker, which also carries events-worker and ingestion-worker logs: 901 and 374 lines in 7 days)."
     },
     {
-      "item": "Traces link to their logs",
+      "criterion": "Traces link to their logs",
       "met": true,
       "evidence": "The Tempo datasource links traces to Loki (jsonData.tracesToLogs -> grafanacloud-logs, +/-2 s). Tempo 24h: ai-worker 73k spans; api request records in Loki carry trace_id 37,314 of 37,314 over 7 days, and 20 of 20 sampled trace ids exist in Tempo."
     },
     {
-      "item": "Access only through Grafana Cloud accounts and tokens",
+      "criterion": "Access only through Grafana Cloud accounts and tokens",
       "met": true,
       "evidence": "see KPI"
     },
     {
-      "item": "Grafana resources git-versioned and applied by workflows",
+      "criterion": "Grafana resources git-versioned and applied by workflows",
       "met": true,
       "evidence": "infra/monitoring/grafana/cloud holds alert-rules.json, ai-alert-rules.json, dashboard-production.json, dashboard-ai-models.json, slos.json and synthetic-monitoring.json, applied by grafana-alert-rules.yml, grafana-ai-alert-rules.yml, grafana-dashboard.yml and grafana-slos.yml. Live: 7 intelliflow-prod rules, 6 intelliflow-ai rules, 2 SLO burn-rate rules, dashboards env008-production and ifc117-ai-models, 3 SLOs."
     },
     {
-      "item": "SonarCloud analyses main",
+      "criterion": "SonarCloud analyses main",
       "met": true,
       "evidence": "SonarCloud project talyssonoliver_IntelliFlow-CRM analysed main at 9a566ce5c on 2026-11-12 12:45 UTC, quality gate OK (17 analyses on record)."
     }

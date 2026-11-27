@@ -69,7 +69,10 @@ describe('eraseCommunications (IFC-316)', () => {
       tenantId: 't1',
     });
     expect(tx.contactReplyDraft.deleteMany.mock.calls[0][0]).toEqual({
-      where: { tenantId: 't1', contactId: { in: ['c1'] } },
+      where: {
+        tenantId: 't1',
+        OR: [{ contactId: { in: ['c1'] } }, { leadId: { in: ['l1'] } }],
+      },
     });
     expect(tx.experimentAssignment.deleteMany.mock.calls[0][0]).toEqual({
       where: { leadId: { in: ['l1'] } },

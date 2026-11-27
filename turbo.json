@@ -23,7 +23,10 @@
     "VERCEL_ENV",
     "GITHUB_ACTIONS",
     "TURBO_TEAM",
-    "TURBO_TOKEN"
+    "TURBO_TOKEN",
+    "TEST_SLOT_HELD",
+    "TEST_SLOTS_DIR",
+    "ALLOW_OUTSIDE_SLOT"
   ],
   "ui": "tui",
   "concurrency": "20",

@@ -28,6 +28,7 @@ import { z } from 'zod';
 import { isErasedEmail, normalizeSubjectEmail } from '@intelliflow/domain';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { EmbeddingChain } from '../chains/embedding.chain';
+import { runWithHandledFallback } from '../lib/handled-fallback';
 import { erasedSubjectEmails, restrictedEmails, type GuardPrisma } from '../lib/data-request-guard';
 import { DEFAULT_RELEVANCE_CONFIG as CANONICAL_RELEVANCE_CONFIG } from '../config/relevance-config';
 import type { ConversationRecordData, MessageRecordWithConversation } from '@intelliflow/domain';
@@ -532,6 +533,7 @@ export class RetrievalService {
   private readonly aclService: ACLService;
   private readonly relevanceEvaluator: RelevanceEvaluator;
   private readonly embeddingChain: EmbeddingChain;
+  private documentVectorColumn: Promise<boolean> | undefined;
 
   constructor(
     private readonly prisma: PrismaClient,
@@ -750,13 +752,22 @@ export class RetrievalService {
     const { tenantId } = aclContext;
     const { query, caseId, limit = 20 } = config;
 
-    // Execute FTS query using the helper function
+    // case_documents has no stored search_vector (no migration creates one, in production
+    // either), so the vector is built here from the title and description. Reading a column
+    // that is not there failed every document search, and with it all RAG context.
+    // (If case_documents grows, add a GIN index on this to_tsvector expression.)
+    // The optional case filter is part of the SQL text, not a nested query: a nested
+    // $queryRaw runs as its own query and was bound as parameter $5 ("syntax error at or
+    // near $5", 42601), which broke this fallback on 23-26/11/2026.
     const results = await this.prisma.$queryRaw<FTSSearchResult[]>`
       SELECT
         cd.id::text,
         cd.title,
         cd.description,
-        ts_rank_cd(cd.search_vector, plainto_tsquery('english', ${query}))::float as rank,
+        ts_rank_cd(
+          to_tsvector('english', COALESCE(cd.title, '') || ' ' || COALESCE(cd.description, '')),
+          plainto_tsquery('english', ${query})
+        )::float as rank,
         ts_headline('english',
           COALESCE(cd.title, '') || ' ' || COALESCE(cd.description, ''),
           plainto_tsquery('english', ${query}),
@@ -766,8 +777,9 @@ export class RetrievalService {
       WHERE cd.tenant_id = ${tenantId}
         AND cd.deleted_at IS NULL
         AND cd.is_latest_version = true
-        AND cd.search_vector @@ plainto_tsquery('english', ${query})
-        ${caseId ? this.prisma.$queryRaw`AND cd.related_case_id = ${caseId}` : this.prisma.$queryRaw``}
+        AND to_tsvector('english', COALESCE(cd.title, '') || ' ' || COALESCE(cd.description, ''))
+          @@ plainto_tsquery('english', ${query})
+        AND (${caseId ?? null}::text IS NULL OR cd.related_case_id = ${caseId ?? null}::text)
       ORDER BY rank DESC
       LIMIT ${limit}
     `;
@@ -789,6 +801,37 @@ export class RetrievalService {
   }
 
   /**
+   * True when case_documents has the `embedding` column the vector query reads. Asked once per
+   * service, from the catalog, instead of letting the query fail: a failed query is an error
+   * span in Grafana, and every search would have raised one. A client that cannot run the probe
+   * (a test double) is assumed to have the column.
+   */
+  private documentVectorsAvailable(): Promise<boolean> {
+    this.documentVectorColumn ??= this.probeDocumentVectorColumn();
+    return this.documentVectorColumn;
+  }
+
+  private async probeDocumentVectorColumn(): Promise<boolean> {
+    const client = this.prisma as unknown as {
+      $queryRawUnsafe?: (sql: string) => Promise<Array<{ present: boolean }>>;
+    };
+    if (typeof client.$queryRawUnsafe !== 'function') return true;
+    try {
+      // A constant statement: nothing from a caller is in it.
+      const rows = await client.$queryRawUnsafe(
+        `SELECT EXISTS (SELECT 1 FROM information_schema.columns
+           WHERE table_schema = current_schema() AND table_name = 'case_documents'
+             AND column_name = 'embedding') AS present`
+      );
+      return rows[0]?.present === true;
+    } catch {
+      // Could not ask (connection trouble): ask again on the next search, search by text now.
+      this.documentVectorColumn = undefined;
+      return false;
+    }
+  }
+
+  /**
    * Semantic search using pgvector cosine similarity
    */
   private async searchDocumentsSemantic(
@@ -798,6 +841,12 @@ export class RetrievalService {
   ): Promise<SearchResult[]> {
     const { tenantId } = aclContext;
     const { query, caseId, limit = 20, semanticThreshold = 0.7 } = config;
+
+    // case_documents has no embedding column in the schema: a vector query would fail on it, so
+    // documents are searched by full text until a migration adds one.
+    if (!(await this.documentVectorsAvailable())) {
+      return this.searchDocumentsFTS(config, _aclFilter, aclContext);
+    }
 
     // Generate query embedding using embedding chain
     // For now, we use a placeholder - in production, call the embedding service
@@ -822,7 +871,7 @@ export class RetrievalService {
         AND cd.is_latest_version = true
         AND cd.embedding IS NOT NULL
         AND (1 - (cd.embedding <=> ${embeddingStr}::vector)) >= ${semanticThreshold}
-        ${caseId ? this.prisma.$queryRaw`AND cd.related_case_id = ${caseId}` : this.prisma.$queryRaw``}
+        AND (${caseId ?? null}::text IS NULL OR cd.related_case_id = ${caseId ?? null}::text)
       ORDER BY cd.embedding <=> ${embeddingStr}::vector
       LIMIT ${limit}
     `;
@@ -855,6 +904,11 @@ export class RetrievalService {
     aclFilter: Record<string, unknown>,
     aclContext: ACLContext
   ): Promise<SearchResult[]> {
+    // Without a vector column there is nothing to fuse: full text alone (see documentVectorsAvailable).
+    if (!(await this.documentVectorsAvailable())) {
+      return this.searchDocumentsFTS(config, aclFilter, aclContext);
+    }
+
     // Execute both searches in parallel
     const [ftsResults, semanticResults] = await Promise.all([
       this.searchDocumentsFTS(config, aclFilter, aclContext),
@@ -977,16 +1031,20 @@ export class RetrievalService {
    */
   private async generateQueryEmbedding(query: string): Promise<number[] | null> {
     try {
-      // IFC-020: Use actual EmbeddingChain for pgvector semantic search
-      const result = await this.embeddingChain.generateEmbedding({ text: query });
+      // IFC-020: Use actual EmbeddingChain for pgvector semantic search. A failure here is
+      // handled below by falling back to FTS, so it is not an error span or an error log.
+      const result = await runWithHandledFallback('embedding_to_fts', () =>
+        this.embeddingChain.generateEmbedding({ text: query })
+      );
       console.log(
         `[IFC-020] Embedding generated for query: ${query.slice(0, 50)}... (${result.dimensions} dimensions)`
       );
       return result.vector;
     } catch (error) {
       // GATE:no-null-fallback - Only fallback to FTS on actual errors
-      // Log the error for debugging and monitoring
-      console.error(
+      // Log the error for debugging and monitoring. A handled fallback is a warning: the search
+      // still returns full-text results (see lib/handled-fallback.ts).
+      console.warn(
         '[IFC-020] Embedding generation failed, falling back to FTS:',
         error instanceof Error ? error.message : String(error)
       );

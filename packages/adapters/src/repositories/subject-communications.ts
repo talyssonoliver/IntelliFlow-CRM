@@ -9,6 +9,7 @@
  */
 import { Prisma, type PrismaClient } from '@intelliflow/db';
 import { ERASED_EMAIL_DOMAIN } from '@intelliflow/domain';
+import { replyDraftsOf } from './subject-reply-drafts';
 
 type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 export type Db = PrismaClient | Tx;
@@ -173,7 +174,7 @@ export async function communicationCounts(
     await Promise.all([
       db.notification.count({ where: c.notificationWhere }),
       db.autoResponseDraft.count({ where: c.draftWhere }),
-      db.contactReplyDraft.count({ where: { tenantId, contactId: { in: ids.contactIds } } }),
+      db.contactReplyDraft.count({ where: replyDraftsOf(tenantId, ids) }),
       db.calendarEvent.count({ where: { tenantId, contactId: { in: ids.contactIds } } }),
       db.experimentAssignment.count({ where: { leadId: { in: ids.leadIds } } }),
     ]);
@@ -264,6 +265,12 @@ async function eraseEmailRecords(tx: Tx, tenantId: string, email: string, ids: s
     where: { tenantId, emailId: { in: ids } },
     data: { fileName: 'erased' },
   });
+  // A bounce report names the recipient by address: it goes with the mail it is about. The row
+  // stays (idempotency and the soft-bounce count) under a per-row stand-in address.
+  await tx.$executeRaw`
+    UPDATE email_bounce_receipts SET diagnostic = NULL,
+      recipient = ${'erased-'}::text || id || ${'@' + ERASED_EMAIL_DOMAIN}::text
+    WHERE "tenantId" = ${tenantId} AND dsar_normalise_email(recipient) = ${email}`;
   return Number(records);
 }
 
@@ -373,8 +380,9 @@ export async function eraseCommunications(
   });
   const notifications = await eraseNotifications(tx, tenantId, email, c.notificationWhere);
   const autoResponseDrafts = await tx.autoResponseDraft.deleteMany({ where: c.draftWhere });
+  // Aurora's reply drafts answer a contact or a lead (MVP-012): both are the person's.
   const contactReplyDrafts = await tx.contactReplyDraft.deleteMany({
-    where: { tenantId, contactId: { in: ids.contactIds } },
+    where: replyDraftsOf(tenantId, ids),
   });
   const calendarEvents = await tx.calendarEvent.updateMany({
     where: { tenantId, contactId: { in: ids.contactIds } },

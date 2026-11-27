@@ -129,6 +129,42 @@ describe('wrapEmbeddingsWithTracing', () => {
     expect(spans[0].events.some((e) => e.name === 'exception')).toBe(true);
   });
 
+  it('does not mark the span ERROR when the caller handles the failure with a fallback', async () => {
+    const { wrapEmbeddingsWithTracing } = await import('../llm-tracer.js');
+    const { runWithHandledFallback } = await import('../../lib/handled-fallback.js');
+
+    // OpenRouter answered 410 for the retired embedding model: semantic search falls back to FTS.
+    const stub = makeEmbeddingsStub({
+      embedQuery: vi.fn().mockRejectedValue(new Error('410 model has reached its end of life')),
+    });
+    const wrapped = wrapEmbeddingsWithTracing(stub, { tier: 'free' });
+
+    await expect(
+      runWithHandledFallback('embedding_to_fts', () => wrapped.embedQuery('q'))
+    ).rejects.toThrow('end of life');
+
+    const spans = exporter.getFinishedSpans();
+    expect(spans).toHaveLength(1);
+    // The Grafana error-span alert counts STATUS_CODE_ERROR only.
+    expect(spans[0].status.code).not.toBe(SpanStatusCode.ERROR);
+    expect(spans[0].attributes['llm.fallback.handled']).toBe('embedding_to_fts');
+    // The evidence is kept as an event, not an exception.
+    expect(spans[0].events.map((e) => e.name)).toEqual(['llm.embed.failed_handled']);
+  });
+
+  it('still marks the span ERROR for the same failure outside a fallback scope', async () => {
+    const { wrapEmbeddingsWithTracing } = await import('../llm-tracer.js');
+
+    const stub = makeEmbeddingsStub({
+      embedQuery: vi.fn().mockRejectedValue(new Error('410 model has reached its end of life')),
+    });
+    const wrapped = wrapEmbeddingsWithTracing(stub, { tier: 'free' });
+
+    await expect(wrapped.embedQuery('q')).rejects.toThrow('end of life');
+
+    expect(exporter.getFinishedSpans()[0].status.code).toBe(SpanStatusCode.ERROR);
+  });
+
   it('records exception and sets ERROR status when embedDocuments throws', async () => {
     const { wrapEmbeddingsWithTracing } = await import('../llm-tracer.js');
 

@@ -37,6 +37,12 @@ vi.mock('../versioning/chain-version-loader', () => ({
     AUTO_RESPONSE: 'EMAIL_WRITER',
   },
   configureVersionLoader: vi.fn(),
+  // The chains read prompts through loadVersionedPrompt; it delegates to the mocked loader.
+  loadVersionedPrompt: vi.fn(async (type: string, tenantId: string) => {
+    const { getVersionLoader } = await import('../versioning/chain-version-loader');
+    const config = await getVersionLoader().getChainConfig(type as never, { tenantId });
+    return { prompt: config?.prompt ?? null, versionId: null };
+  }),
 }));
 
 // Mock the AI config
@@ -238,6 +244,13 @@ describe('ChurnRiskChain', () => {
       const result = await chain.predictChurnRisk(inputWithTransaction);
 
       expect(result).toBeDefined();
+    });
+
+    it('shows the model the total revenue in pounds, never dollars', () => {
+      const text = (chain as any).formatTransactionData({ ...baseInput, totalRevenue: 50000 });
+
+      expect(text).toContain('Total revenue: £50,000');
+      expect(text).not.toContain('$');
     });
 
     it('should handle all entity types', async () => {

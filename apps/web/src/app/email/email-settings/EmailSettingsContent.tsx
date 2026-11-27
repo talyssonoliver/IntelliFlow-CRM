@@ -297,6 +297,7 @@ export default function EmailSettingsContent() {
                   }
                   onChanged={refreshMailboxes}
                   announce={setAnnouncement}
+                  googleClientId={mine.googleClientId}
                 />
               )}
             </>
@@ -314,11 +315,15 @@ export default function EmailSettingsContent() {
                 onChanged={refreshMailboxes}
                 announce={setAnnouncement}
                 readOnlyNoteId={READ_ONLY_NOTE_ID}
+                googleClientId={mine.googleClientId}
               />
               <ReplyToCard
                 value={draft.replyToAddress}
                 onChange={(v) => patch({ replyToAddress: v })}
                 error={errors.replyToAddress}
+                zohoConnected={
+                  mine.mailbox?.kind === 'ZOHO' || (canEdit && tenantQuery.data?.kind === 'ZOHO')
+                }
                 {...readOnlyProps}
               />
               <TrackingCard

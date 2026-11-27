@@ -30,16 +30,7 @@ export function SalesRevenueWidget(_props: Readonly<WidgetProps>) {
   // Show the skeleton while auth is resolving or the query is disabled/pending
   // (`data` undefined) rather than rendering a real-looking £0 / "On track".
   if (isLoading || authLoading || !data) {
-    return (
-      <div className="p-4 sm:p-6 h-full flex flex-col animate-pulse" aria-hidden="true">
-        <div className="flex items-start justify-between">
-          <div className="size-9 sm:size-12 rounded-lg bg-muted" />
-          <div className="w-16 h-5 rounded bg-muted" />
-        </div>
-        <div className="h-4 w-24 bg-muted rounded mt-4" />
-        <div className="h-9 w-32 bg-muted rounded mt-1" />
-      </div>
-    );
+    return <KpiCard label="Sales Revenue" icon="payments" value={null} pending />;
   }
 
   return (

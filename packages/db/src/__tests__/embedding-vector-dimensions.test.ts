@@ -1,7 +1,7 @@
 /**
  * Embedding column dimension (owner ruling 2026-10-31, gh #1108).
  *
- * The free OpenRouter embedding model (nvidia/nemotron-3-embed-1b:free) only returns
+ * The free OpenRouter embedding model (nvidia/nemotron-3.5-embed-1b:free) only returns
  * 2048-dimension vectors, so the four embedding columns move from vector(1536) to
  * vector(2048) and the write guards follow one constant. This file pins the constant to
  * the schema and checks the SQL text of the Class B migration that changes it.
