@@ -60,7 +60,11 @@ describe('emailLog.logToContact (#1177)', () => {
       select: { id: true },
     });
     // Written under the email row's lock, after re-reading it.
-    expect((prismaMock.$queryRaw as any).mock.calls[0][0].join('?')).toContain('FOR UPDATE');
+    expect(
+      (prismaMock.$queryRaw as any).mock.calls.some((c: any[]) =>
+        c[0]?.join?.('?').includes('FOR UPDATE')
+      )
+    ).toBe(true);
     expect(prismaMock.emailRecord.update).toHaveBeenCalledWith({
       where: { id: EMAIL_ID, tenantId },
       data: { contactId: 'contact-ada' },

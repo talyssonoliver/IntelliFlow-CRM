@@ -34,7 +34,13 @@ import { MarkAsReadInputSchema, GetUnreadCountsInputSchema } from '@intelliflow/
 import { sendUserEmailInputSchema, type SendUserEmailResultDto } from '@intelliflow/validators';
 // Import from adapters - using any cast for module resolution compatibility
 import * as adapters from '@intelliflow/adapters';
-import { emailAttachmentStorage, emailRuntimeDeps, type EmailRouterCtx } from './email-access';
+import {
+  emailAttachmentStorage,
+  emailRuntimeDeps,
+  ownMail,
+  visibleMail,
+  type EmailRouterCtx,
+} from './email-access';
 import { dispatchUserMail } from './mailbox-sender';
 import { sendComposedEmail } from '../contact/reply-draft-compose';
 const InboundEmailParser = (adapters as any).InboundEmailParser;
@@ -360,10 +366,13 @@ export const inboundEmailRouter = createTRPCRouter({
   getEmail: tenantProcedure
     .input(z.object({ emailId: z.string() }))
     .query(async ({ input, ctx }): Promise<ParsedEmailResponse | null> => {
+      // Register #64: personal mail is private; see packages/db/src/email-visibility.ts.
+      const visible = await visibleMail(ctx, [input.emailId]);
       const record = await (ctx as any).prisma.emailRecord.findFirst({
         where: {
           id: input.emailId,
           tenantId: (ctx as any).tenant.tenantId,
+          AND: [visible],
         },
         include: { attachments: true },
       });
@@ -422,6 +431,10 @@ export const inboundEmailRouter = createTRPCRouter({
       if (input.contactId) where.contactId = input.contactId;
       if (input.threadId) where.metadata = { path: ['threadId'], equals: input.threadId };
 
+      // Register #64: the rows AND the total only count mail this user may read. The logged-mail
+      // id list this adds is capped (LOGGED_PERSONAL_MAIL_ID_CAP, newest first, fails closed).
+      where.AND = [...(where.AND ?? []), await visibleMail(ctx)];
+
       const [emails, total] = await Promise.all([
         (ctx as any).prisma.emailRecord.findMany({
           where,
@@ -462,7 +475,7 @@ export const inboundEmailRouter = createTRPCRouter({
 
       // Verify email belongs to tenant
       const existing = await (ctx as any).prisma.emailRecord.findFirst({
-        where: { id: emailId, tenantId },
+        where: { id: emailId, tenantId, AND: [await ownMail(ctx)] },
       });
       // Only the shared inbox (inbound mail has no owner) or the caller's own mail
       // (#962): another member's sent mail and drafts are not theirs to move,
@@ -573,10 +586,12 @@ export const inboundEmailRouter = createTRPCRouter({
 
         // Query emails belonging to this thread via metadata. A reply still being written is
         // not part of the conversation: it opens in Compose, and only for whoever is writing it.
+        const visible = await visibleMail(ctx);
         const threadEmails = await (ctx as any).prisma.emailRecord.findMany({
           where: {
             tenantId,
             AND: [
+              visible,
               { metadata: { path: ['threadId'], equals: input.threadId } },
               {
                 OR: [
@@ -596,7 +611,7 @@ export const inboundEmailRouter = createTRPCRouter({
         // This handles emails that don't have metadata.threadId set
         if (emails.length === 0) {
           const single = await (ctx as any).prisma.emailRecord.findFirst({
-            where: { id: input.threadId, tenantId },
+            where: { id: input.threadId, tenantId, AND: [visible] },
             include: { attachments: true },
           });
           if (single && (!single.metadata?.isDraft || single.userId === userId)) {
@@ -647,8 +662,15 @@ export const inboundEmailRouter = createTRPCRouter({
 
         // Single query: verify tenant ownership via tenantId on the attachment row
         // (EmailAttachment.tenantId is set at write time to match EmailRecord.tenantId)
+        // An attachment is as private as its mail (register #64): the same query, through the
+        // mail's visibility, so a file of mail the caller cannot read is not found.
         const attachment = await (ctx as any).prisma.emailAttachment.findFirst({
-          where: { id: input.attachmentId, emailId: input.emailId, tenantId },
+          where: {
+            id: input.attachmentId,
+            emailId: input.emailId,
+            tenantId,
+            email: { is: { AND: [await visibleMail(ctx, [input.emailId])] } },
+          },
         });
         if (!attachment) return null;
 
@@ -819,12 +841,14 @@ export const inboundEmailRouter = createTRPCRouter({
       const tenantId = (ctx as any).tenant.tenantId;
       const prisma = (ctx as any).prisma;
       const now = new Date();
+      const visible = await ownMail(ctx);
 
       if (input.threadId) {
         // Mark all emails in thread as read via metadata threadId
         await prisma.emailRecord.updateMany({
           where: {
             tenantId,
+            AND: [visible],
             metadata: { path: ['threadId'], equals: input.threadId },
             isRead: false,
           },
@@ -832,7 +856,7 @@ export const inboundEmailRouter = createTRPCRouter({
         });
       } else {
         await prisma.emailRecord.updateMany({
-          where: { tenantId, id: input.emailId, isRead: false },
+          where: { tenantId, AND: [visible], id: input.emailId, isRead: false },
           data: { isRead: true, readAt: now },
         });
       }
@@ -844,11 +868,13 @@ export const inboundEmailRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }): Promise<{ success: boolean }> => {
       const tenantId = (ctx as any).tenant.tenantId;
       const prisma = (ctx as any).prisma;
+      const visible = await ownMail(ctx);
 
       if (input.threadId) {
         await prisma.emailRecord.updateMany({
           where: {
             tenantId,
+            AND: [visible],
             metadata: { path: ['threadId'], equals: input.threadId },
             isRead: true,
           },
@@ -856,7 +882,7 @@ export const inboundEmailRouter = createTRPCRouter({
         });
       } else {
         await prisma.emailRecord.updateMany({
-          where: { tenantId, id: input.emailId, isRead: true },
+          where: { tenantId, AND: [visible], id: input.emailId, isRead: true },
           data: { isRead: false, readAt: null },
         });
       }
@@ -879,7 +905,7 @@ export const inboundEmailRouter = createTRPCRouter({
       const prisma = (ctx as any).prisma;
 
       const existing = await prisma.emailRecord.findFirst({
-        where: { id: input.emailId, tenantId },
+        where: { id: input.emailId, tenantId, AND: [await ownMail(ctx)] },
       });
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Email not found' });
@@ -909,9 +935,10 @@ export const inboundEmailRouter = createTRPCRouter({
 
       const result: Record<string, number> = {};
       for (const folder of folders) result[folder] = 0;
+      const visible = await visibleMail(ctx);
 
       const countQueries = folders.map(async (folder) => {
-        const where: any = { tenantId, isRead: false };
+        const where: any = { tenantId, isRead: false, AND: [visible] };
         const folderLower = folder.toLowerCase();
         if (folderLower === 'sent') {
           where.userId = (ctx as any).user?.userId;
@@ -1130,6 +1157,7 @@ export const inboundEmailRouter = createTRPCRouter({
         const emails = await prisma.emailRecord.findMany({
           where: {
             tenantId,
+            AND: [await visibleMail(ctx)],
             OR: [
               { fromEmail: input.email },
               { toEmail: { contains: input.email, mode: 'insensitive' } },

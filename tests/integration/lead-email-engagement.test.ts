@@ -47,7 +47,7 @@ describeDb('leadEmailEngagement (real database)', () => {
     ...over,
   });
   const count = (address: string, tenantId = TENANT) =>
-    leadEmailEngagement(prisma as never, tenantId, address);
+    leadEmailEngagement(prisma as never, { tenantId, userId: 'user-1' }, address);
 
   it('counts CRM sends as tracked, and opens by openCount, openedAt or the status', async () => {
     const to = `a1.${RUN}@example.invalid`;

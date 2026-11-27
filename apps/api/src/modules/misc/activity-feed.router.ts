@@ -12,6 +12,7 @@
 
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { visibleMail } from '../email/email-access';
 import {
   unifiedFeedQuerySchema,
   entityFeedQuerySchema,
@@ -22,7 +23,42 @@ import {
   activityFeedStatsQuerySchema,
   activityFeedSearchQuerySchema,
 } from '@intelliflow/validators';
-import { ACTIVITY_FEED_DEFAULT_LIMIT } from '@intelliflow/domain';
+import { ACTIVITY_FEED_DEFAULT_LIMIT, type ActivityFeedViewer } from '@intelliflow/domain';
+
+/**
+ * Mail feed items have ids like `email_<record id>` (register #64): a reaction or comment on one
+ * is only for someone who may read that mail. Returns the ids among `ids` that are mail the
+ * caller cannot read.
+ */
+async function unreadableMailItems(
+  ctx: { prismaWithTenant: never; tenant: { tenantId: string; userId: string } },
+  source: string | undefined,
+  ids: string[]
+): Promise<Set<string>> {
+  const isMail = (id: string) => source?.toUpperCase() === 'EMAIL' || id.startsWith('email_');
+  const mail = ids.filter(isMail);
+  if (mail.length === 0) return new Set();
+  const records = mail.map((id) => id.replace(/^email_/, ''));
+  const readable = (await (ctx.prismaWithTenant as any).emailRecord.findMany({
+    where: {
+      id: { in: records },
+      tenantId: ctx.tenant.tenantId,
+      AND: [await visibleMail(ctx, records)],
+    },
+    select: { id: true },
+  })) as { id: string }[];
+  const ok = new Set(readable.map((r) => r.id));
+  return new Set(mail.filter((id) => !ok.has(id.replace(/^email_/, ''))));
+}
+
+/** Who is reading the feed: its email rows follow the mail visibility policy (register #64). */
+function feedViewerOf(tenant: {
+  userId: string;
+  role?: string | null;
+  teamMemberIds?: string[];
+}): ActivityFeedViewer {
+  return { userId: tenant.userId, role: tenant.role ?? null, teamMemberIds: tenant.teamMemberIds };
+}
 
 export const activityFeedRouter = createTRPCRouter({
   /**
@@ -48,6 +84,7 @@ export const activityFeedRouter = createTRPCRouter({
       entityId: input.entityId,
       after: input.after,
       before: input.before,
+      viewer: feedViewerOf(ctx.tenant),
     });
 
     const duration = performance.now() - startTime;
@@ -80,7 +117,8 @@ export const activityFeedRouter = createTRPCRouter({
       input.entityId,
       input.limit,
       input.cursor,
-      input.types
+      input.types,
+      feedViewerOf(ctx.tenant)
     );
 
     const duration = performance.now() - startTime;
@@ -110,6 +148,7 @@ export const activityFeedRouter = createTRPCRouter({
     const result = await activityFeedService.getStats(tenantId, input.timeWindow, {
       sources: input.sources,
       entityType: input.entityType,
+      viewer: feedViewerOf(ctx.tenant),
     });
     const duration = performance.now() - startTime;
 
@@ -145,6 +184,7 @@ export const activityFeedRouter = createTRPCRouter({
         types: input.types,
         sources: input.sources,
         entityType: input.entityType,
+        viewer: feedViewerOf(ctx.tenant),
       }
     );
     const duration = performance.now() - startTime;
@@ -166,6 +206,11 @@ export const activityFeedRouter = createTRPCRouter({
     const userId = ctx.tenant.userId;
     const userName = ctx.user?.email ?? 'Unknown';
 
+    if (
+      (await unreadableMailItems(ctx as never, input.activitySource, [input.activityId])).size > 0
+    ) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Activity not found' });
+    }
     const existing = await ctx.prismaWithTenant.activityReaction.findUnique({
       where: {
         activityId_activitySource_userId_emoji: {
@@ -234,6 +279,8 @@ export const activityFeedRouter = createTRPCRouter({
       where.activitySource = input.activitySource;
     }
 
+    const hidden = await unreadableMailItems(ctx as never, input.activitySource, input.activityIds);
+    where.activityId = { in: input.activityIds.filter((id) => !hidden.has(id)) };
     const reactions = await ctx.prismaWithTenant.activityReaction.findMany({ where });
 
     // Group by activityId, then by emoji
@@ -263,6 +310,11 @@ export const activityFeedRouter = createTRPCRouter({
     const userId = ctx.tenant.userId;
     const userName = ctx.user?.email ?? 'Unknown';
 
+    if (
+      (await unreadableMailItems(ctx as never, input.activitySource, [input.activityId])).size > 0
+    ) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Activity not found' });
+    }
     const comment = await ctx.prismaWithTenant.activityComment.create({
       data: {
         activityId: input.activityId,
@@ -292,6 +344,8 @@ export const activityFeedRouter = createTRPCRouter({
       where.activitySource = input.activitySource;
     }
 
+    const hidden = await unreadableMailItems(ctx as never, input.activitySource, input.activityIds);
+    where.activityId = { in: input.activityIds.filter((id) => !hidden.has(id)) };
     const comments = await ctx.prismaWithTenant.activityComment.findMany({
       where,
       orderBy: { createdAt: 'asc' },
