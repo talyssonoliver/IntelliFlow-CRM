@@ -272,8 +272,9 @@ export function ContactAiSummaryCard({
             </span>
           </div>
           <button
+            type="button"
             onClick={onViewAiTab}
-            className="w-full mt-2 text-sm text-[#2a78f6] hover:underline text-center"
+            className="mt-2 flex min-h-11 w-full items-center justify-center rounded-md text-sm font-medium text-[#2a78f6] hover:bg-primary/10 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             View Full Analysis
           </button>

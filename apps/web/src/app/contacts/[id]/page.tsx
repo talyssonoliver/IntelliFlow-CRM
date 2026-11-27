@@ -1,5 +1,6 @@
 'use client';
 
+import { scrollToSection } from '@/lib/ui/scroll-to-section';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { formatDealValue } from '@/components/deals/types';
 import { RestrictionBanner } from '@/components/privacy/RestrictionBanner';
@@ -833,8 +834,8 @@ export default function Contact360Page() {
           </Card>
         </aside>
 
-        {/* Center Content - Tabs and Content */}
-        <section className="lg:col-span-6 flex flex-col gap-6">
+        {/* Center Content - Tabs and Content (anchor: see scrollToSection) */}
+        <section id="contact-tabs" className="lg:col-span-6 flex flex-col gap-6 scroll-mt-20">
           <Card>
             <div className="flex border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto">
               {tabs.map((tab) => (
@@ -1463,7 +1464,11 @@ export default function Contact360Page() {
         <aside className="lg:col-span-3 flex flex-col gap-6">
           <ContactAiSummaryCard
             aiInsights={aiInsights}
-            onViewAiTab={() => setActiveTab('ai-insights')}
+            onViewAiTab={() => {
+              // Same fix as the lead page (owner 23/11): on a phone this button is below the tabs.
+              setActiveTab('ai-insights');
+              scrollToSection('contact-tabs');
+            }}
           />
           <RelatedTasksCard
             entityType="contact"

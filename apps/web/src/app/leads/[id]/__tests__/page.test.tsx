@@ -459,6 +459,29 @@ describe('LeadDetailPage - Null AI Insight UX (IFC-226)', () => {
     expect(leadScoreEl).toHaveTextContent('Not scored');
   });
 
+  // Owner 23/11 ("No ops button, why?"): on a phone the sidebar's View Full Analysis is below the
+  // tabs, so it opens the AI Insights tab AND scrolls the tabs into view, even when already open.
+  it('View Full Analysis opens AI Insights and scrolls the tabs into view', () => {
+    const raf = vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0);
+      return 0;
+    });
+    render(<Lead360Page />);
+    const tabs = document.getElementById('lead-tabs');
+    expect(tabs).not.toBeNull();
+    const scroll = vi.fn();
+    tabs!.scrollIntoView = scroll;
+
+    fireEvent.click(screen.getByRole('button', { name: 'View Full Analysis' }));
+    expect(screen.getByRole('button', { name: /Run AI Analysis/i })).toBeInTheDocument();
+    expect(scroll).toHaveBeenCalledTimes(1);
+
+    // Already on the tab: tapping again still does something visible.
+    fireEvent.click(screen.getByRole('button', { name: 'View Full Analysis' }));
+    expect(scroll).toHaveBeenCalledTimes(2);
+    raf.mockRestore();
+  });
+
   it('renders "Run AI Analysis" CTA in AI Insights tab', () => {
     render(<Lead360Page />);
     const aiTab = screen.getByRole('button', { name: /AI Insights/i });

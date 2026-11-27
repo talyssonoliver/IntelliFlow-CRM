@@ -66,33 +66,44 @@ export function CardListRow({
   secondary,
   status,
   statusClassName,
+  leading,
 }: Readonly<{
   href: string;
   primary: ReactNode;
   secondary?: ReactNode;
   status: ReactNode;
   statusClassName: string;
+  /**
+   * A control before the row's link, e.g. a task's "complete" checkbox. It sits outside the link,
+   * so using it never opens the row (owner 23/11: tasks use the same row as follow-ups).
+   */
+  leading?: ReactNode;
 }>) {
-  return (
-    <li>
-      <Link
-        href={href}
-        className="-mx-2 flex min-h-11 items-center gap-2 rounded-md px-2 py-2.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+  const link = (
+    <Link
+      href={href}
+      className="-mx-2 flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-2.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium text-foreground">{primary}</span>
+        {secondary ? (
+          <span className="block truncate text-xs text-muted-foreground">{secondary}</span>
+        ) : null}
+        <span className={`mt-0.5 block text-xs ${statusClassName}`}>{status}</span>
+      </span>
+      <span
+        className="material-symbols-outlined shrink-0 text-lg text-muted-foreground"
+        aria-hidden="true"
       >
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium text-foreground">{primary}</span>
-          {secondary ? (
-            <span className="block truncate text-xs text-muted-foreground">{secondary}</span>
-          ) : null}
-          <span className={`mt-0.5 block text-xs ${statusClassName}`}>{status}</span>
-        </span>
-        <span
-          className="material-symbols-outlined shrink-0 text-lg text-muted-foreground"
-          aria-hidden="true"
-        >
-          chevron_right
-        </span>
-      </Link>
+        chevron_right
+      </span>
+    </Link>
+  );
+  if (!leading) return <li className="flex">{link}</li>;
+  return (
+    <li className="flex items-center gap-1">
+      {leading}
+      {link}
     </li>
   );
 }

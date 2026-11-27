@@ -20,6 +20,7 @@ import type { WidgetProps } from './index';
 import type { TaskStatus } from '@intelliflow/domain';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { WidgetHeader } from '../WidgetHeader';
+import { CardList, CardListRow, CardListSection } from './CardListSection';
 
 const priorityColors: Record<string, string> = {
   URGENT: 'text-red-600 dark:text-red-400',
@@ -131,40 +132,50 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
             // second button for the same thing.
             <EmptyState entity="tasks" showCta={false} className="py-2" />
           )}
-        {!isLoading &&
-          tasks.map((task) => (
-            <Link
-              key={task.id}
-              href={`/tasks/${task.id}`}
-              className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              <input
-                type="checkbox"
-                className="mt-1 rounded border-slate-300 dark:border-slate-600 cursor-pointer"
-                checked={false}
-                title="Mark as complete"
-                onChange={() => completeMutation.mutate({ taskId: task.id })}
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                aria-label={`Complete task: ${task.title}`}
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                  {task.title}
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span
-                    className={`text-xs font-medium ${priorityColors[task.priority] ?? 'text-slate-500'}`}
-                  >
-                    {task.priority?.charAt(0) + task.priority?.slice(1).toLowerCase()}
-                  </span>
-                  <span className={`text-xs ${getDueDateColor(task.dueDate)}`}>
-                    {formatDueDate(task.dueDate, timezone)}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
+        {/* Owner 23/11 on the dashboard: "The cards of follow up are different from this one,
+            why?". Tasks use the same section, list and row as Follow-ups due and Waiting for
+            reply; the complete checkbox sits before the row, outside its link. */}
+        {!isLoading && tasks.length > 0 && (
+          <CardListSection
+            label="Tasks due"
+            testId="upcoming-tasks"
+            caption={`${tasks.length} ${tasks.length === 1 ? 'task' : 'tasks'} due next`}
+          >
+            <CardList>
+              {tasks.map((task) => (
+                <CardListRow
+                  key={task.id}
+                  href={`/tasks/${task.id}`}
+                  primary={task.title}
+                  status={
+                    <>
+                      <span className={priorityColors[task.priority] ?? 'text-slate-500'}>
+                        {task.priority?.charAt(0) + task.priority?.slice(1).toLowerCase()}
+                      </span>
+                      {' · '}
+                      <span className={getDueDateColor(task.dueDate)}>
+                        {formatDueDate(task.dueDate, timezone)}
+                      </span>
+                    </>
+                  }
+                  statusClassName="text-muted-foreground"
+                  leading={
+                    <label className="flex size-11 shrink-0 cursor-pointer items-center justify-center">
+                      <input
+                        type="checkbox"
+                        className="size-4 cursor-pointer rounded border-slate-300 dark:border-slate-600"
+                        checked={false}
+                        title="Mark as complete"
+                        onChange={() => completeMutation.mutate({ taskId: task.id })}
+                        aria-label={`Complete task: ${task.title}`}
+                      />
+                    </label>
+                  }
+                />
+              ))}
+            </CardList>
+          </CardListSection>
+        )}
         {!isLoading && (
           <FollowUpsDueSection
             leads={followUps.leads}

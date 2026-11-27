@@ -128,6 +128,37 @@ describe('UpcomingTasksWidget', () => {
     expect(screen.queryByTestId('waiting-for-reply')).toBeNull();
   });
 
+  // Owner 23/11: "The cards of follow up are different from this one, why?" Tasks use the same
+  // card-list section and rows as Follow-ups due.
+  it('lists tasks in the shared card list, with the complete checkbox outside the row link', async () => {
+    const { api } = await import('@/lib/api');
+    (api.task.list.useQuery as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      data: {
+        tasks: [
+          {
+            id: 't1',
+            title: '[AI] Call the decision maker today',
+            priority: 'HIGH',
+            dueDate: new Date().toISOString(),
+          },
+        ],
+      },
+      isLoading: false,
+    });
+    render(<UpcomingTasksWidget />);
+
+    const section = screen.getByTestId('upcoming-tasks');
+    expect(within(section).getByText('1 task due next')).toBeInTheDocument();
+    const link = within(section).getByRole('link', { name: /Call the decision maker today/ });
+    expect(link).toHaveAttribute('href', '/tasks/t1');
+    const checkbox = within(section).getByRole('checkbox', {
+      name: 'Complete task: [AI] Call the decision maker today',
+    });
+    // Ticking a task must not open it: the checkbox is not inside the link.
+    expect(link.contains(checkbox)).toBe(false);
+    expect(link.closest('li')?.contains(checkbox)).toBe(true);
+  });
+
   it('renders widget title and view all link', () => {
     render(<UpcomingTasksWidget />);
 
