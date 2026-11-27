@@ -296,6 +296,7 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
               : null
           }
           isLoading={threadQuery.isLoading}
+          unavailable={threadQuery.isError}
           labels={selectedEmail?.labels ?? []}
           onLabelsChange={handleSetLabels}
           onReply={handleReply}
