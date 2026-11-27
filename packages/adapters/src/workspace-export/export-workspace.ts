@@ -143,6 +143,8 @@ interface Plan {
   model: string;
   description: string;
   columns: string[];
+  /** The columns that identify a row and order the keyset read (`id` unless the model has none). */
+  keyColumns: readonly string[];
   urlColumns: readonly string[];
   /** Extra predicate beyond `tenantId` (users, and the team-visible mail). */
   where: (tenantId: string, now: Date) => Record<string, unknown>;
@@ -177,6 +179,7 @@ export function buildPlans(): Plan[] {
     model: e.model,
     description: e.description,
     columns: exportColumns(e.model),
+    keyColumns: e.keyColumns ?? ['id'],
     urlColumns: e.urlColumns ?? [],
     where: TEAM_MAIL_WHERE[e.model] ?? ((tenantId) => ({ tenantId })),
   }));
@@ -185,6 +188,7 @@ export function buildPlans(): Plan[] {
     model: MEMBERSHIP_EXPORT.model,
     description: MEMBERSHIP_EXPORT.description,
     columns: [...MEMBERSHIP_EXPORT.columns],
+    keyColumns: ['id'],
     urlColumns: [],
     // Like the users file: the operator staff grants are not the customer records.
     where: (tenantId) => ({ tenantId, source: { not: 'PORTAL_STAFF' } }),
@@ -194,6 +198,7 @@ export function buildPlans(): Plan[] {
     model: USER_EXPORT.model,
     description: USER_EXPORT.description,
     columns: [...USER_EXPORT.columns],
+    keyColumns: ['id'],
     urlColumns: [],
     // Home users plus members with a live membership. The tenant client does not filter users
     // (they can live in another home tenant), so the predicate is explicit.
@@ -218,6 +223,19 @@ export function buildPlans(): Plan[] {
   return plans;
 }
 
+/**
+ * Keyset condition for "rows after `last`" over `keys` (id alone, or a composite key): a row is
+ * after when its first differing key column is greater.
+ */
+function afterKey(keys: readonly string[], last: ExportRow): Record<string, unknown> {
+  return {
+    OR: keys.map((key, i) => ({
+      ...Object.fromEntries(keys.slice(0, i).map((k) => [k, last[k]])),
+      [key]: { gt: last[key] },
+    })),
+  };
+}
+
 async function* readPages(
   db: ExportDb,
   plan: Plan,
@@ -227,23 +245,24 @@ async function* readPages(
 ): AsyncGenerator<ExportRow[]> {
   const delegate = db[lowerFirst(plan.model)];
   if (!delegate?.findMany) throw new Error(`Export database has no ${plan.model} delegate`);
-  const select = Object.fromEntries([...new Set(['id', ...plan.columns])].map((c) => [c, true]));
-  let cursor: string | undefined;
+  const keys = plan.keyColumns;
+  const select = Object.fromEntries([...new Set([...keys, ...plan.columns])].map((c) => [c, true]));
+  let last: ExportRow | undefined;
   for (;;) {
     const rows: ExportRow[] = await delegate.findMany({
-      // Keyset paging (id > last id), not a Prisma cursor: a cursor row deleted mid-export would
+      // Keyset paging (key > last key), not a Prisma cursor: a cursor row deleted mid-export would
       // match nothing and silently cut off every later row.
-      where: cursor
-        ? { AND: [plan.where(tenantId, now), { id: { gt: cursor } }] }
+      where: last
+        ? { AND: [plan.where(tenantId, now), afterKey(keys, last)] }
         : plan.where(tenantId, now),
-      orderBy: { id: 'asc' },
+      orderBy: keys.map((k) => ({ [k]: 'asc' })),
       take: pageSize,
       select,
     });
     if (rows.length === 0) return;
     yield rows;
     if (rows.length < pageSize) return;
-    cursor = String(rows[rows.length - 1]!.id);
+    last = rows[rows.length - 1]!;
   }
 }
 

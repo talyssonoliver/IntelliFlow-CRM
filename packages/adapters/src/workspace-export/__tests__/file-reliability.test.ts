@@ -274,3 +274,40 @@ describe('export recipients when the workspace is administered through membershi
     expect(await ids(tables, { subscriptionId: 'sub_1' })).toEqual([]);
   });
 });
+
+describe('a model with a composite key (no id column)', () => {
+  it('pages through it by its key columns without losing or repeating a row', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'wsx-k-'));
+    const rows = ['t1', 't2', 't3'].flatMap((type) =>
+      ['g1', 'g2', 'g3'].map((tag) => ({
+        tenantId: T,
+        contactTypeId: type,
+        contactTagId: tag,
+        createdAt: when,
+      }))
+    );
+    const database = makeDb({
+      tenant: [
+        {
+          id: T,
+          name: 'Alpha',
+          slug: 'alpha',
+          status: 'ACTIVE',
+          plan: 'STARTER',
+          createdAt: when,
+          updatedAt: when,
+        },
+      ],
+      contactTypeDefaultTag: [...rows].reverse(),
+    });
+    const out = join(dir, 'a.zip');
+    await runWorkspaceExport({ db: database, tenantId: T, outputPath: out, pageSize: 2 });
+    const exported = JSON.parse(readZip(out)['data/contact_type_default_tags.json']!) as Array<{
+      contactTypeId: string;
+      contactTagId: string;
+    }>;
+    expect(exported.map((r) => `${r.contactTypeId}/${r.contactTagId}`)).toEqual(
+      rows.map((r) => `${r.contactTypeId}/${r.contactTagId}`)
+    );
+  });
+});

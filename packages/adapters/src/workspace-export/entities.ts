@@ -17,6 +17,8 @@ export interface ExportEntity {
   readonly model: string;
   /** What the file holds, for the README. */
   readonly description: string;
+  /** The columns that identify a row, when the model has no `id` (a composite key). */
+  readonly keyColumns?: readonly string[];
   /** Columns holding a stored-file URL: the query string is dropped (it can carry a token). */
   readonly urlColumns?: readonly string[];
 }
@@ -330,6 +332,7 @@ export const EXPORT_ENTITIES: readonly ExportEntity[] = [
     name: 'contact_type_default_tags',
     model: 'ContactTypeDefaultTag',
     description: 'Default tags applied to each contact type.',
+    keyColumns: ['contactTypeId', 'contactTagId'],
   },
   {
     name: 'case_type_checklist_items',

@@ -73,6 +73,17 @@ export function delegate(rows: Row[], tables?: Record<string, Row[]>) {
   return {
     findMany: async (args: Row = {}) => {
       let out = rows.filter((r) => matches(r, args.where, tables));
+      if (Array.isArray(args.orderBy)) {
+        // The export's keyset read: ascending by each key column in turn.
+        const keys = args.orderBy.map((o: Row) => Object.keys(o)[0]!);
+        out = [...out].sort((x, y) => {
+          for (const k of keys) {
+            const c = String(x[k]).localeCompare(String(y[k]));
+            if (c !== 0) return c;
+          }
+          return 0;
+        });
+      }
       if (args.orderBy?.id === 'asc')
         out = [...out].sort((a, b) => String(a.id).localeCompare(String(b.id)));
       if (args.orderBy?.createdAt) {
