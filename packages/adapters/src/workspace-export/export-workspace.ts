@@ -16,7 +16,8 @@
  * path is re-checked. Secrets: see ./deny-list.ts. Memory: rows are read in keyset pages and
  * written as they come; files are piped.
  */
-import { Prisma, emailTeamVisibleWhere } from '@intelliflow/db';
+import { Prisma, emailTeamVisibleWhere, isTeamVisibleEmail } from '@intelliflow/db';
+import type { TeamMailContext, TeamMailRow } from '@intelliflow/db';
 import { createHash } from 'node:crypto';
 import { createReadStream, createWriteStream } from 'node:fs';
 import { rm, stat, writeFile } from 'node:fs/promises';
@@ -28,7 +29,8 @@ import {
   type PartedEntryInfo,
 } from './parted-archive';
 import {
-  DEFAULT_EXPORT_FILE_BUCKETS,
+  defaultExportFileBuckets,
+  resolveEmailAttachmentsBucket,
   EXPORT_ENTITIES,
   MEMBERSHIP_EXPORT,
   TENANT_COLUMNS,
@@ -75,6 +77,11 @@ export interface RunWorkspaceExportOptions {
   requestId?: string;
   files?: ExportFileStorage | null;
   buckets?: readonly string[];
+  /**
+   * The bucket that holds email attachments: only the files of exported mail are copied from it.
+   * Defaults to the storage adapter's own name (EMAIL_ATTACHMENTS_BUCKET, else 'email-attachments').
+   */
+  emailAttachmentsBucket?: string;
   now?: () => Date;
   pageSize?: number;
   /** A part is closed once it passes this size (default about 4 GB). Tests inject a small one. */
@@ -82,9 +89,6 @@ export interface RunWorkspaceExportOptions {
   /** Opening a stored file is retried with a growing delay before the export fails. */
   fileRetry?: { attempts?: number; delayMs?: number };
 }
-
-/** The bucket whose objects are restricted to the attachments of the mail that is exported. */
-export const EMAIL_ATTACHMENTS_BUCKET = 'email-attachments';
 
 export interface ManifestFile {
   path: string;
@@ -236,12 +240,40 @@ function afterKey(keys: readonly string[], last: ExportRow): Record<string, unkn
   };
 }
 
+/** Decides, row by row, whether a row read from the database goes into the archive. */
+type RowFilter = (row: ExportRow) => boolean;
+
+/** Every id of `model` matching `where`, read in keyset pages (small tables: ids only). */
+async function readIds(
+  db: ExportDb,
+  model: string,
+  where: Record<string, unknown>,
+  pageSize: number
+): Promise<Set<string>> {
+  const delegate = db[lowerFirst(model)];
+  if (!delegate?.findMany) throw new Error(`Export database has no ${model} delegate`);
+  const ids = new Set<string>();
+  let after: string | undefined;
+  for (;;) {
+    const rows: Array<{ id: string }> = await delegate.findMany({
+      where: after ? { AND: [where, { id: { gt: after } }] } : where,
+      orderBy: { id: 'asc' },
+      take: pageSize,
+      select: { id: true },
+    });
+    for (const r of rows) ids.add(r.id);
+    if (rows.length < pageSize) return ids;
+    after = rows[rows.length - 1]!.id;
+  }
+}
+
 async function* readPages(
   db: ExportDb,
   plan: Plan,
   tenantId: string,
   now: Date,
-  pageSize: number
+  pageSize: number,
+  keep: RowFilter | null = null
 ): AsyncGenerator<ExportRow[]> {
   const delegate = db[lowerFirst(plan.model)];
   if (!delegate?.findMany) throw new Error(`Export database has no ${plan.model} delegate`);
@@ -260,7 +292,9 @@ async function* readPages(
       select,
     });
     if (rows.length === 0) return;
-    yield rows;
+    // Paging follows the rows read; the filter only drops rows from what is written.
+    const kept = keep ? rows.filter(keep) : rows;
+    if (kept.length > 0) yield kept;
     if (rows.length < pageSize) return;
     last = rows[rows.length - 1]!;
   }
@@ -483,6 +517,10 @@ interface ExportRun {
   entities: WorkspaceExportManifest['entities'];
   warnings: string[];
   skippedFiles: WorkspaceExportManifest['skippedFiles'];
+  /** The bucket that holds email attachments. */
+  emailBucket: string;
+  /** Ids of the exported mail: only their attachment rows are exported. */
+  emailIds: Set<string>;
   /** Storage paths of the exported email attachments: the only objects copied from that bucket. */
   attachmentPaths: Set<string>;
   /** Stored email attachments left out because their mail is private. */
@@ -490,17 +528,39 @@ interface ExportRun {
   track(info: PartedEntryInfo, extra: Omit<ManifestFile, 'bytes' | 'sha256' | 'part'>): void;
 }
 
-/** Passes the pages through, noting which stored files the exported attachment rows point at. */
-async function* rememberAttachmentPaths(
+/**
+ * The row-level filter of an entity, or null. Personal mail is private (owner decision
+ * 26/11/2026): a mail is exported only when the whole team may read it, with the check the
+ * database `where` cannot do (the lead or contact it is logged to must still exist), and an
+ * attachment row only when its mail was exported. Mail is read before its attachments.
+ */
+async function rowFilterFor(
   run: ExportRun,
-  pages: AsyncIterable<ExportRow[]>
-): AsyncGenerator<ExportRow[]> {
-  for await (const page of pages) {
-    for (const row of page) {
-      if (typeof row.fileUrl === 'string') run.attachmentPaths.add(row.fileUrl);
-    }
-    yield page;
+  plan: Plan,
+  ctx: { db: ExportDb; tenantId: string; pageSize: number }
+): Promise<RowFilter | null> {
+  if (plan.model === 'EmailRecord') {
+    const { db, tenantId, pageSize } = ctx;
+    const [tenantMailboxIds, contactIds, leadIds] = await Promise.all([
+      readIds(db, 'EmailMailbox', { tenantId, scope: 'TENANT' }, pageSize),
+      readIds(db, 'Contact', { tenantId }, pageSize),
+      readIds(db, 'Lead', { tenantId }, pageSize),
+    ]);
+    const team: TeamMailContext = { tenantMailboxIds, contactIds, leadIds };
+    return (row) => {
+      if (!isTeamVisibleEmail(row as TeamMailRow, team)) return false;
+      run.emailIds.add(String(row.id));
+      return true;
+    };
   }
+  if (plan.model === 'EmailAttachment') {
+    return (row) => {
+      if (!run.emailIds.has(String(row.emailId))) return false;
+      if (typeof row.fileUrl === 'string') run.attachmentPaths.add(row.fileUrl);
+      return true;
+    };
+  }
+  return null;
 }
 
 /** One entity: its CSV, then its JSON, each from its own keyset read. */
@@ -519,13 +579,9 @@ async function writeEntityFiles(
   const spools: string[] = [];
   let total = 0;
   try {
-    const pages = readPages(ctx.db, plan, ctx.tenantId, ctx.now, ctx.pageSize);
-    const chunks = spoolChunks(
-      ctx.spoolBase,
-      plan,
-      plan.model === 'EmailAttachment' ? rememberAttachmentPaths(run, pages) : pages,
-      ctx.maxChunkBytes
-    );
+    const keep = await rowFilterFor(run, plan, ctx);
+    const pages = readPages(ctx.db, plan, ctx.tenantId, ctx.now, ctx.pageSize, keep);
+    const chunks = spoolChunks(ctx.spoolBase, plan, pages, ctx.maxChunkBytes);
     for await (const chunk of chunks) {
       spools.push(chunk.csvPath, chunk.jsonPath);
       const base = chunk.n === 1 ? plan.name : `${plan.name}.part-${chunk.n}`;
@@ -590,7 +646,7 @@ function skipReason(
   }
   // Email attachments leave only with their mail: an object that no exported attachment row
   // points at belongs to private mail (a personal mailbox or a draft) and stays out.
-  if (bucket === EMAIL_ATTACHMENTS_BUCKET && !run.attachmentPaths.has(path)) {
+  if (bucket === run.emailBucket && !run.attachmentPaths.has(path)) {
     run.privateAttachmentsLeftOut += 1;
     return { reason: 'private mail', silent: true };
   }
@@ -653,7 +709,8 @@ export async function runWorkspaceExport(
   const now = opts.now ?? (() => new Date());
   const generatedAt = now();
   const pageSize = opts.pageSize ?? 500;
-  const buckets = opts.buckets ?? DEFAULT_EXPORT_FILE_BUCKETS;
+  const emailBucket = opts.emailAttachmentsBucket ?? resolveEmailAttachmentsBucket();
+  const buckets = opts.buckets ?? defaultExportFileBuckets(emailBucket);
 
   const tenant = await db.tenant.findFirst({
     where: { id: tenantId },
@@ -669,6 +726,8 @@ export async function runWorkspaceExport(
     entities: {},
     warnings: [],
     skippedFiles: [],
+    emailBucket,
+    emailIds: new Set<string>(),
     attachmentPaths: new Set<string>(),
     privateAttachmentsLeftOut: 0,
     track(info, extra) {

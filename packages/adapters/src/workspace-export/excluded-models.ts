@@ -24,7 +24,6 @@ export const EXCLUDED_MODELS: Readonly<Record<string, string>> = {
   Session: CREDENTIAL,
   UserMfaSettings: CREDENTIAL,
   WebhookEndpoint: `${CREDENTIAL} (webhook signing secrets)`,
-  TaskAutomationRule: `${CREDENTIAL} (webhook tokens and secrets)`,
   TenantAIProviderKey: `${CREDENTIAL} (the workspace's own AI provider keys)`,
   PartnerLoginGrant: `${CREDENTIAL} (operator staff login links)`,
   CustomActionHandler: 'executable handler configuration that can carry endpoints and secrets',
@@ -104,7 +103,6 @@ export const EXCLUDED_MODELS: Readonly<Record<string, string>> = {
 
   // Delivery plumbing and platform access control
   EmailBounceReceipt: PLUMBING,
-  EmailSuppression: PLUMBING,
   Notification: PLUMBING,
   NotificationDLQ: PLUMBING,
   UserPermission: 'platform access-control grants; each user role is in users.csv',

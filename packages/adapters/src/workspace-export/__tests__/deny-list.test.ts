@@ -146,4 +146,19 @@ describe('secret deny-list', () => {
     );
     expect(stripUrlSecrets('plain/path')).toBe('plain/path');
   });
+
+  it('exports the automation rules but never their webhook credentials', () => {
+    expect(EXPORT_ENTITIES.map((e) => e.model)).toContain('TaskAutomationRule');
+    const plan = buildPlans().find((p) => p.model === 'TaskAutomationRule')!;
+    for (const col of [
+      'webhookTokenHash',
+      'webhookTokenPrefix',
+      'webhookSecret',
+      'webhookSecretPrevious',
+      'webhookSecretPreviousExpiresAt',
+    ]) {
+      expect(plan.columns, col).not.toContain(col);
+    }
+    expect(plan.columns).toContain('actions');
+  });
 });

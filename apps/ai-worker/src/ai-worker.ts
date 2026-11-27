@@ -723,6 +723,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           archiveStorage: storage,
           fileStorage: storage,
           buckets: [emailBucket, 'case-documents'],
+          emailAttachmentsBucket: emailBucket,
         },
         this.logger
       );

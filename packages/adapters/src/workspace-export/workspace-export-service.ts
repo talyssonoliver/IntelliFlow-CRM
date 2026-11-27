@@ -217,6 +217,8 @@ export interface ExportJobDeps {
   fileStorage: ExportFileStorage | null;
   sendEmail: (mail: ExportMail) => Promise<void>;
   buckets?: readonly string[];
+  /** The email-attachments bucket (EMAIL_ATTACHMENTS_BUCKET): its files leave only with their mail. */
+  emailAttachmentsBucket?: string;
   tmpDir?: string;
   now?: () => Date;
   /** Test seam. */
@@ -583,6 +585,7 @@ export async function processWorkspaceExport(
       requestId: request.id,
       files: deps.fileStorage,
       buckets: deps.buckets,
+      emailAttachmentsBucket: deps.emailAttachmentsBucket,
       now,
     });
 

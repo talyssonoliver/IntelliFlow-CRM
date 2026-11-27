@@ -46,12 +46,6 @@ export const EXPLICIT_SECRET_DENYLIST: Readonly<Record<string, readonly string[]
   APIKey: ['keyHash'],
   PartnerApiKey: ['keyHash'],
   WebhookEndpoint: ['secret'],
-  TaskAutomationRule: [
-    'webhookTokenHash',
-    'webhookTokenPrefix',
-    'webhookSecret',
-    'webhookSecretPrevious',
-  ],
   // Privacy request tokens and anti-abuse hashes.
   DsarRequest: ['verificationTokenHash', 'exportTokenHash', 'capEmailHash', 'ipHash'],
   BookingAttempt: ['emailHash', 'ipHash'],
@@ -61,6 +55,14 @@ export const EXPLICIT_SECRET_DENYLIST: Readonly<Record<string, readonly string[]
 export const EXPORTED_COLUMN_EXCLUSIONS: Readonly<Record<string, readonly string[]>> = {
   // A recording link can be a pre-signed URL; the customer's call log keeps duration/outcome.
   CallRecord: ['recordingUrl'],
+  // The customer's own automation rules are theirs; only the webhook credentials stay out.
+  TaskAutomationRule: [
+    'webhookTokenHash',
+    'webhookTokenPrefix',
+    'webhookSecret',
+    'webhookSecretPrevious',
+    'webhookSecretPreviousExpiresAt',
+  ],
 };
 
 /**

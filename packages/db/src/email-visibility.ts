@@ -188,8 +188,12 @@ export function emailVisibilityWhere(viewerUserId: string, loggedIds: readonly s
  *  - never a draft, and never mail that is only in a user's personal mailbox.
  *
  * There is no administrator branch (owner decision 26/11/2026): an administrator who exports the
- * workspace gets exactly what any colleague could already read. `metadata.leadId` is matched as a
- * string, like the SQL form; the lead is not looked up (a Prisma `where` cannot join it).
+ * workspace gets exactly what any colleague could already read.
+ *
+ * This is the Prisma half and it is a SUPERSET: a `where` cannot check that the lead or contact a
+ * mail is logged to still exists (`email_records` has no relation to them, and a deleted lead
+ * leaves its id in `metadata`). Use it to narrow the read, then keep a row only when
+ * `isTeamVisibleEmail` says so.
  */
 export function emailTeamVisibleWhere() {
   return {
@@ -215,6 +219,47 @@ export function emailTeamVisibleWhere() {
       },
     ],
   };
+}
+
+/** What `isTeamVisibleEmail` needs to know about the tenant. */
+export interface TeamMailContext {
+  /** Ids of the company mailboxes (`scope = 'TENANT'`). */
+  tenantMailboxIds: ReadonlySet<string>;
+  /** Ids of the contacts that exist in the tenant. */
+  contactIds: ReadonlySet<string>;
+  /** Ids of the leads that exist in the tenant. */
+  leadIds: ReadonlySet<string>;
+}
+
+/** The slice of an `email_records` row the policy reads. */
+export interface TeamMailRow {
+  mailboxId?: string | null;
+  userId?: string | null;
+  contactId?: string | null;
+  metadata?: unknown;
+}
+
+const metadataOf = (row: TeamMailRow): Record<string, unknown> =>
+  row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata)
+    ? (row.metadata as Record<string, unknown>)
+    : {};
+
+/**
+ * The exact form of `emailTeamVisibleWhere`, with the existence check the Prisma form cannot do:
+ * mail logged to a lead or contact counts only while that lead or contact still exists in the
+ * tenant, as in `loggedToVisibleSql`. A draft is never team mail.
+ */
+export function isTeamVisibleEmail(row: TeamMailRow, ctx: TeamMailContext): boolean {
+  const meta = metadataOf(row);
+  if (meta.isDraft === true) return false;
+  if (row.mailboxId && ctx.tenantMailboxIds.has(row.mailboxId)) return true;
+  const ownerless =
+    !row.mailboxId &&
+    !row.userId &&
+    (meta.mailboxOwnerId === undefined || meta.mailboxOwnerId === null);
+  if (ownerless) return true;
+  if (row.contactId && ctx.contactIds.has(row.contactId)) return true;
+  return typeof meta.leadId === 'string' && ctx.leadIds.has(meta.leadId);
 }
 
 /** The viewer's full Prisma visibility fragment: looks up the logged-to-a-visible-person ids. */

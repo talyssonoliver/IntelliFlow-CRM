@@ -2,7 +2,7 @@
  * Whole-workspace data export (agreement clause 5: a standalone copy of the customer's data
  * within 14 days of leaving).
  *
- * Every procedure is `adminTenantProcedure` (workspace administrators only) and acts on the
+ * Every procedure is `exportProcedure`: `adminTenantProcedure` (workspace administrators only), never a pinned staff session, and acts on the
  * context tenant: another tenant's request id is NOT_FOUND. The export itself runs in the
  * ai-worker (BullMQ queue `intelliflow-workspace-export`); this router creates the audit row,
  * queues the job, lists requests and issues a fresh signed link. A link is never stored and never
@@ -19,7 +19,25 @@ import {
 } from '@intelliflow/adapters';
 import { adminTenantProcedure, createTRPCRouter } from '../../trpc';
 import { getAuditLogger } from '../../security/audit-logger';
+import { membershipError } from '../../security/membership';
 import { enqueueWorkspaceExport } from './workspace-export.queue';
+
+/**
+ * The whole workspace in one archive is for the workspace's own administrators. A pinned Portal
+ * staff session (an operator guest in a client workspace) is refused here as well as by the
+ * home-only registry (`workspaceExport.` in security/home-only.ts): two independent checks, so a
+ * renamed procedure or a registry edit cannot open the export to staff.
+ */
+const exportProcedure = adminTenantProcedure.use(({ ctx, next }) => {
+  if (ctx.user?.pinned) {
+    throw membershipError(
+      'FORBIDDEN',
+      'HOME_ONLY',
+      'This action is not available in a client workspace opened from the Portal.'
+    );
+  }
+  return next();
+});
 
 let archiveStorage: SupabaseExportStorage | null = null;
 
@@ -69,7 +87,7 @@ const requestIdInput = z.object({ requestId: z.string().min(1).max(64) });
 
 export const workspaceExportRouter = createTRPCRouter({
   /** "Export all workspace data": one per day, one at a time. */
-  request: adminTenantProcedure.mutation(async ({ ctx }) => {
+  request: exportProcedure.mutation(async ({ ctx }) => {
     const outcome = await requestWorkspaceExport(
       ctx.prismaWithTenant,
       { tenantId: ctx.tenant.tenantId, requestedById: ctx.tenant.userId },
@@ -109,7 +127,7 @@ export const workspaceExportRouter = createTRPCRouter({
   }),
 
   /** The latest requests of this workspace: status, counts and expiry. No links. */
-  list: adminTenantProcedure.query(async ({ ctx }): Promise<WorkspaceExportDto[]> => {
+  list: exportProcedure.query(async ({ ctx }): Promise<WorkspaceExportDto[]> => {
     const rows = await ctx.prismaWithTenant.workspaceExportRequest.findMany({
       where: { tenantId: ctx.tenant.tenantId },
       orderBy: { requestedAt: 'desc' },
@@ -132,7 +150,7 @@ export const workspaceExportRouter = createTRPCRouter({
   }),
 
   /** A fresh link for a READY export, valid until its 14 days are over. */
-  downloadLink: adminTenantProcedure.input(requestIdInput).mutation(async ({ ctx, input }) => {
+  downloadLink: exportProcedure.input(requestIdInput).mutation(async ({ ctx, input }) => {
     try {
       const link = await issueDownloadLink(ctx.prismaWithTenant, getArchiveStorage(), {
         tenantId: ctx.tenant.tenantId,

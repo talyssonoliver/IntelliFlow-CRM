@@ -103,6 +103,15 @@ describe('pinned Portal staff session', () => {
     expect(signedDownloadUrl).not.toHaveBeenCalled();
   });
 
+  it('is refused by the router itself, without the home-only registry', async () => {
+    const c = workspaceExportRouter.createCaller(adminContext(true));
+    await expect(c.request()).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(c.list()).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(c.downloadLink({ requestId: 'r1' })).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    expect(prismaMock.workspaceExportRequest.create).not.toHaveBeenCalled();
+    expect(signedDownloadUrl).not.toHaveBeenCalled();
+  });
+
   it("still lets the workspace's own administrator through", async () => {
     const c = mounted.createCaller(adminContext(false));
     await expect(c.workspaceExport.request()).resolves.toEqual({ requestId: 'req_1' });

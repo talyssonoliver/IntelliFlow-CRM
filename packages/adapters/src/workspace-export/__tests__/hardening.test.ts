@@ -749,7 +749,8 @@ describe('review follow-ups: sweep races and the export bucket', () => {
     const real = db.lead.findMany;
     let reads = 0;
     db.lead.findMany = async (args: any) => {
-      reads += 1;
+      // The mail filter also reads the lead ids (select: id only); count the entity read.
+      if (args.select?.email) reads += 1;
       return real(args);
     };
     const out = join(dir, 'a.zip');

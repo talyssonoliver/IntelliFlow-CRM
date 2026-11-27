@@ -545,6 +545,18 @@ export const EXPORT_ENTITIES: readonly ExportEntity[] = [
     model: 'NotificationTemplate',
     description: 'Notification templates your workspace customised.',
   },
+  {
+    name: 'task_automation_rules',
+    model: 'TaskAutomationRule',
+    description:
+      'Task automation rules: trigger, filter, schedule and actions. Webhook tokens and secrets are not included.',
+  },
+  {
+    name: 'email_suppressions',
+    model: 'EmailSuppression',
+    description:
+      'Addresses your workspace no longer sends email to (hard bounces and ones added by hand), with the reason.',
+  },
   // People
   { name: 'teams', model: 'Team', description: 'Teams.' },
   { name: 'team_members', model: 'TeamMember', description: 'Team membership.' },
@@ -613,8 +625,19 @@ export const TENANT_COLUMNS = [
   'updatedAt',
 ] as const;
 
+/**
+ * The email-attachments bucket, named as the storage adapter names it (the same env override and
+ * default), so the export and the adapter that wrote the files can never disagree.
+ */
+export function resolveEmailAttachmentsBucket(
+  env: Record<string, string | undefined> = process.env
+): string {
+  return env['EMAIL_ATTACHMENTS_BUCKET'] || 'email-attachments';
+}
+
 /** Private buckets whose `<tenantId>/` folder is copied into files/. */
-export const DEFAULT_EXPORT_FILE_BUCKETS: readonly string[] = [
-  'email-attachments',
-  'case-documents',
-];
+export function defaultExportFileBuckets(
+  emailAttachmentsBucket: string = resolveEmailAttachmentsBucket()
+): readonly string[] {
+  return [emailAttachmentsBucket, 'case-documents'];
+}

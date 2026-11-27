@@ -167,10 +167,22 @@ describeDb('workspace export (real database)', () => {
       userId: ownerA.id,
       contactId: contactA.id,
     });
+    const leadA = await prisma.lead.findFirst({ where: { tenantId: tA } });
     await mk('personalLoggedLead', {
       mailboxId: `${TAG}_mb_me`,
       userId: ownerA.id,
-      metadata: { leadId: 'any-lead-id' },
+      metadata: { leadId: leadA.id },
+    });
+    // Logged to a lead and a contact that no longer exist: private again.
+    await mk('personalDanglingLead', {
+      mailboxId: `${TAG}_mb_me`,
+      userId: ownerA.id,
+      metadata: { leadId: 'deleted-lead-id' },
+    });
+    await mk('personalDanglingContact', {
+      mailboxId: `${TAG}_mb_me`,
+      userId: ownerA.id,
+      contactId: 'deleted-contact-id',
     });
     await mk('draft', { mailboxId: `${TAG}_mb_co`, metadata: { isDraft: true } });
     await mk('nullMetadata', { metadata: Prisma.DbNull });
@@ -256,7 +268,9 @@ describeDb('workspace export (real database)', () => {
         'body a',
       ].sort()
     );
-    expect(Object.values(zip).join(' ')).not.toMatch(/BODY-personal\b|BODY-draft/);
+    expect(Object.values(zip).join(' ')).not.toMatch(
+      /BODY-personal\b|BODY-personalDangling|BODY-draft/
+    );
     const attachments = JSON.parse(zip['data/email_attachments.json']!) as Array<{
       fileName: string;
     }>;
