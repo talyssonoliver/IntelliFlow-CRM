@@ -333,7 +333,11 @@ export class AnalyticsAggregationService {
     const prevMonthEnd = AnalyticsAggregationService.utcEndOfMonth(y, m - 1);
 
     const range = dateRange || { startDate: currentMonthStart, endDate: currentMonthEnd };
-    const prevRange = { startDate: prevMonthStart, endDate: prevMonthEnd };
+    // "vs previous period" (codex 27/11): a requested range compares with the period of the same
+    // length just before it, not with last calendar month. Without one, this month vs last.
+    const prevRange = dateRange
+      ? previousPeriod(dateRange)
+      : { startDate: prevMonthStart, endDate: prevMonthEnd };
 
     const [
       totalLeads,
@@ -797,4 +801,14 @@ export function csvField(value: unknown): string {
   if (value === null || value === undefined) return '';
   const text = value instanceof Date ? value.toISOString() : String(value);
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+/** The period of the same length ending just before `range` starts. */
+export function previousPeriod(range: { startDate: Date; endDate: Date }): {
+  startDate: Date;
+  endDate: Date;
+} {
+  const start = new Date(range.startDate).getTime();
+  const end = new Date(range.endDate).getTime();
+  return { startDate: new Date(start - (end - start) - 1), endDate: new Date(start - 1) };
 }
