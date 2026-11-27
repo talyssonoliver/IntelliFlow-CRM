@@ -22,6 +22,17 @@ export const RESET_MARGIN_MIN = 1;
 const CAP_RE =
   /usage limit|hit your .{0,20}limit|rate.?limit|quota|try again (at|in|later)|too many requests|\b429\b|plan limit|insufficient_quota|capacity/i;
 
+const MODEL_UNAVAILABLE_RE =
+  /model_not_found|unknown model|invalid model|model[^\n]{0,80}(is not (supported|available|enabled)|not supported|not available|not found|does not exist|doesn't exist|no access|not on (the|your) plan|unsupported)|(not supported|unsupported|not available|invalid)[^\n]{0,80}(model|reasoning[ _]effort)|reasoning[ _]effort[^\n]{0,80}(not supported|unsupported|invalid|unknown)|do(es)? not have access to[^\n]{0,40}model/i;
+
+/**
+ * Does a failed Codex run say the chosen model or reasoning effort is not available on the plan?
+ * A usage cap is never this: a capped run reads as a cap first.
+ */
+export function isModelUnavailable(text) {
+  return !isCapped(text) && MODEL_UNAVAILABLE_RE.test(text || '');
+}
+
 /** Does a failed Codex run read as a usage cap (as opposed to a crash or a bad flag)? */
 export function isCapped(text) {
   return CAP_RE.test(text || '');
@@ -121,6 +132,8 @@ export function makeReviewer({
     resetAt: null,
     reason: codexUsable ? '' : 'not installed or not logged in',
     waited: false,
+    modelFallback: null,
+    fallbackOpts: null,
   };
   const allowClaude = claudeAllowed({ risky: plan.risky, env });
 
@@ -137,7 +150,7 @@ export function makeReviewer({
   return function review(prompt) {
     const attempts = [];
     if (!state.codexDown) {
-      let opts = { model: plan.model, effort: plan.effort };
+      let opts = state.fallbackOpts ?? { model: plan.model, effort: plan.effort };
       let a = tryCodex(prompt, opts, plan.why);
       if (a.parsed) {
         return {
@@ -149,14 +162,47 @@ export function makeReviewer({
           attempts,
         };
       }
-      const failText = `${a.r.stderr || ''}\n${a.r.stdout || ''}\n${a.raw}`;
+      let failText = `${a.r.stderr || ''}\n${a.r.stdout || ''}\n${a.raw}`;
       attempts.push({
         reviewer: 'codex',
         ...opts,
         status: a.r.status ?? -1,
         capped: isCapped(failText),
       });
-      if (!isCapped(failText) && plan.tier === 'light') {
+      // The chosen model or effort is not on the plan (a stale models_cache.json, or a plan
+      // change): retry ONCE with no -m and no effort flag, so codex uses the user's configured
+      // ones, and record why. Only a failed retry (a cap or anything else) makes Codex unavailable.
+      let fellBack = false;
+      if ((opts.model || opts.effort) && isModelUnavailable(failText)) {
+        fellBack = true;
+        state.modelFallback = {
+          from: { model: opts.model, effort: opts.effort },
+          reason: `${opts.model ?? 'config model'}/${opts.effort ?? 'config effort'} is not available on the plan (codex exit ${a.r.status ?? -1}); retried with the codex config model and effort`,
+        };
+        log.err(`[codex-review] WARN: ${state.modelFallback.reason}.\n`);
+        opts = { model: null, effort: null };
+        state.fallbackOpts = opts;
+        a = tryCodex(prompt, opts, 'retry without -m after a model-not-on-plan error');
+        if (a.parsed) {
+          return {
+            parsed: a.parsed,
+            reviewer: 'codex',
+            raw: a.raw,
+            ...opts,
+            tokens: a.r.tokens ?? null,
+            attempts,
+            modelFallback: state.modelFallback,
+          };
+        }
+        failText = `${a.r.stderr || ''}\n${a.r.stdout || ''}\n${a.raw}`;
+        attempts.push({
+          reviewer: 'codex',
+          ...opts,
+          status: a.r.status ?? -1,
+          capped: isCapped(failText),
+        });
+      }
+      if (!fellBack && !isCapped(failText) && plan.tier === 'light') {
         // A light model that errors (not a cap) may be unknown to this CLI: one escalation to the strong model.
         opts = { model: models.strong.model, effort: models.strong.effort };
         log.err(
@@ -229,6 +275,7 @@ export function makeReviewer({
           tokens: c.tokens ?? null,
           costUsd: c.costUsd ?? null,
           attempts,
+          modelFallback: state.modelFallback,
         };
       }
       attempts.push({ reviewer: 'claude', status: -1, capped: false });
@@ -241,6 +288,7 @@ export function makeReviewer({
           resetAt: state.resetAt,
         },
         attempts,
+        modelFallback: state.modelFallback,
       };
     }
     return {
@@ -249,6 +297,7 @@ export function makeReviewer({
       raw: '',
       deferred: { reason: state.reason || 'codex unavailable', resetAt: state.resetAt },
       attempts,
+      modelFallback: state.modelFallback,
     };
   };
 }

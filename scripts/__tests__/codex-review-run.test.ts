@@ -15,6 +15,8 @@ import {
   summarizeRuns,
 } from '../lib/codex-review-run.mjs';
 import { buildRecord } from '../lib/review-metrics.mjs';
+import { codexExecArgs } from '../lib/review-commands.mjs';
+import { isModelUnavailable } from '../lib/review-policy.mjs';
 import { guardSharedGitConfig } from './shared-git-config-guard';
 import { gitEnv } from '../lib/preship-git.mjs';
 import { collectNumstat } from '../lib/codex-chunk-review.mjs';
@@ -475,5 +477,134 @@ describe('createGate: rounds, delta and the limit', () => {
     });
     expect(g.run()).toBe(1);
     expect(g.out()).toMatch(/REVIEW_DEFERRED|INCOMPLETE_REVIEW/);
+  });
+});
+
+describe('createGate: a model or effort the plan lacks falls back to the codex config', () => {
+  // Real argv through a fake codex program: it fails like codex does when -m names a model that
+  // is not on the ChatGPT plan, and works when no -m is given.
+  const FAKE = [
+    'const a = process.argv.slice(2);',
+    "const fs = require('node:fs');",
+    'const mode = process.env.FAKE_CODEX_MODE;',
+    'fs.appendFileSync(process.env.FAKE_CODEX_LOG, JSON.stringify(a) + String.fromCharCode(10));',
+    "const m = a.indexOf('-m');",
+    "if (mode === 'capacity') { console.error('ERROR: usage limit reached. try again later'); process.exit(1); }",
+    "if (mode === 'not-on-plan' && m !== -1) {",
+    '  console.error("ERROR: The \'gpt-6.2-sol\' model is not supported when using Codex with a ChatGPT account.");',
+    '  process.exit(1);',
+    '}',
+    "if (mode === 'both-fail') { console.error('ERROR: model gpt-6.2-sol does not exist'); process.exit(1); }",
+    "fs.writeFileSync(a[a.indexOf('-o') + 1], JSON.stringify({ findings: [] }));",
+    'process.exit(0);',
+  ].join(String.fromCharCode(10));
+
+  function setup(mode: string) {
+    const bigCode = text(Array.from({ length: 200 }, (_, i) => `export const v${i} = ${i};`));
+    const { dir } = makeRepo({ 'apps/web/src/a.ts': bigCode });
+    const fakePath = path.join(dir, 'fake-codex.cjs');
+    fs.writeFileSync(fakePath, FAKE);
+    const argvLog = path.join(dir, 'fake-codex-argv.log');
+    const calls = () =>
+      fs.existsSync(argvLog)
+        ? fs
+            .readFileSync(argvLog, 'utf8')
+            .trim()
+            .split('\n')
+            .map((l) => JSON.parse(l) as string[])
+        : [];
+    const runCodexReviewer = (
+      input: string,
+      last: string,
+      cwd: string,
+      _spawn: unknown,
+      tier: object
+    ) =>
+      spawnSync(process.execPath, [fakePath, ...codexExecArgs(last, tier)], {
+        input,
+        cwd,
+        encoding: 'utf8',
+        env: { ...process.env, FAKE_CODEX_MODE: mode, FAKE_CODEX_LOG: argvLog },
+      });
+    return { dir, calls, runCodexReviewer };
+  }
+
+  const writeCache = (dir: string, models: object[]) => {
+    fs.mkdirSync(path.join(dir, '.codex'), { recursive: true });
+    fs.writeFileSync(path.join(dir, '.codex/models_cache.json'), JSON.stringify({ models }));
+  };
+
+  it('model not on the plan: retries once without -m and the effort flag, then passes, and records why', () => {
+    const { dir, calls, runCodexReviewer } = setup('not-on-plan');
+    const g = gate(dir, { runCodexReviewer });
+    expect(g.run()).toBe(0);
+    const argv = calls();
+    expect(argv).toHaveLength(2);
+    expect(argv[0]).toContain('-m');
+    expect(argv[0]).toContain('gpt-6.2-sol');
+    expect(argv[1]).not.toContain('-m');
+    expect(argv[1].some((x) => x.startsWith('model_reasoning_effort='))).toBe(false);
+    const rec = g.metrics().at(-1);
+    expect(rec).toMatchObject({ verdict: 'PASS', reviewer: 'codex', model: null });
+    expect(rec.why).toMatch(/gpt-6\.2-sol\/high is not available on the plan/);
+    expect(rec.note).toMatch(/^model fallback:/);
+  });
+
+  it('a capacity error is a deferral, not a model fallback', () => {
+    const { dir, calls, runCodexReviewer } = setup('capacity');
+    const g = gate(dir, { runCodexReviewer });
+    expect(g.run()).toBe(1);
+    expect(calls()).toHaveLength(1);
+    expect(g.out()).toMatch(/REVIEW_DEFERRED: codex unavailable \(usage cap\)/);
+    expect(g.metrics().at(-1)).toMatchObject({ verdict: 'DEFERRED' });
+  });
+
+  it('model not on the plan and the retry fails too: deferred, with the fallback recorded', () => {
+    const { dir, calls, runCodexReviewer } = setup('both-fail');
+    const g = gate(dir, { runCodexReviewer });
+    expect(g.run()).toBe(1);
+    expect(calls()).toHaveLength(2);
+    const rec = g.metrics().at(-1);
+    expect(rec).toMatchObject({ verdict: 'DEFERRED' });
+    expect(rec.why).toMatch(/is not available on the plan/);
+    expect(g.out()).toMatch(/REVIEW_DEFERRED/);
+  });
+
+  it('an unknown slug in models_cache.json is skipped up front: no -m, no failed call', () => {
+    const { dir, calls, runCodexReviewer } = setup('not-on-plan');
+    writeCache(dir, [{ slug: 'gpt-6.1-sol', supported_reasoning_levels: [{ effort: 'high' }] }]);
+    const g = gate(dir, { runCodexReviewer });
+    expect(g.run()).toBe(0);
+    const argv = calls();
+    expect(argv).toHaveLength(1);
+    expect(argv[0]).not.toContain('-m');
+    expect(g.metrics().at(-1).why).toMatch(/gpt-6\.2-sol is not on the plan/);
+  });
+
+  it('a known model whose cached efforts lack the chosen one keeps -m and drops the effort flag', () => {
+    const { dir, calls, runCodexReviewer } = setup('ok');
+    writeCache(dir, [{ slug: 'gpt-6.2-sol', supported_reasoning_levels: [{ effort: 'low' }] }]);
+    const g = gate(dir, { runCodexReviewer });
+    expect(g.run()).toBe(0);
+    const argv = calls()[0];
+    expect(argv).toContain('gpt-6.2-sol');
+    expect(argv.some((x) => x.startsWith('model_reasoning_effort='))).toBe(false);
+  });
+});
+
+describe('isModelUnavailable', () => {
+  it('reads codex model/effort errors, and never a usage cap', () => {
+    expect(
+      isModelUnavailable("The 'x' model is not supported when using Codex with a ChatGPT account.")
+    ).toBe(true);
+    expect(isModelUnavailable('{"error":{"code":"model_not_found"}}')).toBe(true);
+    expect(isModelUnavailable('Unsupported value: reasoning effort ultra is not supported')).toBe(
+      true
+    );
+    expect(
+      isModelUnavailable('You hit your usage limit. model gpt is not available until reset')
+    ).toBe(false);
+    expect(isModelUnavailable('network error: ECONNRESET')).toBe(false);
+    expect(isModelUnavailable('')).toBe(false);
   });
 });

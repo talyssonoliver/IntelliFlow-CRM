@@ -22,8 +22,13 @@ export interface SubjectExport {
 export interface ErasureOutcome {
   /** Rows anonymised or deleted, per category (no values). */
   counts: Record<string, number>;
-  /** Rows the admin must handle by hand (communications, stored files...). */
+  /** Rows the admin must handle by hand (deals, tasks, stored files). */
   checklist: Record<string, number>;
+  /**
+   * After an erasure: the rows behind the stored files left, by id, read before the person's
+   * address was removed, so their objects can still be found and deleted (IFC-316).
+   */
+  storedFiles?: { emailAttachmentIds: string[]; chatMessageIds: string[]; leadFileIds: string[] };
 }
 
 export type ErasureResult =

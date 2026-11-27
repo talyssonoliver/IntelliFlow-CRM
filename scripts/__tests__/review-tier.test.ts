@@ -12,6 +12,7 @@ import {
   isCommentOnlyDiff,
   modelForTier,
   parseModelCache,
+  parseModelCatalog,
   parseNumstat,
   riskArea,
   sizeRange,
@@ -290,5 +291,34 @@ describe('the dry-run sizing of a revision range', () => {
       fakeGit({ numstat: numstat(1, 1, web), diff: diffOf(web, '-// a', '+// b') })
     );
     expect(row).toMatchObject({ tier: 'skip' });
+  });
+});
+
+describe('parseModelCatalog and effort validation', () => {
+  it('reads each slug with its supported efforts, null when unreadable', () => {
+    const cat = parseModelCatalog(
+      JSON.stringify({
+        models: [{ slug: 'a', supported_reasoning_levels: [{ effort: 'low' }] }, { slug: 'b' }],
+      })
+    );
+    expect(cat).toEqual([
+      { slug: 'a', efforts: ['low'] },
+      { slug: 'b', efforts: null },
+    ]);
+    expect(parseModelCatalog('nope')).toBeNull();
+  });
+
+  it('keeps a known model, drops an effort it does not list, skips an unknown slug', () => {
+    const cat = [{ slug: 'gpt-6.2-sol', efforts: ['low', 'medium'] }];
+    expect(modelForTier('strong', {}, cat)).toMatchObject({ model: 'gpt-6.2-sol', effort: null });
+    expect(modelForTier('strong', {}, [{ slug: 'z', efforts: ['high'] }])).toMatchObject({
+      model: null,
+      effort: 'high',
+    });
+    expect(modelForTier('strong', {}, [{ slug: 'gpt-6.2-sol', efforts: ['high'] }])).toMatchObject({
+      model: 'gpt-6.2-sol',
+      effort: 'high',
+      note: '',
+    });
   });
 });
