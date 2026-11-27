@@ -136,6 +136,23 @@ export function depScanNote(r, scanner) {
   );
 }
 
+/**
+ * The line printed under the codex-review step when it did not call a model (docs, tests,
+ * generated or comment-only diff). A skip is visible: "skipped: <reason>", never a silent pass.
+ * @param {{id: string, verdict: string}} r
+ * @param {string} findingsText the content of artifacts/codex-review/findings.json ('' when absent)
+ */
+export function reviewSkipNote(r, findingsText) {
+  if (r.id !== 'codex-review' || r.verdict !== 'PASS' || !findingsText) return '';
+  try {
+    const f = JSON.parse(findingsText);
+    if (f.verdict !== 'SKIPPED' || !f.skipped_reason) return '';
+    return `    Semantic review skipped, no model called: ${f.skipped_reason}\n`;
+  } catch {
+    return '';
+  }
+}
+
 /** The final verdict line, carrying counts that agree with the per-step lines. */
 export function finalLine(verdict, duration, results, expected) {
   return `pre-ship: ${verdict} in ${duration} (${summaryText(summarize(results, expected))}).\n`;
