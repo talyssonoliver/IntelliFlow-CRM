@@ -14,8 +14,6 @@
  * Skips cleanly (with a visible reason) when DATABASE_URL is not set.
  */
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -36,72 +34,14 @@ import {
   type DsarSlaDeps,
   type DsarSlaPrisma,
 } from '../../apps/api/src/modules/privacy/dsar-sla-scheduler';
-import { DSAR_PURGE_SUITE_LOCK_KEY, applySchemaSql, holdSuiteLock, sqlState } from './schema-lock';
-
-const MIGRATION = join(
-  __dirname,
-  '../../packages/db/prisma/migrations/20261022120000_dsar_requests/migration.sql'
-);
-
-/** Split migration SQL into statements, keeping `DO $$ ... $$` blocks whole. */
-function splitStatements(sql: string): string[] {
-  const statements: string[] = [];
-  let current = '';
-  let inDollar = false;
-  for (let i = 0; i < sql.length; i++) {
-    if (sql.startsWith('$$', i)) {
-      inDollar = !inDollar;
-      current += '$$';
-      i++;
-      continue;
-    }
-    const ch = sql[i];
-    if (ch === ';' && !inDollar) {
-      if (current.trim()) statements.push(current.trim());
-      current = '';
-    } else {
-      current += ch;
-    }
-  }
-  if (current.trim()) statements.push(current.trim());
-  return statements;
-}
+import { DSAR_PURGE_SUITE_LOCK_KEY, holdSuiteLock, sqlState } from './schema-lock';
+import { ensureMigrationSql } from './dsar-setup';
 
 const DB_URL = process.env.DATABASE_URL;
 const describeDb = DB_URL ? describe : describe.skip;
 
 if (!DB_URL) {
   console.log('Skipping DSAR integration test: DATABASE_URL not set');
-}
-
-/** Already exists (type, constraint, policy), duplicate column, duplicate relation. */
-const ALREADY_THERE = ['42710', '42701', '42P07'];
-
-/**
- * CI builds its test database with `prisma db push`: the tables exist but the named CHECKs,
- * the partial unique index, the SQL-only user FKs and RLS do not. When the probe CHECK is
- * missing, rebuild the two DSAR tables (they hold only this suite's rows) from the
- * migration's own SQL. The enum types db push already created are tolerated.
- */
-async function ensureMigrationSql(client: any): Promise<string | null> {
-  const tables: unknown[] = await client.$queryRawUnsafe(
-    `SELECT 1 FROM pg_class WHERE relname = 'dsar_requests'`
-  );
-  if (tables.length === 0) return 'dsar_requests does not exist (schema not applied)';
-  const present: unknown[] = await client.$queryRawUnsafe(
-    `SELECT 1 FROM pg_constraint WHERE conname = 'dsar_requests_staff_identity_check'`
-  );
-  if (present.length > 0) return null;
-  const sql = readFileSync(MIGRATION, 'utf-8')
-    .split(/\r?\n/)
-    .filter((line) => !line.trim().startsWith('--'))
-    .join('\n');
-  const statements = [
-    'DROP TABLE IF EXISTS "dsar_requests", "processing_restrictions" CASCADE',
-    ...splitStatements(sql).filter((s) => !/^SET LOCAL/i.test(s)),
-  ];
-  await applySchemaSql(DB_URL!, statements, { tolerate: ALREADY_THERE });
-  return null;
 }
 
 const RUN = `pg203d_${Date.now()}_${randomBytes(3).toString('hex')}`;
@@ -167,7 +107,7 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
 
   beforeAll(async () => {
     prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: DB_URL! }) });
-    const skipReason = await ensureMigrationSql(prisma);
+    const skipReason = await ensureMigrationSql(prisma, DB_URL!);
     if (skipReason) {
       console.log(`Skipping DSAR integration test: ${skipReason}`);
       return;
@@ -1111,13 +1051,13 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
         expect(exported.data.emailRecords).toHaveLength(3);
         expect(exported.withheld.MESSAGE_BODIES).toBe(3);
         const preview = await subjects.previewErasure(TENANT_A, grace);
-        expect(preview.checklist.emailRecords).toBe(3);
+        expect(preview.counts.emailRecords).toBe(3);
       } finally {
         await prisma.emailRecord.deleteMany({ where: { id: { in: [...found, ...decoys] } } });
       }
     });
 
-    it('lists staff notifications about the person and their deals on the checklist (codex)', async () => {
+    it('counts staff notifications about the person and their deals in the erasure (codex)', async () => {
       const before = await subjects.previewErasure(TENANT_A, SUBJECT);
       const account = await prisma.account.create({
         data: { tenantId: TENANT_A, ownerId: ADMIN_A, name: `${RUN} Ada Co` },
@@ -1149,7 +1089,7 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
       );
       try {
         const after = await subjects.previewErasure(TENANT_A, SUBJECT);
-        expect(after.checklist.notifications).toBe(before.checklist.notifications + 2);
+        expect(after.counts.notifications).toBe(before.counts.notifications + 2);
       } finally {
         await prisma.notification.deleteMany({ where: { id: { in: alerts.map((a) => a.id) } } });
         await prisma.opportunity.delete({ where: { id: deal.id } });
@@ -1159,7 +1099,7 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
 
     it('previews counts without changing anything', async () => {
       const preview = await subjects.previewErasure(TENANT_A, SUBJECT);
-      expect(preview.counts).toEqual({ leads: 1, contacts: 1, bookings: 1 });
+      expect(preview.counts).toMatchObject({ leads: 1, contacts: 1, bookings: 1 });
       expect(preview.checklist.storedLeadFiles).toBe(1);
       const lead = await prisma.lead.findUnique({ where: { id: leadA } });
       expect(lead.firstName).toBe('Ada');
@@ -1533,9 +1473,9 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
         });
         expect(result).toMatchObject({
           outcome: 'ERASED',
-          result: { checklist: { deals: 1, tasks: 1, calendarEvents: 1 } },
+          result: { checklist: { deals: 1, tasks: 1 }, counts: { calendarEvents: 1 } },
         });
-        // Counted for the manual checklist, not touched.
+        // Deals and tasks stay on the checklist, untouched (Q23).
         await expect(
           prisma.opportunity.findUnique({ where: { id: deal.id } })
         ).resolves.toMatchObject({
