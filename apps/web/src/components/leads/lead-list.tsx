@@ -21,9 +21,17 @@ import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { invalidateLeadsCache } from '@/app/leads/(list)/actions';
 import { revalidateLeadCaches, revalidateLeadConversionCaches } from '@/app/leads/actions';
 import type { Lead } from '@/lib/leads/lead-types';
-import { leadScoreDisplay } from '@/lib/leads/score-display';
-import { leadDisplayName } from '@/lib/leads/lead-format';
-import { getInitials } from '@/components/shared/app-avatar';
+import { leadDisplayName, leadListSubtitle } from '@/lib/leads/lead-format';
+import { LeadAvatar } from '@/components/leads/LeadAvatar';
+import { LeadScoreBadge } from '@/components/leads/LeadScoreBadge';
+import { LeadCardList } from '@/components/leads/LeadCardList';
+import {
+  emailComposeHref,
+  formatLeadListDate,
+  leadMenuActions,
+  leadQuickActions,
+  type LeadRowActionHandlers,
+} from '@/lib/leads/lead-row-actions';
 import { LeadStatusBadge } from '@/components/leads/lead-detail';
 import {
   LEAD_STATUS_OPTIONS,
@@ -37,6 +45,7 @@ import {
   type BulkDialogKind,
 } from '@/lib/leads/bulk-actions';
 import { useLeadRecentViews } from '@/lib/leads/use-lead-recent-views';
+import { buildListConvertPayload } from '@/lib/leads/lead-conversion';
 
 /**
  * Lead List — extracted client component (PG-059).
@@ -55,35 +64,8 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-function formatDate(date: Date | string, timezone: string = 'Europe/London'): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  if (Number.isNaN(d.getTime())) return 'Invalid date';
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffHours < 1) return 'Just now';
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  return d.toLocaleDateString('en-GB', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: timezone,
-  });
-}
-
-interface RowActionHandlers {
-  onEdit: (lead: Lead) => void;
-  onConvert: (lead: Lead) => void;
-  onQualify: (lead: Lead) => void;
-  onScore: (lead: Lead) => void;
-  onToggleStar: (lead: Lead) => void;
-  onDelete: (lead: Lead) => void;
-}
-
 function createColumns(
-  handlers: RowActionHandlers,
+  handlers: LeadRowActionHandlers,
   timezone: string = 'Europe/London'
 ): ColumnDef<Lead>[] {
   return [
@@ -101,7 +83,7 @@ function createColumns(
                 {leadDisplayName(lead)}
               </span>
               <span className="text-xs text-slate-500 dark:text-slate-400">
-                {lead.title ? `${lead.title} @ ${lead.company}` : lead.company}
+                {leadListSubtitle(lead)}
               </span>
             </div>
           </div>
@@ -115,7 +97,7 @@ function createColumns(
       cell: ({ row }) => (
         <EntityHoverCard email={row.original.email} displayName={leadDisplayName(row.original)}>
           <a
-            href={`/email/compose?to=${encodeURIComponent(row.original.email)}`}
+            href={emailComposeHref(row.original.email)}
             onClick={(e) => e.stopPropagation()}
             className="text-sm text-primary hover:underline"
           >
@@ -129,7 +111,11 @@ function createColumns(
       header: 'Score',
       size: 80,
       cell: ({ row }) => (
-        <ScoreBadge score={row.original.score} scoringStatus={row.original.scoringStatus} />
+        <LeadScoreBadge
+          score={row.original.score}
+          scoringStatus={row.original.scoringStatus}
+          scoreConfidence={row.original.scoreConfidence}
+        />
       ),
     },
     {
@@ -144,7 +130,7 @@ function createColumns(
       size: 120,
       cell: ({ row }) => (
         <span className="text-sm text-slate-600 dark:text-slate-400">
-          {formatDate(row.original.createdAt, timezone)}
+          {formatLeadListDate(row.original.createdAt, timezone)}
         </span>
       ),
     },
@@ -154,68 +140,10 @@ function createColumns(
       size: 120,
       cell: ({ row }) => {
         const lead = row.original;
-        const canQualify = lead.status === 'NEW' || lead.status === 'CONTACTED';
-        const canConvert = lead.status === 'QUALIFIED';
         return (
           <TableRowActions
-            quickActions={[
-              {
-                icon: 'phone',
-                label: 'Call',
-                onClick: () => {
-                  if (lead.phone) window.open(`tel:${lead.phone}`);
-                },
-              },
-              {
-                icon: 'mail',
-                label: 'Send Email',
-                onClick: () => {
-                  window.location.href = `/email/compose?to=${encodeURIComponent(lead.email)}`;
-                },
-              },
-            ]}
-            dropdownActions={[
-              {
-                icon: lead.isStarred ? 'star' : 'star_outline',
-                label: lead.isStarred ? 'Unstar' : 'Star',
-                onClick: () => handlers.onToggleStar(lead),
-              },
-              {
-                icon: 'edit',
-                label: 'Edit Lead',
-                onClick: () => handlers.onEdit(lead),
-              },
-              ...(canQualify
-                ? [
-                    {
-                      icon: 'verified',
-                      label: 'Qualify Lead',
-                      onClick: () => handlers.onQualify(lead),
-                    },
-                  ]
-                : []),
-              ...(canConvert
-                ? [
-                    {
-                      icon: 'person_add',
-                      label: 'Convert to Contact',
-                      onClick: () => handlers.onConvert(lead),
-                    },
-                  ]
-                : []),
-              {
-                icon: 'auto_awesome',
-                label: 'Score with AI',
-                onClick: () => handlers.onScore(lead),
-              },
-              { id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true },
-              {
-                icon: 'delete',
-                label: 'Delete',
-                variant: 'danger',
-                onClick: () => handlers.onDelete(lead),
-              },
-            ]}
+            quickActions={leadQuickActions(lead)}
+            dropdownActions={leadMenuActions(lead, handlers)}
           />
         );
       },
@@ -248,7 +176,7 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
 
   const { recentIds, push: pushRecentView } = useLeadRecentViews();
 
-  // Sidebar-driven scope: /leads?view=my|starred|recent OR /leads?segment=new-week|hot|followup
+  // Sidebar-driven scope: /leads?view=my|starred|recent OR /leads?segment=new-week|hot|followup|waiting
   const scope = useMemo(
     () =>
       getLeadScope(
@@ -288,8 +216,7 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
     scope.view === 'all' &&
     scope.segment === null;
 
-  // Scope params (from view/segment) merge with the in-page filters.
-  // In-page filters win when both set the same key (explicit user intent).
+  // Scope params (from view/segment) merge with the in-page filters; in-page filters win on a clash.
   const statusFromScope = scope.params.status ? [...scope.params.status] : undefined;
   const statusForQuery = statusFilter ? [statusFilter as LeadStatus] : statusFromScope;
 
@@ -304,6 +231,7 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
       dateTo: scope.params.dateTo,
       lastContactedBefore: scope.params.lastContactedBefore,
       isStarred: scope.params.isStarred,
+      waitingForReply: scope.params.waitingForReply,
       ids: scope.params.ids ? [...scope.params.ids] : undefined,
       minScore: scoreParams.minScore ?? scope.params.minScore,
       maxScore: scoreParams.maxScore ?? scope.params.maxScore,
@@ -502,10 +430,10 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
     await runners.runDelete(selectedLeadsRef.current);
   }, [runners]);
 
-  const rowActionHandlers: RowActionHandlers = useMemo(
+  const rowActionHandlers: LeadRowActionHandlers = useMemo(
     () => ({
       onEdit: (lead) => router.push(`/leads/${lead.id}/edit`),
-      onConvert: (lead) => convertMutation.mutate({ leadId: lead.id, createAccount: true }),
+      onConvert: (lead) => convertMutation.mutate(buildListConvertPayload(lead)),
       onQualify: (lead) =>
         qualifyMutation.mutate({ leadId: lead.id, reason: 'Manual qualification from list' }),
       onScore: (lead) => scoreMutation.mutate({ leadId: lead.id }),
@@ -654,22 +582,34 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
       )}
 
       {!isLoading && !error && (
-        <DataTable
-          columns={columns}
-          data={leads}
-          entity="leads"
-          emptyMessage={emptyMessage}
-          emptyIcon="person_search"
-          onRowClick={handleRowClick}
-          enableRowSelection
-          bulkActions={bulkActions}
-          pageSize={pageSize}
-          hidePagination
-        />
+        <>
+          <LeadCardList
+            className="md:hidden"
+            leads={leads}
+            handlers={rowActionHandlers}
+            onOpen={handleRowClick}
+            timezone={timezone}
+            emptyMessage={emptyMessage}
+          />
+          <div className="hidden md:block">
+            <DataTable
+              columns={columns}
+              data={leads}
+              entity="leads"
+              emptyMessage={emptyMessage}
+              emptyIcon="person_search"
+              onRowClick={handleRowClick}
+              enableRowSelection
+              bulkActions={bulkActions}
+              pageSize={pageSize}
+              hidePagination
+            />
+          </div>
+        </>
       )}
 
       {!isLoading && !error && totalItems > 0 && (
-        <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-slate-600 dark:text-slate-400">
           <span>
             Showing {(currentPage - 1) * pageSize + 1} to{' '}
             {Math.min(currentPage * pageSize, totalItems)} of {totalItems} leads
@@ -740,90 +680,5 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
         icon="delete"
       />
     </div>
-  );
-}
-
-function LeadAvatar({ lead }: Readonly<{ lead: Lead }>) {
-  // Same name and initials rule as the lead page's avatar: a company-only lead shows
-  // the company's initials, not "?".
-  const displayName = leadDisplayName(lead);
-  const initials = getInitials(displayName);
-  const getAvatarColor = (name: string) => {
-    const colors = [
-      'bg-amber-200 text-amber-800 border-amber-300',
-      'bg-indigo-100 text-indigo-700 border-indigo-200',
-      'bg-emerald-100 text-emerald-700 border-emerald-200',
-      'bg-rose-100 text-rose-700 border-rose-200',
-      'bg-sky-100 text-sky-700 border-sky-200',
-    ];
-    const hash = name.split('').reduce((acc, char) => acc + (char.codePointAt(0) ?? 0), 0);
-    return colors[hash % colors.length];
-  };
-  return (
-    <span
-      className={`size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border ${getAvatarColor(
-        // Person leads keep their colour; company-only leads no longer all share one.
-        `${lead.firstName ?? ''}${lead.lastName ?? ''}` || displayName
-      )}`}
-      aria-label={`Avatar for ${displayName}`}
-    >
-      {initials}
-    </span>
-  );
-}
-
-function ScoreBadge({
-  score,
-  scoringStatus,
-}: Readonly<{ score: number; scoringStatus?: string | null }>) {
-  const display = leadScoreDisplay(score, scoringStatus);
-  if (display.kind === 'not-scored') {
-    return (
-      <span
-        title={display.title}
-        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300 border border-slate-200 dark:border-slate-600"
-      >
-        {display.label}
-      </span>
-    );
-  }
-  const getScoreConfig = (s: number) => {
-    if (s >= 80) {
-      return {
-        bgClass: 'bg-green-100 dark:bg-green-500/20',
-        textClass: 'text-green-700 dark:text-green-400',
-        dotClass: 'bg-green-500',
-        borderClass: 'border-green-200 dark:border-green-500/20',
-      };
-    }
-    if (s >= 50) {
-      return {
-        bgClass: 'bg-amber-100 dark:bg-amber-500/20',
-        textClass: 'text-amber-700 dark:text-amber-400',
-        dotClass: 'bg-amber-500',
-        borderClass: 'border-amber-200 dark:border-amber-500/20',
-      };
-    }
-    return {
-      bgClass: 'bg-red-100 dark:bg-red-500/20',
-      textClass: 'text-red-700 dark:text-red-400',
-      dotClass: 'bg-red-500',
-      borderClass: 'border-red-200 dark:border-red-500/20',
-    };
-  };
-  const { bgClass, textClass, dotClass, borderClass } = getScoreConfig(score);
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${bgClass} ${textClass} border ${borderClass}`}
-    >
-      <span className={`size-1.5 rounded-full ${dotClass}`} aria-hidden="true" />
-      {score}
-      {display.needsReview && <span className="sr-only"> (low confidence, needs review)</span>}
-      {display.needsReview && (
-        <span className="font-normal" aria-hidden="true" title="Low confidence: needs review">
-          ?
-        </span>
-      )}
-    </span>
   );
 }

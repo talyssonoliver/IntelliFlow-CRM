@@ -37,6 +37,8 @@ import {
 } from '@intelliflow/ui';
 import { widgetRegistry } from '@/components/dashboard/widgets';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { useEnabledModules } from '@/hooks/useEnabledModules';
+import { filterAvailableWidgets } from '@/lib/modules/module-visibility';
 
 // Default widgets matching the actual dashboard layout (4-column grid)
 const defaultWidgets: Widget[] = [
@@ -117,6 +119,11 @@ export default function CustomizeDashboardPage() {
   const { timezone } = useTimezoneContext();
   const router = useRouter();
   const [widgets, setWidgets] = useState<Widget[]>(defaultWidgets);
+  // A widget for a module the workspace does not have is not drawn or offered; the saved layout keeps
+  // it, so it comes back if the module is ever switched on.
+  const { isModuleEnabled } = useEnabledModules();
+  const visibleWidgets = filterAvailableWidgets(widgets, isModuleEnabled);
+  const availableTemplates = filterAvailableWidgets(defaultWidgetTemplates, isModuleEnabled);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeDashboard, setActiveDashboard] = useState('overview');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -281,9 +288,12 @@ export default function CustomizeDashboardPage() {
               >
                 {/* Grid Area */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-8 relative grid-bg">
-                  <SortableContext items={widgets.map((w) => w.id)} strategy={rectSortingStrategy}>
+                  <SortableContext
+                    items={visibleWidgets.map((w) => w.id)}
+                    strategy={rectSortingStrategy}
+                  >
                     <LayoutBuilderGrid>
-                      {widgets.map((widget) => {
+                      {visibleWidgets.map((widget) => {
                         const WidgetComponent = widgetRegistry[widget.type];
                         return (
                           <SortableWidget
@@ -326,7 +336,7 @@ export default function CustomizeDashboardPage() {
 
                 {/* Widget Library Sidebar */}
                 <WidgetLibrary
-                  templates={defaultWidgetTemplates}
+                  templates={availableTemplates}
                   onAddWidget={handleAddWidget}
                   usedWidgetTypes={widgets.map((w) => w.type)}
                 />
@@ -335,7 +345,7 @@ export default function CustomizeDashboardPage() {
               /* Loading skeleton while DndContext initializes */
               <div className="flex-1 overflow-y-auto p-6 md:p-8 relative grid-bg">
                 <LayoutBuilderGrid>
-                  {widgets.map((widget) => {
+                  {visibleWidgets.map((widget) => {
                     const WidgetComponent = widgetRegistry[widget.type];
                     return (
                       <WidgetCard key={widget.id} widget={widget} isEditing={false}>

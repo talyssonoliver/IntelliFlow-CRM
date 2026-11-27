@@ -5,12 +5,18 @@ export * from './client';
 
 // ADR-071: inherited-membership predicates shared by the API and the quota adapter.
 export * from './membership';
+
+// Register #64: THE visibility policy for email_records (personal mail is private).
+export * from './email-visibility';
 export * from './tenant-models.generated';
 
 // ADR-053: request-scoped N+1 query-budget detector (infrastructure layer).
 // Seeded by the API tRPC tracing middleware and ai-worker job entry; a no-op
 // elsewhere. Domain/application layers MUST NOT import this.
 export * from './query-budget';
+
+// Egress audit 1126: rows and bytes returned per job, behind EGRESS_LOG=1.
+export * from './egress-meter';
 
 // Prisma 7 generated client splits exports across files.
 // client.ts uses .js extensions in imports that webpack can't resolve,

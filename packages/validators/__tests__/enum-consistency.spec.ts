@@ -6,6 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { tenantBusinessTypeSchema } from '../src/module';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -33,6 +34,8 @@ import {
   EVENT_TYPE_REQUIRED_FIELDS,
   DSAR_REQUEST_TYPES,
   DSAR_STATUSES,
+  TENANT_BUSINESS_TYPES,
+  TENANT_MODULE_ORIGINS,
 } from '@intelliflow/domain';
 import { dsarRequestTypeSchema, dsarStatusSchema } from '../src/dsar';
 import {
@@ -210,6 +213,12 @@ describe('Enum Consistency - DRY Architecture', () => {
 
     it('should use the tag colour tokens for event types', () => {
       expect([...EVENT_TYPE_COLOR_TOKENS]).toEqual([...TAG_COLOR_TOKENS]);
+    });
+
+    it('should keep the tenant business type and module origin identical in domain, validators and Prisma', () => {
+      expect(tenantBusinessTypeSchema.options).toEqual([...TENANT_BUSINESS_TYPES]);
+      expect(prismaEnum('TenantBusinessType')).toEqual([...TENANT_BUSINESS_TYPES]);
+      expect(prismaEnum('TenantModuleOrigin')).toEqual([...TENANT_MODULE_ORIGINS]);
     });
 
     it('should keep the DSAR enums identical in domain, validators and Prisma (PG-203 DSAR)', () => {

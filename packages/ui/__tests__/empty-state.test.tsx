@@ -521,3 +521,18 @@ describe('EmptyState entity mode, uncontrolled', () => {
     expect(onCtaClick).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('Deals empty-state illustration currency', () => {
+  it('draws the zero value in pounds', async () => {
+    const { DealsIllustration, InvoicesIllustration } =
+      await import('../src/components/empty-state-illustrations');
+    const { container } = render(
+      <>
+        <DealsIllustration />
+        <InvoicesIllustration />
+      </>
+    );
+    expect(container.textContent).toContain('£0');
+    expect(container.textContent).not.toContain('$');
+  });
+});

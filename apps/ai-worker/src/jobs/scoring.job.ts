@@ -18,6 +18,7 @@ import { logAIAgentAction } from '../utils/audit-log';
 import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
 import { isMonthlyBudgetExceeded } from '../lib/monthly-budget';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 import { formatLeadActivityContext, loadLeadActivityContext } from '../lib/lead-activity-context';
 import { requiresHumanReview } from '@intelliflow/domain';
 import type { CircuitBreaker } from '../utils/circuit-breaker';
@@ -317,7 +318,8 @@ async function scoreThroughBreaker(
         isInconclusive(error) ||
         isContentRefusal(error) ||
         isPurposeCeilingReached(error) ||
-        isMonthlyBudgetExceeded(error)
+        isMonthlyBudgetExceeded(error) ||
+        isAiActionsExhausted(error)
       )
         return { notCounted: error };
       throw error;
@@ -630,11 +632,14 @@ async function writeAutomaticLeadScore(
     ? 'NEEDS_REVIEW'
     : 'SCORED';
   const now = new Date();
+  // The confidence the score was made with, so the UI can tell "very little to go on" (below 0.6)
+  // from "few signals yet" (below 0.85). Stored only when it is a real number.
+  const scoreConfidence = Number.isFinite(result.confidence) ? result.confidence : null;
   await (tx as { $executeRaw: (s: TemplateStringsArray, ...v: unknown[]) => Promise<number> })
     .$executeRaw`
     UPDATE leads SET score = ${Math.round(result.score)},
       "scoringStatus" = ${scoringStatus}::"LeadScoringStatus", "scoredAt" = ${now},
-      "updatedAt" = ${now}
+      "scoreConfidence" = ${scoreConfidence}, "updatedAt" = ${now}
     WHERE id = ${leadId} AND "tenantId" = ${tenantId}`;
 }
 

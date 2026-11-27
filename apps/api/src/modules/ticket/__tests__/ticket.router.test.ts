@@ -190,9 +190,7 @@ describe('ticketRouter', () => {
       ]);
 
       const mockContext = createMockContext();
-      const caller = ticketRouterEntitled.createCaller(
-        mockContext as any // test-only mock
-      );
+      const caller = ticketRouterEntitled.createCaller(mockContext as any); // test-only mock
 
       const result = await caller.assignees();
 
@@ -511,7 +509,8 @@ describe('ticketRouter', () => {
         TICKET_UUID,
         'This is a response',
         'Test User',
-        'AGENT'
+        'AGENT',
+        USER_UUID
       );
     });
 

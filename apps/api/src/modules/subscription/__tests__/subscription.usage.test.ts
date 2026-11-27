@@ -12,6 +12,7 @@ const limits = {
   seats: 2,
   emailsPerMonth: 0,
   aiSpendCentsPerMonth: 0,
+  aiActionsPerMonth: 0,
   workflowsActive: 0,
 };
 const usage = {
@@ -19,6 +20,7 @@ const usage = {
   seats: 1,
   emailsPerMonth: 0,
   aiSpendCentsPerMonth: 0,
+  aiActionsPerMonth: 0,
   workflowsActive: 0,
 };
 

@@ -48,13 +48,91 @@ import {
 } from './subscription-sync';
 import { buildReceiptEmail } from './receipt-email';
 import { resolvePlanState } from './plan-state';
+import type { QuotaService } from '@intelliflow/application';
 import {
   PLAN_TIERS,
   type PlanTier,
+  getQuotaLimitsForPlan,
   SubscriptionCanceledEvent,
   SubscriptionPausedEvent,
 } from '@intelliflow/domain';
 import { formatDateTimeInTimezone } from '../../lib/timezone-utils';
+
+/**
+ * Map a Tenant.plan (no Stripe subscription) to a getUsageMetrics limits key.
+ * CUSTOM (contract) and ENTERPRISE are unlimited; unknown or free tiers use free limits.
+ */
+function planKeyForTenantPlan(plan: string | null | undefined): string {
+  switch (plan) {
+    case 'CUSTOM':
+    case 'ENTERPRISE':
+      return 'enterprise';
+    case 'PROFESSIONAL':
+      return 'professional';
+    case 'STARTER':
+      return 'starter';
+    default:
+      return 'free';
+  }
+}
+
+/** Plan key (as used by getUsageMetrics) to the QuotaRegistry tier, for a context without QuotaService. */
+const QUOTA_PLAN_FOR_KEY: Record<string, PlanTier> = {
+  free: 'PARTNER_FREE',
+  starter: 'STARTER',
+  professional: 'PROFESSIONAL',
+  enterprise: 'ENTERPRISE',
+};
+
+/**
+ * AI actions used this month and the plan's limit (-1 = unlimited, as the usage card renders
+ * it), from QuotaService, which enforces the same number: plan default plus any tenant override.
+ * Without a quota service (only an unwired test context; production fails closed without one)
+ * the registry default for the plan is used and nothing has been counted, so used is 0.
+ */
+async function resolveAiActionsUsage(
+  quota: Pick<QuotaService, 'getLimits' | 'getKeyUsage'> | undefined,
+  tenantId: string,
+  planKey: string
+): Promise<{ current: number; limit: number }> {
+  if (quota) {
+    try {
+      const [limits, used] = await Promise.all([
+        quota.getLimits(tenantId),
+        quota.getKeyUsage(tenantId, 'aiActionsPerMonth'),
+      ]);
+      return { current: used, limit: limits.aiActionsPerMonth ?? -1 };
+    } catch (error) {
+      // The AI card must not take the whole usage view down; fall back to the plan default.
+      console.warn('[billing] could not read the AI actions usage', { tenantId, error });
+    }
+  }
+  const plan = QUOTA_PLAN_FOR_KEY[planKey] ?? 'PARTNER_FREE';
+  return { current: 0, limit: getQuotaLimitsForPlan(plan).aiActionsPerMonth ?? -1 };
+}
+
+/**
+ * Plan key from the customer's Stripe subscription price id; 'free' when there is no
+ * subscription, the price id is not a known plan, or Stripe is unavailable.
+ */
+async function resolveStripePlanKey(customerId: string, planKeys: string[]): Promise<string> {
+  try {
+    const stripe = await getStripeAdapter();
+    const subsResult = await callStripeAPI(() => stripe.listSubscriptions(customerId));
+    if (subsResult.isSuccess && subsResult.value.length > 0) {
+      const activeSub =
+        subsResult.value.find((s) => s.status === 'active' || s.status === 'trialing') ??
+        subsResult.value[0];
+      const parts = activeSub.priceId.split('_');
+      if (parts.length >= 2 && planKeys.includes(parts[1])) {
+        return parts[1];
+      }
+    }
+  } catch {
+    // Stripe unavailable — fall back to free tier limits
+  }
+  return 'free';
+}
 
 // ============================================
 // Price ID Resolution (incident 2026-06-16 onboarding redesign)
@@ -464,6 +542,13 @@ interface SubscriptionWebhookPayload {
   };
 }
 
+/** A cancellation: Stripe `.deleted`, or a status of canceled, for a known workspace. */
+function endsSubscription(input: SubscriptionWebhookPayload): boolean {
+  const obj = input.data.object;
+  const canceled = input.type === 'customer.subscription.deleted' || obj.status === 'canceled';
+  return canceled && Boolean(obj.metadata?.tenantId);
+}
+
 /**
  * IFC-314: persist Stripe subscription status (offline-reliable) and — for ENGINE
  * subscriptions (metadata.tenantSlug present) — enqueue the portal push on the
@@ -483,12 +568,17 @@ async function syncSubscriptionFromWebhook(
     if (!subscriptionRepository) return;
 
     const obj = input.data.object;
+    // Loaded here, not at the top: the export module pulls in the adapters package.
+    const { createEndedSubscriptionExportHook } =
+      await import('../workspace-export/ended-subscription-export.js');
     await createSubscriptionSyncHandler({
       repo: subscriptionRepository,
       // Gated on the portal sync being configured, as the inline push was.
       enqueuePortalPush: adapters?.portalDeliverySync
         ? createOutboxPortalPushEnqueuer(ctx.prisma)
         : undefined,
+      // Agreement clause 5: a subscription that ends starts the customer's data export at once.
+      onSubscriptionEnded: createEndedSubscriptionExportHook(ctx.prisma, console),
       logger: {
         info: (o, m) => console.log(m ?? '', o),
         warn: (o, m) => console.warn(m ?? '', o),
@@ -505,10 +595,24 @@ async function syncSubscriptionFromWebhook(
       tenantSlug: obj.metadata?.tenantSlug,
     });
   } catch (err) {
+    if (err instanceof Error && err.name === 'WorkspaceExportTriggerError') {
+      // The leaving customer's data export could not be recorded: fail so the replay is retried.
+      console.error('[Billing Webhook] Workspace export not recorded:', err);
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.message });
+    }
     if (err instanceof PortalPushEnqueueError) {
       // Nothing durable holds the portal push: fail the webhook so Stripe redelivers.
       console.error('[Billing Webhook] Portal push enqueue failed:', err);
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.message });
+    }
+    if (endsSubscription(input)) {
+      // The customer is leaving and their data export is owed (agreement clause 5): a failed
+      // persist or import before the export is recorded must be retried, not logged and dropped.
+      console.error('[Billing Webhook] Ending subscription not synced:', err);
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'The ended subscription could not be recorded. Retry the replay.',
+      });
     }
     console.error('[Billing Webhook] Subscription sync failed (non-fatal):', err);
   }
@@ -1178,65 +1282,69 @@ export const billingRouter = createTRPCRouter({
    * - API calls: count of audit log entries this billing period
    * - Storage: estimated from document + attachment counts
    *
-   * Limits are derived from the subscription's plan tier.
+   * Limits are derived from the subscription's plan tier. A tenant with no Stripe
+   * customer (contracted or free workspace) still gets its own real counts, measured
+   * against the free tier; only billing-specific data is absent (getSubscription
+   * returns null for it).
    */
   getUsageMetrics: tenantProcedure.query(async ({ ctx }) => {
     const user = ctx.user;
 
-    // No subscription = no usage metrics. SUPER_ADMIN skips this check so the
-    // dev/seed environment can still surface counts without a Stripe customer.
-    if (!user?.stripeCustomerId && user?.role !== 'SUPER_ADMIN') {
-      return null;
-    }
-
-    // Plan tier limits — aligned with pricing-data.json comparisonFeatures
+    // Plan tier limits — aligned with pricing-data.json comparisonFeatures. The AI allowance is
+    // not in this table: it is aiActionsPerMonth in QuotaRegistry (see aiActions below).
     // "Unlimited" is represented as -1 (frontend renders as "Unlimited")
     const PLAN_LIMITS: Record<
       string,
       {
         maxUsers: number;
         contacts: number;
-        aiPredictions: number;
         storageGB: number;
       }
     > = {
-      free: { maxUsers: 5, contacts: 500, aiPredictions: 500, storageGB: 0.5 },
-      starter: { maxUsers: 5, contacts: 1000, aiPredictions: 1000, storageGB: 1 },
-      professional: { maxUsers: 25, contacts: 10000, aiPredictions: 10000, storageGB: 5 },
-      enterprise: { maxUsers: -1, contacts: -1, aiPredictions: -1, storageGB: -1 },
+      free: { maxUsers: 5, contacts: 500, storageGB: 0.5 },
+      starter: { maxUsers: 5, contacts: 1000, storageGB: 1 },
+      professional: { maxUsers: 25, contacts: 10000, storageGB: 5 },
+      enterprise: { maxUsers: -1, contacts: -1, storageGB: -1 },
     };
 
     // Resolve plan tier from subscription (default to free if no subscription)
     let planKey = 'free';
+    // Plan the limits actually come from, reported to the UI ('contract' = Tenant.plan CUSTOM)
+    let effectivePlan: string | undefined;
 
     if (user?.stripeCustomerId) {
-      try {
-        const stripe = await getStripeAdapter();
-        const subsResult = await callStripeAPI(() =>
-          stripe.listSubscriptions(user.stripeCustomerId!)
-        );
-
-        if (subsResult.isSuccess && subsResult.value.length > 0) {
-          const activeSub =
-            subsResult.value.find((s) => s.status === 'active' || s.status === 'trialing') ??
-            subsResult.value[0];
-          const parts = activeSub.priceId.split('_');
-          if (parts.length >= 2 && parts[1] in PLAN_LIMITS) {
-            planKey = parts[1];
-          }
-        }
-      } catch {
-        // Stripe unavailable — fall back to free tier limits
-      }
+      planKey = await resolveStripePlanKey(user.stripeCustomerId, Object.keys(PLAN_LIMITS));
     }
 
     // Super admin (no stripeCustomerId, dev/seed environment) gets enterprise limits
     if (!user?.stripeCustomerId && user.role === 'SUPER_ADMIN') {
       planKey = 'enterprise';
+    } else if (!user?.stripeCustomerId) {
+      // No Stripe customer: the workspace may be on a contract plan billed outside Stripe
+      // (Tenant.plan = CUSTOM, unlimited quotas), so read the tenant's own plan.
+      const tenantRow = await ctx.prismaWithTenant.tenant.findUnique({
+        where: { id: user.tenantId },
+        select: { plan: true },
+      });
+      planKey = planKeyForTenantPlan(tenantRow?.plan);
+      if (tenantRow?.plan === 'CUSTOM') effectivePlan = 'contract';
     }
 
-    const limits = PLAN_LIMITS[planKey]!;
+    effectivePlan ??= planKey;
+    const limits = { ...PLAN_LIMITS[planKey]! };
+
+    // No Stripe customer: seats and contacts follow the quotas the application enforces
+    // (QuotaRegistry defaults plus tenant overrides); null means unlimited (-1 here).
+    if (!user?.stripeCustomerId && user.role !== 'SUPER_ADMIN' && ctx.services?.quota) {
+      const quotaLimits = await ctx.services.quota.getLimits(user.tenantId);
+      limits.maxUsers = quotaLimits.seats ?? -1;
+      limits.contacts = quotaLimits.contacts ?? -1;
+    }
     const tenantId = user.tenantId;
+
+    // AI allowance: AI actions this month against aiActionsPerMonth, the one number the pricing
+    // page, the enforcement and this card share (QuotaRegistry plus any tenant override).
+    const aiActions = await resolveAiActionsUsage(ctx.services?.quota, tenantId, planKey);
 
     // Billing period start (first day of current month)
     const periodStart = new Date();
@@ -1310,11 +1418,13 @@ export const billingRouter = createTRPCRouter({
     const estimatedStorageGB = Math.round(((documentCount * 50) / (1024 * 1024)) * 100) / 100;
 
     return {
+      // Plan the limits above come from: free | starter | professional | enterprise | contract
+      effectivePlan,
       // Plan-limited metrics (with progress bars)
       planLimits: {
         activeUsers: { current: userCount, limit: limits.maxUsers },
         contacts: { current: contactCount, limit: limits.contacts },
-        aiPredictions: { current: aiScoreThisPeriod, limit: limits.aiPredictions },
+        aiPredictions: aiActions,
         storage: { current: estimatedStorageGB, limit: limits.storageGB },
       },
       // CRM data counts

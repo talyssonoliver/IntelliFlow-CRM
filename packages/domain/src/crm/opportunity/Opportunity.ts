@@ -71,6 +71,7 @@ interface OpportunityProps {
   accountId: string;
   contactId?: string;
   sourceLeadId?: string;
+  createdContactId?: string;
   ownerId: string;
   tenantId: string;
   createdAt: Date;
@@ -87,11 +88,15 @@ export interface CreateOpportunityProps {
   accountId: string;
   contactId?: string;
   sourceLeadId?: string;
+  /** MVP-003: the contact a lead conversion created for this deal (undo deletes only this one). */
+  createdContactId?: string;
   expectedCloseDate?: Date;
   description?: string;
   ownerId: string;
   tenantId: string;
   currency?: string;
+  /** MVP-003: the value is not known yet (a lead converted without one), so 0 is accepted. */
+  valueNotYetKnown?: boolean;
 }
 
 /**
@@ -143,6 +148,10 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return this.props.sourceLeadId;
   }
 
+  get createdContactId(): string | undefined {
+    return this.props.createdContactId;
+  }
+
   get ownerId(): string {
     return this.props.ownerId;
   }
@@ -191,30 +200,37 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   }
 
   // Factory method
-  static create(props: CreateOpportunityProps): Result<Opportunity, DomainError> {
-    // Convert value to Money if number provided
-    let moneyValue: Money;
-    if (typeof props.value === 'number') {
-      // Opportunity value must be greater than 0
-      if (props.value <= 0) {
-        return Result.fail(
-          new InvalidOpportunityValueError('Opportunity value must be greater than zero')
-        );
-      }
-      const moneyResult = Money.create(props.value, props.currency || 'GBP');
-      if (moneyResult.isFailure) {
-        return Result.fail(new InvalidOpportunityValueError(moneyResult.error.message));
-      }
-      moneyValue = moneyResult.value;
-    } else {
-      // When Money object is provided, check its amount
-      if (props.value.amount <= 0) {
-        return Result.fail(
-          new InvalidOpportunityValueError('Opportunity value must be greater than zero')
-        );
-      }
-      moneyValue = props.value;
+  /**
+   * A deal's value as Money. It must be greater than zero, except that 0 is accepted when the
+   * value is not known yet (MVP-003); a negative value is never accepted.
+   */
+  private static toMoney(
+    value: number | Money,
+    currency: string,
+    allowZero = false
+  ): Result<Money, DomainError> {
+    const amount = typeof value === 'number' ? value : value.amount;
+    if (amount < 0 || (amount === 0 && !allowZero)) {
+      return Result.fail(
+        new InvalidOpportunityValueError('Opportunity value must be greater than zero')
+      );
     }
+    if (typeof value !== 'number') return Result.ok(value);
+    const moneyResult = Money.create(value, currency);
+    if (moneyResult.isFailure) {
+      return Result.fail(new InvalidOpportunityValueError(moneyResult.error.message));
+    }
+    return Result.ok(moneyResult.value);
+  }
+
+  static create(props: CreateOpportunityProps): Result<Opportunity, DomainError> {
+    const valueResult = Opportunity.toMoney(
+      props.value,
+      props.currency || 'GBP',
+      props.valueNotYetKnown === true
+    );
+    if (valueResult.isFailure) return Result.fail(valueResult.error);
+    const moneyValue = valueResult.value;
 
     const initialStage = props.stage ?? 'PROSPECTING';
     const probabilityResult = Opportunity.resolveInitialProbability(
@@ -238,6 +254,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
       accountId: props.accountId,
       contactId: props.contactId,
       sourceLeadId: props.sourceLeadId,
+      createdContactId: props.createdContactId,
       ownerId: props.ownerId,
       tenantId: props.tenantId,
       createdAt: now,
@@ -265,9 +282,8 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
 
   // Commands
   changeStage(newStage: OpportunityStage, changedBy: string): Result<void, DomainError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
+    if (newStage === 'CLOSED_WON' && this.props.value.amount === 0) return this.valueNeededToWin();
 
     const previousStage = this.props.stage;
     this.props.stage = newStage;
@@ -288,33 +304,11 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   }
 
   updateValue(newValue: number | Money, updatedBy: string): Result<void, DomainError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
 
-    // Convert to Money if number provided
-    let moneyValue: Money;
-    if (typeof newValue === 'number') {
-      // Opportunity value must be greater than 0
-      if (newValue <= 0) {
-        return Result.fail(
-          new InvalidOpportunityValueError('Opportunity value must be greater than zero')
-        );
-      }
-      const moneyResult = Money.create(newValue, this.props.value.currency);
-      if (moneyResult.isFailure) {
-        return Result.fail(new InvalidOpportunityValueError(moneyResult.error.message));
-      }
-      moneyValue = moneyResult.value;
-    } else {
-      // When Money object is provided, check its amount
-      if (newValue.amount <= 0) {
-        return Result.fail(
-          new InvalidOpportunityValueError('Opportunity value must be greater than zero')
-        );
-      }
-      moneyValue = newValue;
-    }
+    const valueResult = Opportunity.toMoney(newValue, this.props.value.currency);
+    if (valueResult.isFailure) return Result.fail(valueResult.error);
+    const moneyValue = valueResult.value;
 
     const previousValue = this.props.value;
     this.props.value = moneyValue;
@@ -331,9 +325,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     newProbability: number | Percentage,
     updatedBy: string
   ): Result<void, DomainError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
 
     // Convert to Percentage if number provided
     let percentageValue: Percentage;
@@ -367,9 +359,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     newDate: Date,
     changedBy: string
   ): Result<void, OpportunityAlreadyClosedError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
 
     const previousDate = this.props.expectedCloseDate ?? null;
     this.props.expectedCloseDate = newDate;
@@ -390,18 +380,22 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
    * description update is never a "clear", always a new value.
    */
   clearExpectedCloseDate(_changedBy: string): Result<void, OpportunityAlreadyClosedError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
     this.props.expectedCloseDate = undefined;
     this.props.updatedAt = new Date();
     return Result.ok(undefined);
   }
 
+  /** MVP-003: a won deal can no longer be edited, so its value must be known before it is won. */
+  private valueNeededToWin(): Result<void, DomainError> {
+    return Result.fail(
+      new InvalidOpportunityValueError('Add the deal value before marking it won')
+    );
+  }
+
   markAsWon(closedBy: string): Result<void, DomainError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
+    if (this.props.value.amount === 0) return this.valueNeededToWin();
 
     this.props.stage = 'CLOSED_WON';
 
@@ -422,9 +416,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   }
 
   markAsLost(reason: string, closedBy: string): Result<void, DomainError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
 
     this.props.stage = 'CLOSED_LOST';
 

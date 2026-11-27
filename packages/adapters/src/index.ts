@@ -13,6 +13,9 @@ export * from './common';
 export * from './storage/SupabaseStorageAdapter';
 export * from './storage/InMemoryStorageAdapter';
 
+// Whole-workspace data export (agreement clause 5)
+export * from './workspace-export';
+
 // Antivirus Adapters
 export * from './antivirus/ClamAVScanner';
 export * from './antivirus/NoOpAVScanner';
@@ -118,6 +121,15 @@ export * from './messaging/email/public-host';
 export * from './messaging/email/mime';
 export * from './messaging/email/smtp-provider';
 export * from './messaging/email/oauth-mailbox';
+export * from './messaging/email/zoho-mailbox';
+export * from './messaging/email/zoho-mail-reader';
+export * from './messaging/email/gmail-mail-reader';
+export * from './messaging/email/mail-content';
+export * from './messaging/email/gmail-mail-content';
+export * from './messaging/email/graph-mail-content';
+export * from './messaging/email/zoho-mail-content';
+export * from './messaging/email/mail-automation-signals';
+export * from './messaging/email/graph-mail-delta';
 export * from './messaging/email/dsn-parser';
 export * from './messaging/email/imap-dsn-reader';
 

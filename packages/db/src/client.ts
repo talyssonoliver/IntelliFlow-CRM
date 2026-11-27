@@ -2,6 +2,7 @@ import { PrismaClient, Prisma } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { fieldEncryptionExtension, deriveKey } from './field-encryption.js';
 import { instrumentOperation } from './query-budget/extension.js';
+import { egressMeterEnabled, meterOperation, startEgressLogging } from './egress-meter.js';
 
 // ---------------------------------------------------------------------------
 // M4 prompt encryption — ACTIVE via bespoke $extends (AES-256-GCM)
@@ -167,7 +168,7 @@ const createPrismaClient = () => {
   // a request/job seeds a budget context (see query-budget/context). Built here
   // (client.ts imports the generated client at the correct `../generated` depth
   // for bundling); the per-op logic lives in query-budget/extension.ts.
-  return encrypted.$extends(
+  const budgeted = encrypted.$extends(
     Prisma.defineExtension({
       name: 'query-budget',
       // `as any` on the query value mirrors fieldEncryptionExtension — it keeps
@@ -178,6 +179,21 @@ const createPrismaClient = () => {
       } as any,
     })
   );
+
+  // Egress audit 1126: with EGRESS_LOG=1, count rows and bytes returned per job and log a summary
+  // on an interval. Attached only when the flag is set, so there is no cost when it is off.
+  if (egressMeterEnabled()) {
+    startEgressLogging();
+    return budgeted.$extends(
+      Prisma.defineExtension({
+        name: 'egress-meter',
+        query: {
+          $allOperations: (params: unknown) => meterOperation(params as never),
+        } as any,
+      })
+    ) as unknown as typeof budgeted;
+  }
+  return budgeted;
 };
 
 // Type alias capturing the extended client shape.
@@ -288,7 +304,7 @@ export interface VectorSearchResult<T> {
 
 /**
  * Size of the embedding columns (leads, lead_notes, contacts, contact_notes): vector(2048),
- * the only size the free OpenRouter model nvidia/nemotron-3-embed-1b:free returns
+ * the only size the free OpenRouter model nvidia/nemotron-3.5-embed-1b:free returns
  * (migration 20261031120000_embeddings_vector_2048, gh #1108).
  */
 export const VECTOR_COLUMN_DIMENSIONS = 2048;

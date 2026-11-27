@@ -38,6 +38,7 @@ import {
 } from './ProviderPicker';
 import { secretInput, type SecretChange } from './SecretField';
 import type { FieldBinding, FieldErrorProps } from './field-binding';
+import { PERSONAL_MAILBOX_NOTICE, parsePersonalRefusal } from '../../oauth/personal-mailbox';
 import {
   SmtpEndpointFields,
   endpointChanged,
@@ -435,7 +436,22 @@ export function SmtpMailboxForm({
     try {
       onSaved(await save.mutateAsync(input));
     } catch (error) {
-      setServerError(messageOf(error, 'The mailbox could not be saved.'));
+      // A personal (consumer-domain) address: ask once, then save with the confirmation given.
+      const personal = parsePersonalRefusal((error as { message?: unknown } | null)?.message);
+      if (personal && window.confirm(PERSONAL_MAILBOX_NOTICE)) {
+        try {
+          onSaved(await save.mutateAsync({ ...input, acceptPersonal: true }));
+          return;
+        } catch (again) {
+          setServerError(messageOf(again, 'The mailbox could not be saved.'));
+          return;
+        }
+      }
+      setServerError(
+        personal
+          ? 'The mailbox was not connected.'
+          : messageOf(error, 'The mailbox could not be saved.')
+      );
     }
   };
 

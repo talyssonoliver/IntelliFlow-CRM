@@ -1,0 +1,189 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "MVP-005",
+  "run_id": "plan-mvp-close-2026-11-17",
+  "attestor": "Claude Code (claude-sonnet-5-5), ifc-ui-2 lane (plan close for Aurora)",
+  "attestation_timestamp": "2026-11-17T19:26:06Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [],
+    "invariants_acknowledged": [
+      "Shipped in #1386, #1392, #1407, #1434. Production /activity at desktop and phone width, captured 2026-11-17T19:23Z after #1434 (ops/reviews/owner-walk-1117-mvp005-008b): status 200, no console errors, no failed requests, no horizontal overflow. The Activity Log lists his own entries first (the Pilates \"Lead Qualified\" entry from 17/11 and his sent emails), shows a \"My activity\" button and filter, and holds 35 system and sync entries in one collapsed \"System updates (35)\" group.",
+      "The production captures were taken signed in as the owner, at his instruction (his words on 17/11/2026: \"Why can't you do it? I'm driving\", relayed by Aurora): a headless browser, read-only, nothing created or changed in his workspace. The capture times are the file times recorded below.",
+      "The captures are not committed because this repository is public (they show the owner and his data). They are held privately; their SHA-256 hashes are recorded in artifact_hashes."
+    ],
+    "acknowledged_at": "2026-11-17T19:26:06Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "kpis_met": 1,
+    "kpis_missed": 0
+  },
+  "artifact_hashes": {
+    "ops/reviews/owner-walk-1117-mvp005-008b/_activity-desk.png": "sha256:6ebfa68fc5bd6f9b5db27215897093b3613ba66407cb496e1c5eea4bf1a42b9e",
+    "ops/reviews/owner-walk-1117-mvp005-008b/_activity-phone.png": "sha256:70cff6d47a2db7db59c9412da75e17d82029a907eedc75d5bb1021ec145d3218",
+    "ops/reviews/owner-walk-1117-mvp005-008b/report.json": "sha256:c6c33e927b3f2d55ff4a91ed55bb505d244562d536cf1c85cf209048716c4aad"
+  },
+  "manual_verification": {
+    "performed_by": "Claude Code (claude-sonnet-5-5), ifc-ui-2 lane, for Aurora (the evidence was captured as the owner)",
+    "performed_at": "2026-11-17T19:26:06Z",
+    "review_notes": "Two \"Lead Scored by AI\" entries from 8 Nov still show in the main list of the capture (their author carries an id, which the page counts as a person): a small leftover for a follow-up. The \"My activity\" button was shown, not pressed, in the capture.",
+    "items_checked": [
+      "#1386 merged 2026-11-16T09:37Z: lead activity shows your own work first, system updates folded",
+      "#1392 merged 2026-11-16T10:53Z: notifications only what needs action; one daily follow-up line",
+      "#1407 merged 2026-11-16T15:28Z: a lead with only system updates says so instead of \"Showing 0 of 0\"",
+      "#1434 merged 2026-11-17T14:47Z: the Activity Log folds system and sync entries into one group, with a My activity filter",
+      "Production /activity at desktop and phone width, captured 2026-11-17T19:23Z after #1434 (ops/reviews/owner-walk-1117-mvp005-008b): status 200, no console errors, no failed requests, no horizontal overflow. The Activity Log lists his own entries first (the Pilates \"Lead Qualified\" entry from 17/11 and his sent emails), shows a \"My activity\" button and filter, and holds 35 system and sync entries in one collapsed \"System updates (35)\" group."
+    ]
+  },
+  "validation_results": [
+    {
+      "name": "Merged pull requests",
+      "command": "gh pr view <number> --repo talyssonoliver/IntelliFlow-CRM --json state,mergedAt (each PR listed in manual_verification.items_checked)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-17T19:26:06Z"
+    },
+    {
+      "name": "Production evidence hashed",
+      "command": "sha256 of each capture file listed in artifact_hashes",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-17T19:26:06Z"
+    },
+    {
+      "name": "TypeScript typecheck, web",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:01Z"
+    },
+    {
+      "name": "Lint, web",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:41Z"
+    },
+    {
+      "name": "Build, web",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:00:58Z"
+    },
+    {
+      "name": "Tests, web",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:14:11Z"
+    },
+    {
+      "name": "TypeScript typecheck, api",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:14:59Z"
+    },
+    {
+      "name": "Lint, api",
+      "command": "pnpm --filter @intelliflow/api lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:06Z"
+    },
+    {
+      "name": "Build, api",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:33Z"
+    },
+    {
+      "name": "Tests, api",
+      "command": "pnpm --filter @intelliflow/api test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:04:27Z"
+    },
+    {
+      "name": "TypeScript typecheck, workers",
+      "command": "pnpm --filter @intelliflow/workers typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:17:20Z"
+    },
+    {
+      "name": "Lint, workers",
+      "command": "pnpm --filter @intelliflow/workers lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:21Z"
+    },
+    {
+      "name": "Build, workers",
+      "command": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/combined-worker build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:49Z"
+    },
+    {
+      "name": "Tests, workers",
+      "command": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/combined-worker --filter @intelliflow/worker-shared test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:56Z"
+    },
+    {
+      "name": "TypeScript typecheck, validators",
+      "command": "pnpm --filter @intelliflow/validators typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:54:05Z"
+    },
+    {
+      "name": "Lint, validators",
+      "command": "pnpm --filter @intelliflow/validators lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:56:34Z"
+    },
+    {
+      "name": "Build, validators",
+      "command": "pnpm --filter @intelliflow/validators build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:53:01Z"
+    },
+    {
+      "name": "Tests, validators",
+      "command": "pnpm --filter @intelliflow/validators test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:01:10Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "merged-pr-evidence",
+      "passed": true
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "His own activity reachable in one filter; automated entries can be hidden",
+      "target": "one filter; automated entries foldable",
+      "actual": "\"My activity\" button present; 35 system updates folded into one group",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "The owner can find yesterday's call, note or email in under 10 seconds on production for the Leangency workspace",
+      "met": true
+    }
+  ],
+  "notes": "Closed by the 17/11 plan close on the signed-in production evidence listed here. Two \"Lead Scored by AI\" entries from 8 Nov still show in the main list of the capture (their author carries an id, which the page counts as a person): a small leftover for a follow-up. The \"My activity\" button was shown, not pressed, in the capture. Checks recorded 2026-11-22 by re-running them on a fresh worktree of origin/main (3df6095e9), each through the test-slot wrapper, for the packages this row's merged PRs touched. Dependency packages (domain, validators, db, platform, webhooks, application, adapters, observability, partner-sdk, worker-shared, ai-worker) were built first; earlier attempts that ran before those builds failed with unresolved modules and were re-run after, only the passing re-runs are recorded. Packages with no build script (ui) have no Build record. The production captures above stay as the behaviour evidence."
+}

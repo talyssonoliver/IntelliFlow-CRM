@@ -272,6 +272,13 @@ export function interpretEffectSize(cohensD: number): EffectSizeInterpretation {
   return 'LARGE';
 }
 
+/** Tolerance for comparing statistical parameters (alpha, power) that arrive as floats. */
+const PARAM_TOLERANCE = 1e-9;
+
+function isApproximately(value: number, target: number): boolean {
+  return Math.abs(value - target) < PARAM_TOLERANCE;
+}
+
 /**
  * Calculate required sample size per group for desired power
  * Uses simplified formula: n = 2 * ((z_α + z_β) / d)²
@@ -284,17 +291,17 @@ export function calculateRequiredSampleSize(
 ): number {
   // Z-scores for common values (approximation)
   let zAlpha: number;
-  if (alpha === 0.05) {
+  if (isApproximately(alpha, 0.05)) {
     zAlpha = 1.96;
-  } else if (alpha === 0.01) {
+  } else if (isApproximately(alpha, 0.01)) {
     zAlpha = 2.576;
   } else {
     zAlpha = 1.645;
   }
   let zBeta: number;
-  if (power === 0.8) {
+  if (isApproximately(power, 0.8)) {
     zBeta = 0.84;
-  } else if (power === 0.9) {
+  } else if (isApproximately(power, 0.9)) {
     zBeta = 1.28;
   } else {
     zBeta = 0.52;

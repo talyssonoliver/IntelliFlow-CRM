@@ -130,7 +130,7 @@ export function OpportunityCreateSheet({
           </div>
 
           <div>
-            <Label htmlFor="opp-value">Value (USD) *</Label>
+            <Label htmlFor="opp-value">Value (GBP) *</Label>
             <Input
               id="opp-value"
               type="number"

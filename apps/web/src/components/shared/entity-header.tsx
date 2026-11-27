@@ -1,9 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { cn } from '@intelliflow/ui';
-import { Breadcrumbs, type BreadcrumbItem, type PageAction } from './page-header';
+import { ActionButton, Breadcrumbs, type BreadcrumbItem, type PageAction } from './page-header';
 
 // =============================================================================
 // Types
@@ -57,75 +56,6 @@ function getBadgeClasses(variant: EntityBadge['variant']): string {
     default:
       return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700';
   }
-}
-
-// =============================================================================
-// Action Button Component
-// =============================================================================
-
-interface ActionButtonProps {
-  action: PageAction;
-}
-
-function ActionButton({ action }: Readonly<ActionButtonProps>) {
-  const {
-    label,
-    onClick,
-    href,
-    icon,
-    variant = 'secondary',
-    hideOnMobile = false,
-    disabled = false,
-    loading = false,
-  } = action;
-
-  const baseClasses = cn(
-    'group flex items-center justify-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-sm rounded-lg transition-all active:scale-95',
-    disabled && 'opacity-50 cursor-not-allowed',
-    variant === 'primary' && [
-      'bg-primary text-white font-bold shadow-sm shadow-primary/30',
-      !disabled && 'hover:bg-primary-hover',
-    ],
-    variant === 'secondary' && [
-      'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium',
-      !disabled && 'hover:bg-slate-50 dark:hover:bg-slate-700',
-    ]
-  );
-
-  const content = (
-    <>
-      {(() => {
-        if (loading)
-          return (
-            <span className="material-symbols-outlined text-[20px] animate-spin">
-              progress_activity
-            </span>
-          );
-        if (icon)
-          return (
-            <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
-              {icon}
-            </span>
-          );
-        return null;
-      })()}
-      <span className={cn(hideOnMobile && 'hidden sm:inline')}>{label}</span>
-    </>
-  );
-
-  if (href && !disabled) {
-    return (
-      <Link href={href} className={baseClasses}>
-        {content}
-      </Link>
-    );
-  }
-
-  return (
-    <button type="button" onClick={onClick} disabled={disabled || loading} className={baseClasses}>
-      {content}
-    </button>
-  );
 }
 
 // =============================================================================

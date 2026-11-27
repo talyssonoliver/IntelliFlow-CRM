@@ -81,6 +81,7 @@ describe('QuotaService', () => {
         seats: 2,
         emailsPerMonth: 0,
         aiSpendCentsPerMonth: 0,
+        aiActionsPerMonth: 0,
         workflowsActive: 0,
       });
     });
@@ -118,6 +119,8 @@ describe('QuotaService', () => {
           'emailsPerMonth:2026-09': 40,
           'emailsPerMonth:2026-08': 999,
           'aiSpendCentsPerMonth:2026-09': 75,
+          'aiActionsPerMonth:2026-09': 321,
+          'aiActionsPerMonth:2026-08': 999,
         },
       });
       const { service } = makeService('STARTER', repo);
@@ -126,6 +129,7 @@ describe('QuotaService', () => {
         seats: 2,
         emailsPerMonth: 40,
         aiSpendCentsPerMonth: 75,
+        aiActionsPerMonth: 321,
         workflowsActive: 1,
       });
     });
@@ -204,6 +208,63 @@ describe('QuotaService', () => {
       await expect(service.assertWithinQuota(TENANT, 'aiSpendCentsPerMonth')).rejects.toMatchObject(
         { used: 2000, limit: 2000 }
       );
+    });
+  });
+
+  describe('aiActionsPerMonth', () => {
+    it('refuses the 1,001st action on Starter and counts per UTC month', async () => {
+      repo = makeRepo({
+        counters: { 'aiActionsPerMonth:2026-09': 1000, 'aiActionsPerMonth:2026-08': 5 },
+      });
+      const { service } = makeService('STARTER', repo);
+      await expect(service.assertWithinQuota(TENANT, 'aiActionsPerMonth')).rejects.toMatchObject({
+        key: 'aiActionsPerMonth',
+        used: 1000,
+        limit: 1000,
+      });
+    });
+
+    it('lets a tenant override raise the Starter allowance', async () => {
+      repo = makeRepo({
+        counters: { 'aiActionsPerMonth:2026-09': 1000 },
+        overrides: [{ key: 'aiActionsPerMonth', limit: 5000 }],
+      });
+      const { service } = makeService('STARTER', repo);
+      expect((await service.getLimits(TENANT)).aiActionsPerMonth).toBe(5000);
+      await expect(service.assertWithinQuota(TENANT, 'aiActionsPerMonth')).resolves.toBeUndefined();
+    });
+
+    it('lets a tenant override lower it, or make it unlimited', async () => {
+      repo = makeRepo({
+        counters: { 'aiActionsPerMonth:2026-09': 50 },
+        overrides: [{ key: 'aiActionsPerMonth', limit: 50 }],
+      });
+      const { service } = makeService('PROFESSIONAL', repo);
+      await expect(service.assertWithinQuota(TENANT, 'aiActionsPerMonth')).rejects.toMatchObject({
+        limit: 50,
+      });
+      const { service: unlimited } = makeService(
+        'STARTER',
+        makeRepo({
+          counters: { 'aiActionsPerMonth:2026-09': 99999 },
+          overrides: [{ key: 'aiActionsPerMonth', limit: null }],
+        })
+      );
+      await expect(
+        unlimited.assertWithinQuota(TENANT, 'aiActionsPerMonth')
+      ).resolves.toBeUndefined();
+    });
+
+    it('never limits CUSTOM (the owner workspace)', async () => {
+      repo = makeRepo({ counters: { 'aiActionsPerMonth:2026-09': 10_000_000 } });
+      const { service } = makeService('CUSTOM', repo);
+      await expect(service.assertWithinQuota(TENANT, 'aiActionsPerMonth')).resolves.toBeUndefined();
+    });
+
+    it('increment writes the current-month counter', async () => {
+      const { service } = makeService('STARTER', repo);
+      await service.increment(TENANT, 'aiActionsPerMonth');
+      expect(repo.incrementCounter).toHaveBeenCalledWith(TENANT, 'aiActionsPerMonth', '2026-09', 1);
     });
   });
 

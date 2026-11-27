@@ -126,6 +126,73 @@ describe('wrapModelWithTracing', () => {
     expect(spans[0].events.some((e) => e.name === 'exception')).toBe(true);
   });
 
+  it('refuses the model call before any provider is reached once the tenant allowance of AI actions is used up', async () => {
+    const { wrapModelWithTracing } = await import('../llm-tracer.js');
+    const { tenantContextStore } = await import('../tenant-context.js');
+    const { setAiActionsAllowanceReader, AiActionsExhaustedError } =
+      await import('../../lib/ai-actions-allowance.js');
+    setAiActionsAllowanceReader({
+      getLimits: vi.fn().mockResolvedValue({ aiActionsPerMonth: 1000 }),
+      getKeyUsage: vi.fn().mockResolvedValue(1000),
+    });
+    const invoke = vi.fn().mockResolvedValue({ content: 'ok' });
+    const wrapped = wrapModelWithTracing(
+      { invoke } as unknown as import('@langchain/core/language_models/chat_models').BaseChatModel,
+      { purpose: 'scoring', tier: 'free' }
+    );
+
+    await expect(
+      tenantContextStore.run({ tenantId: 'tenant-full' } as never, () => wrapped.invoke('p'))
+    ).rejects.toBeInstanceOf(AiActionsExhaustedError);
+    expect(invoke).not.toHaveBeenCalled();
+    setAiActionsAllowanceReader(null);
+  });
+
+  it('counts one AI action per completed call, and one for a billed but unusable answer, never for a refusal', async () => {
+    const { wrapModelWithTracing } = await import('../llm-tracer.js');
+    const { setAiActionRecorder } = await import('../../lib/ai-actions-allowance.js');
+    const recorder = vi.fn().mockResolvedValue(undefined);
+    setAiActionRecorder(recorder);
+    const invoke = vi
+      .fn()
+      .mockResolvedValueOnce({ content: 'ok' })
+      .mockRejectedValueOnce(Object.assign(new Error('refusal'), { billedResult: { content: '' } }))
+      .mockRejectedValueOnce(new Error('network down'));
+    const wrapped = wrapModelWithTracing(
+      { invoke } as unknown as import('@langchain/core/language_models/chat_models').BaseChatModel,
+      { purpose: 'scoring', tier: 'free' }
+    );
+
+    await wrapped.invoke('p'); // completed
+    await expect(wrapped.invoke('p')).rejects.toThrow('refusal'); // billed
+    await expect(wrapped.invoke('p')).rejects.toThrow('network down'); // nothing billed
+    expect(recorder).toHaveBeenCalledTimes(2);
+    setAiActionRecorder(null);
+  });
+
+  it('runs the model call for a tenant with actions left, and for an unlimited plan', async () => {
+    const { wrapModelWithTracing } = await import('../llm-tracer.js');
+    const { tenantContextStore } = await import('../tenant-context.js');
+    const { setAiActionsAllowanceReader } = await import('../../lib/ai-actions-allowance.js');
+    setAiActionsAllowanceReader({
+      getLimits: vi.fn().mockImplementation(async (t: string) => ({
+        aiActionsPerMonth: t === 'owner' ? null : 1000,
+      })),
+      getKeyUsage: vi.fn().mockResolvedValue(999),
+    });
+    const invoke = vi.fn().mockResolvedValue({ content: 'ok' });
+    const wrapped = wrapModelWithTracing(
+      { invoke } as unknown as import('@langchain/core/language_models/chat_models').BaseChatModel,
+      { purpose: 'scoring', tier: 'free' }
+    );
+    await tenantContextStore.run({ tenantId: 'starter-tenant' } as never, () =>
+      wrapped.invoke('p')
+    );
+    await tenantContextStore.run({ tenantId: 'owner' } as never, () => wrapped.invoke('p'));
+    expect(invoke).toHaveBeenCalledTimes(2);
+    setAiActionsAllowanceReader(null);
+  });
+
   it('propagates tenant.id from tenantContextStore', async () => {
     const { wrapModelWithTracing } = await import('../llm-tracer.js');
     const { tenantContextStore } = await import('../tenant-context.js');

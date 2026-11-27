@@ -14,7 +14,7 @@
  * @kpi Response time <1s
  */
 
-import { PrismaClient } from '@intelliflow/db';
+import { PrismaClient, visibleEmailWhere, type MailViewer } from '@intelliflow/db';
 import { TimelineEvent, TimelineEventType } from './timeline.router';
 
 // ─── Module-level helpers ───────────────────────────────────────────────────
@@ -164,7 +164,14 @@ export type CommunicationChannelValue =
  * Timeline service for communication events
  */
 export class TimelineCommunicationService {
-  constructor(private readonly prisma: PrismaClient) {}
+  /**
+   * `viewer` is who the timeline is read for: emails are read through the mail visibility policy
+   * (register #64), so a colleague's personal-mailbox mail never appears on someone else's timeline.
+   */
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly viewer: MailViewer
+  ) {}
 
   /**
    * Get email events for a case
@@ -182,8 +189,11 @@ export class TimelineCommunicationService {
   }): Promise<TimelineEvent[]> {
     const { contactId, dealId, fromDate, toDate, sortOrder = 'desc', limit = 50 } = options;
 
-    // Build where clause
-    const where: any = {};
+    // Build where clause: the viewer's tenant and what the viewer may read
+    const where: any = {
+      tenantId: this.viewer.tenantId,
+      AND: [await visibleEmailWhere(this.prisma as never, this.viewer)],
+    };
 
     if (contactId) {
       where.contactId = contactId;
@@ -246,7 +256,6 @@ export class TimelineCommunicationService {
         hasAttachments: email.attachments.length > 0,
         attachmentCount: email.attachments.length,
         ccEmails: email.ccEmails,
-        bccEmails: email.bccEmails,
       },
       isOverdue: false,
       agentAction: null,
@@ -591,9 +600,10 @@ export class TimelineCommunicationService {
  * Factory function to create timeline communication service
  */
 export function createTimelineCommunicationService(
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  viewer: MailViewer
 ): TimelineCommunicationService {
-  return new TimelineCommunicationService(prisma);
+  return new TimelineCommunicationService(prisma, viewer);
 }
 
 /**

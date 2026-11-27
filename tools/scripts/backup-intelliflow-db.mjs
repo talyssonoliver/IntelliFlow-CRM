@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Daily IntelliFlow production database backup (owner request 2026-11-12;
- * the pattern of nutri-gyn/scripts/backup-nutrigyn.mjs).
+ * the pattern of the sibling client project's backup script).
  *
  * One run, end to end:
  *   1. Fails at once, with a log line, when Docker is not running.

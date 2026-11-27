@@ -52,8 +52,15 @@
 
 - **NEVER skip `build` validation** — "Next.js compiles on demand" is NOT a
   valid excuse. Build catches import errors, missing deps, SSR issues that dev
-  mode misses.
+  mode misses. The pre-ship gate no longer runs `next build` on this PC (owner
+  ruling 2026-11-19): CI's required `Build` job runs it on every PR and the PR
+  does not merge until it is green. Run one locally only inside the queue, or
+  with `PRESHIP_FULL_BUILD=1`.
 - **ALL 4 validations are NON-NEGOTIABLE**: TypeScript, Tests, Lint, Build
+  (Build is validated by CI, the other three by CI and the local gate)
+- `pnpm build`, `pnpm dev` and the Lighthouse scripts run only inside the
+  test-slot queue (or under CI); outside it they exit 2 and say how to queue.
+  See the root CLAUDE.md, "Heavy commands run only in the queue".
 - Coverage must be **scoped and measured**:
   `npx vitest run <test-dir> --coverage --coverage.include='<src-pattern>'`
 - Coverage thresholds: Statements >=90%, Branches >=80%, Functions >=90%,

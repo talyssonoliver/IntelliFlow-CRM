@@ -265,6 +265,7 @@ export function createMockEmailTrpc() {
       listEmails: { invalidate: invalidateListEmails },
       getUnreadCounts: { invalidate: invalidateUnreadCounts },
     },
+    emailLog: { status: { invalidate: vi.fn() } },
   });
 
   const trpc = {
@@ -292,6 +293,11 @@ export function createMockEmailTrpc() {
     },
     emailAttachments: {
       upload: { useMutation: uploadAttachment },
+    },
+    // #1177: link state unknown by default, so the Log to contact button stays hidden.
+    emailLog: {
+      status: { useQuery: vi.fn(() => ({ data: undefined })) },
+      logToContact: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isPending: false })) },
     },
     contact: {
       list: { useQuery: contactList },

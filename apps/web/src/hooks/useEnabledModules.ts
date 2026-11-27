@@ -12,7 +12,12 @@
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { type ModuleId, getRoutesForModules, type NavRouteConfig } from '@intelliflow/domain';
+import {
+  type ModuleId,
+  type TenantBusinessType,
+  getRoutesForModules,
+  type NavRouteConfig,
+} from '@intelliflow/domain';
 
 export interface UseEnabledModulesResult {
   /** List of enabled module IDs in canonical order */
@@ -23,6 +28,10 @@ export interface UseEnabledModulesResult {
   enabledRoutes: NavRouteConfig[];
   /** Current plan tier */
   plan: string | undefined;
+  /** The workspace's business type; null = not chosen yet (gated like OTHER) */
+  businessType: TenantBusinessType | null;
+  /** True for a workspace admin whose workspace has no business type yet (show the banner) */
+  needsBusinessType: boolean;
   /** Whether the query is still loading */
   isLoading: boolean;
   /** Whether there was an error */
@@ -44,6 +53,8 @@ export function useEnabledModules(): UseEnabledModulesResult {
     [data?.modules]
   );
   const plan = data?.plan;
+  const businessType = (data && 'businessType' in data ? data.businessType : null) ?? null;
+  const needsBusinessType = Boolean(data && 'needsBusinessType' in data && data.needsBusinessType);
 
   const isModuleEnabled = useMemo(() => {
     const enabledSet = new Set(enabledModules);
@@ -57,6 +68,8 @@ export function useEnabledModules(): UseEnabledModulesResult {
     isModuleEnabled,
     enabledRoutes,
     plan,
+    businessType: businessType as TenantBusinessType | null,
+    needsBusinessType,
     isLoading: authLoading || isLoading,
     isError: isAuthenticated ? isError : false,
   };

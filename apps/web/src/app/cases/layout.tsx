@@ -6,5 +6,9 @@ export const metadata: Metadata = {
 };
 
 export default function CasesLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <ModuleGate moduleId="LEGAL">{children}</ModuleGate>;
+  return (
+    <ModuleGate moduleId="LEGAL" featureLabel="Cases">
+      {children}
+    </ModuleGate>
+  );
 }

@@ -71,10 +71,25 @@ describe('UserMenu', () => {
     expect(screen.getByText('John Doe')).toBeDefined();
   });
 
+  it('names the menu button with the user name (label in name), whatever the header width', () => {
+    render(<UserMenu user={{ name: 'John Doe', email: 'john@example.com', role: 'Admin' }} />);
+    expect(screen.getByRole('button', { name: 'John Doe, account menu' })).toHaveAttribute(
+      'aria-haspopup',
+      'true'
+    );
+  });
+
   it('renders initials when no avatar is provided', () => {
     render(<UserMenu user={{ name: 'John Doe', email: 'john@example.com' }} />);
 
     expect(screen.getByText('JD')).toBeDefined();
+  });
+
+  // Was asserted on a copy of the initials code in user-menu.supplementary2.test.ts (#1216).
+  it('uses the first two initials of a longer name', () => {
+    render(<UserMenu user={{ name: 'alice bob charlie', email: 'abc@example.com' }} />);
+
+    expect(screen.getByText('AB')).toBeDefined();
   });
 
   it('falls back to Guest when no user prop and no auth user', () => {

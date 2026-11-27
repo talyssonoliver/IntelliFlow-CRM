@@ -1,0 +1,103 @@
+@startuml IFC-035-WhatsApp-Integration-Design
+title WhatsApp channel: integration design (IFC-035)\nOne seam, two transports, one raw-body webhook route in the API
+
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam componentStyle rectangle
+skinparam ArrowFontSize 11
+
+legend right
+  Decision (IFC-035, 2026-11-22): the API's raw-body webhook route
+  REPLACES the earlier idea of a Supabase database webhook.
+  Why: a database webhook fires after a row exists, so the provider's body
+  would already have been stored (and parsed) before anyone checked who sent it.
+  The route verifies the HMAC over the exact bytes first, stores only
+  authenticated bodies, and answers the provider's retry rules directly.
+  Sources: ADR-089, whatsapp-channel-design.md sections 3, 5, 6;
+  Meta webhooks overview (retries up to 7 days); WAHA events docs (HMAC sha512).
+end legend
+
+actor "Customer's customer\n(WhatsApp user)" as WU
+actor "Customer's team\n(Aurora user)" as AU
+
+cloud "Meta WhatsApp Cloud API\n(transport A, official)" as META
+cloud "WhatsApp network" as WA
+
+package "Private network (no public address)" {
+  component "WAHA container\nNOWEB, pinned by digest\none session + one session key per tenant\ndashboard and Swagger off" as WAHA
+}
+
+package "Aurora API (apps/api)" {
+  component "Raw-body route\nPOST /api/webhooks/whatsapp/{transport}/{token}\n1. read exact bytes\n2. find connection by hashed path token\n3. verifyWebhook (fail closed, 401)\n4. archive authenticated body only\n5. parseWebhook -> events\n6. 200 fast" as ROUTE
+  component "Ingest use case (IFC-324)\nmatch number -> contact -> lead\nidempotent on provider message id\nignore groups and status/broadcast" as INGEST
+  component "Send use case (IFC-327)\nconnection connected\nrecipient is the conversation's contact\nMeta: 24 h window else template\nrestriction and STOP checks" as SEND
+  component "tRPC whatsapp.send / thread" as TRPC
+  component "Connection settings (IFC-328)\nnotice + acknowledgement\nencrypted secrets" as SETTINGS
+  component "WAHA session manager (IFC-330)\nadmin key ONLY here\nmints per-tenant session key + HMAC key" as SESSMGR
+}
+
+package "Port and adapters (hexagonal)" {
+  interface "WhatsAppTransportPort\nverifyWebhook / parseWebhook\nsend / status (IFC-320)" as PORT
+  component "MetaCloudTransport (IFC-325)\nX-Hub-Signature-256 = sha256 HMAC(app secret, raw body)" as ADA
+  component "WahaTransport (IFC-326)\nX-Webhook-Hmac = sha512 HMAC(session key, raw body)\nclient bound to ONE tenant's session" as ADB
+}
+
+database "Aurora database (RLS per tenant)" as DB {
+  [whatsapp_connections]
+  [whatsapp_webhook_events (encrypted, 30-day purge)]
+  [ChatConversation / ChatMessage]
+  [Lead activity: WHATSAPP]
+}
+
+' inbound
+WU --> WA : message
+WA --> META : A: Meta delivers
+WA --> WAHA : B: paired phone, WhatsApp Web session
+META --> ROUTE : HTTPS POST (retries up to 7 days on non-200;\nduplicates possible)
+WAHA --> ROUTE : HTTP POST over private network\n(configurable retries)
+ROUTE ..> PORT : verify + parse
+PORT <|.. ADA
+PORT <|.. ADB
+ROUTE --> INGEST : normalised events
+INGEST --> DB : store message + lead activity (Received)
+
+' outbound
+AU --> TRPC : reply from the lead page
+TRPC --> SEND
+SEND ..> PORT : send
+ADA --> META : Graph API /messages (token)
+ADB --> WAHA : /api/sendText (session key)
+SEND --> DB : outbound message + activity
+META --> ROUTE : status webhooks (sent, delivered, read, failed)
+WAHA --> ROUTE : ack webhooks
+
+' admin
+AU --> SETTINGS : choose a transport,\ntick the notice (B: against WhatsApp terms)
+SETTINGS --> DB
+SETTINGS --> SESSMGR : B only
+SESSMGR --> WAHA : admin key: create session, mint keys
+
+note bottom of ROUTE
+  Bytes, not strings: pass the Buffer to verifyWebhook.
+  The Stripe route converts the body with toString('utf8') before use;
+  that is fine for Stripe, but an HMAC over a decoded string can differ
+  from one over the received bytes if the body is not valid UTF-8.
+  Proven live against WAHA 2026.10.1: a body re-serialised (pretty-printed)
+  before verifying fails the signature (artifacts/misc/waha-sandbox-proof.json).
+end note
+
+note right of WAHA
+  Risk: WhatsApp does not allow unofficial clients.
+  The number can be restricted or banned, with its chats.
+  Customer ticks the notice; policy is reply-only,
+  no anti-detection features.
+end note
+
+note left of META
+  Risk: cost and process, not ban.
+  Per-message prices since 1 Jul 2025;
+  service replies charged after 1,000 free per number
+  per month from 1 Oct 2026. Templates need approval.
+end note
+
+@enduml

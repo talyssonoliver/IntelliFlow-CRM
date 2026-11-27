@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-12T17:57:05.344Z",
+  "timestamp": "2026-11-27T16:41:25.334Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 78,
-    "total_endpoints": 611,
-    "total_queries": 263,
-    "total_mutations": 348,
+    "total_routers": 85,
+    "total_endpoints": 628,
+    "total_queries": 270,
+    "total_mutations": 358,
     "routers": [
       {
         "name": "contact",
@@ -1321,6 +1321,12 @@
         "mutations": 3
       },
       {
+        "name": "emailLog",
+        "endpoints": 5,
+        "queries": 4,
+        "mutations": 1
+      },
+      {
         "name": "health",
         "endpoints": 5,
         "queries": 5,
@@ -1351,10 +1357,22 @@
         "mutations": 0
       },
       {
+        "name": "subscription",
+        "endpoints": 4,
+        "queries": 2,
+        "mutations": 2
+      },
+      {
         "name": "user",
         "endpoints": 4,
         "queries": 2,
         "mutations": 2
+      },
+      {
+        "name": "aiProviderKey",
+        "endpoints": 3,
+        "queries": 0,
+        "mutations": 3
       },
       {
         "name": "modelConfig",
@@ -1387,6 +1405,12 @@
         "mutations": 1
       },
       {
+        "name": "replyDraft",
+        "endpoints": 3,
+        "queries": 0,
+        "mutations": 3
+      },
+      {
         "name": "emailMailbox",
         "endpoints": 3,
         "queries": 2,
@@ -1397,12 +1421,6 @@
         "endpoints": 3,
         "queries": 1,
         "mutations": 2
-      },
-      {
-        "name": "subscription",
-        "endpoints": 3,
-        "queries": 2,
-        "mutations": 1
       },
       {
         "name": "taskSettings",
@@ -1418,6 +1436,12 @@
       },
       {
         "name": "upload",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
+        "name": "conversionUndo",
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
@@ -1465,6 +1489,18 @@
         "mutations": 1
       },
       {
+        "name": "emailAttachments",
+        "endpoints": 1,
+        "queries": 0,
+        "mutations": 1
+      },
+      {
+        "name": "emailProviderHint",
+        "endpoints": 1,
+        "queries": 1,
+        "mutations": 0
+      },
+      {
         "name": "globalSearch",
         "endpoints": 1,
         "queries": 1,
@@ -1483,6 +1519,12 @@
         "mutations": 0
       },
       {
+        "name": "waiting",
+        "endpoints": 1,
+        "queries": 1,
+        "mutations": 0
+      },
+      {
         "name": "webhooks",
         "endpoints": 1,
         "queries": 0,
@@ -1491,39 +1533,53 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 215,
-    "total_fields": 3160,
-    "total_indexes": 955,
-    "total_relations": 304,
+    "total_tables": 221,
+    "total_fields": 3310,
+    "total_indexes": 974,
+    "total_relations": 325,
     "tables_with_embeddings": 4,
-    "enums": 82,
+    "enums": 86,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 192,
+        "fields": 198,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
       },
       {
+        "name": "EmailMailbox",
+        "fields": 60,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "Lead",
-        "fields": 53,
+        "fields": 56,
         "indexes": 16,
         "relations": 3,
         "hasEmbedding": true
       },
       {
         "name": "User",
-        "fields": 49,
+        "fields": 54,
         "indexes": 7,
-        "relations": 9,
+        "relations": 14,
         "hasEmbedding": false
       },
       {
         "name": "Appointment",
-        "fields": 38,
+        "fields": 41,
         "indexes": 10,
-        "relations": 4,
+        "relations": 6,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DsarRequest",
+        "fields": 39,
+        "indexes": 6,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
@@ -1532,13 +1588,6 @@
         "indexes": 15,
         "relations": 4,
         "hasEmbedding": true
-      },
-      {
-        "name": "DsarRequest",
-        "fields": 37,
-        "indexes": 6,
-        "relations": 1,
-        "hasEmbedding": false
       },
       {
         "name": "TaskAutomationRule",
@@ -1551,13 +1600,6 @@
         "name": "ConversationRecord",
         "fields": 36,
         "indexes": 7,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "EmailMailbox",
-        "fields": 36,
-        "indexes": 4,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -1591,9 +1633,16 @@
       },
       {
         "name": "EmailRecord",
-        "fields": 31,
-        "indexes": 9,
+        "fields": 32,
+        "indexes": 10,
         "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Opportunity",
+        "fields": 30,
+        "indexes": 14,
+        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1601,13 +1650,6 @@
         "fields": 30,
         "indexes": 4,
         "relations": 3,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Opportunity",
-        "fields": 29,
-        "indexes": 14,
-        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1653,6 +1695,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "Case",
+        "fields": 24,
+        "indexes": 8,
+        "relations": 5,
+        "hasEmbedding": false
+      },
+      {
         "name": "CallRecord",
         "fields": 24,
         "indexes": 6,
@@ -1664,13 +1713,6 @@
         "fields": 23,
         "indexes": 13,
         "relations": 7,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Case",
-        "fields": 23,
-        "indexes": 8,
-        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1699,6 +1741,13 @@
         "fields": 21,
         "indexes": 7,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EventType",
+        "fields": 20,
+        "indexes": 5,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1737,6 +1786,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "CalendarEventLink",
+        "fields": 19,
+        "indexes": 5,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
         "name": "ReportDefinition",
         "fields": 19,
         "indexes": 5,
@@ -1758,9 +1814,23 @@
         "hasEmbedding": false
       },
       {
+        "name": "WorkspaceExportRequest",
+        "fields": 18,
+        "indexes": 1,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
         "name": "MessageRecord",
         "fields": 18,
         "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketActivity",
+        "fields": 18,
+        "indexes": 7,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -1786,24 +1856,17 @@
         "hasEmbedding": false
       },
       {
-        "name": "EventType",
-        "fields": 17,
-        "indexes": 5,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "TicketActivity",
-        "fields": 17,
-        "indexes": 6,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
         "name": "LeadAIInsight",
         "fields": 17,
         "indexes": 6,
         "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactReplyDraft",
+        "fields": 17,
+        "indexes": 4,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
@@ -1912,17 +1975,17 @@
         "hasEmbedding": false
       },
       {
+        "name": "CaseType",
+        "fields": 15,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "CaseTask",
         "fields": 15,
         "indexes": 7,
         "relations": 3,
-        "hasEmbedding": false
-      },
-      {
-        "name": "ContactReplyDraft",
-        "fields": 15,
-        "indexes": 3,
-        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1996,6 +2059,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "ChainRun",
+        "fields": 14,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TenantMembership",
         "fields": 14,
         "indexes": 4,
@@ -2003,10 +2073,17 @@
         "hasEmbedding": false
       },
       {
-        "name": "CaseType",
+        "name": "ProcessingRestriction",
         "fields": 14,
         "indexes": 3,
-        "relations": 1,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AIMonitoringDailySummary",
+        "fields": 14,
+        "indexes": 3,
+        "relations": 0,
         "hasEmbedding": false
       },
       {
@@ -2066,6 +2143,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TenantAIProviderKey",
+        "fields": 13,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "LeadActivity",
         "fields": 13,
         "indexes": 4,
@@ -2083,6 +2167,13 @@
         "name": "AuditLog",
         "fields": 13,
         "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailAttachment",
+        "fields": 13,
+        "indexes": 3,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -2168,13 +2259,6 @@
         "fields": 12,
         "indexes": 4,
         "relations": 3,
-        "hasEmbedding": false
-      },
-      {
-        "name": "ProcessingRestriction",
-        "fields": 12,
-        "indexes": 3,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -2318,6 +2402,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "EmailOAuthState",
+        "fields": 11,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "EmailSignature",
         "fields": 11,
         "indexes": 2,
@@ -2399,6 +2490,13 @@
         "fields": 11,
         "indexes": 4,
         "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ComplianceSnapshot",
+        "fields": 11,
+        "indexes": 3,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -2504,20 +2602,6 @@
         "fields": 10,
         "indexes": 4,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "EmailAttachment",
-        "fields": 10,
-        "indexes": 3,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "EmailOAuthState",
-        "fields": 10,
-        "indexes": 3,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -2703,6 +2787,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TenantModule",
+        "fields": 8,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "AccountIndustryOption",
         "fields": 8,
         "indexes": 3,
@@ -2735,6 +2826,13 @@
         "fields": 8,
         "indexes": 4,
         "relations": 3,
+        "hasEmbedding": false
+      },
+      {
+        "name": "BookingAttempt",
+        "fields": 8,
+        "indexes": 4,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2808,13 +2906,6 @@
         "hasEmbedding": false
       },
       {
-        "name": "TenantModule",
-        "fields": 7,
-        "indexes": 3,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
         "name": "AccountHierarchyConfig",
         "fields": 7,
         "indexes": 2,
@@ -2860,13 +2951,6 @@
         "name": "AvailabilityClosure",
         "fields": 7,
         "indexes": 3,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "BookingAttempt",
-        "fields": 7,
-        "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -3368,11 +3452,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 73,
-    "total_schemas": 691,
+    "total_validators": 75,
+    "total_schemas": 697,
     "by_complexity": {
       "complex": 39,
-      "moderate": 25,
+      "moderate": 27,
       "simple": 9
     },
     "validators": [
@@ -3557,6 +3641,12 @@
         "complexity": "complex"
       },
       {
+        "name": "module",
+        "file": "module.ts",
+        "schemas": 9,
+        "complexity": "moderate"
+      },
+      {
         "name": "ticket-settings",
         "file": "ticket-settings.ts",
         "schemas": 9,
@@ -3599,16 +3689,16 @@
         "complexity": "complex"
       },
       {
-        "name": "module",
-        "file": "module.ts",
-        "schemas": 7,
-        "complexity": "moderate"
-      },
-      {
         "name": "email-mailbox",
         "file": "email-mailbox.ts",
         "schemas": 6,
         "complexity": "moderate"
+      },
+      {
+        "name": "email-settings",
+        "file": "email-settings.ts",
+        "schemas": 6,
+        "complexity": "complex"
       },
       {
         "name": "report-templates",
@@ -3627,12 +3717,6 @@
         "file": "case-types.ts",
         "schemas": 5,
         "complexity": "moderate"
-      },
-      {
-        "name": "email-settings",
-        "file": "email-settings.ts",
-        "schemas": 5,
-        "complexity": "complex"
       },
       {
         "name": "email-signatures",
@@ -3686,6 +3770,12 @@
         "name": "terms-acceptance",
         "file": "terms-acceptance.ts",
         "schemas": 4,
+        "complexity": "moderate"
+      },
+      {
+        "name": "ai-provider-key",
+        "file": "ai-provider-key.ts",
+        "schemas": 3,
         "complexity": "moderate"
       },
       {
@@ -3770,6 +3860,12 @@
         "name": "base-schemas",
         "file": "base-schemas.ts",
         "schemas": 1,
+        "complexity": "moderate"
+      },
+      {
+        "name": "activity-text",
+        "file": "activity-text.ts",
+        "schemas": 0,
         "complexity": "moderate"
       },
       {
@@ -4159,6 +4255,23 @@
         "name": "agent.getPendingCount",
         "method": "GET",
         "description": "Get pending count"
+      }
+    ],
+    "aiProviderKey": [
+      {
+        "name": "aiProviderKey.get",
+        "method": "POST",
+        "description": "Get"
+      },
+      {
+        "name": "aiProviderKey.setOptions",
+        "method": "POST",
+        "description": "Set options"
+      },
+      {
+        "name": "aiProviderKey.remove",
+        "method": "POST",
+        "description": "Remove"
       }
     ],
     "approvalPolicies": [
@@ -5079,6 +5192,23 @@
         "description": "List reply drafts"
       }
     ],
+    "replyDraft": [
+      {
+        "name": "replyDraft.listForLead",
+        "method": "POST",
+        "description": "List for lead"
+      },
+      {
+        "name": "replyDraft.openInCompose",
+        "method": "POST",
+        "description": "Open in compose"
+      },
+      {
+        "name": "replyDraft.dismiss",
+        "method": "POST",
+        "description": "Dismiss"
+      }
+    ],
     "customActionHandler": [
       {
         "name": "customActionHandler.list",
@@ -5112,6 +5242,40 @@
         "description": "Get upload status"
       }
     ],
+    "emailAttachments": [
+      {
+        "name": "emailAttachments.fetch",
+        "method": "POST",
+        "description": "Fetch"
+      }
+    ],
+    "emailLog": [
+      {
+        "name": "emailLog.status",
+        "method": "GET",
+        "description": "Status"
+      },
+      {
+        "name": "emailLog.engagementForLead",
+        "method": "GET",
+        "description": "Engagement for lead"
+      },
+      {
+        "name": "emailLog.leadEmails",
+        "method": "GET",
+        "description": "Lead emails"
+      },
+      {
+        "name": "emailLog.leadEmail",
+        "method": "GET",
+        "description": "Lead email"
+      },
+      {
+        "name": "emailLog.logToContact",
+        "method": "POST",
+        "description": "Log to contact"
+      }
+    ],
     "emailMailbox": [
       {
         "name": "emailMailbox.getMine",
@@ -5127,6 +5291,13 @@
         "name": "emailMailbox.getTenant",
         "method": "POST",
         "description": "Get tenant"
+      }
+    ],
+    "emailProviderHint": [
+      {
+        "name": "emailProviderHint.forAddress",
+        "method": "GET",
+        "description": "For address"
       }
     ],
     "emailSettings": [
@@ -5639,6 +5810,18 @@
         "name": "intelligence.ragSearch",
         "method": "GET",
         "description": "Rag search"
+      }
+    ],
+    "conversionUndo": [
+      {
+        "name": "conversionUndo.status",
+        "method": "GET",
+        "description": "Status"
+      },
+      {
+        "name": "conversionUndo.undo",
+        "method": "POST",
+        "description": "Undo"
       }
     ],
     "leadSettings": [
@@ -6688,6 +6871,11 @@
         "description": "Get enabled modules"
       },
       {
+        "name": "subscription.setBusinessType",
+        "method": "POST",
+        "description": "Set business type"
+      },
+      {
         "name": "subscription.getPlans",
         "method": "GET",
         "description": "Get plans"
@@ -7067,6 +7255,13 @@
         "name": "user.list",
         "method": "GET",
         "description": "List users with pagination"
+      }
+    ],
+    "waiting": [
+      {
+        "name": "waiting.list",
+        "method": "GET",
+        "description": "List waitings with pagination"
       }
     ],
     "webhooks": [

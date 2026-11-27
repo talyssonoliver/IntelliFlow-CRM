@@ -193,6 +193,20 @@ describe('IFC-312 job handlers — safety gates', () => {
       expect(prismaReplyDraftMock.create).not.toHaveBeenCalled();
     });
 
+    it('drafts for a tenant that never saved the setting: the default is on (MVP-012)', async () => {
+      prismaContactSettingMock.findUnique.mockResolvedValue(null);
+      const { processReplyDraftJob } = await import('../reply-draft.job.js');
+      const out = await processReplyDraftJob({
+        data: {
+          contactId: 'c-1',
+          tenantId: 't-1',
+          emailThread: [{ from: 'a@b.com', body: 'hi', at: '2026-01-01' }],
+        },
+      } as any);
+      expect(out.draftId).toBe('draft-1');
+      expect(prismaReplyDraftMock.create.mock.calls[0]![0].data.status).toBe('DRAFT');
+    });
+
     it('writes ContactReplyDraft with status="DRAFT" — NEVER "SENT"', async () => {
       prismaContactSettingMock.findUnique.mockResolvedValue({ aiAutoReplyDrafting: true });
       const { processReplyDraftJob } = await import('../reply-draft.job.js');
@@ -208,6 +222,39 @@ describe('IFC-312 job handlers — safety gates', () => {
       expect(call.data.status).toBe('DRAFT');
       expect(call.data.status).not.toBe('SENT');
       expect(call.data.tenantId).toBe('t-1');
+    });
+
+    it('writes a lead draft on the lead, still DRAFT (MVP-012 PR B)', async () => {
+      prismaContactSettingMock.findUnique.mockResolvedValue({ aiAutoReplyDrafting: true });
+      const { processReplyDraftJob } = await import('../reply-draft.job.js');
+      const out = await processReplyDraftJob({
+        data: {
+          leadId: 'l-1',
+          tenantId: 't-1',
+          emailThread: [{ from: 'a@b.com', body: 'Can you quote a fence?', at: '2026-11-19' }],
+        },
+      } as any);
+      expect(out.draftId).toBe('draft-1');
+      const call = prismaReplyDraftMock.create.mock.calls[0]![0];
+      expect(call.data).toMatchObject({ leadId: 'l-1', status: 'DRAFT', tenantId: 't-1' });
+      expect(call.data).not.toHaveProperty('contactId');
+    });
+
+    it.each([
+      ['both a contact and a lead', { contactId: 'c-1', leadId: 'l-1' }],
+      ['neither', {}],
+    ])('refuses a job naming %s', async (_label, subject) => {
+      const { processReplyDraftJob } = await import('../reply-draft.job.js');
+      await expect(
+        processReplyDraftJob({
+          data: {
+            ...subject,
+            tenantId: 't-1',
+            emailThread: [{ from: 'a@b.com', body: 'hi', at: '2026-01-01' }],
+          },
+        } as any)
+      ).rejects.toThrow(/exactly one contact or lead/);
+      expect(prismaReplyDraftMock.create).not.toHaveBeenCalled();
     });
   });
 

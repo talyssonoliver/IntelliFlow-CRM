@@ -28,6 +28,7 @@ import {
 } from '@intelliflow/validators';
 import { getTenantContext } from '../../security/tenant-context';
 import { assertQuota } from '../../shared/quota-guard';
+import { isModuleEnabledForTenant } from '../../shared/module-enabled';
 import { SIGNIFICANCE_LEVELS, requiresHumanReview } from '@intelliflow/domain';
 
 // ADR-070: server-side AI_INTELLIGENCE entitlement — intelligence router
@@ -932,8 +933,9 @@ export const intelligenceRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const { entityType, entityId, predictionType, priority } = input;
 
-      // Per-tenant metering: the queued prediction is AI spend. Assert only; cost is recorded elsewhere.
-      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiSpendCentsPerMonth');
+      // Plan allowance counted in AI actions (aiActionsPerMonth). Assert only; the ai-worker counts
+      // each model call as it completes (the spend in cents stays an internal metric).
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
 
       // Verify entity exists
       if (entityType === 'lead') {
@@ -1456,7 +1458,11 @@ export const intelligenceRouter = createTRPCRouter({
         'messages',
         'tickets',
       ];
-      const searchSources = input.sources ?? allSources;
+      const requestedSources = input.sources ?? allSources;
+      // Tickets belong to the SUPPORT module: leave them out when the workspace does not have it.
+      const searchSources = (await isModuleEnabledForTenant(ctx, tenantId, 'SUPPORT'))
+        ? requestedSources
+        : requestedSources.filter((source) => source !== 'tickets');
 
       // Search each source with tenant isolation
       const dateFilter = since ? { gte: since } : undefined;

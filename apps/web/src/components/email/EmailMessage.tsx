@@ -5,9 +5,10 @@ import { useId } from 'react';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { EntityHoverCard } from '@/components/shared';
 import { BreakableAddress } from './BreakableAddress';
-import DOMPurify from 'isomorphic-dompurify';
+import { EmailBody } from './EmailBody';
 import { cn } from '@/lib/utils';
 import { DeliveryStatusBadge } from './DeliveryStatusBadge';
+import { LogToContactButton } from './LogToContactButton';
 
 interface EmailMessageData {
   id: string;
@@ -18,10 +19,14 @@ interface EmailMessageData {
   to: Array<{ address: string; name?: string }>;
   receivedAt: string;
   attachments: Array<{
+    id?: string;
     filename: string;
     contentType: string;
     size: number;
     checksum: string;
+    isInline?: boolean;
+    contentId?: string | null;
+    onDemand?: boolean;
   }>;
   /** PG-207: delivery status of a sent email, for the Bounced / Failed badge. */
   status?: string;
@@ -162,42 +167,15 @@ export function EmailMessage({
       {/* Content — only when expanded */}
       {isExpanded && (
         <section id={contentId} aria-labelledby={headingId} className="border-t border-border">
-          {/* Body */}
+          {/* Body and attachments: the shared renderer (sandboxed frame, images blocked until shown) */}
           <div className="px-4 py-3">
-            {message.htmlBody ? (
-              <div
-                className="prose prose-sm dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message.htmlBody) }}
-              />
-            ) : (
-              <pre className="whitespace-pre-wrap text-sm">{message.textBody}</pre>
-            )}
+            <EmailBody
+              emailId={message.id}
+              htmlBody={message.htmlBody}
+              textBody={message.textBody}
+              attachments={message.attachments}
+            />
           </div>
-
-          {/* Attachments */}
-          {message.attachments.length > 0 && (
-            <div className="border-t border-border px-4 py-2">
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <span className="material-symbols-outlined text-base" aria-hidden="true">
-                  attach_file
-                </span>
-                <span>{message.attachments.length} attachment(s)</span>
-              </div>
-              <div className="mt-1 flex flex-wrap gap-2">
-                {message.attachments.map((att) => (
-                  <span
-                    key={att.checksum}
-                    className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs"
-                  >
-                    <span className="material-symbols-outlined text-base" aria-hidden="true">
-                      attach_file
-                    </span>
-                    {att.filename}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-1 border-t border-border px-4 py-2">
@@ -234,6 +212,7 @@ export function EmailMessage({
               </span>{' '}
               Forward
             </button>
+            <LogToContactButton emailId={message.id} />
           </div>
         </section>
       )}

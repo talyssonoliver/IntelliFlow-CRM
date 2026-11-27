@@ -84,7 +84,7 @@ export function classifyChangedFiles(changedFiles) {
   const sources = unique
     .filter((f) => SOURCE_EXTENSION.test(f))
     .filter((f) => !NON_SOURCE_PREFIXES.some((p) => f.startsWith(p)))
-    .sort();
+    .sort((x, y) => Number(x > y) - Number(x < y));
 
   if (sources.length === 0) {
     return { scope: 'none', reason: 'no source files changed', files: [] };

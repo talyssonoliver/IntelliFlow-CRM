@@ -13,9 +13,15 @@ import type { MailboxDto, OAuthProvidersAvailableDto } from '@intelliflow/valida
 import { trpc } from '@/lib/trpc';
 import { SectionHeader } from '@/components/shared/section-header';
 import { mailboxErrorMessage } from '@/components/email/send-errors';
-import { oauthProviderKey } from '../../oauth/oauth-session';
+import { oauthProviderKey, oauthSendOnlyKey } from '../../oauth/oauth-session';
 import { connectionFailureHelp } from './connection-help';
 import { oneClickNotYet, providerByServer } from './mailbox-providers';
+import { SmtpHostingNotice } from './SmtpHostingNotice';
+import { SendFromHint, type HintProvider } from './SendFromHint';
+import { calendarSyncLine } from './calendar-sync-status';
+import { historyImportLine, inboxSyncLine } from './inbox-sync-status';
+import { GoogleAdminTrust } from './GoogleAdminTrust';
+import { GoogleCalendarAccess } from './GoogleCalendarAccess';
 
 // Loaded on demand: most users connect with Google or Microsoft (C-FE5).
 const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.SmtpMailboxForm), {
@@ -24,9 +30,15 @@ const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.
 });
 
 type Scope = 'USER' | 'TENANT';
-type Provider = 'GMAIL' | 'MICROSOFT';
+type Provider = 'GMAIL' | 'MICROSOFT' | 'ZOHO';
 
-const PROVIDER_LABEL: Record<Provider, string> = { GMAIL: 'Google', MICROSOFT: 'Microsoft' };
+const ORDER: readonly Provider[] = ['GMAIL', 'MICROSOFT', 'ZOHO'];
+
+const PROVIDER_LABEL: Record<Provider, string> = {
+  GMAIL: 'Google',
+  MICROSOFT: 'Microsoft',
+  ZOHO: 'Zoho Mail',
+};
 
 function errorText(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
@@ -47,8 +59,41 @@ export interface MailboxConnectionProps {
   headingId: string;
   onChanged: () => void;
   announce: (message: string) => void;
+  /** MVP-011: the Google client id a Workspace admin trusts (shown on the admin-trust card). */
+  googleClientId?: string | null;
 }
 
+/** Google Calendar line under a healthy mailbox: the reconnect card, or when it last synced. */
+function CalendarSyncSection({
+  mailbox,
+  prefix,
+  gmailAvailable,
+  pending,
+  onConnect,
+}: Readonly<{
+  mailbox: MailboxDto;
+  prefix: string;
+  gmailAvailable: boolean;
+  pending: boolean;
+  onConnect: () => void;
+}>) {
+  if (mailbox.calendarSync === 'NEEDS_RECONNECT' && mailbox.replySync !== 'NEEDS_ADMIN_TRUST') {
+    return (
+      <GoogleCalendarAccess
+        reconnect
+        idPrefix={prefix}
+        onConnect={gmailAvailable ? onConnect : undefined}
+        pending={pending}
+      />
+    );
+  }
+  if (mailbox.calendarSync !== 'ON') return null;
+  return (
+    <p className="text-xs text-muted-foreground" data-testid="calendar-sync-status">
+      {calendarSyncLine(mailbox.calendarSyncedAt)}
+    </p>
+  );
+}
 /** Connection status and actions for one mailbox scope. */
 export function MailboxConnection({
   scope,
@@ -58,12 +103,15 @@ export function MailboxConnection({
   headingId,
   onChanged,
   announce,
+  googleClientId = null,
 }: Readonly<MailboxConnectionProps>) {
   const prefix = scope === 'USER' ? 'my' : 'company';
   const oauthStart = trpc.emailMailbox.oauthStart.useMutation();
   const testConnection = trpc.emailMailbox.testConnection.useMutation();
   const disconnect = trpc.emailMailbox.disconnect.useMutation();
   const [editing, setEditing] = useState(false);
+  // MVP-001: the provider the send-from address's mail runs on, offered first.
+  const [preferred, setPreferred] = useState<HintProvider | null>(null);
   const [disconnectOpen, setDisconnectOpen] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -84,12 +132,20 @@ export function MailboxConnection({
   const connected = mailbox !== null && mailbox.status !== 'DISCONNECTED';
   const broken = mailbox?.status === 'ERROR';
 
-  const startOAuth = async (provider: Provider) => {
+  /** `sendOnly` (Google): sign in for sending only, when the domain blocks reading (MVP-011). */
+  const startOAuth = async (provider: Provider, sendOnly = false) => {
     setError(null);
     try {
-      const { url } = await oauthStart.mutateAsync({ provider, scope });
+      const { url } = await oauthStart.mutateAsync({
+        provider,
+        scope,
+        ...(sendOnly ? { sendOnly: true } : {}),
+      });
       const state = new URL(url).searchParams.get('state');
-      if (state) sessionStorage.setItem(oauthProviderKey(state), provider);
+      if (state) {
+        sessionStorage.setItem(oauthProviderKey(state), provider);
+        if (sendOnly) sessionStorage.setItem(oauthSendOnlyKey(state), '1');
+      }
       window.location.assign(url);
     } catch (e) {
       setError(errorText(e, `${PROVIDER_LABEL[provider]} sign-in could not start.`));
@@ -142,7 +198,7 @@ export function MailboxConnection({
         Connect {PROVIDER_LABEL[provider]}
       </Button>
     ) : null;
-  const notYet = (['GMAIL', 'MICROSOFT'] as const)
+  const notYet = (['GMAIL', 'MICROSOFT', 'ZOHO'] as const)
     .filter((provider) => !providersAvailable[provider])
     .map((provider) => PROVIDER_LABEL[provider]);
 
@@ -159,7 +215,6 @@ export function MailboxConnection({
           </>
         )}
       </div>
-
       {!connected && (
         <p className="text-sm text-muted-foreground">
           {scope === 'USER'
@@ -172,12 +227,72 @@ export function MailboxConnection({
           {mailboxErrorMessage(mailbox.lastErrorCode)}
         </p>
       )}
-
+      {connected && !broken && mailbox?.replySync === 'ON' && (
+        <p className="text-xs text-muted-foreground" data-testid="inbox-sync-status">
+          {inboxSyncLine(mailbox.inboxSyncedAt)}
+        </p>
+      )}
+      {connected && !broken && historyImportLine(mailbox?.historyImport, mailbox?.kind) && (
+        <p className="text-xs text-muted-foreground" data-testid="history-import-status">
+          {historyImportLine(mailbox?.historyImport, mailbox?.kind)}
+        </p>
+      )}
+      {connected && !broken && mailbox?.replySync === 'NEEDS_RECONNECT' && (
+        <div className="flex flex-wrap items-center gap-2" data-testid="reply-sync-reconnect">
+          <p className="text-xs text-muted-foreground">
+            Replies from leads and contacts are not logged yet: this mailbox was connected before
+            Aurora could read it.
+          </p>
+          {providersAvailable[mailbox.kind as Provider] && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={oauthStart.isPending}
+              onClick={() => void startOAuth(mailbox.kind as Provider)}
+            >
+              Reconnect to log replies
+            </Button>
+          )}
+        </div>
+      )}
+      {connected && !broken && mailbox?.replySync === 'NEEDS_ADMIN_TRUST' && (
+        <GoogleAdminTrust
+          idPrefix={prefix}
+          clientId={googleClientId}
+          lead="This Google mailbox is connected for sending only."
+          onRetry={providersAvailable.GMAIL ? () => void startOAuth('GMAIL') : undefined}
+          pending={oauthStart.isPending}
+        />
+      )}{' '}
+      {/* The admin-trust card above already covers a domain that blocks reading: it blocks the calendar too. */}
+      {connected &&
+        !broken &&
+        mailbox?.calendarAccess === 'NOT_GRANTED' &&
+        mailbox.replySync !== 'NEEDS_ADMIN_TRUST' && (
+          <GoogleCalendarAccess
+            idPrefix={prefix}
+            onConnect={providersAvailable.GMAIL ? () => void startOAuth('GMAIL') : undefined}
+            pending={oauthStart.isPending}
+          />
+        )}
+      {connected && !broken && mailbox && (
+        <CalendarSyncSection
+          mailbox={mailbox}
+          prefix={prefix}
+          gmailAvailable={providersAvailable.GMAIL}
+          pending={oauthStart.isPending}
+          onConnect={() => void startOAuth('GMAIL')}
+        />
+      )}
+      {!connected && !editing && <SendFromHint scope={scope} onProvider={setPreferred} />}
       {(!connected || broken) && (
         <div className="flex flex-wrap items-start gap-2">
           {/* While setting up, the form's own first step is the only choice on screen. */}
-          {!editing && providerButton('GMAIL')}
-          {!editing && providerButton('MICROSOFT')}
+          {!editing &&
+            ORDER.filter((p) => p === preferred)
+              .concat(ORDER.filter((p) => p !== preferred))
+              .map((p) => providerButton(p))}
           {/* A broken SMTP mailbox is edited below; a disconnected one is set up again here. */}
           {!editing && (!connected || mailbox?.kind !== 'SMTP') && (
             <Button
@@ -195,9 +310,25 @@ export function MailboxConnection({
               {oneClickNotYet(notYet.join(' and '))}
             </p>
           )}
+          {/* Google asks for reading too; a domain that does not trust Aurora blocks that sign-in. */}
+          {!editing && providersAvailable.GMAIL && (
+            <details className="w-full text-sm" data-testid="google-blocked-help">
+              <summary className="cursor-pointer text-muted-foreground">
+                Google blocked the sign-in?
+              </summary>
+              <div className="mt-2">
+                <GoogleAdminTrust
+                  idPrefix={`${prefix}-blocked`}
+                  clientId={googleClientId}
+                  lead="Google blocks reading mail and using the calendar for a Workspace account whose admin has not trusted Aurora yet."
+                  onSendOnly={() => void startOAuth('GMAIL', true)}
+                  pending={oauthStart.isPending}
+                />
+              </div>
+            </details>
+          )}
         </div>
       )}
-
       {connected && (
         <div className="flex flex-wrap gap-2">
           <Button
@@ -225,7 +356,6 @@ export function MailboxConnection({
           </Button>
         </div>
       )}
-
       {result && (
         <p
           className={
@@ -240,7 +370,7 @@ export function MailboxConnection({
           {error}
         </p>
       )}
-
+      {editing && <SmtpHostingNotice />}
       {editing && (
         <SmtpMailboxForm
           scope={scope}
@@ -258,7 +388,6 @@ export function MailboxConnection({
           }}
         />
       )}
-
       <ConfirmationDialog
         open={disconnectOpen}
         onOpenChange={setDisconnectOpen}
@@ -291,6 +420,7 @@ export interface MyMailboxCardProps {
   companyFallbackAddress: string | null;
   onChanged: () => void;
   announce: (message: string) => void;
+  googleClientId?: string | null;
 }
 
 export function MyMailboxCard({
@@ -299,6 +429,7 @@ export function MyMailboxCard({
   companyFallbackAddress,
   onChanged,
   announce,
+  googleClientId = null,
 }: Readonly<MyMailboxCardProps>) {
   const consequence = companyFallbackAddress
     ? `Your email will be sent from the company mailbox (${companyFallbackAddress}) instead.`
@@ -324,6 +455,7 @@ export function MyMailboxCard({
           disconnectConsequence={consequence}
           onChanged={onChanged}
           announce={announce}
+          googleClientId={googleClientId}
         />
       </Card>
     </section>

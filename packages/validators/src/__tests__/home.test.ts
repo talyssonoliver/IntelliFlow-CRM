@@ -969,7 +969,7 @@ describe('Home Page Validators', () => {
     });
 
     it('GOAL_DEFAULTS revenue has $5000 target', () => {
-      expect(GOAL_DEFAULTS.revenue).toEqual({ targetValue: 5000, label: 'Sales', unit: '$' });
+      expect(GOAL_DEFAULTS.revenue).toEqual({ targetValue: 5000, label: 'Sales', unit: '£' });
     });
   });
 

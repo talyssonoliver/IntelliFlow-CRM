@@ -45,6 +45,9 @@ export interface ExtraAction {
   icon: string;
   onClick: () => void;
   destructive?: boolean;
+  /** Listed but not usable yet; hint says why. */
+  disabled?: boolean;
+  hint?: string | undefined;
 }
 
 interface EntityActionSheetProps {
@@ -168,18 +171,26 @@ export function EntityActionSheet({
                 <button
                   key={action.label}
                   type="button"
+                  disabled={action.disabled}
                   onClick={() => {
                     action.onClick();
                     onOpenChange(false);
                   }}
-                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-colors disabled:opacity-50 ${
                     action.destructive
                       ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span className="material-symbols-outlined text-[20px]">{action.icon}</span>{' '}
-                  {action.label}
+                  <span className="min-w-0">
+                    {action.label}
+                    {action.hint && (
+                      <span className="block text-xs font-normal text-slate-500 dark:text-slate-400">
+                        {action.hint}
+                      </span>
+                    )}
+                  </span>
                 </button>
               ))}
             </>

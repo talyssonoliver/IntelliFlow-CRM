@@ -158,21 +158,28 @@ export function DealForm({
     if (!formData.name.trim()) {
       newErrors.name = 'Deal name is required';
     }
-    if (!formData.value.amount || formData.value.amount <= 0) {
+    // MVP-003: a deal converted without a value keeps it "not known yet" (0) through other edits;
+    // the page sends the value only when it changed, so 0 is never written back.
+    const valueStillUnknown =
+      mode === 'edit' && !initialData?.value?.amount && !formData.value.amount;
+    if (!valueStillUnknown && (!formData.value.amount || formData.value.amount <= 0)) {
       newErrors.value = 'Deal value must be greater than 0';
     }
     if (!formData.accountId) {
       newErrors.accountId = 'Account is required';
     }
 
-    const parsedInput = createOpportunitySchema.safeParse(buildCreateOpportunityInput(formData));
+    const checked = valueStillUnknown
+      ? { ...formData, value: { ...formData.value, amount: 1 } }
+      : formData;
+    const parsedInput = createOpportunitySchema.safeParse(buildCreateOpportunityInput(checked));
     if (!parsedInput.success) {
       newErrors = applyZodIssuesToErrors(parsedInput.error.issues, newErrors);
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [formData]);
+  }, [formData, mode, initialData]);
 
   const handleStageChange = useCallback((stage: string) => {
     const typedStage = stage as OpportunityStage;
@@ -265,10 +272,10 @@ export function DealForm({
 
           {/* Deal Value */}
           <div>
-            <Label htmlFor="deal-value">Deal Value (USD) *</Label>
+            <Label htmlFor="deal-value">Deal Value (GBP) *</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                $
+                £
               </span>
               <Input
                 id="deal-value"

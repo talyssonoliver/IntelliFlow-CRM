@@ -67,7 +67,11 @@ describe('activityFeedRouter.getStats', () => {
     expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(
       TEST_UUIDS.tenant,
       '7d', // default
-      { sources: undefined, entityType: undefined }
+      expect.objectContaining({
+        sources: undefined,
+        entityType: undefined,
+        viewer: expect.anything(),
+      })
     );
   });
 
@@ -93,10 +97,14 @@ describe('activityFeedRouter.getStats', () => {
 
     await caller.getStats({ sources: ['LEAD_ACTIVITY', 'EMAIL'] });
 
-    expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(TEST_UUIDS.tenant, '7d', {
-      sources: ['LEAD_ACTIVITY', 'EMAIL'],
-      entityType: undefined,
-    });
+    expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(
+      TEST_UUIDS.tenant,
+      '7d',
+      expect.objectContaining({
+        sources: ['LEAD_ACTIVITY', 'EMAIL'],
+        entityType: undefined,
+      })
+    );
   });
 
   it('applies entityType filter correctly (passes to service)', async () => {
@@ -105,10 +113,14 @@ describe('activityFeedRouter.getStats', () => {
 
     await caller.getStats({ entityType: 'LEAD' });
 
-    expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(TEST_UUIDS.tenant, '7d', {
-      sources: undefined,
-      entityType: 'LEAD',
-    });
+    expect(mockActivityFeedService.getStats).toHaveBeenCalledWith(
+      TEST_UUIDS.tenant,
+      '7d',
+      expect.objectContaining({
+        sources: undefined,
+        entityType: 'LEAD',
+      })
+    );
   });
 
   it('returns empty stats for tenant with no data', async () => {

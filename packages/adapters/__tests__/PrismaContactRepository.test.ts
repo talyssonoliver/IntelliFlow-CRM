@@ -19,6 +19,7 @@ type ContactPrismaDelegateDouble = {
   findMany: ReturnType<typeof vi.fn>;
   delete: ReturnType<typeof vi.fn>;
   count: ReturnType<typeof vi.fn>;
+  updateMany: ReturnType<typeof vi.fn>;
 };
 
 interface ContactPrismaClientDouble {
@@ -34,6 +35,7 @@ const createMockPrismaClient = (): ContactPrismaClientDouble => {
     findMany: vi.fn(),
     delete: vi.fn(),
     count: vi.fn(),
+    updateMany: vi.fn(),
   };
 
   const partialClient = {
@@ -367,6 +369,53 @@ describe('PrismaContactRepository', () => {
         where: { tenantId: 'tenant-123', email: 'nonexistent@example.com' },
       });
       expect(result).toBeNull();
+    });
+  });
+
+  describe('linkToAccountIfFree()', () => {
+    const link = {
+      contactId: 'c-1',
+      tenantId: 'tenant-123',
+      accountId: 'account-9',
+      expectedEmail: 'known@example.com',
+    };
+    const base = { id: 'c-1', tenantId: 'tenant-123', email: 'known@example.com' };
+
+    it('attaches a contact that still has its email and no account, writing only the link', async () => {
+      mockPrisma.contact.updateMany.mockResolvedValueOnce({ count: 1 });
+
+      expect(await repository.linkToAccountIfFree(link)).toBe('attached');
+      expect(mockPrisma.contact.updateMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.contact.updateMany).toHaveBeenCalledWith({
+        where: { ...base, accountId: null },
+        data: { accountId: 'account-9', updatedAt: expect.any(Date) },
+      });
+    });
+
+    it('reports a contact already on the account as linked', async () => {
+      mockPrisma.contact.updateMany
+        .mockResolvedValueOnce({ count: 0 })
+        .mockResolvedValueOnce({ count: 1 });
+
+      expect(await repository.linkToAccountIfFree(link)).toBe('linked');
+      expect(mockPrisma.contact.updateMany).toHaveBeenLastCalledWith({
+        where: { ...base, accountId: 'account-9' },
+        data: { accountId: 'account-9' },
+      });
+    });
+
+    it('reports changed when the email or account moved, or the contact is gone', async () => {
+      mockPrisma.contact.updateMany.mockResolvedValue({ count: 0 });
+
+      expect(await repository.linkToAccountIfFree(link)).toBe('changed');
+    });
+
+    it('writes through the transaction client when one is given', async () => {
+      const tx = { contact: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) } };
+
+      expect(await repository.linkToAccountIfFree(link, tx as never)).toBe('attached');
+      expect(tx.contact.updateMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.contact.updateMany).not.toHaveBeenCalled();
     });
   });
 

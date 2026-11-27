@@ -71,7 +71,13 @@ import {
   type MemoryRetentionJobResult,
 } from './jobs';
 import { costTracker } from './utils/cost-tracker';
-import { createTenantAiSpendRecorder, createPurposeSpendRecorder } from './utils/tenant-ai-spend';
+import {
+  createTenantAiSpendRecorder,
+  createPurposeSpendRecorder,
+  createTenantAiActionsRecorder,
+} from './utils/tenant-ai-spend';
+import { setAiActionRecorder, setAiActionsAllowanceReader } from './lib/ai-actions-allowance';
+import { insightJobQueryBudget } from './lib/insight-query-budget';
 import { setPurposeSpendReader } from './lib/purpose-ceiling';
 import { aiConfig, loadAIConfig } from './config/ai.config';
 import { anthropicModelForTier } from './lib/anthropic-config';
@@ -181,6 +187,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private ingestionWorkersHandle?: import('./workers/ingestion-workers.js').IngestionWorkersHandle;
   // #230: notification-email queue consumer (folded from apps/workers/notifications-worker).
   private notificationEmailWorkerHandle?: import('./workers/notification-email-worker.js').NotificationEmailWorkerHandle;
+  private workspaceExportWorkerHandle?: import('./workers/workspace-export-worker.js').WorkspaceExportWorkerHandle;
   /** Passive dead-letter queue — no worker, just for inspection and replay. */
   private dlqQueue: Queue | null = null;
   /** QueueEvents instances for each AI queue (used for lifecycle listeners). */
@@ -349,16 +356,41 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       return;
     }
     await this.wireAuditLogAdapter();
+    await this.wireChainVersionLoader();
     await this.wireTenantAiSpend();
     await this.wireRetrievalService();
     await this.bootContactEmbedWorker();
     await this.bootIngestionWorkers();
     await this.bootNotificationEmailWorker();
+    await this.bootWorkspaceExportWorker();
   }
 
   /**
-   * Attribute each model call's estimated cost to the job's tenant so the API can enforce
-   * the aiSpendCentsPerMonth quota (nothing else increments that counter).
+   * Saved chain versions take effect: the shared version loader reads each tenant's active
+   * version from the database. If this fails, chains keep their built-in prompts.
+   */
+  private async wireChainVersionLoader(): Promise<void> {
+    try {
+      const { configureVersionLoaderFromPrisma } =
+        await import('./versioning/chain-version-loader.js');
+      await configureVersionLoaderFromPrisma(this.prisma);
+      // AI Chains usage: each run of a versioned chain is recorded in chain_runs.
+      const { setChainRunWriter, chainRunWriterFromPrisma } =
+        await import('./monitoring/chain-run-recorder.js');
+      setChainRunWriter(chainRunWriterFromPrisma(this.prisma as never));
+      this.logger.info("Chain version loader wired: tenants' active chain versions are in use");
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Chain version loader not wired; chains use their built-in prompts'
+      );
+    }
+  }
+
+  /**
+   * Attribute each completed model call to the job's tenant: its estimated cost (internal
+   * metric, aiSpendCentsPerMonth) and one AI action (the customer allowance,
+   * aiActionsPerMonth, enforced here before each call and in the API where AI work starts).
    */
   private async wireTenantAiSpend(): Promise<void> {
     try {
@@ -371,6 +403,13 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       );
       const getTenantId = () => tenantContextStore.getStore()?.tenantId;
       const record = createTenantAiSpendRecorder({ quota, getTenantId, logger: this.logger });
+      const recordAction = createTenantAiActionsRecorder({
+        quota,
+        getTenantId,
+        logger: this.logger,
+      });
+      setAiActionsAllowanceReader(quota);
+      setAiActionRecorder(() => recordAction());
       // PG-199: per-purpose spend feeds the purpose cost ceilings, and the same repository
       // is the spend reader of the pre-call ceiling check.
       const purposeSpend = new PrismaPurposeSpendRepository(this.prisma as never);
@@ -395,7 +434,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         });
       });
       this.logger.info(
-        'Tenant AI spend recorder wired — model cost counts toward aiSpendCentsPerMonth and the per-purpose ceilings'
+        'Tenant AI spend recorder wired — model cost counts toward aiSpendCentsPerMonth and the per-purpose ceilings; each chat call counts toward aiActionsPerMonth (tracing wrapper)'
       );
     } catch (error) {
       this.logger.error(
@@ -651,6 +690,47 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
         'Failed to boot notification email worker — ticket-assignment emails will remain queued'
+      );
+    }
+  }
+
+  /**
+   * Whole-workspace data export (agreement clause 5). Consumes `intelliflow-workspace-export`,
+   * writes one ZIP per tenant to the private `workspace-exports` bucket and emails a 14-day
+   * signed link through the notification-email queue. Needs Supabase Storage (service role);
+   * without it the worker does not boot and requests stay QUEUED (they are not lost: the
+   * sweep picks them up once storage is configured).
+   */
+  private async bootWorkspaceExportWorker(): Promise<void> {
+    try {
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!supabaseUrl || !serviceKey) {
+        this.logger.warn(
+          'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set — workspace export worker not started. ' +
+            'Export requests stay queued.'
+        );
+        return;
+      }
+      const { bootWorkspaceExportWorker } = await import('./workers/workspace-export-worker.js');
+      const { SupabaseExportStorage } = await import('@intelliflow/adapters');
+      const storage = new SupabaseExportStorage(supabaseUrl, serviceKey);
+      const emailBucket = process.env.EMAIL_ATTACHMENTS_BUCKET || 'email-attachments';
+      this.workspaceExportWorkerHandle = await bootWorkspaceExportWorker(
+        redisConnectionOptions(),
+        {
+          prisma: this.prisma as never,
+          archiveStorage: storage,
+          fileStorage: storage,
+          buckets: [emailBucket, 'case-documents'],
+          emailAttachmentsBucket: emailBucket,
+        },
+        this.logger
+      );
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Failed to boot workspace export worker — export requests will remain queued'
       );
     }
   }
@@ -1050,6 +1130,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     this.logger.info('Shutting down AI Worker...');
 
     this.stopTenantAiSpend?.();
+    setAiActionRecorder(null);
 
     // IFC-117: stop drift detection before the flush, so the final flush holds the last results
     this.driftScheduler?.stop();
@@ -1080,6 +1161,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     if (this.notificationEmailWorkerHandle) {
       this.logger.info('NotificationEmailWorker stopped');
     }
+
+    await this.tryStop(this.workspaceExportWorkerHandle, 'WorkspaceExportWorker');
 
     // H8: Close DLQ queue and lifecycle event listeners
     await this.closeQueueResources();
@@ -1142,7 +1225,11 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
               context: 'background',
               route: job.queueName ?? job.name ?? 'background-job',
               requestId: correlationId,
-              budget: resolveBackgroundBudget(),
+              budget: insightJobQueryBudget(
+                job.queueName,
+                INSIGHT_QUEUE,
+                resolveBackgroundBudget()
+              ),
             },
             () => this._processJobImpl(job)
           )

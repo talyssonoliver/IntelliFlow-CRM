@@ -250,6 +250,9 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
 
   return (
     <div className={cn('flex h-full dark:bg-background', className)}>
+      {/* The page had no heading (owner 21/11 check). The inbox fills the screen like a mail
+          client, so the heading is for screen readers and leaves the list where it is. */}
+      <h1 className="sr-only">Email</h1>
       {/* Email list */}
       <EmailList
         emails={filteredEmails}
@@ -293,6 +296,7 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
               : null
           }
           isLoading={threadQuery.isLoading}
+          unavailable={threadQuery.isError}
           labels={selectedEmail?.labels ?? []}
           onLabelsChange={handleSetLabels}
           onReply={handleReply}

@@ -1,6 +1,8 @@
 /**
  * Content Security Policy for every page, sent as
- * `Content-Security-Policy-Report-Only` by `src/proxy.ts`.
+ * `Content-Security-Policy-Report-Only` by `src/proxy.ts`, and by `next.config.js` for the one
+ * response the proxy does not see (a signed-out `/`, served prerendered from the CDN). next.config.js
+ * loads this file directly (Node strips the types), so keep it free of imports.
  *
  * Report-only first: browsers report what the policy would block and block
  * nothing. Scripts allow `'unsafe-inline'` because Next.js emits inline scripts

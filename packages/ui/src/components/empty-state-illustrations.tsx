@@ -919,7 +919,7 @@ export function DealsIllustration({
         fill={P}
         fontFamily="Inter, sans-serif"
       >
-        $0.00
+        £0
       </text>
       {/* Trend arrow */}
       <polyline
@@ -1352,7 +1352,7 @@ export function InvoicesIllustration({
         fill={P}
         fontFamily="Inter, sans-serif"
       >
-        $0.00
+        £0
       </text>
       {/* Divider */}
       <line x1="56" y1="68" x2="124" y2="68" stroke={S2} strokeWidth="1" strokeDasharray="4 2" />
@@ -1950,7 +1950,7 @@ export function SubscriptionsIllustration({
         fill={P}
         fontFamily="Inter, sans-serif"
       >
-        $0
+        £0
       </text>
       <text
         x="90"

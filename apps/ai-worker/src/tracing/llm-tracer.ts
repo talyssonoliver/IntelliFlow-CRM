@@ -34,8 +34,37 @@ import {
   recordMonthlyModelSpend,
 } from '../lib/usage-metering.js';
 import { assertWithinMonthlyBudget } from '../lib/monthly-budget.js';
+import { assertWithinAiActions, recordAiAction } from '../lib/ai-actions-allowance.js';
+import { handledFallback, recordHandledFallback } from '../lib/handled-fallback.js';
 
 const tracer = trace.getTracer('intelliflow-ai-worker', '0.1.0');
+
+/** An error with only the class and HTTP status of `err`: no provider message. */
+function byokSafeError(err: unknown): Error {
+  const e = err as { name?: unknown; status?: unknown } | null;
+  const name = typeof e?.name === 'string' ? e.name : 'Error';
+  const status = typeof e?.status === 'number' ? ` (HTTP ${e.status})` : '';
+  const safe = new Error(`BYOK call failed: ${name}${status}`);
+  safe.name = name;
+  return safe;
+}
+
+/**
+ * Ends an embed span for a failed call. When the caller recovers with a fallback
+ * (lib/handled-fallback.ts) the span keeps the evidence but is not an ERROR, so the error-span
+ * alert fires only on failures nobody handled.
+ */
+function markEmbedFailure(span: Span, err: unknown): void {
+  const handled = handledFallback();
+  if (handled) {
+    span.setAttribute('llm.fallback.handled', handled.name);
+    span.addEvent('llm.embed.failed_handled', { 'exception.message': String(err) });
+    recordHandledFallback(handled.name);
+    return;
+  }
+  span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
+  span.recordException(err as Error);
+}
 
 export interface LLMTracingMeta {
   purpose: LLMPurpose;
@@ -49,6 +78,11 @@ export interface LLMTracingMeta {
    * job-level fallback). The monthly budget fails closed per provider (monthly-budget.ts).
    */
   provider?: AIProvider;
+  /**
+   * PG-199 BYOK: this model runs on the tenant's own key. Its usage is metered for the tenant
+   * but skips the platform's daily cost limit and monthly budget (lib/usage-metering.ts).
+   */
+  byok?: boolean;
 }
 
 export interface EmbeddingsTracingMeta {
@@ -79,9 +113,15 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
     options?: InvokeParams[1]
   ) => {
     const tenantId = tenantContextStore.getStore()?.tenantId ?? 'unknown';
-    assertWithinDailyLimit();
-    // The worker-wide monthly cap (owner constraint): refuse before any provider is called.
-    await assertWithinMonthlyBudget(chatPricingKey(meta), meta.provider ?? aiConfig.provider);
+    // The platform's own caps (daily cost limit, worker-wide monthly budget) protect what the
+    // PLATFORM pays: a tenant on its own key is never refused by them (PG-199 BYOK).
+    if (!meta.byok) {
+      assertWithinDailyLimit();
+      // The worker-wide monthly cap (owner constraint): refuse before any provider is called.
+      await assertWithinMonthlyBudget(chatPricingKey(meta), meta.provider ?? aiConfig.provider);
+    }
+    // The tenant's plan allowance, counted in AI actions: applies on its own key too.
+    await assertWithinAiActions(tenantId);
 
     return tracer.startActiveSpan(
       'llm.invoke',
@@ -101,16 +141,24 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
           const result = await originalInvoke(input, options);
           span.setStatus({ code: SpanStatusCode.OK });
           recordModelUsage(meta, input, result);
+          recordAiAction();
           await recordMonthlyModelSpend(meta, result);
           return result;
         } catch (err) {
-          span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
-          span.recordException(err as Error);
+          // A tenant's own-key call can fail with a provider message that quotes (masked) key
+          // text: its span carries only the error class and HTTP status (PG-199 BYOK).
+          const traced = meta.byok ? byokSafeError(err) : (err as Error);
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: meta.byok ? traced.message : String(err),
+          });
+          span.recordException(traced);
           // A provider response that completed but was unusable (a Claude refusal or a cut-off
           // answer) is still billed: meter it, or repeated failures would escape spend limits.
           const billed = (err as { billedResult?: unknown } | null)?.billedResult;
           if (billed) {
             recordModelUsage(meta, input, billed);
+            recordAiAction();
             await recordMonthlyModelSpend(meta, billed);
           }
           throw err;
@@ -229,8 +277,7 @@ export function wrapEmbeddingsWithTracing(
             recordCall(jobTenantId, [text]);
             return result;
           } catch (err) {
-            span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
-            span.recordException(err as Error);
+            markEmbedFailure(span, err);
             throw err;
           } finally {
             span.end();
@@ -268,8 +315,7 @@ export function wrapEmbeddingsWithTracing(
             recordCall(jobTenantId, texts);
             return result;
           } catch (err) {
-            span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
-            span.recordException(err as Error);
+            markEmbedFailure(span, err);
             throw err;
           } finally {
             span.end();

@@ -31,53 +31,28 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getSupabaseBrowserClient } from '../supabase-browser';
 import type { OAuthProvider } from '@intelliflow/domain';
 import { getSupabaseProviderName } from './sso-handler';
-import { isTokenUsable } from './jwt';
+import { decodeJwtPayload, getTokenExpiryMs, isTokenUsable } from './jwt';
+import { isPublicAuthRoute } from './route-protection';
+import {
+  clearCachedAuthStatus,
+  readCachedAuthStatus,
+  sameTokenSubject,
+  writeCachedAuthStatus,
+} from './auth-status-snapshot';
 import { loginPathFor, safeRedirectPath } from './safe-redirect';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
 import { AUTH_TOKEN_CHANGED_EVENT, leaveAfterLogout } from '@/lib/shared/session-cleanup';
 import { watchForLogoutElsewhere, type PageSession } from './logout-sync';
-import { clearActiveTenant } from '@/lib/tenant/active-tenant';
+import {
+  ACTIVE_TENANT_CHANGED_EVENT,
+  clearActiveTenant,
+  getActiveTenantId,
+} from '@/lib/tenant/active-tenant';
 
 export type AuthMfaMethod = 'totp' | 'sms' | 'email' | 'backup';
 
-// ============================================
-// Token Refresh Utilities
-// ============================================
-
-/**
- * Decode JWT token payload without verifying signature
- */
-function decodeJwtPayload(token: string): { exp?: number; sub?: string } | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    return JSON.parse(atob(parts[1].replaceAll('-', '+').replaceAll('_', '/')));
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Check if token needs refresh (expires within threshold)
- * Default threshold: 5 minutes before expiry
- */
-function _tokenNeedsRefresh(token: string, thresholdMs: number = 5 * 60 * 1000): boolean {
-  const payload = decodeJwtPayload(token);
-  if (!payload?.exp) return true; // If we can't read expiry, assume needs refresh
-
-  const expiryTime = payload.exp * 1000;
-  const now = Date.now();
-  return now >= expiryTime - thresholdMs;
-}
-
-/**
- * Get token expiry time in milliseconds
- */
-function getTokenExpiryMs(token: string): number | null {
-  const payload = decodeJwtPayload(token);
-  if (!payload?.exp) return null;
-  return payload.exp * 1000;
-}
+// The JWT helpers (decodeJwtPayload, getTokenExpiryMs) live in ./jwt, tested there; this
+// file used to keep private copies, which its tests then copied again (#1216).
 
 // ============================================
 // Types
@@ -292,6 +267,35 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     staleTime: Infinity,
   });
 
+  // MVP-007: while getStatus is in flight, start from the status it last confirmed for this same
+  // token subject (./auth-status-snapshot.ts). Every layout and page query waits for
+  // isAuthenticated, so they now start with getStatus instead of one API round trip after it.
+  // Declared before the effect that resolves getStatus: if getStatus has already answered, that
+  // effect runs after this one in the same commit and its state wins.
+  // Not on the sign-in, sign-up, password and verification pages: they send a signed-in visitor
+  // away (useRedirectIfAuthenticated), so there only a status the server confirmed may count. A
+  // reset-password link opened with an ended session must stay on the reset page.
+  useEffect(() => {
+    if (isLoggedOutPage || typeof globalThis.window === 'undefined') return;
+    if (isPublicAuthRoute(globalThis.location?.pathname ?? '')) return;
+    const cached = readCachedAuthStatus<AuthUser>(
+      localStorage.getItem('accessToken'),
+      getActiveTenantId()
+    );
+    if (!cached) return;
+    setState((prev) =>
+      prev.isLoading
+        ? {
+            ...prev,
+            user: cached.user,
+            isAuthenticated: true,
+            isLoading: false,
+            emailVerified: cached.emailVerified,
+          }
+        : prev
+    );
+  }, [isLoggedOutPage]);
+
   // Another tab logging out, or the browser restoring this page from its back-forward
   // cache after logout, must take this page out of the portal too.
   const pageSessionRef = useRef<PageSession | null>(null);
@@ -311,15 +315,43 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   // query can stay stuck at the pre-login `authenticated: false` snapshot it
   // cached on the /login or /auth/callback page, and useRequireAuth then bounces
   // every subsequent navigation back to /login.
+  // MVP-007: the token getStatus was asked with. Its answer is stored only under that same token's
+  // subject, and not at all if the token changed while it was in flight (a sign-in as someone else
+  // in another tab), so one user's status is never paired with another user's token.
+  // The workspace is recorded too: getStatus answers with the role in the active workspace.
+  const statusTokenRef = useRef<{ token: string | null; tenant: string | null; changed: boolean }>({
+    token: null,
+    tenant: null,
+    changed: false,
+  });
+  useEffect(() => {
+    if (statusQuery.isFetching && typeof globalThis.window !== 'undefined') {
+      statusTokenRef.current = {
+        token: localStorage.getItem('accessToken'),
+        tenant: getActiveTenantId(),
+        changed: false,
+      };
+    }
+  }, [statusQuery.isFetching]);
+
   useEffect(() => {
     if (typeof globalThis.window === 'undefined') return;
     const onTokenChanged = () => {
+      statusTokenRef.current = { ...statusTokenRef.current, changed: true };
       queryClient
         .invalidateQueries({ queryKey: [['auth', 'getStatus']] })
         .catch(logAuthStatusRefreshError);
     };
     globalThis.addEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
-    return () => globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
+    // A workspace switch mid-request also means the answer may be for the other workspace.
+    const onTenantChanged = () => {
+      statusTokenRef.current = { ...statusTokenRef.current, changed: true };
+    };
+    globalThis.addEventListener(ACTIVE_TENANT_CHANGED_EVENT, onTenantChanged);
+    return () => {
+      globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
+      globalThis.removeEventListener(ACTIVE_TENANT_CHANGED_EVENT, onTenantChanged);
+    };
   }, [queryClient]);
 
   // Track refresh timer
@@ -406,6 +438,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
           .catch(logAuthStatusRefreshError);
       } else if (event === 'SIGNED_OUT') {
         console.log('[AuthContext] Signed out via Supabase');
+        clearCachedAuthStatus();
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
@@ -523,6 +556,21 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
 
     setState((prev) => ({ ...prev, ...result.update }));
+    if (result.update.isAuthenticated && result.update.user) {
+      const asked = statusTokenRef.current;
+      const current = localStorage.getItem('accessToken');
+      const tenant = getActiveTenantId();
+      if (!asked.changed && asked.tenant === tenant && sameTokenSubject(asked.token, current)) {
+        writeCachedAuthStatus(
+          current,
+          tenant,
+          result.update.user,
+          result.update.emailVerified ?? null
+        );
+      }
+    } else if (queryView.isSuccess) {
+      clearCachedAuthStatus();
+    }
   }, [
     statusQuery.isPending,
     statusQuery.isFetching,
@@ -826,6 +874,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const logout = useCallback(
     async (options?: { navigate?: boolean }): Promise<void> => {
       setState((prev) => ({ ...prev, isLoading: true }));
+      clearCachedAuthStatus();
 
       try {
         const serverResult = await logoutMutation.mutateAsync();

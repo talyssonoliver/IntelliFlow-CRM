@@ -40,6 +40,7 @@ import {
   type GoalType,
 } from '@intelliflow/validators';
 import { z } from 'zod';
+import { formatPounds } from '../../shared/format-pounds';
 import {
   startOfDayInTimezone,
   endOfDayInTimezone,
@@ -995,7 +996,7 @@ async function buildPipelineSummaryInsight(
     type: 'opportunity',
     source: 'heuristic',
     title: 'Pipeline Overview',
-    description: `You have ${activeDealCount} active deal${dealPlural} worth $${value.toLocaleString('en-GB')}. Review your pipeline for next steps.`,
+    description: `You have ${activeDealCount} active deal${dealPlural} worth ${formatPounds(value)}. Review your pipeline for next steps.`,
     suggestedAction: 'Review pipeline',
     entityType: null,
     entityId: null,
@@ -1884,9 +1885,7 @@ export const homeRouter = createTRPCRouter({
 
     // Format remaining based on goal type
     const remainingFormatted =
-      goalType === 'revenue'
-        ? `$${remainingToTarget.toLocaleString('en-GB')}`
-        : `${remainingToTarget} ${unit}`;
+      goalType === 'revenue' ? formatPounds(remainingToTarget) : `${remainingToTarget} ${unit}`;
 
     const duration = performance.now() - startTime;
     if (duration > 200) {
@@ -2141,9 +2140,7 @@ export const homeRouter = createTRPCRouter({
           progress: 0,
           remainingToTarget: row.targetValue,
           remainingFormatted:
-            goalType === 'revenue'
-              ? `$${row.targetValue.toLocaleString('en-GB')}`
-              : `${row.targetValue} ${unit}`,
+            goalType === 'revenue' ? formatPounds(row.targetValue) : `${row.targetValue} ${unit}`,
         },
         lastUpdated: row.updatedAt,
       };

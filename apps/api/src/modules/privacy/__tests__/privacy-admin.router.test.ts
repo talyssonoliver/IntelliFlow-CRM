@@ -310,7 +310,7 @@ describe('complete', () => {
   });
 
   it('completes other types and records whether marketing was stopped', async () => {
-    service.complete.mockResolvedValue({ outcome: 'OK' });
+    service.complete.mockResolvedValue({ outcome: 'OK', marketingStopped: true });
     await expect(
       adminCaller().complete({
         id: ID,
@@ -320,7 +320,23 @@ describe('complete', () => {
       })
     ).resolves.toEqual({ erasure: null });
     expect(auditLog.mock.calls[0]![4]).toMatchObject({
-      metadata: { change: 'COMPLETED', marketingStopped: true },
+      metadata: { change: 'COMPLETED', marketingStopped: true, externalStopMethodGiven: true },
+    });
+  });
+
+  it('records marketing stopped for a marketing objection with no external stop method', async () => {
+    service.complete.mockResolvedValue({ outcome: 'OK', marketingStopped: true });
+    await adminCaller().complete({ id: ID, note: 'Done' });
+    expect(auditLog.mock.calls[0]![4]).toMatchObject({
+      metadata: { change: 'COMPLETED', marketingStopped: true, externalStopMethodGiven: false },
+    });
+  });
+
+  it('records marketing not stopped when the request was not a marketing objection', async () => {
+    service.complete.mockResolvedValue({ outcome: 'OK', marketingStopped: false });
+    await adminCaller().complete({ id: ID, note: 'Done' });
+    expect(auditLog.mock.calls[0]![4]).toMatchObject({
+      metadata: { change: 'COMPLETED', marketingStopped: false, externalStopMethodGiven: false },
     });
   });
 

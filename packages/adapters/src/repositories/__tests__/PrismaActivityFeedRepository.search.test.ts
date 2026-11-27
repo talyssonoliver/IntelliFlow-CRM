@@ -289,8 +289,8 @@ describe('PrismaActivityFeedRepository.searchFeed', () => {
     await repo.searchFeed(tenantId, 'test', 20, cursor, {});
 
     const call = mockPrisma.leadActivity.findMany.mock.calls[0][0];
-    // AND[0] = search conditions, AND[1] = cursor conditions
-    expect(call.where.AND).toHaveLength(2);
+    // AND[0] = search conditions, AND[1] = cursor conditions, AND[2] = who may see EMAIL entries
+    expect(call.where.AND).toHaveLength(3);
     expect(call.where.AND[0].OR).toBeDefined(); // search ILIKE conditions
     expect(call.where.AND[1].OR).toBeDefined(); // cursor pagination conditions
   });

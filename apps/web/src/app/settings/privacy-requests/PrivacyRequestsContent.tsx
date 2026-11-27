@@ -35,6 +35,7 @@ import {
   type RequestAction,
 } from './components/RequestActionDialog';
 import { LogRequestDialog, TYPE_LABELS } from './components/LogRequestDialog';
+import { WorkspaceExportCard } from './components/WorkspaceExportCard';
 
 const OPEN_TITLE_ID = 'open-requests-title';
 // The server requires a reason of at least 10 characters to lift a restriction.
@@ -323,6 +324,8 @@ export default function PrivacyRequestsContent() {
         description="Requests from people about their personal data. Answer each within one month of confirmation."
         actions={[{ label: 'Log a request', icon: 'add', onClick: () => setLogOpen(true) }]}
       />
+
+      <WorkspaceExportCard enabled={enabled} />
 
       <Card className="p-6">
         <SectionHeader

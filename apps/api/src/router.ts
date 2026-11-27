@@ -7,6 +7,8 @@
 
 import { createTRPCRouter } from './trpc';
 import { leadRouter } from './modules/lead/lead.router';
+import { conversionUndoRouter } from './modules/lead/conversion-undo.router';
+import { replyDraftRouter } from './modules/contact/reply-draft.router';
 import { leadSettingsRouter } from './modules/lead/lead-settings.router';
 import { contactRouter } from './modules/contact/contact.router';
 import { contactSettingsRouter } from './modules/contact/contact-settings.router';
@@ -42,6 +44,7 @@ import { uploadRouter } from './modules/documents/upload.router';
 import { agentRouter } from './modules/agent/agent.router';
 import { approvalPoliciesRouter } from './modules/agent/approval-policies.router'; // PG-198
 import { modelConfigRouter } from './modules/agent/model-config.router'; // PG-199
+import { aiProviderKeyRouter } from './modules/agent/ai-provider-key.router'; // PG-199 BYOK
 import { conversationRouter } from './modules/agent/conversation.router';
 import { auditRouter } from './modules/security/audit.router';
 import { authRouter } from './modules/auth/auth.router';
@@ -52,9 +55,11 @@ import { zepBudgetRouter } from './modules/zep/zep-budget.router';
 import { intelligenceRouter } from './modules/intelligence/intelligence.router';
 import { inboundEmailRouter } from './modules/email/inbound.router';
 import { emailMailboxRouter } from './modules/email/email-mailbox.router';
+import { emailProviderHintRouter } from './modules/email/email-provider-hint.router';
 import { emailSettingsRouter } from './modules/email/email-settings.router';
 import { emailSignaturesRouter } from './modules/email/email-signatures.router';
 import { emailAttachmentsRouter } from './modules/email/email-attachments.router';
+import { emailLogRouter } from './modules/email/email-log.router';
 import { autoResponseRouter } from './modules/autoresponse';
 import { aiMonitoringRouter } from './modules/ai-monitoring/ai-monitoring.router';
 import { aiReviewRouter } from './modules/ai-review/ai-review.router';
@@ -65,6 +70,7 @@ import { webhooksRouter } from './modules/webhooks/webhooks.router';
 import { queuesAdminRouter } from './modules/admin/queues.router';
 import { activityFeedRouter } from './modules/misc/activity-feed.router';
 import { globalSearchRouter } from './modules/misc/global-search.router';
+import { waitingRouter } from './modules/waiting/waiting.router';
 import { moduleAccessRouter } from './modules/subscription/subscription.router';
 import { experimentRouter } from './modules/experiment';
 import { routingRouter } from './modules/routing';
@@ -76,6 +82,8 @@ import { teamRouter } from './modules/team/team.router';
 import { calendarRouter } from './modules/calendar/calendar.router';
 import { calendarWebhooksRouter } from './modules/calendar/calendar-webhook.router';
 import { privacyRouter } from './modules/privacy/privacy.router';
+import { workspaceExportRouter } from './modules/workspace-export/workspace-export.router';
+import { complianceRouter } from './modules/compliance/compliance.router';
 import { helpArticleRouter } from './modules/help-article/help-article.router';
 import { customNodeTypeRouter } from './modules/custom-node-type/custom-node-type.router';
 import { customActionHandlerRouter } from './modules/custom-action-handler/custom-action-handler.router';
@@ -142,7 +150,11 @@ export const appRouter = createTRPCRouter({
 
   // Core CRM entities
   lead: leadRouter,
+  // MVP-003: undo a lead-to-deal conversion while nothing has happened since
+  leadConversion: conversionUndoRouter,
   contact: contactRouter,
+  // MVP-012: send, edit in Compose or dismiss an AI-drafted reply (never sent without a click)
+  replyDraft: replyDraftRouter,
   account: accountRouter,
   opportunity: opportunityRouter,
   pipelineConfig: pipelineConfigRouter,
@@ -180,6 +192,7 @@ export const appRouter = createTRPCRouter({
   agent: agentRouter,
   approvalPolicies: approvalPoliciesRouter, // PG-198: Approval Policies
   modelConfig: modelConfigRouter, // PG-199: Model Config
+  aiProviderKey: aiProviderKeyRouter, // PG-199 BYOK: the workspace's own provider key
   conversation: conversationRouter, // IFC-148: Conversation records, messages, tool calls
   chainVersion: chainVersionRouter,
   zepBudget: zepBudgetRouter,
@@ -207,9 +220,13 @@ export const appRouter = createTRPCRouter({
   email: inboundEmailRouter,
   // PG-207 (ADR-085): user mailboxes, email settings, signatures, attachments
   emailMailbox: emailMailboxRouter,
+  // MVP-001: which provider runs an address's mail (MX), for the connect screen
+  emailProviderHint: emailProviderHintRouter,
   emailSettings: emailSettingsRouter,
   emailSignatures: emailSignaturesRouter,
   emailAttachments: emailAttachmentsRouter,
+  // #1177: one-click "Log to contact" for mail sent from the CRM
+  emailLog: emailLogRouter,
 
   // Webhook Infrastructure (IFC-144)
   webhooks: webhooksRouter,
@@ -231,6 +248,7 @@ export const appRouter = createTRPCRouter({
 
   // Global Search (IFC-203: cross-entity search from header)
   globalSearch: globalSearchRouter,
+  waiting: waitingRouter,
 
   // Module Access (IFC-209)
   moduleAccess: moduleAccessRouter,
@@ -258,7 +276,11 @@ export const appRouter = createTRPCRouter({
   calendarWebhooks: calendarWebhooksRouter,
 
   // Privacy & GDPR (Fix #17 — IFC-140)
+  compliance: complianceRouter, // PG-194: governance compliance dashboard data
   privacy: privacyRouter, // PG-203: public data requests, banner read, admin handling
+
+  // Whole-workspace data export (agreement clause 5): admin request, list, fresh signed link
+  workspaceExport: workspaceExportRouter,
 
   // Support Help Center (IFC-299)
   helpArticle: helpArticleRouter,

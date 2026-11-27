@@ -5,6 +5,7 @@ import { isEmptySeries } from '@/lib/charts/empty-series';
 import { ChartEmptyState, ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import { useAuth } from '@/lib/auth/AuthContext';
 import type { WidgetProps } from './index';
+import { WidgetHeader } from '../WidgetHeader';
 
 interface GrowthTrendData {
   value: number;
@@ -76,24 +77,26 @@ export function GrowthTrendsWidget(_props: Readonly<WidgetProps>) {
 
   return (
     <div className="p-5 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold text-foreground flex items-center gap-2">
-          <span className="material-symbols-outlined text-muted-foreground">show_chart</span> Growth
-          Trends
-        </h3>
-        {yoyChange !== 0 && (
-          <span
-            className={`text-xs font-medium flex items-center px-1.5 py-0.5 rounded ${
-              yoyChange >= 0
-                ? 'text-success bg-success-muted'
-                : 'text-destructive bg-destructive-muted'
-            }`}
-          >
-            {yoyChange >= 0 ? '+' : ''}
-            {yoyChange}% YoY
-          </span>
-        )}
-      </div>
+      <WidgetHeader
+        title="Growth Trends"
+        icon="show_chart"
+        titleClassName="font-bold text-foreground"
+        className="mb-4"
+        actions={
+          yoyChange !== 0 && (
+            <span
+              className={`text-xs font-medium flex items-center px-1.5 py-0.5 rounded ${
+                yoyChange >= 0
+                  ? 'text-success bg-success-muted'
+                  : 'text-destructive bg-destructive-muted'
+              }`}
+            >
+              {yoyChange >= 0 ? '+' : ''}
+              {yoyChange}% YoY
+            </span>
+          )
+        }
+      />
 
       {/* Simple line chart visualization */}
       <div className="flex-1 flex items-end gap-1 min-h-[120px]">

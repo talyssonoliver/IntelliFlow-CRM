@@ -345,8 +345,22 @@ export function reconcileSite(
 // Filesystem I/O
 // ============================================================================
 
+/**
+ * The environment for a git call that must act on `repoRoot` alone. A git hook (pre-push
+ * runs this gate) exports GIT_DIR, GIT_WORK_TREE and GIT_INDEX_FILE; inherited, they point
+ * `git ls-files` at the hook's repository whatever `cwd` says. Same rule as gitEnv() in
+ * scripts/lib/preship-git.mjs: drop every GIT_* variable and let `cwd` pick the repository.
+ */
+export function gitChildEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  return Object.fromEntries(Object.entries(env).filter(([k]) => !k.startsWith('GIT_')));
+}
+
 function defaultListFiles(repoRoot: string): string[] {
-  const stdout = execSync('git ls-files', { cwd: repoRoot, encoding: 'utf-8' });
+  const stdout = execSync('git ls-files', {
+    cwd: repoRoot,
+    encoding: 'utf-8',
+    env: gitChildEnv(process.env),
+  });
   return stdout
     .split(/\r?\n/)
     .map((f) => f.trim())
