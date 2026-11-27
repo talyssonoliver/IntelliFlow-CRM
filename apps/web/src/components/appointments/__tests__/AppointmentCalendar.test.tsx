@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 import { AppointmentCalendar } from '../AppointmentCalendar';
 import { mockAppointments } from '@/test/fixtures/appointment-data';
 import type { CalendarTask } from '../types';
@@ -207,5 +207,23 @@ describe('AppointmentCalendar', () => {
     render(<AppointmentCalendar {...defaultProps} />);
     fireEvent.click(screen.getByTestId('mock-date-click'));
     expect(defaultProps.onCreateWithDate).toHaveBeenCalledWith(expect.any(Date));
+  });
+
+  it('keeps Month reachable on a phone left on week view (codex 27/11)', () => {
+    render(<AppointmentCalendar {...defaultProps} view="week" />);
+    const group = screen.getByRole('group', { name: 'Calendar view' });
+    expect(group.className).not.toMatch(/(^|\s)hidden(\s|$)/);
+    const month = within(group).getByRole('button', { name: /month/i });
+    expect(month.className).not.toMatch(/(^|\s)hidden(\s|$)/);
+    expect(within(group).getByRole('button', { name: /day/i }).className).toMatch(
+      /hidden sm:inline-flex/
+    );
+  });
+
+  it('hides the switcher on a phone already on month view', () => {
+    render(<AppointmentCalendar {...defaultProps} view="month" />);
+    expect(screen.getByRole('group', { name: 'Calendar view' }).className).toMatch(
+      /hidden sm:flex/
+    );
   });
 });

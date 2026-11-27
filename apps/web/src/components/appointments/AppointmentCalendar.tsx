@@ -144,9 +144,10 @@ export function AppointmentCalendar({
           </button>
         </div>
 
-        {/* View Switcher — week/day hidden on mobile */}
+        {/* View Switcher — week/day hidden on mobile. A phone left on week or day view still gets
+            Month to go back (codex 27/11), and the current view stays shown. */}
         <fieldset
-          className="hidden sm:flex rounded-md border border-slate-200 dark:border-slate-600 overflow-hidden m-0 p-0"
+          className={`${view === 'month' ? 'hidden sm:flex' : 'flex'} rounded-md border border-slate-200 dark:border-slate-600 overflow-hidden m-0 p-0`}
           aria-label="Calendar view"
         >
           <legend className="sr-only">Calendar view</legend>
@@ -156,6 +157,8 @@ export function AppointmentCalendar({
               type="button"
               onClick={() => onViewChange(v)}
               className={`min-h-11 px-3 text-sm capitalize transition-colors ${
+                v === 'month' || v === view ? '' : 'hidden sm:inline-flex sm:items-center'
+              } ${
                 view === v
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'

@@ -113,12 +113,19 @@ function toTaskRange(
       .toZonedDateTime(tz);
     return { start, end: start.add({ minutes: TASK_DEFAULT_DURATION_MIN }) };
   }
+  // A timed task sits on its LOCAL day, the same clock its hours are judged by (codex 27/11):
+  // the UTC date can be the day before or after for a late or early task.
+  const localDate = Temporal.PlainDate.from({
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
+  });
   const startMinutes = date.getHours() * 60 + date.getMinutes();
   const lastStart = CALENDAR_DAY_END_HOUR * 60 - TASK_DEFAULT_DURATION_MIN;
   if (startMinutes < CALENDAR_DAY_START_HOUR * 60 || startMinutes > lastStart) {
-    return { start: plainDate, end: plainDate };
+    return { start: localDate, end: localDate };
   }
-  const start = plainDate
+  const start = localDate
     .toPlainDateTime({ hour: date.getHours(), minute: date.getMinutes() })
     .toZonedDateTime(tz);
   return { start, end: start.add({ minutes: TASK_DEFAULT_DURATION_MIN }) };
