@@ -133,7 +133,7 @@ Source (19): `packages/domain/src/crm/contact/Contact.ts`; `packages/domain/src/
 `apps/web/src/components/contacts/ContactList.tsx`; `apps/web/src/app/contacts/[id]/edit/page.tsx`.
 
 Tests (8): `packages/validators/__tests__/enum-consistency.spec.ts`; `packages/validators/__tests__/contact.test.ts`;
-`packages/domain/src/crm/contact/__tests__/Contact.additional.test.ts` (additive key-format cases only; the length-6
+`packages/domain/src/crm/contact/__tests__/Contact.test.ts` (additive key-format cases only; the length-6
 assertion at :56-64 is untouched); `apps/api/src/__tests__/app-router.smoke.test.ts`;
 `apps/api/src/modules/contact/__tests__/contact-automation.test.ts`;
 `apps/web/src/app/contacts/(list)/new/__tests__/page.test.tsx`; `apps/web/src/components/contacts/__tests__/ContactForm.test.tsx`;
@@ -192,7 +192,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `packages/domain/src/crm/contact/__tests__/contact-type-defaults.test.ts`
 
 **Files to Modify:**
-- `packages/domain/src/crm/contact/__tests__/Contact.additional.test.ts` (key-format invariant cases only)
+- `packages/domain/src/crm/contact/__tests__/Contact.test.ts` (key-format invariant cases only; Contact.additional.test.ts was merged into this file by #1296, the PG-205 cases are in describe "contactType key invariant (PG-205)")
 
 - [x] precedence: explicit status/department beat type defaults; type beats none.
 - [x] owner: CREATOR → creator; ACCOUNT_OWNER with valid owner → owner; no account / no owner / invalid owner →
@@ -206,7 +206,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
       false for USER/undefined.
 - [x] resolver output keys == allowlist (no tenantId/email/dataClassification).
 - [x] `Contact` rejects a malformed `contactType`; still accepts all six seed keys.
-- Validation: `pnpm --filter ./packages/domain exec vitest run src/crm/contact/__tests__/contact-type-defaults.test.ts src/crm/contact/__tests__/Contact.additional.test.ts` → RED log `01-domain.red.txt`. *(RED run 2026-10-17T16:39:21Z: 31 failed / 66 passed, all assertion failures — log saved)*
+- Validation: `pnpm --filter ./packages/domain exec vitest run src/crm/contact/__tests__/contact-type-defaults.test.ts src/crm/contact/__tests__/Contact.test.ts` → RED log `01-domain.red.txt`. *(RED run 2026-10-17T16:39:21Z: 31 failed / 66 passed, all assertion failures — log saved)*
 
 #### Step 2: Validator tests (AC-CTY-004, AC-CTY-005, AC-CTY-009; DoD 7; CA-6)
 
@@ -665,7 +665,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 
 | Scope | Purpose | Command |
 |---|---|---|
-| Domain new + touched | resolver, constants, entity invariant | `pnpm --filter ./packages/domain exec vitest run src/crm/contact/__tests__/contact-type-defaults.test.ts src/crm/contact/__tests__/Contact.additional.test.ts` |
+| Domain new + touched | resolver, constants, entity invariant | `pnpm --filter ./packages/domain exec vitest run src/crm/contact/__tests__/contact-type-defaults.test.ts src/crm/contact/__tests__/Contact.test.ts` |
 | Domain full | regression | `pnpm --filter ./packages/domain test` |
 | Validators new + touched | schemas, enum consistency, contact keys | `pnpm --filter ./packages/validators exec vitest run src/__tests__/contact-types.test.ts __tests__/enum-consistency.spec.ts __tests__/contact.test.ts` |
 | Validators full | regression | `pnpm --filter ./packages/validators test` |

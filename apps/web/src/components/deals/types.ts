@@ -8,6 +8,7 @@
 import { type OpportunityStage } from '@intelliflow/domain';
 import type { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@intelliflow/api-client';
+import { formatGBPCompact } from '@/lib/format/gbp-compact';
 
 // ─── Inferred API Boundary Types (F-19) ──────────────────────────────────────
 // Typed against the real tRPC output instead of Record<string, unknown> casts.
@@ -59,7 +60,7 @@ export interface DealFiltersValue {
 
 // ─── Utility Functions ───────────────────────────────────────────────────────
 
-/** Format currency with full value (e.g., $125,000) */
+/** Format currency with full value (e.g., £125,000) */
 export function formatCurrencyFull(value: number): string {
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
@@ -69,12 +70,17 @@ export function formatCurrencyFull(value: number): string {
   }).format(value);
 }
 
-/** Format currency in compact form (e.g., $125K, $1.2M) */
-export function formatCurrencyCompact(value: number): string {
-  if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-  if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
-  return `$${value}`;
+/**
+ * A deal's value for cards and lists: "No value set" while it is unknown (null, undefined or 0),
+ * so a deal converted from a lead without a value does not read as a £0 deal (register #48).
+ */
+export const NO_DEAL_VALUE_LABEL = 'No value set';
+export function formatDealValue(value: number | null | undefined): string {
+  return value ? formatCurrencyFull(value) : NO_DEAL_VALUE_LABEL;
 }
+
+/** Compact pounds (e.g., £125k, £1.2M): the shared GBP formatter. */
+export const formatCurrencyCompact = formatGBPCompact;
 
 // ─── Stage Display Config ────────────────────────────────────────────────────
 // Uses OPPORTUNITY_STAGES from domain as single source of truth (AC-32).

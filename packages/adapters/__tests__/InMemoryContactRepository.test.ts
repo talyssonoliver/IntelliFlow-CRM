@@ -214,6 +214,61 @@ describe('InMemoryContactRepository', () => {
     });
   });
 
+  describe('linkToAccountIfFree()', () => {
+    const make = (accountId?: string) =>
+      Contact.create({
+        email: 'link@example.com',
+        firstName: 'Link',
+        lastName: 'Test',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-1',
+        ...(accountId ? { accountId } : {}),
+      }).value;
+
+    const link = (
+      contactId: string,
+      over: Partial<{ tenantId: string; accountId: string; expectedEmail: string }> = {}
+    ) => ({
+      contactId,
+      tenantId: 'tenant-1',
+      accountId: 'acc-1',
+      expectedEmail: 'link@example.com',
+      ...over,
+    });
+
+    it('attaches a contact with no account, adding no event of its own', async () => {
+      const c = make();
+      await repository.save(c);
+      c.clearDomainEvents();
+      expect(await repository.linkToAccountIfFree(link(c.id.value))).toBe('attached');
+      expect((await repository.findById(c.id))?.accountId).toBe('acc-1');
+      expect(c.getDomainEvents()).toHaveLength(0);
+    });
+
+    it('reports a contact already on the account as linked', async () => {
+      const c = make('acc-1');
+      await repository.save(c);
+      expect(await repository.linkToAccountIfFree(link(c.id.value))).toBe('linked');
+    });
+
+    it('reports changed for another account, another tenant, another email, or a missing contact', async () => {
+      const c = make('acc-2');
+      await repository.save(c);
+      expect(await repository.linkToAccountIfFree(link(c.id.value))).toBe('changed');
+      expect(
+        await repository.linkToAccountIfFree(
+          link(c.id.value, { tenantId: 'tenant-2', accountId: 'acc-2' })
+        )
+      ).toBe('changed');
+      expect(
+        await repository.linkToAccountIfFree(
+          link(c.id.value, { accountId: 'acc-2', expectedEmail: 'other@example.com' })
+        )
+      ).toBe('changed');
+      expect(await repository.linkToAccountIfFree(link('missing'))).toBe('changed');
+    });
+  });
+
   describe('findByOwnerId()', () => {
     it('should return all contacts for an owner', async () => {
       const contact2Result = Contact.create({

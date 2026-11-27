@@ -1,64 +1,28 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from '@intelliflow/ui';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
 import { taskStatusOptions, taskPriorityOptions } from '@/lib/shared/filter-utils';
 import { api } from '@/lib/api';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { TaskList, type TaskListItem } from '@/components/tasks/TaskList';
+import { followUpTaskRows } from '@/components/tasks/follow-up-rows';
+import { FOLLOW_UP_SCAN_LIMIT } from '@/lib/leads/follow-ups-due';
+import { useFollowUpsDue } from '@/components/dashboard/widgets/useFollowUpsDue';
+import {
+  getEditingTaskDueDate,
+  getEntityName,
+  resolveEntityIds,
+} from '@/lib/tasks/task-page-helpers';
 
-function formatFullName(first: string | null | undefined, last: string | null | undefined): string {
-  return `${first ?? ''} ${last ?? ''}`.trim();
-}
-
-function getEntityName(task: TaskListItem): string {
-  if (task.lead) return formatFullName(task.lead.firstName, task.lead.lastName);
-  if (task.contact) return formatFullName(task.contact.firstName, task.contact.lastName);
-  if (task.opportunity) return task.opportunity.name;
-  return '';
-}
-
-function resolveEntityIds(formData: TaskFormData): {
-  leadId?: string;
-  contactId?: string;
-  opportunityId?: string;
-} {
-  const id = formData.entityId || undefined;
-  return {
-    leadId: formData.entityType === 'lead' ? id : undefined,
-    contactId: formData.entityType === 'contact' ? id : undefined,
-    opportunityId: formData.entityType === 'opportunity' ? id : undefined,
-  };
-}
-
-function getEditingTaskDueDate(task: TaskListItem | null): string {
-  if (!task?.dueDate) return '';
-  if (typeof task.dueDate === 'string') return task.dueDate.split('T')[0];
-  return task.dueDate.toISOString().split('T')[0];
-}
 import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
 import { ReminderConfig } from '@/components/tasks/ReminderConfig';
 import { revalidateTasksCache } from '@/lib/tasks/revalidate-tasks-cache';
-
-// Custom hook for debounced value
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },
@@ -346,6 +310,23 @@ export default function TasksPage() {
     [router]
   );
 
+  // Follow-ups due are derived from leads: shown on the unfiltered first page only.
+  const hasActiveFilters = Boolean(
+    searchQuery ||
+    statusFilter ||
+    priorityFilter ||
+    searchParams.get('status') ||
+    searchParams.get('priority')
+  );
+  const showFollowUps = isAuthenticated && !authLoading && !hasActiveFilters && page === 1;
+  // The follow-ups due, from the same shared query the dashboard card reads. Owner 21/11: they
+  // are rows of this same task table (after the stored tasks, newest due first), not a second
+  // list above it. Unfiltered first page only, as before.
+  const followUpsDue = useFollowUpsDue(FOLLOW_UP_SCAN_LIMIT);
+  const tableRows = useMemo(
+    () => (showFollowUps ? [...tasks, ...followUpTaskRows(followUpsDue.leads)] : tasks),
+    [showFollowUps, tasks, followUpsDue.leads]
+  );
   const totalItems = data?.total ?? tasks.length;
   const taskCountSuffix = totalItems > 0 ? ` (${totalItems} total)` : '';
 
@@ -436,8 +417,8 @@ export default function TasksPage() {
       {/* Content */}
       {!error && (
         <TaskList
-          tasks={tasks}
-          isLoading={isLoading}
+          tasks={tableRows}
+          isLoading={isLoading || (showFollowUps && followUpsDue.isLoading)}
           onRowClick={handleRowClick}
           onComplete={handleComplete}
           onEdit={handleEdit}
@@ -447,7 +428,18 @@ export default function TasksPage() {
           onBulkDelete={handleBulkDelete}
           onBulkArchive={handleBulkArchive}
           onCreate={() => setShowCreateForm(true)}
+          filtered={hasActiveFilters}
         />
+      )}
+
+      {/* The table lists the first follow-ups due; the rest are on the Leads view. */}
+      {!error && showFollowUps && followUpsDue.total > followUpsDue.leads.length && (
+        <p className="text-sm text-muted-foreground">
+          Showing {followUpsDue.leads.length} of {followUpsDue.total} follow-ups due.{' '}
+          <Link href="/leads?segment=followup" className="text-ds-primary hover:underline">
+            See all leads needing a <span className="whitespace-nowrap">follow-up</span>
+          </Link>
+        </p>
       )}
 
       {/* Pagination */}

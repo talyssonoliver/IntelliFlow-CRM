@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { buildReportOnlyCsp, originOf, sentryReportUri } from '../csp';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { buildReportOnlyCsp, cspEnvFromProcess, originOf, sentryReportUri } from '../csp';
 
 // A DSN shape on a reserved host, assembled at runtime: not a real key or project.
 const INGEST_HOST = ['o1', 'ingest', 'example', 'invalid'].join('.');
@@ -119,5 +119,27 @@ describe('buildReportOnlyCsp', () => {
     ).split(' ');
 
     expect(new Set(connect).size).toBe(connect.length);
+  });
+});
+
+describe('cspEnvFromProcess', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('reads the public API, socket, Supabase and Sentry variables', () => {
+    vi.stubEnv('NEXT_PUBLIC_API_URL', 'https://api.example.invalid');
+    vi.stubEnv('NEXT_PUBLIC_WS_URL', 'wss://ws.example.invalid');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://db.example.invalid');
+    vi.stubEnv('NEXT_PUBLIC_SENTRY_DSN', FAKE_DSN);
+    vi.stubEnv('NEXT_PUBLIC_SENTRY_ENVIRONMENT', 'preview');
+
+    expect(cspEnvFromProcess()).toEqual({
+      apiUrl: 'https://api.example.invalid',
+      wsUrl: 'wss://ws.example.invalid',
+      supabaseUrl: 'https://db.example.invalid',
+      sentryDsn: FAKE_DSN,
+      sentryEnvironment: 'preview',
+    });
   });
 });

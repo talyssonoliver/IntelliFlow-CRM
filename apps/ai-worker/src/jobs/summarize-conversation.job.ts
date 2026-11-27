@@ -18,6 +18,7 @@ import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import { context as otelContext, propagation } from '@opentelemetry/api';
 import { createLLMForTenant } from '../lib/llm-factory.js';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 
 const logger = pino({
   name: 'summarize-conversation-job',
@@ -337,6 +338,8 @@ export async function processSummarizeJob(
       ),
     ]);
   } catch (error) {
+    // The plan's AI actions are used up: fail with that reason, never write a non-AI digest.
+    if (isAiActionsExhausted(error)) throw error;
     logger.warn(
       {
         jobId: job.id,

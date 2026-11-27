@@ -427,3 +427,17 @@ describe('PinnedItemsSheet (supplementary)', () => {
     });
   });
 });
+
+// Business-type gating (owner ruling 23/11/2026): this suite is about something else, so every module is on.
+vi.mock('@/hooks/useEnabledModules', () => ({
+  useEnabledModules: () => ({
+    enabledModules: ['CORE_CRM', 'LEGAL', 'SUPPORT', 'AI_INTELLIGENCE', 'ANALYTICS', 'COMMERCE'],
+    isModuleEnabled: () => true,
+    enabledRoutes: [],
+    plan: 'ENTERPRISE',
+    businessType: 'AGENCY',
+    needsBusinessType: false,
+    isLoading: false,
+    isError: false,
+  }),
+}));

@@ -344,13 +344,13 @@ HARD-WON GOTCHAS (these cost real days — encoded so you don't repeat them):
    per-package test command runs the include, so an out-of-include test never executes, and coverage
    never sees it). Colocate as <feature>/__tests__/<name>.test.tsx next to the code. (PG-058's draft
    plan placed a11y tests outside src/; the plan-reviewer caught it — author it right the first time.)
-15. GATE-LOCK — the full pre-ship/coverage gate is SERIALIZED across the fleet. Running two coverage
-   runs at once on this single host COLLIDES on artifacts/coverage-parts (ENOTEMPTY) and OOMs (web
-   Istanbul write SIGKILL), and triples wall-clock (coverage 43min contended vs 18min solo). So: do
-   all the parallel-safe work freely (spec, plan, exec-build, scoped tests, the CHEAP gates, codex
-   standalone), but BEFORE you run the ONE full \`node scripts/pre-ship.mjs\` or \`git push\` (the
-   pre-push hook runs the full gate), tell the orchestrator "ready for the gate-lock" and WAIT for it.
-   Only one executor holds the lock at a time.
+15. HEAVY GATES QUEUE THEMSELVES — there is no manual gate-lock to request. Two coverage runs at once on
+   this single host collide on artifacts/coverage-parts (ENOTEMPTY) and OOM, so \`node scripts/pre-ship.mjs\`
+   re-runs itself under the machine-wide slot queue (scripts/lib/test-slot.mjs) and waits for a free slot. Push
+   (the pre-push hook runs the full gate) without asking the orchestrator; if you launch a heavy command by hand,
+   run it through \`node C:/Users/talys/ops/test-slots/with-slot.mjs --label <name> -- <cmd>\`, and IntelliFlow
+   pushes add \`--exclusive\` so only one IntelliFlow pre-ship runs at a time (owner ruling 2026-11-12, CLAUDE.md).
+   Do the parallel-safe work (spec, plan, exec-build, scoped tests, cheap gates, codex standalone) freely.
 16. COMMIT ALL EVIDENCE BEFORE THE ONE FULL PRE-SHIP. Stage + commit your code AND the 4 .specify
    artifacts (spec, plan, attestation, task-tracking) AND the issues-log as your FINAL commit, THEN run
    the single full pre-ship at that SHA, THEN push immediately (pre-push reuses the cache). If you
@@ -400,8 +400,8 @@ OPEN THE PR AND REPORT — YOU DO NOT MERGE (this is where the PR # is born — 
   snapshot). When the orchestrator says "re-sync": \`git merge --no-edit origin/main\` (keep ALL CSV
   rows + re-run split-sprint-plan.ts), then if
   pnpm-lock.yaml or packages/** changed re-run \`pnpm install\` + \`pnpm exec turbo build
-  --filter='./packages/*'\` and clear apps/web/.next/types, then take the gate-lock, re-run the full
-  pre-ship SOLO, and re-push. Renamed exports break semantically with NO textual conflict — a clean
+  --filter='./packages/*'\` and clear apps/web/.next/types, then re-run the full
+  pre-ship (it queues for a slot itself), and re-push. Renamed exports break semantically with NO textual conflict — a clean
   cherry-merge is not enough.
 - The CSV flip is the ORCHESTRATOR's job, NOT yours. You NEVER commit to local main or touch the
   control plane.

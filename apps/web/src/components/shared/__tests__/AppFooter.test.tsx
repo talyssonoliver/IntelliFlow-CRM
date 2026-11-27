@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-let pathname = '/dashboard';
+let pathname = '/';
 let auth = { isAuthenticated: true, isLoading: false };
 
 vi.mock('next/navigation', () => ({
@@ -20,11 +20,11 @@ vi.mock('@/hooks/useEnabledModules', () => ({
   useEnabledModules: () => ({ enabledRoutes: [], isLoading: false, isError: false }),
 }));
 
-import { AppFooter, APP_FOOTER_LINKS } from '../AppFooter';
+import { AppFooter, APP_FOOTER_LINKS, showsAppFooter } from '../AppFooter';
 
 describe('AppFooter', () => {
   beforeEach(() => {
-    pathname = '/dashboard';
+    pathname = '/';
     auth = { isAuthenticated: true, isLoading: false };
   });
 
@@ -49,6 +49,30 @@ describe('AppFooter', () => {
     pathname = '/privacy';
     render(<AppFooter />);
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
+  });
+
+  it.each([
+    '/dashboard',
+    '/leads',
+    '/leads/abc',
+    '/deals',
+    '/tasks',
+    '/email',
+    '/settings/profile',
+  ])('renders nothing on the working page %s (owner 21/11: only the home shows it)', (route) => {
+    pathname = route;
+    const { container } = render(<AppFooter />);
+    expect(container.querySelector('footer')).toBeNull();
+  });
+
+  it('decides by the path: the signed-in home and the site pages, nothing else', () => {
+    expect(showsAppFooter('/')).toBe(true);
+    expect(showsAppFooter('/dashboard')).toBe(false);
+    expect(showsAppFooter('/terms')).toBe(true);
+    expect(showsAppFooter('/blog/some-post')).toBe(true);
+    expect(showsAppFooter('/dashboard/customize')).toBe(false);
+    expect(showsAppFooter('/termsx')).toBe(false);
+    expect(showsAppFooter(null)).toBe(false);
   });
 
   it.each(['/login', '/logout', '/mfa/verify', '/book/abc', '/dsar/request'])(

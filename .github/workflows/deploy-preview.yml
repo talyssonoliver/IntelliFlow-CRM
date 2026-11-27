@@ -9,6 +9,13 @@ name: Deploy Preview
 #
 # NOTE: workflow_run only activates from the file on the DEFAULT branch (main),
 # so this gate takes effect for PRs opened AFTER it merges.
+#
+# Opt-in (2026-11-17, owner: "build only main"): a PR gets a Vercel preview
+# only when it carries the `needs-preview` label. Vercel's free plan allows 100
+# deployments a day, and a preview on every lane push used them up by mid-
+# afternoon, so production could not deploy. Without the label the job still
+# runs and succeeds, and logs that the deploy was skipped. To get a preview:
+# add the label, then push or re-run the PR's CI Pipeline run.
 
 on:
   workflow_run:
@@ -47,12 +54,57 @@ jobs:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
     steps:
+      - name: Preview wanted? (needs-preview label)
+        id: optin
+        uses: actions/github-script@v9
+        env:
+          PREVIEW_LABEL: needs-preview
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        with:
+          script: |
+            const { PREVIEW_LABEL, HEAD_BRANCH } = process.env;
+            // The PR is on the CI run for same-repo branches; otherwise find it by branch.
+            let number = context.payload.workflow_run?.pull_requests?.[0]?.number;
+            if (!number) {
+              const prs = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                head: `${context.repo.owner}:${HEAD_BRANCH}`,
+              });
+              number = prs.data[0]?.number;
+            }
+            let labels = [];
+            if (number) {
+              const pr = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: number,
+              });
+              labels = pr.data.labels.map((l) => l.name);
+            }
+            const wanted = labels.includes(PREVIEW_LABEL);
+            core.setOutput('deploy', wanted ? 'true' : 'false');
+            core.info(
+              `PR ${number ? '#' + number : '(none found)'}: ` +
+                (wanted ? `has "${PREVIEW_LABEL}", deploying a preview.` : `no "${PREVIEW_LABEL}" label.`)
+            );
+
+      - name: Preview deploy skipped (no needs-preview label)
+        if: steps.optin.outputs.deploy != 'true'
+        run: |
+          echo "Preview deploy skipped: this PR has no 'needs-preview' label."
+          echo "Vercel previews are opt-in to stay inside the free plan's 100 deployments a day."
+          echo "To get one, add the 'needs-preview' label, then push or re-run the CI Pipeline run."
+
       - uses: actions/checkout@v7
+        if: steps.optin.outputs.deploy == 'true'
         with:
           # Deploy exactly the commit CI validated, not the branch tip.
           ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Install Vercel CLI
+        if: steps.optin.outputs.deploy == 'true'
         run: npm add -g vercel@latest
 
       # `vercel build` runs the project install command (pnpm install) in this
@@ -61,23 +113,28 @@ jobs:
       # which all of CI passes with) rather than corepack, which doesn't put
       # pnpm on PATH reliably here -> "pnpm: not found" (exit 127).
       - name: Setup pnpm
+        if: steps.optin.outputs.deploy == 'true'
         uses: pnpm/action-setup@v6
         with:
           version: 10.33.0
 
       - name: Setup Node.js
+        if: steps.optin.outputs.deploy == 'true'
         uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
 
       - name: Pull Vercel environment (preview)
+        if: steps.optin.outputs.deploy == 'true'
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build with Vercel
+        if: steps.optin.outputs.deploy == 'true'
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel Preview
         id: deploy
+        if: steps.optin.outputs.deploy == 'true'
         # --archive=tgz: one tarball instead of thousands of files (Hobby plan
         # caps file uploads/day). Mirrors the prior pr-checks.yml deploy.
         run: |
@@ -86,6 +143,7 @@ jobs:
           echo "Preview URL: $DEPLOY_URL"
 
       - name: Comment preview URL on the PR
+        if: steps.optin.outputs.deploy == 'true'
         uses: actions/github-script@v9
         env:
           PREVIEW_URL: ${{ steps.deploy.outputs.preview-url }}

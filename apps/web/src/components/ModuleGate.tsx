@@ -16,17 +16,71 @@
  * the paywall must show instead.
  */
 
-import type { ModuleId } from '@intelliflow/domain';
+import Link from 'next/link';
+import {
+  MODULE_METADATA,
+  MODULE_NOT_IN_WORKSPACE_MESSAGE,
+  getModulesForBusinessType,
+  type ModuleId,
+} from '@intelliflow/domain';
 import { useEnabledModules } from '@/hooks/useEnabledModules';
 import { ModulePaywall } from './ModulePaywall';
 
 interface ModuleGateProps {
   moduleId: ModuleId;
+  /** Name of the feature the user tried to open ("Cases"); a module can cover several features. */
+  featureLabel?: string;
   children: React.ReactNode;
 }
 
-export function ModuleGate({ moduleId, children }: Readonly<ModuleGateProps>) {
-  const { isModuleEnabled, isLoading, isError } = useEnabledModules();
+/**
+ * Shown when the workspace's business type does not include the module (Cases for a handyman).
+ * An upgrade would not help here, so this is not the paywall: it says the tool is not part of the
+ * workspace and points to the setting that decides it. Nothing is deleted; the route still exists.
+ */
+function WorkspaceModuleNotice({
+  moduleId,
+  featureLabel,
+}: Readonly<{ moduleId: ModuleId; featureLabel?: string }>) {
+  const label = featureLabel ?? MODULE_METADATA[moduleId]?.label ?? moduleId;
+  return (
+    <div
+      className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center"
+      data-testid="workspace-module-notice"
+    >
+      <div className="max-w-md space-y-4">
+        <span
+          className="material-symbols-outlined text-4xl text-slate-400 dark:text-slate-500"
+          aria-hidden="true"
+        >
+          lock
+        </span>
+        <h1 className="text-2xl font-bold tracking-tight">{label}</h1>
+        <p className="text-sm text-muted-foreground">
+          {MODULE_NOT_IN_WORKSPACE_MESSAGE}. This tool is for a different kind of business. An admin
+          can check the business type in workspace settings.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+          <Link
+            href="/settings/workspace"
+            className="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Workspace settings
+          </Link>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center justify-center rounded-lg border border-border px-6 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ModuleGate({ moduleId, featureLabel, children }: Readonly<ModuleGateProps>) {
+  const { isModuleEnabled, isLoading, isError, businessType } = useEnabledModules();
 
   // While the access query is in-flight, show a loading spinner.
   // This avoids a flash-of-paywall for users who do have access.
@@ -36,6 +90,17 @@ export function ModuleGate({ moduleId, children }: Readonly<ModuleGateProps>) {
         <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
       </div>
     );
+  }
+
+  // Not enabled because the business type does not include it (a null type gates like OTHER):
+  // an upgrade would not help, so say it is not part of the workspace instead of selling a plan.
+  if (
+    !isError &&
+    !isModuleEnabled(moduleId) &&
+    businessType !== undefined &&
+    !getModulesForBusinessType(businessType).includes(moduleId)
+  ) {
+    return <WorkspaceModuleNotice moduleId={moduleId} featureLabel={featureLabel} />;
   }
 
   // Module not enabled for this tenant — show inline upgrade paywall.

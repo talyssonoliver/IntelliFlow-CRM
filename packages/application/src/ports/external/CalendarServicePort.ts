@@ -28,6 +28,8 @@ export interface ExternalCalendarEvent {
   htmlLink?: string;
   etag?: string; // For optimistic concurrency
   lastModified: Date;
+  /** MVP-013: Google's event visibility; a private or confidential event is not copied into the CRM. */
+  visibility?: 'default' | 'public' | 'private' | 'confidential';
 }
 
 export interface ExternalAttendee {
@@ -123,6 +125,16 @@ export class CalendarSyncError extends DomainError {
   readonly code = 'CALENDAR_SYNC_ERROR';
   constructor(provider: CalendarProvider, message: string) {
     super(`${provider} sync failed: ${message}`);
+  }
+}
+
+/**
+ * The provider no longer accepts the sync token (Google answers 410 Gone once it has expired): the
+ * caller starts a full sync again. Still a CalendarSyncError, with its code.
+ */
+export class CalendarSyncTokenExpiredError extends CalendarSyncError {
+  constructor(provider: CalendarProvider) {
+    super(provider, 'Sync token expired. Full sync required.');
   }
 }
 

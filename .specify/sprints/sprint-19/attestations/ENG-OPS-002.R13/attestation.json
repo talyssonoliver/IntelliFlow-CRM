@@ -39,6 +39,27 @@
       "passed": true,
       "timestamp": "2026-11-12T14:37:34Z",
       "stdout_hash": "9f51e914d097ff66ed1846eaf9fb9e8d406413b69f1f5f3b3ccd741119310260"
+    },
+    {
+      "name": "TypeScript typecheck, flaky-test-skip-gate",
+      "command": "pnpm exec tsc --noEmit --strict --skipLibCheck --target ES2022 --module ESNext --moduleResolution bundler --esModuleInterop --resolveJsonModule --types node tools/scripts/flaky-test-skip-gate.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:52:07Z"
+    },
+    {
+      "name": "Lint, flaky-test-skip-gate",
+      "command": "pnpm exec eslint tools/scripts/flaky-test-skip-gate.ts tools/scripts/__tests__/flaky-test-skip-gate.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:52:16Z"
+    },
+    {
+      "name": "Build, repo (turbo)",
+      "command": "pnpm build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:57:45Z"
     }
   ],
   "gate_results": [
@@ -89,7 +110,9 @@
       "evidence": "The gate is not part of `pnpm lint` (turbo lint); it runs beside it in the same CI job. The CSV's verified-by is corrected to `pnpm validate:flaky-test-gate` in the same change."
     }
   ],
-  "dependencies_verified": ["ENG-OPS-002"],
+  "dependencies_verified": [
+    "ENG-OPS-002"
+  ],
   "environment": {
     "os": "win32",
     "node_version": "v25.2.1",

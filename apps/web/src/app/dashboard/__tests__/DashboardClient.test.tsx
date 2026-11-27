@@ -2,12 +2,25 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Suspense } from 'react';
+import { act } from 'react';
 import DashboardClient from '../DashboardClient';
+import { setLiveConnected } from '@/lib/live-connection';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => ({ isLoading: false }),
   useAuth: () => ({ isAuthenticated: true, isLoading: false }),
+}));
+
+// ── Modules: Reports shows in the hero only when Analytics is on ─────────────
+const modules = { analytics: false, support: true };
+vi.mock('@/hooks/useEnabledModules', () => ({
+  useEnabledModules: () => ({
+    isModuleEnabled: (id: string) =>
+      id === 'CORE_CRM' ||
+      (id === 'ANALYTICS' && modules.analytics) ||
+      (id === 'SUPPORT' && modules.support),
+  }),
 }));
 
 // ── Widget registry — lightweight stubs so each widget renders instantly ──────
@@ -56,6 +69,19 @@ function renderDashboard(props: Parameters<typeof DashboardClient>[0] = {}) {
 describe('DashboardClient', () => {
   beforeEach(() => {
     localStorageMock.clear();
+    setLiveConnected(false);
+  });
+
+  it('says Live only while the live-update connection is open (MVP-004)', () => {
+    renderDashboard();
+    expect(screen.getByText('Key figures refresh every minute')).toBeInTheDocument();
+    expect(screen.queryByText(/^Live/)).not.toBeInTheDocument();
+
+    act(() => setLiveConnected(true));
+    expect(screen.getByText('Live · key figures refresh every minute')).toBeInTheDocument();
+
+    act(() => setLiveConnected(false));
+    expect(screen.getByText('Key figures refresh every minute')).toBeInTheDocument();
   });
 
   it('renders the page header', () => {
@@ -75,6 +101,62 @@ describe('DashboardClient', () => {
       'href',
       '/dashboard/new'
     );
+  });
+
+  it('shows the hero subtitle and leads with Add New (owner 21/11)', () => {
+    renderDashboard();
+
+    expect(screen.getByText('Your sales, deals and tasks at a glance.')).toBeInTheDocument();
+    const hrefs = screen
+      .getAllByRole('link')
+      .map((l) => l.getAttribute('href'))
+      .filter((h) => h !== '/');
+    expect(hrefs.slice(0, 3)).toEqual(['/dashboard/new', '/dashboard/customize', '/calendar']);
+  });
+
+  it('offers Reports only when the Analytics module is on, so no control leads nowhere', () => {
+    modules.analytics = false;
+    const { unmount } = renderDashboard();
+    expect(screen.queryByRole('link', { name: 'Reports' })).toBeNull();
+    unmount();
+
+    modules.analytics = true;
+    try {
+      renderDashboard();
+      expect(screen.getByRole('link', { name: 'Reports' })).toHaveAttribute('href', '/analytics');
+    } finally {
+      modules.analytics = false;
+    }
+  });
+
+  it('leaves the Open Tickets widget out when the workspace has no Support module', () => {
+    modules.support = false;
+    try {
+      renderDashboard();
+      expect(screen.queryByTestId('widget-open-tickets')).toBeNull();
+      expect(screen.getByTestId('widget-total-leads')).toBeInTheDocument();
+      expect(screen.getByTestId('widget-pipeline-summary')).toBeInTheDocument();
+    } finally {
+      modules.support = true;
+    }
+  });
+
+  it('also drops it from a saved layout, without losing the other widgets', () => {
+    localStorageMock.setItem(
+      'dashboard-layout',
+      JSON.stringify([
+        { id: 'a', type: 'total-leads', title: 'Total Leads', colSpan: 1, rowSpan: 1 },
+        { id: 'b', type: 'open-tickets', title: 'Open Tickets', colSpan: 1, rowSpan: 1 },
+      ])
+    );
+    modules.support = false;
+    try {
+      renderDashboard();
+      expect(screen.queryByTestId('widget-open-tickets')).toBeNull();
+      expect(screen.getByTestId('widget-total-leads')).toBeInTheDocument();
+    } finally {
+      modules.support = true;
+    }
   });
 
   it('renders all 8 default widgets', () => {

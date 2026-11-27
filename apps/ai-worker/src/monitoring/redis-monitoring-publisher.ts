@@ -65,10 +65,17 @@ const SNAPSHOT_KINDS: readonly SnapshotKind[] = [
   'roi',
 ];
 
-/** Matches the MonitoringFlushService cadence that feeds the source table. */
-export const DEFAULT_PUBLISH_INTERVAL_MS = 60_000;
+/**
+ * Every tick that reads rows is Supabase pooler egress. 5 min is plenty for a
+ * dashboard cache; set AI_MONITORING_REDIS_PUBLISH_INTERVAL_MS to change it.
+ */
+export const DEFAULT_PUBLISH_INTERVAL_MS = 300_000;
 /** R-016 control 3: TTL ≥ 6× the publish cadence. */
 const TTL_TO_INTERVAL_RATIO = 6;
+
+const PAYLOAD_EVENT_TYPES = ['drift', 'hallucination'];
+const SLIM_EVENT_TYPES = ['latency', 'roi_cost', 'roi_value'];
+const EVENTS_PER_TENANT_CAP = 10000;
 
 const SCHEMA_VERSION = 'v1';
 const KEY_PREFIX = 'ai-mon';
@@ -111,6 +118,12 @@ export class RedisMonitoringPublisher {
   private readonly disabled: boolean;
   private readonly lookbackMs: number;
   private timer: ReturnType<typeof setInterval> | null = null;
+  /** Cheap change marker (count|max recordedAt) of the last full publish. */
+  private lastMarker: string | null = null;
+  /** Epoch ms of the last write of the snapshots to Redis. */
+  private lastPublishAt = 0;
+  /** Serialized snapshots of the last full publish, re-sent to extend the TTL. */
+  private lastPayloads = new Map<string, string>();
 
   constructor(
     private readonly redis: RedisLike | null,
@@ -191,12 +204,21 @@ export class RedisMonitoringPublisher {
     }
 
     const since = new Date(Date.now() - this.lookbackMs);
+
+    // Cheap marker first (one aggregate, a few bytes back). If nothing was added
+    // or aged out of the window since the last publish, read no rows at all:
+    // do nothing while the Redis snapshots have more than half their TTL left,
+    // and past that re-send the cached payloads to extend it (Redis only).
+    const marker = await this.fetchMarker(since);
+    if (marker !== null && marker === this.lastMarker) {
+      const age = Date.now() - this.lastPublishAt;
+      if (age < (this.ttlSeconds * 1000) / 2) return { written: 0, skipped: 0 };
+      return this.writeAll(this.lastPayloads);
+    }
+
     const tenantIds = await this.fetchActiveTenants(since); // includes `null` if global drift events present
 
-    let written = 0;
-    let skipped = 0;
-    const redis = this.redis;
-
+    const payloads = new Map<string, string>();
     for (const tenantId of tenantIds) {
       const namespace = tenantId ?? GLOBAL_NAMESPACE;
       const ns_events = await this.fetchEventsForTenant(since, tenantId);
@@ -204,24 +226,75 @@ export class RedisMonitoringPublisher {
       // are tenant-scoped by definition (see AIMonitoringService.tenantFilter).
       const kindsForNs: readonly SnapshotKind[] =
         namespace === GLOBAL_NAMESPACE ? (['drift'] as const) : SNAPSHOT_KINDS;
-
       for (const kind of kindsForNs) {
-        const payload = this.buildSnapshot(kind, ns_events);
-        const key = redisKey(namespace, kind);
-        try {
-          await redis.set(key, JSON.stringify(payload), 'EX', this.ttlSeconds);
-          written += 1;
-        } catch (err) {
-          skipped += 1;
-          logger.warn(
-            { key, err: err instanceof Error ? err.message : err },
-            'redis.set failed — snapshot skipped'
-          );
-        }
+        payloads.set(
+          redisKey(namespace, kind),
+          JSON.stringify(this.buildSnapshot(kind, ns_events))
+        );
       }
     }
 
+    const result = await this.writeAll(payloads);
+    // Only remember the marker after a clean publish, so a failed write retries
+    // with a full read on the next tick.
+    if (result.skipped === 0 && marker !== null) {
+      this.lastMarker = marker;
+      this.lastPayloads = payloads;
+    } else {
+      this.lastMarker = null;
+    }
+    return result;
+  }
+
+  private async writeAll(
+    payloads: Map<string, string>
+  ): Promise<{ written: number; skipped: number }> {
+    const redis = this.redis;
+    let written = 0;
+    let skipped = 0;
+    if (!redis) return { written, skipped };
+    for (const [key, json] of payloads) {
+      try {
+        await redis.set(key, json, 'EX', this.ttlSeconds);
+        written += 1;
+      } catch (err) {
+        skipped += 1;
+        logger.warn(
+          { key, err: err instanceof Error ? err.message : err },
+          'redis.set failed — snapshot skipped'
+        );
+      }
+    }
+    if (skipped === 0) this.lastPublishAt = Date.now();
+    else this.lastMarker = null;
     return { written, skipped };
+  }
+
+  /**
+   * Row count and newest recordedAt inside the lookback window. Both change when
+   * an event arrives (max, count) or ages out (count). Returns null if the probe
+   * fails, which forces a normal full publish.
+   */
+  private async fetchMarker(since: Date): Promise<string | null> {
+    const db = this.prisma as unknown as {
+      aIMonitoringEvent: {
+        aggregate: (args: unknown) => Promise<{
+          _count: { _all: number };
+          _max: { recordedAt: Date | null };
+        }>;
+      };
+    };
+    try {
+      const r = await db.aIMonitoringEvent.aggregate({
+        where: { recordedAt: { gte: since } },
+        _count: { _all: true },
+        _max: { recordedAt: true },
+      });
+      return `${r._count._all}|${r._max.recordedAt ? new Date(r._max.recordedAt).getTime() : 0}`;
+    } catch (err) {
+      logger.warn({ err: err instanceof Error ? err.message : err }, 'marker probe failed');
+      return null;
+    }
   }
 
   /**
@@ -256,11 +329,37 @@ export class RedisMonitoringPublisher {
         findMany: (args: unknown) => Promise<AIMonitoringEventRow[]>;
       };
     };
-    return db.aIMonitoringEvent.findMany({
-      where: { recordedAt: { gte: since }, tenantId },
-      orderBy: { recordedAt: 'desc' },
-      take: 10000,
-    });
+    const base = { recordedAt: { gte: since }, tenantId };
+    const cols = {
+      tenantId: true,
+      eventType: true,
+      recordedAt: true,
+      value: true,
+      flagged: true,
+      severity: true,
+      metric: true,
+      model: true,
+    };
+    // Only drift and hallucination snapshots read `payload` (the heavy JSON
+    // column); the other kinds never do, so those rows are fetched without it.
+    // Event types no snapshot uses are not fetched at all.
+    const [withPayload, withoutPayload] = await Promise.all([
+      db.aIMonitoringEvent.findMany({
+        where: { ...base, eventType: { in: PAYLOAD_EVENT_TYPES } },
+        select: { ...cols, payload: true },
+        orderBy: { recordedAt: 'desc' },
+        take: EVENTS_PER_TENANT_CAP,
+      }),
+      db.aIMonitoringEvent.findMany({
+        where: { ...base, eventType: { in: SLIM_EVENT_TYPES } },
+        select: cols,
+        orderBy: { recordedAt: 'desc' },
+        take: EVENTS_PER_TENANT_CAP,
+      }),
+    ]);
+    return [...withPayload, ...withoutPayload.map((e) => ({ ...e, payload: null }))]
+      .sort((x, y) => y.recordedAt.getTime() - x.recordedAt.getTime())
+      .slice(0, EVENTS_PER_TENANT_CAP);
   }
 
   /**

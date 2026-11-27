@@ -622,7 +622,7 @@ Otherwise the firm completes them after reviewing what was withheld. `ERASURE`,
 `RECTIFICATION`, `RESTRICTION` and `OBJECTION` wait for an ADMIN on
 `/settings/privacy-requests`. A `RESTRICTION` applies from verification.
 
-### Erasure model (owner Q19: CRM core automatic, communications as a checklist)
+### Erasure model (owner Q19; communications automated by IFC-316)
 
 Erasure runs in one transaction, scoped to the tenant and the exact email. It
 first re-reads the request `FOR UPDATE` and runs only if it is still `VERIFIED`,
@@ -638,9 +638,21 @@ so a double click or two admins cannot run it twice. It anonymises in place:
 - **Derived AI data** (scores and lead, contact and entity insights) is deleted.
 - **Lead file rows** lose their name. The storage locator stays so the stored
   object can be found and deleted by hand.
-- **Not automated, shown as a counted checklist.** Email records, tickets,
-  chats, feedback, notifications, auto-response and reply drafts, calendar
-  events, experiment assignments and stored lead files.
+- **Communications (IFC-316)** in the same transaction
+  (`subject-communications.ts`). Email records: subject and body replaced, and
+  the person's address replaced in From, To, CC and BCC (other addresses kept,
+  in order). Tickets, their activity and next steps, chats and their messages,
+  feedback, notifications to or about the person and calendar events lose their
+  text and the person's name and address; staff names stay. Auto-response and
+  reply drafts, ticket AI insights and experiment assignments are deleted. Email
+  attachment rows lose their name and keep their storage locator; a ticket
+  attachment's inline content URL is cleared. Bounce reports naming the person's
+  address lose it (a stand-in address per row keeps the idempotency key); reply
+  drafts are matched by contact or lead.
+- **Left on a counted checklist.** Deals and tasks (Q23) and stored files: lead
+  files and email and chat attachments, whose objects are deleted from storage
+  by hand until a storage cleanup job exists. Legal holds: no hold register
+  exists yet, so the admin's no-hold confirmation is the check.
 - **Audit logs** keep counts and the admin id, never erased values. The audit
   row is awaited.
 
@@ -687,6 +699,30 @@ only under the locks above, after re-checking (`writeSubjectIfStillEligible` in
 lands while the model runs therefore wins. The lead and contact detail pages
 show a "Processing restricted" banner. Plan Addendum B lists every path.
 
+### Marketing email (IFC-315, Art 21(3))
+
+User email may carry a purpose: `SERVICE` or `MARKETING`, chosen in compose. An
+email that names neither is refused with `PURPOSE_REQUIRED` (nothing sent) when
+any recipient objected, and compose asks the sender whether it is a service
+email or marketing, so an objection never depends on the sender remembering to
+mark marketing. The inbox forward action has no way to ask, so it sends as
+`SERVICE`: forwarding an existing email is not marketing. `dispatchUserMail`
+(`apps/api/src/modules/email/mailbox-sender.ts`) is the only path that sends
+email to a lead or contact the user picks. For a MARKETING email it drops every
+recipient whose address has an active restriction with `blocksMarketing`, or is
+an erased placeholder, after the suppression list and before quota is reserved.
+It reads them with one query (`ProcessingRestrictionPort.marketingBlocked`). It
+sends to the rest, refuses with `ALL_OBJECTED` when nobody is left, records the
+dropped addresses on the email record and audits each withheld send with counts
+only. A failed read fails the send. Email the sender marked SERVICE is not
+checked: the objection covers marketing only. The record keeps the purpose, and
+the completion audit row records `marketingStopped` from the request itself.
+Booking emails, calendar invites, receipts and data request notices are service
+email by nature and are not marketing paths. No workflow, automation or campaign
+step sends email. Completing a marketing objection therefore no longer needs the
+admin to confirm a manual stop; a stop method is optional and records marketing
+stopped outside the CRM.
+
 ### Delivery
 
 The migration is Class A. It is applied through the gated
@@ -699,8 +735,6 @@ It takes `pg_try_advisory_xact_lock`, so one replica runs each tick.
 
 ### Out of scope (tracked)
 
-- Outreach and marketing suppression keyed on `blocksMarketing`: IFC-315. A
-  marketing objection only records the admin's manual confirmation.
 - Automated erasure of communications and stored files, a CSV export with
   Article 20(2) direct transfer, and Article 19 recipient notification: IFC-316,
   IFC-317 and IFC-318.

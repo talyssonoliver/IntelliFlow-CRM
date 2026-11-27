@@ -15,6 +15,7 @@ vi.mock('@/lib/trpc', () => ({
     },
   },
 }));
+vi.mock('../SendFromHint', () => ({ SendFromHint: () => null }));
 vi.mock('../SmtpMailboxForm', () => ({
   SmtpMailboxForm: (p: { scope: string }) => <div data-testid="smtp-form">form for {p.scope}</div>,
 }));
@@ -48,7 +49,7 @@ function renderCard(props: Partial<Parameters<typeof CompanyMailboxCard>[0]> = {
       <CompanyMailboxCard
         canEdit
         mailbox={null}
-        providersAvailable={{ GMAIL: true, MICROSOFT: true }}
+        providersAvailable={{ GMAIL: true, MICROSOFT: true, ZOHO: false }}
         allowFallback={false}
         onAllowFallbackChange={onAllowFallbackChange}
         companyMailboxAddress={null}

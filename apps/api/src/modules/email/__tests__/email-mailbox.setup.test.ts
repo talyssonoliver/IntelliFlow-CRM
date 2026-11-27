@@ -60,7 +60,7 @@ const ctxWith = (base: any) => ({
       smtp: { send: vi.fn(), verify: smtpVerify },
       imap: { read: vi.fn(), verify: imapVerify },
       oauth: vi.fn(() => null),
-      oauthConfigured: { GMAIL: false, MICROSOFT: false },
+      oauthConfigured: { GMAIL: false, MICROSOFT: false, ZOHO: false },
     },
   },
 });

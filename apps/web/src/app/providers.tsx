@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
 import { httpBatchLink, splitLink, createWSClient, wsLink } from '@trpc/client';
+import { setLiveConnected } from '@/lib/live-connection';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { AuthProvider } from '@/lib/auth';
@@ -10,7 +11,7 @@ import { RemindersProvider } from '@/lib/cases/reminders-context';
 import { AUTH_TOKEN_CHANGED_EVENT, clearTokenCookie } from '@/lib/shared/session-cleanup';
 import { getValidAccessToken } from '@/lib/auth/access-token';
 import { getBaseUrl, getWsUrl } from '@/lib/api-endpoints';
-import { isAuthError, MUTATION_RETRY, shouldRetryQuery } from '@/lib/query-retry';
+import { isAuthError, MUTATION_RETRY, queryRetryDelay, shouldRetryQuery } from '@/lib/query-retry';
 import { noRealtimeLink } from '@/lib/no-realtime-link';
 import {
   ACTIVE_TENANT_HEADER,
@@ -54,6 +55,7 @@ function closeWsClientConnection() {
 function disposeWsClient() {
   const client = wsClient;
   wsClient = null;
+  setLiveConnected(false);
 
   if (!client) return;
 
@@ -87,9 +89,11 @@ function getWsClient() {
         },
         onOpen: () => {
           console.log('[tRPC WS] Connected to WebSocket server');
+          setLiveConnected(true);
         },
         onClose: () => {
           console.log('[tRPC WS] Disconnected from WebSocket server');
+          setLiveConnected(false);
         },
       });
     }
@@ -167,6 +171,8 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
             gcTime: 10 * 60 * 1000, // React Query v5 uses gcTime (v4 used cacheTime)
             // Don't retry on auth errors - they won't succeed without re-authentication
             retry: shouldRetryQuery,
+            // A 429 waits for the server's Retry-After instead of failing the page.
+            retryDelay: queryRetryDelay,
           },
           mutations: {
             // Never auto-retried (not idempotent) — see lib/query-retry.ts

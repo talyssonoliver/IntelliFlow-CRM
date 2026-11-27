@@ -34,6 +34,7 @@ describe('OAuthReturnNotice', () => {
     ['error=denied', 'The sign-in was cancelled, so no mailbox was connected.'],
     ['error=expired', 'The sign-in took too long. Start again from Connect.'],
     ['error=failed', 'The mailbox could not be connected. Try again, or set it up with SMTP.'],
+    ['error=google-denied', 'its admin may need to trust Aurora first'],
   ])('reports %s as an alert', (query, message) => {
     renderWith(query);
     expect(screen.getByRole('alert')).toHaveTextContent(message);

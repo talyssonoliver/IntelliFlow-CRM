@@ -17,8 +17,20 @@ process.env.QUOTA_GUARD_ALLOW_MISSING_SERVICE = '1';
 import type { PrismaClient, Prisma as PrismaNamespace } from '@intelliflow/db';
 import { Prisma } from '@intelliflow/db';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
-import { NOT_RESTRICTED } from '@intelliflow/application';
+import type { RestrictionStatus } from '@intelliflow/application';
 import type { BaseContext } from '../context';
+
+/**
+ * Same value as NOT_RESTRICTED in @intelliflow/application. Importing it from there loaded
+ * the whole application bundle into every one of the ~360 api test files (about 130 s of
+ * setup time per full run, measured 2026-11-13); a type-only import costs nothing.
+ * setup-constants.test.ts fails if the two ever differ.
+ */
+export const NOT_RESTRICTED: RestrictionStatus = {
+  restricted: false,
+  blocksMarketing: false,
+  since: null,
+};
 
 // ============================================================================
 // Global mocks for tracingMiddleware dependencies
@@ -165,6 +177,13 @@ beforeEach(() => {
   // PG-203: nobody is restricted by a data request unless a test says so (the reset above
   // leaves the deep mock answering undefined, which the restriction checks treat as a failure).
   mockAdapters.processingRestrictionRepository.status.mockResolvedValue(NOT_RESTRICTED);
+  // Register #64: no personal mail is logged to a lead or contact the reader can see, unless a
+  // test says so (the visibility policy reads that list with a raw query).
+  (
+    prismaMock.$queryRaw as unknown as { mockResolvedValue: (v: unknown) => void }
+  ).mockResolvedValue([]);
+  // IFC-315: nobody objected to marketing unless a test says so.
+  mockAdapters.processingRestrictionRepository.marketingBlocked.mockResolvedValue(new Set());
 });
 
 /**
@@ -397,6 +416,8 @@ export function createTestContext(overrides?: Partial<BaseContext>): BaseContext
           isModuleEnabled: async () => true,
           getEnabledModules: async () => [],
           getTenantPlan: async () => 'ENTERPRISE',
+          getBusinessType: async () => 'OTHER',
+          setBusinessType: async () => [],
         }
       : undefined
   );
@@ -586,6 +607,7 @@ export const mockLead = {
   outreachSlugEventAt: null,
   scoringStatus: 'NONE' as const,
   scoredAt: null,
+  scoreConfidence: null,
   // Lead 360 fields
   location: null,
   website: null,
@@ -671,13 +693,13 @@ export const mockOpportunity = {
   contactId: TEST_UUIDS.contact1,
   ownerId: TEST_UUIDS.user1,
   sourceLeadId: null,
+  createdContactId: null,
   deliveryTier: null,
   tenantSlug: null,
   stripeCustomerId: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };
-
 export const mockTask = {
   id: TEST_UUIDS.task1,
   tenantId: TEST_UUIDS.tenant,

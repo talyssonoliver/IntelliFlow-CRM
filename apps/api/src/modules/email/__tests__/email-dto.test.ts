@@ -5,6 +5,9 @@ import {
   toMailboxDto,
   toSignatureDto,
   toSuppressionDto,
+  replySyncState,
+  calendarAccessState,
+  calendarSyncState,
 } from '../email-dto';
 import {
   NO_SMTP_ACCOUNT,
@@ -58,9 +61,23 @@ describe('toMailboxDto', () => {
       hasImapPassword: true,
       bounceReadingEnabled: true,
       accountAddress: null,
+      inboxSyncedAt: null,
+      historyImport: null,
+      replySync: null,
+      calendarAccess: null,
+      calendarSync: null,
+      calendarSyncedAt: null,
       updatedAt: updatedAt.toISOString(),
     });
     expect(JSON.stringify(dto)).not.toContain(secret);
+  });
+
+  it('carries when the Outlook inbox sync last finished (#1177)', () => {
+    const syncedAt = new Date('2026-11-15T10:30:00.000Z');
+
+    expect(toMailboxDto({ ...smtpRow, syncedAt }, { includeConnection: false }).inboxSyncedAt).toBe(
+      '2026-11-15T10:30:00.000Z'
+    );
   });
 
   it('hides host and username when connection details are not for this viewer', () => {
@@ -71,8 +88,8 @@ describe('toMailboxDto', () => {
     expect(dto.fromAddress).toBe('me@mail.example.invalid');
   });
 
-  it('marks an OAuth mailbox bounce-readable when it has a refresh token, never exposing it', () => {
-    const dto = toMailboxDto(
+  it('never marks a Gmail mailbox bounce-readable: it holds gmail.send only (owner decision 14/11)', () => {
+    const gmail = toMailboxDto(
       {
         ...smtpRow,
         kind: 'GMAIL',
@@ -81,6 +98,23 @@ describe('toMailboxDto', () => {
         imapHost: null,
         imapPassword: null,
         accountAddress: 'me@gmail.example',
+        refreshToken: secret,
+      },
+      { includeConnection: true }
+    );
+    expect(gmail.bounceReadingEnabled).toBe(false);
+  });
+
+  it('marks a Microsoft mailbox bounce-readable when it has a refresh token, never exposing it', () => {
+    const dto = toMailboxDto(
+      {
+        ...smtpRow,
+        kind: 'MICROSOFT',
+        ...NO_SMTP_ENDPOINT,
+        ...NO_SMTP_ACCOUNT,
+        imapHost: null,
+        imapPassword: null,
+        accountAddress: 'me@outlook.example',
         refreshToken: secret,
       },
       { includeConnection: true }
@@ -186,5 +220,162 @@ describe('signature and suppression DTOs', () => {
       source: 'DSN',
       createdAt: updatedAt.toISOString(),
     });
+  });
+});
+
+describe('replySyncState (MVP-001)', () => {
+  it('is ON when the kind has a reader and the read permission was granted', () => {
+    expect(replySyncState({ kind: 'MICROSOFT', grantedScopes: ['Mail.Send', 'Mail.Read'] })).toBe(
+      'ON'
+    );
+    expect(
+      replySyncState({
+        kind: 'ZOHO',
+        grantedScopes: ['ZohoMail.messages.READ', 'ZohoMail.folders.READ'],
+      })
+    ).toBe('ON');
+  });
+
+  it('asks for a reconnect when the connection predates the read permission', () => {
+    expect(
+      replySyncState({
+        kind: 'ZOHO',
+        grantedScopes: ['ZohoMail.messages.CREATE', 'ZohoMail.accounts.READ'],
+      })
+    ).toBe('NEEDS_RECONNECT');
+    expect(replySyncState({ kind: 'MICROSOFT', grantedScopes: [] })).toBe('NEEDS_RECONNECT');
+  });
+
+  it('is null for kinds that do not sync', () => {
+    expect(replySyncState({ kind: 'SMTP', grantedScopes: [] })).toBeNull();
+  });
+
+  it('a Gmail mailbox is ON with read-only, else waits for its Workspace admin (MVP-011)', () => {
+    const send = 'https://www.googleapis.com/auth/gmail.send';
+    const read = 'https://www.googleapis.com/auth/gmail.readonly';
+    expect(replySyncState({ kind: 'GMAIL', grantedScopes: [send, read] })).toBe('ON');
+    // Google granted sending only: reconnecting alone does not help, the admin must trust Aurora.
+    expect(replySyncState({ kind: 'GMAIL', grantedScopes: [send] })).toBe('NEEDS_ADMIN_TRUST');
+    expect(replySyncState({ kind: 'GMAIL', grantedScopes: [] })).toBe('NEEDS_ADMIN_TRUST');
+  });
+});
+
+describe('calendarAccessState (MVP-013)', () => {
+  const send = 'https://www.googleapis.com/auth/gmail.send';
+  const events = 'https://www.googleapis.com/auth/calendar.events';
+
+  it('is GRANTED for a user Google mailbox that was given calendar events', () => {
+    expect(
+      calendarAccessState({ kind: 'GMAIL', scope: 'USER', grantedScopes: [send, events] })
+    ).toBe('GRANTED');
+  });
+
+  it('accepts the wider calendar scope too, however the provider spells the URI', () => {
+    const wide = 'https://www.googleapis.com/auth/calendar/';
+    expect(calendarAccessState({ kind: 'GMAIL', scope: 'USER', grantedScopes: [wide] })).toBe(
+      'GRANTED'
+    );
+    expect(
+      calendarAccessState({ kind: 'GMAIL', scope: 'USER', grantedScopes: [events.toUpperCase()] })
+    ).toBe('GRANTED');
+  });
+
+  it('is NOT_GRANTED when the user unticked it, connected before it was asked, or nothing is known', () => {
+    const read = 'https://www.googleapis.com/auth/gmail.readonly';
+    expect(calendarAccessState({ kind: 'GMAIL', scope: 'USER', grantedScopes: [send, read] })).toBe(
+      'NOT_GRANTED'
+    );
+    expect(calendarAccessState({ kind: 'GMAIL', scope: 'USER', grantedScopes: [] })).toBe(
+      'NOT_GRANTED'
+    );
+    expect(calendarAccessState({ kind: 'GMAIL', scope: 'USER' })).toBe('NOT_GRANTED');
+  });
+
+  it('is not confused by a scope that only mentions calendar', () => {
+    const lookalike = 'https://www.googleapis.com/auth/calendar.readonly';
+    expect(calendarAccessState({ kind: 'GMAIL', scope: 'USER', grantedScopes: [lookalike] })).toBe(
+      'NOT_GRANTED'
+    );
+  });
+
+  it('is null where there is no personal Google calendar', () => {
+    expect(
+      calendarAccessState({ kind: 'GMAIL', scope: 'TENANT', grantedScopes: [events] })
+    ).toBeNull();
+    expect(
+      calendarAccessState({ kind: 'MICROSOFT', scope: 'USER', grantedScopes: [events] })
+    ).toBeNull();
+    expect(calendarAccessState({ kind: 'SMTP', scope: 'USER', grantedScopes: [] })).toBeNull();
+  });
+
+  it('reaches the mailbox DTO', () => {
+    const row = {
+      ...smtpRow,
+      kind: 'GMAIL',
+      refreshToken: 'r'.repeat(30),
+      grantedScopes: [send, events],
+    };
+    expect(toMailboxDto(row, { includeConnection: true }).calendarAccess).toBe('GRANTED');
+    expect(
+      toMailboxDto({ ...row, grantedScopes: [send] }, { includeConnection: true }).calendarAccess
+    ).toBe('NOT_GRANTED');
+  });
+});
+
+describe('calendarSyncState (MVP-013)', () => {
+  const granted = ['https://www.googleapis.com/auth/calendar.events'];
+
+  it('is ON for a Google mailbox that has the permission, until Google stops the sync', () => {
+    const row = { kind: 'GMAIL', scope: 'USER', grantedScopes: granted };
+    expect(calendarSyncState({ ...row, calendarStatus: 'ACTIVE' })).toBe('ON');
+    expect(calendarSyncState({ ...row, calendarStatus: null })).toBe('ON');
+    expect(calendarSyncState({ ...row, calendarStatus: 'NEEDS_RECONNECT' })).toBe(
+      'NEEDS_RECONNECT'
+    );
+  });
+
+  it('is null when there is no calendar to sync', () => {
+    expect(
+      calendarSyncState({
+        kind: 'GMAIL',
+        scope: 'USER',
+        grantedScopes: [],
+        calendarStatus: 'ACTIVE',
+      })
+    ).toBeNull();
+    expect(
+      calendarSyncState({ kind: 'GMAIL', scope: 'TENANT', grantedScopes: granted })
+    ).toBeNull();
+    expect(
+      calendarSyncState({ kind: 'MICROSOFT', scope: 'USER', grantedScopes: granted })
+    ).toBeNull();
+  });
+
+  it('is in the mailbox DTO with when the sync last finished', () => {
+    const dto = toMailboxDto(
+      {
+        id: 'mb1',
+        scope: 'USER',
+        kind: 'GMAIL',
+        status: 'ACTIVE',
+        lastErrorCode: null,
+        fromAddress: 'owner@studio.example.invalid',
+        fromName: null,
+        imapHost: null,
+        imapPort: null,
+        imapUsername: null,
+        imapPassword: null,
+        accountAddress: null,
+        refreshToken: null,
+        grantedScopes: granted,
+        calendarStatus: 'NEEDS_RECONNECT',
+        calendarSyncedAt: new Date('2026-11-20T10:30:00.000Z'),
+        updatedAt: new Date('2026-11-20T10:30:00.000Z'),
+      } as never,
+      { includeConnection: false }
+    );
+
+    expect(dto.calendarSync).toBe('NEEDS_RECONNECT');
+    expect(dto.calendarSyncedAt).toBe('2026-11-20T10:30:00.000Z');
   });
 });

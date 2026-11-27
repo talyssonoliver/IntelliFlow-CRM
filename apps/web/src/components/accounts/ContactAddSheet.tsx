@@ -59,7 +59,7 @@ export function ContactAddSheet({
     onSuccess: () => {
       toast({
         title: 'Contact created',
-        description: `${form.firstName} ${form.lastName} has been added.`,
+        description: `${[form.firstName, form.lastName].filter(Boolean).join(' ')} has been added.`,
       });
       onOpenChange(false);
       onSuccess?.();
@@ -88,9 +88,6 @@ export function ContactAddSheet({
     const newErrors: Record<string, string> = {};
     if (!form.firstName.trim()) {
       newErrors.firstName = 'First name is required';
-    }
-    if (!form.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
     }
     if (!form.email.trim()) {
       newErrors.email = 'Email is required';
@@ -144,20 +141,13 @@ export function ContactAddSheet({
           </div>
 
           <div>
-            <Label htmlFor="contact-last-name">Last Name *</Label>
+            <Label htmlFor="contact-last-name">Last Name</Label>
             <Input
               id="contact-last-name"
               value={form.lastName}
               onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
-              aria-invalid={!!errors.lastName}
-              aria-describedby={errors.lastName ? 'contact-last-name-error' : undefined}
               placeholder="Last name"
             />
-            {errors.lastName && (
-              <p id="contact-last-name-error" className="text-sm text-destructive mt-1">
-                {errors.lastName}
-              </p>
-            )}
           </div>
 
           <div>

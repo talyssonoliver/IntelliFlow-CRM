@@ -10,6 +10,7 @@
 import Link from 'next/link';
 import { Card, EmptyState } from '@intelliflow/ui';
 import { getResolvedCategories } from '@/lib/shared/settings-search';
+import { useEnabledModules } from '@/hooks/useEnabledModules';
 
 export interface SettingsNavProps {
   searchQuery?: string;
@@ -17,7 +18,8 @@ export interface SettingsNavProps {
 }
 
 export function SettingsNav({ searchQuery, className }: Readonly<SettingsNavProps>) {
-  const categories = getResolvedCategories(searchQuery);
+  const { isModuleEnabled } = useEnabledModules();
+  const categories = getResolvedCategories(searchQuery, isModuleEnabled);
 
   if (categories.length === 0) {
     return (

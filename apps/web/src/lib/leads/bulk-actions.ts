@@ -105,7 +105,7 @@ export function getScoreParams(scoreFilter: string): {
  * current leadQuerySchema.
  */
 export type LeadView = 'all' | 'my' | 'starred' | 'recent';
-export type LeadSegment = 'new-week' | 'hot' | 'followup';
+export type LeadSegment = 'new-week' | 'hot' | 'followup' | 'waiting';
 
 export interface LeadScopeParams {
   readonly ownerId?: string;
@@ -113,6 +113,7 @@ export interface LeadScopeParams {
   readonly maxScore?: number;
   readonly dateFrom?: Date;
   readonly dateTo?: Date;
+  readonly waitingForReply?: boolean;
   readonly lastContactedBefore?: Date;
   readonly isStarred?: boolean;
   readonly ids?: readonly string[];
@@ -134,25 +135,14 @@ function parseView(raw: string | null | undefined): LeadView {
 }
 
 function parseSegment(raw: string | null | undefined): LeadSegment | null {
-  if (raw === 'new-week' || raw === 'hot' || raw === 'followup') return raw;
+  if (raw === 'new-week' || raw === 'hot' || raw === 'followup' || raw === 'waiting') return raw;
   return null;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/**
- * Optional injection for recently-viewed IDs. Lives in localStorage on the
- * client (see `useLeadRecentViews` hook); passed in so this module stays
- * React-free and deterministic for tests.
- */
-export function getLeadScope(
-  viewParam: string | null | undefined,
-  segmentParam: string | null | undefined,
-  currentUserId: string | undefined | null,
-  now: Date = new Date(),
-  recentIds: readonly string[] = []
-): LeadScope {
-  const segment = parseSegment(segmentParam);
+/** The scope a sidebar segment (?segment=...) stands for. */
+function segmentScope(segment: LeadSegment | null, now: Date): LeadScope | null {
   if (segment === 'new-week') {
     return {
       view: 'all',
@@ -173,6 +163,17 @@ export function getLeadScope(
       pendingNotice: null,
     };
   }
+  if (segment === 'waiting') {
+    // MVP-014: leads whose last email to us has had no reply (server-side filter).
+    return {
+      view: 'all',
+      segment,
+      title: 'Waiting for reply',
+      description: 'Leads who wrote to you and have had no reply yet.',
+      params: { waitingForReply: true },
+      pendingNotice: null,
+    };
+  }
   if (segment === 'followup') {
     // Leads whose last contact is older than 7 days (or never contacted).
     // Uses the `lastContactedBefore` filter added to leadQuerySchema + the
@@ -186,6 +187,24 @@ export function getLeadScope(
       pendingNotice: null,
     };
   }
+  return null;
+}
+
+/**
+ * Optional injection for recently-viewed IDs. Lives in localStorage on the
+ * client (see `useLeadRecentViews` hook); passed in so this module stays
+ * React-free and deterministic for tests.
+ */
+export function getLeadScope(
+  viewParam: string | null | undefined,
+  segmentParam: string | null | undefined,
+  currentUserId: string | undefined | null,
+  now: Date = new Date(),
+  recentIds: readonly string[] = []
+): LeadScope {
+  const segment = parseSegment(segmentParam);
+  const bySegment = segmentScope(segment, now);
+  if (bySegment) return bySegment;
 
   const view = parseView(viewParam);
   if (view === 'my') {

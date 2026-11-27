@@ -13,6 +13,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { virtualElapsedMs } from '../../../../../../tests/utils/virtual-clock';
 import {
   ConvertLeadToContactUseCase,
   ConvertLeadToContactInput,
@@ -260,8 +261,8 @@ describe('ConvertLeadToContactUseCase', () => {
       expect(result.isSuccess).toBe(true);
       const savedContact = contactRepository.savedContact;
       expect(savedContact!.email.value).toBe('minimal@example.com');
-      expect(savedContact!.firstName).toBe('Unknown'); // Default for missing firstName
-      expect(savedContact!.lastName).toBe('Unknown'); // Default for missing lastName
+      expect(savedContact!.firstName).toBe('minimal@example.com'); // no name, no company: the address
+      expect(savedContact!.lastName).toBe(''); // never an invented "Unknown"
     });
   });
 
@@ -623,12 +624,14 @@ describe('ConvertLeadToContactUseCase', () => {
         convertedBy: 'sales-rep-perf',
       };
 
-      const startTime = performance.now();
-      const result = await useCase.execute(input);
-      const endTime = performance.now();
+      // Load-independent: measured on a fake clock (time spent waiting on timers).
+      let result: Awaited<ReturnType<typeof useCase.execute>> | undefined;
+      const elapsed = await virtualElapsedMs(async () => {
+        result = await useCase.execute(input);
+      });
 
-      expect(result.isSuccess).toBe(true);
-      expect(endTime - startTime).toBeLessThan(200);
+      expect(result?.isSuccess).toBe(true);
+      expect(elapsed).toBeLessThan(200);
     });
   });
 

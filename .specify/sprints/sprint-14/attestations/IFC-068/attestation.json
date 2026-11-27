@@ -181,5 +181,5 @@
     "git_commit": "f1f8d413",
     "branch": "sprint0/codex-run"
   },
-  "notes": "Full-stack feedback analytics dashboard. Migration SQL created with compound indexes and CHECK constraints (applied at deploy time). All code, tests, and validations complete. 86 IFC-068-specific tests across 6 test files. Container wiring verified in container.ts, context.ts, router.ts."
+  "notes": "Full-stack feedback analytics dashboard. Migration SQL created with compound indexes and CHECK constraints (applied at deploy time). All code, tests, and validations complete. 86 IFC-068-specific tests across 6 test files. Container wiring verified in container.ts, context.ts, router.ts. SCOPE NOTE (2026-11-22): this task's DoD covers the dashboard (read side) only. Collecting responses was never built: the feedbackSurvey router is read-only and the only writer of feedback_surveys is packages/db/prisma/seed.ts, so the page shows \"No insights yet\" for every real tenant. Collection (send, public tokenised response page, triggers, consent) now lives in IFC-332. Status stays Completed because the DoD was met."
 }

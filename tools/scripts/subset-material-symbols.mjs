@@ -303,8 +303,12 @@ export function resolveDynamicSites(scan, opts) {
 export function diffAgainstAudit(discovered, audit) {
   const auditSet = new Set(audit.icons ?? []);
   const discSet = new Set(discovered);
-  const missing = [...discSet].filter((x) => !auditSet.has(x)).sort();
-  const added = [...auditSet].filter((x) => !discSet.has(x)).sort();
+  const missing = [...discSet]
+    .filter((x) => !auditSet.has(x))
+    .sort((x, y) => Number(x > y) - Number(x < y));
+  const added = [...auditSet]
+    .filter((x) => !discSet.has(x))
+    .sort((x, y) => Number(x > y) - Number(x < y));
   return { missing, added, ok: missing.length === 0 };
 }
 
@@ -322,7 +326,7 @@ export function serializeAudit(data) {
     if (!(k in ordered)) ordered[k] = data[k];
   }
   if (Array.isArray(ordered.icons)) {
-    ordered.icons = [...new Set(ordered.icons)].sort();
+    ordered.icons = [...new Set(ordered.icons)].sort((x, y) => Number(x > y) - Number(x < y));
     ordered.icons_count = ordered.icons.length;
   }
   return JSON.stringify(ordered, null, 2) + '\n';
@@ -426,7 +430,7 @@ export async function regenerate({ repoRoot = REPO_ROOT, subsetFont, log = conso
   const dyn = resolveDynamicSites(scan, { iconMapping, allowList: [] });
 
   const allIcons = new Set([...scan.icons, ...dyn.resolved]);
-  const iconList = [...allIcons].sort();
+  const iconList = [...allIcons].sort((x, y) => Number(x > y) - Number(x < y));
 
   log.info?.(
     `[pg-195] discovered icons=${scan.icons.size}, dyn.resolved=${dyn.resolved.size}, total=${iconList.length}`
@@ -487,7 +491,9 @@ export async function verify({ repoRoot = REPO_ROOT, log = console } = {}) {
     iconMapping,
     allowList: audit.explicit_allow_list ?? [],
   });
-  const discovered = [...new Set([...scan.icons, ...dyn.resolved])].sort();
+  const discovered = [...new Set([...scan.icons, ...dyn.resolved])].sort(
+    (x, y) => Number(x > y) - Number(x < y)
+  );
   const diff = diffAgainstAudit(discovered, audit);
 
   if (!diff.ok) {

@@ -128,7 +128,9 @@ export class CostTracker {
       this.usageHistory.splice(0, excess);
       this.evictedRecords += excess;
     }
-    this.dailyCost += cost;
+    // PG-199 BYOK: a call on the tenant's own key is recorded (history, totals, listeners) but
+    // does not count toward the platform's daily cost limit.
+    if (params.metadata?.['byok'] !== true) this.dailyCost += cost;
     this.addToDailyTotals(usage);
 
     // Notify before the threshold check: that check can throw, and the spend already happened.

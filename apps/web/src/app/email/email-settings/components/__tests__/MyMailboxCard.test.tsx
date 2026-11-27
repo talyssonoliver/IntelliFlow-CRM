@@ -20,6 +20,13 @@ vi.mock('@/lib/trpc', () => ({
     },
   },
 }));
+vi.mock('../SendFromHint', () => ({
+  SendFromHint: (p: { onProvider: (provider: 'ZOHO') => void }) => (
+    <button type="button" onClick={() => p.onProvider('ZOHO')}>
+      stub hint zoho
+    </button>
+  ),
+}));
 vi.mock('../SmtpMailboxForm', () => ({
   SmtpMailboxForm: (p: { scope: string; onSaved: (d: unknown) => void; onCancel: () => void }) => (
     <div data-testid="smtp-form">
@@ -62,7 +69,7 @@ function renderCard(props: Partial<Parameters<typeof MyMailboxCard>[0]> = {}) {
   const utils = render(
     <MyMailboxCard
       mailbox={null}
-      providersAvailable={{ GMAIL: true, MICROSOFT: false }}
+      providersAvailable={{ GMAIL: true, MICROSOFT: false, ZOHO: false }}
       companyFallbackAddress={null}
       onChanged={onChanged}
       announce={announce}
@@ -104,8 +111,40 @@ describe('MyMailboxCard', () => {
   it('offers only what works, and says in one line what does not yet', () => {
     renderCard();
     expect(screen.queryByRole('button', { name: 'Connect Microsoft' })).not.toBeInTheDocument();
-    expect(screen.getByText("One-click Microsoft sign-in isn't available yet.")).toBeVisible();
+    expect(
+      screen.getByText("One-click Microsoft and Zoho Mail sign-in isn't available yet.")
+    ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Connect Google' })).toBeEnabled();
+  });
+
+  it('offers Connect Zoho Mail once Zoho is configured, and starts its sign-in', async () => {
+    api.oauthStart.mutateAsync.mockResolvedValue({
+      url: 'https://accounts.zoho.example.invalid/oauth/v2/auth?state=z1',
+    });
+    renderCard({ providersAvailable: { GMAIL: true, MICROSOFT: true, ZOHO: true } });
+    fireEvent.click(screen.getByRole('button', { name: 'Connect Zoho Mail' }));
+    await waitFor(() =>
+      expect(api.oauthStart.mutateAsync).toHaveBeenCalledWith({ provider: 'ZOHO', scope: 'USER' })
+    );
+    expect(screen.queryByText(/isn't available yet/)).not.toBeInTheDocument();
+  });
+
+  it('puts the button of the provider that runs the send-from address first', () => {
+    renderCard({ providersAvailable: { GMAIL: true, MICROSOFT: true, ZOHO: true } });
+    const before = screen.getAllByRole('button', { name: /^Connect / }).map((b) => b.textContent);
+    expect(before[0]).toBe('Connect Google');
+    fireEvent.click(screen.getByRole('button', { name: 'stub hint zoho' }));
+    const after = screen.getAllByRole('button', { name: /^Connect / }).map((b) => b.textContent);
+    expect(after[0]).toBe('Connect Zoho Mail');
+  });
+
+  it('says above the password form that sending with a password does not work here yet', () => {
+    renderCard();
+    expect(screen.queryByTestId('smtp-hosting-notice')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Set Up Mailbox' }));
+    expect(screen.getByTestId('smtp-hosting-notice')).toHaveTextContent(
+      'Sending with a password does not work on our servers yet'
+    );
   });
 
   it('starts Google sign-in, remembers the provider for this state and redirects', async () => {
@@ -146,6 +185,98 @@ describe('MyMailboxCard', () => {
     expect(screen.getByText('Connected')).toBeInTheDocument();
     expect(screen.getByText('me@mail.example.invalid')).toBeInTheDocument();
     expect(screen.getByText('SMTP · smtp.mail.example.invalid')).toBeInTheDocument();
+    // The sync line is only for mailboxes whose replies are logged (#1177, MVP-001).
+    expect(screen.queryByTestId('inbox-sync-status')).not.toBeInTheDocument();
+  });
+
+  it('tells a connected mailbox whose replies are logged what the sync logs and when it last ran', () => {
+    renderCard({
+      mailbox: mailbox({
+        kind: 'MICROSOFT',
+        smtpHost: null,
+        accountAddress: 'me@outlook.example.invalid',
+        fromAddress: 'me@outlook.example.invalid',
+        inboxSyncedAt: null,
+        replySync: 'ON',
+      }),
+    });
+    expect(screen.getByTestId('inbox-sync-status')).toHaveTextContent(
+      'Mail with your leads and contacts, received or sent from this mailbox, is logged here. Waiting for the first sync.'
+    );
+    expect(screen.queryByTestId('reply-sync-reconnect')).not.toBeInTheDocument();
+  });
+
+  it('shows the history import from the stored progress, and that a pause resumes by itself (register #58)', () => {
+    renderCard({
+      mailbox: mailbox({
+        kind: 'GMAIL',
+        smtpHost: null,
+        accountAddress: 'me@work.example.invalid',
+        fromAddress: 'me@work.example.invalid',
+        replySync: 'ON',
+        historyImport: { done: 40, total: 163, paused: true },
+      }),
+    });
+    expect(screen.getByTestId('history-import-status')).toHaveTextContent(
+      "Importing email history: 40 of 163 contacts. Paused by Gmail's limits, resumes automatically."
+    );
+  });
+
+  it('shows no import line when nothing is importing', () => {
+    renderCard({
+      mailbox: mailbox({
+        kind: 'GMAIL',
+        smtpHost: null,
+        accountAddress: 'me@work.example.invalid',
+        fromAddress: 'me@work.example.invalid',
+        replySync: 'ON',
+        historyImport: null,
+      }),
+    });
+    expect(screen.queryByTestId('history-import-status')).not.toBeInTheDocument();
+  });
+
+  it('offers to reconnect a Zoho mailbox connected before replies could be read (MVP-001)', async () => {
+    api.oauthStart.mutateAsync.mockResolvedValue({
+      url: 'https://accounts.zoho.example.invalid/oauth/v2/auth?state=r1',
+    });
+    renderCard({
+      mailbox: mailbox({ kind: 'ZOHO', smtpHost: null, replySync: 'NEEDS_RECONNECT' }),
+      providersAvailable: { GMAIL: true, MICROSOFT: true, ZOHO: true },
+    });
+    expect(screen.getByTestId('reply-sync-reconnect')).toHaveTextContent(
+      'Replies from leads and contacts are not logged yet'
+    );
+    expect(screen.queryByTestId('inbox-sync-status')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reconnect to log replies' }));
+    await waitFor(() =>
+      expect(api.oauthStart.mutateAsync).toHaveBeenCalledWith({ provider: 'ZOHO', scope: 'USER' })
+    );
+  });
+
+  it('shows no reconnect button when that provider is not configured here', () => {
+    renderCard({
+      mailbox: mailbox({ kind: 'ZOHO', smtpHost: null, replySync: 'NEEDS_RECONNECT' }),
+      providersAvailable: { GMAIL: true, MICROSOFT: true, ZOHO: false },
+    });
+    expect(screen.getByTestId('reply-sync-reconnect')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Reconnect to log replies' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('hides the sync line while a Microsoft mailbox needs attention', () => {
+    renderCard({
+      mailbox: mailbox({
+        kind: 'MICROSOFT',
+        smtpHost: null,
+        status: 'ERROR',
+        lastErrorCode: 'TOKEN_REVOKED',
+        inboxSyncedAt: '2026-11-15T10:00:00.000Z',
+      }),
+    });
+    expect(screen.queryByTestId('inbox-sync-status')).not.toBeInTheDocument();
   });
 
   it('shows a connected Google mailbox by its verified address', () => {

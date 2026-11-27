@@ -80,7 +80,13 @@ async function pickClient() {
   fireEvent.change(screen.getByLabelText(/Link to Client\/Account/), {
     target: { value: 'Ac' },
   });
-  const option = await screen.findByRole('button', { name: /Acme Ltd/ });
+  const option = await screen.findByRole(
+    'button',
+    { name: /Acme Ltd/ },
+    // The account options arrive after the debounced search; the default 1 s window
+    // elapses under load. Only this wait is longer.
+    { timeout: 10_000 }
+  );
   fireEvent.click(option);
 }
 

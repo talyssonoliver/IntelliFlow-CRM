@@ -54,6 +54,8 @@ export interface AnthropicChatModelParams extends BaseChatModelParams {
   maxRetries?: number;
   /** For tests: a client double. Production builds the SDK client from ANTHROPIC_API_KEY. */
   client?: Pick<Anthropic, 'messages'>;
+  /** PG-199 BYOK: the tenant's own key, used instead of ANTHROPIC_API_KEY. */
+  apiKey?: string;
 }
 
 /** Stop reasons that mean the model finished its answer. */
@@ -118,6 +120,7 @@ export class AnthropicChatModel extends BaseChatModel<AnthropicChatCallOptions> 
   readonly effort: AnthropicEffort;
   readonly maxRetries: number;
   private client: Pick<Anthropic, 'messages'> | undefined;
+  private readonly apiKey: string | undefined;
 
   constructor(params: AnthropicChatModelParams) {
     super(params);
@@ -127,6 +130,7 @@ export class AnthropicChatModel extends BaseChatModel<AnthropicChatCallOptions> 
     this.effort = params.effort;
     this.maxRetries = params.maxRetries ?? 1;
     this.client = params.client;
+    this.apiKey = params.apiKey;
   }
 
   _llmType(): string {
@@ -135,7 +139,10 @@ export class AnthropicChatModel extends BaseChatModel<AnthropicChatCallOptions> 
 
   private getClient(): Pick<Anthropic, 'messages'> {
     this.client ??= new Anthropic({
-      apiKey: process.env['ANTHROPIC_API_KEY'],
+      // A tenant's own key (BYOK) goes only to Anthropic, never to a platform-configured host
+      // (ANTHROPIC_BASE_URL) and never alongside the platform's auth token.
+      ...(this.apiKey ? { baseURL: 'https://api.anthropic.com', authToken: null } : {}),
+      apiKey: this.apiKey ?? process.env['ANTHROPIC_API_KEY'],
       timeout: this.timeout,
       maxRetries: this.maxRetries,
     });

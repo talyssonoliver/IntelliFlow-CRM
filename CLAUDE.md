@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-**IntelliFlow CRM** — AI-powered CRM system. 597 tasks across Sprints 0–29 (plus
-continuous tasks) tracked in `Sprint_plan.csv`; the IFC-010 Go/No-Go passed
-2025-12-27. For the **live sprint, phase, and completion status**, read
-`docs/SESSION_CONTEXT.md` (regenerated each session) — do not hardcode the
-active sprint here, or it goes stale (ENG-OPS-002 STALE-001).
+**IntelliFlow CRM** — AI-powered CRM system. Its tasks (Sprints 0–29 plus
+continuous tasks) are tracked in `Sprint_plan.csv`; the IFC-010 Go/No-Go passed
+2025-12-27. For the **live sprint, phase, task counts and completion status**,
+read `docs/SESSION_CONTEXT.md` (regenerated each session) — do not hardcode the
+active sprint or any count here, or it goes stale (ENG-OPS-002 STALE-001, R03).
 
 ## Task ID Conventions
 
@@ -34,16 +34,11 @@ files:
 ```
 apps/project-tracker/docs/metrics/_global/
 ├── Sprint_plan.csv      # Source of truth (edit here only)
-├── Sprint_plan_A.csv    # 67 rows (EXC-INIT-001 → IFC-042)
-├── Sprint_plan_B.csv    # 72 rows (IFC-043 → PG-015)
-├── Sprint_plan_C.csv    # 73 rows (PG-016 → SALES-002)
-├── Sprint_plan_D.csv    # 69 rows (PM-OPS-001 → IFC-123)
-├── Sprint_plan_E.csv    # 63 rows (IFC-124 → IFC-170)
-├── Sprint_plan_F.csv    # 64 rows (IFC-171 → PG-156)
-├── Sprint_plan_G.csv    # 64 rows (PG-157 → IFC-233)
-├── Sprint_plan_H.csv    # 62 rows (IFC-234 → IFC-296)
-└── Sprint_plan_I.csv    # 26 rows (IFC-297 → IFC-308)
+└── Sprint_plan_A.csv … Sprint_plan_J.csv   # generated parts in CSV order
 ```
+
+The parts are regenerated from the CSV, so their number and row ranges change;
+`ls` the folder or `grep -l "<TASK-ID>," Sprint_plan_*.csv` to find a task.
 
 Regenerate splits: `npx tsx tools/scripts/split-sprint-plan.ts` Full guide:
 `docs/claude-refs/sprint-plan-guide.md`
@@ -158,7 +153,9 @@ show "pending" status. Never populate fields with fake values.
 ### Never Skip Build Validation
 
 ALL 4 validations are NON-NEGOTIABLE: TypeScript, Tests, Lint, **Build**.
-"Next.js compiles on demand" is NOT a valid reason to skip build.
+"Next.js compiles on demand" is NOT a valid reason to skip build. The build is
+validated by CI's required `Build` job, not on this PC (see "Pre-ship Gate",
+build scope): a PR does not merge until it is green.
 
 ### Pre-ship Gate Is Not Skippable
 
@@ -175,11 +172,23 @@ DB** (never prod — `.env.local`'s `DATABASE_URL` is production Supabase; use
 `new_coverage` ≥80% on changed lines) so under-tested diffs fail locally, not
 after a CI round.
 
+**Heavy work is CI's, not this PC's** (owner ruling 2026-11-19: full builds and
+the full suite run in GitHub Actions, free because the repo is public; the PC
+keeps quick scoped checks only). Locally the gate skips the production `build`
+(next build and the app builds) and any full-suite run, and prints "skipped
+locally, CI is the guard (<CI job>)" for each. The CI jobs that guard them are
+required on `main`: `Build`, `Type Check`, `Lint & Format`, `Integration Tests`,
+`Unit Tests (sharded) / Merge Coverage Gate`. `PRESHIP_FULL_BUILD=1`,
+`PRESHIP_FULL_TESTS=1` and `PRESHIP_FULL_DB=1` still force them here, and CI
+itself runs everything.
+
 **Test scope:** locally the test steps run only the tests related to the files
 changed since `origin/main` (`vitest related`); the full 10k+ suite is CI's
-sharded runners' job. `PRESHIP_FULL_TESTS=1` runs the full suite locally;
-lockfile, `package.json` (other than `scripts`), vitest/tsconfig, Prisma schema
-or test-setup changes widen to full on their own.
+sharded runners' job. `PRESHIP_FULL_TESTS=1` runs the full suite locally.
+Lockfile, `package.json` (other than `scripts`), vitest/tsconfig, Prisma schema
+or test-setup changes used to widen to full; locally the unit-tests, coverage,
+coverage-floor and infra-skip-gate steps now skip then ("skipped locally, CI is
+the guard") and the `Unit Tests (sharded)` job covers it.
 
 **Lint scope:** format-check, lint and lint-promises check only the changed
 files, and go repo-wide when eslint/prettier config, tsconfig, any
@@ -188,18 +197,19 @@ type-aware lint-promises step has its own, narrower list: only its config, the
 tsconfigs, the lockfile/workspace files and its runners widen it, not a
 package.json or the default eslint/prettier config. CI checks the whole repo.
 
-**Build scope:** locally `library-build`, `typecheck` and `build` cover the
-packages the branch changed plus their dependents (CI's
+**Build scope:** locally the production `build` step (next build, tsup of the
+apps) is CI-only: "skipped locally, CI is the guard (Build)". `typecheck` covers
+the packages the branch changed plus their dependents (CI's
 `scripts/ci/affected.mjs` classification over the local diff, turbo's local
-cache on); `build` is skipped when only docs or test files changed. Root config,
-`.github/` or shared tsconfig changes widen to every package;
-`PRESHIP_FULL_BUILD=1` forces it. The web app's `next build` runs only when a
-web build input changed: apps/web itself, a workspace package it uses, the
-lockfile or a root file not known to be outside it (tooling, CI, hooks, docs and
-test configs are outside). Otherwise the step prints "web build not affected; CI
-build check is the guard": a non-web change no longer proves the web build
-locally, and CI's build check still does before merge (owner decision on the
-2026-11-13 pre-ship audit). All other gates stay full.
+cache on), and `library-build` builds only the dependency closure of those
+packages (`--filter=<pkg>^...`): the dist/ their typecheck and related tests
+read, nothing more. A root-config change (turbo.json, lockfile, `.github/`) no
+longer widens either step to every package locally; CI's required jobs cover it.
+A change to the shared tsconfig package still typechecks everything.
+`PRESHIP_FULL_BUILD=1` restores the full, scoped-as-before build here. Known
+gap: a root test or script that imports a library's dist/ for a package outside
+the diff can find it unbuilt locally; run it with `PRESHIP_FULL_BUILD=1` or
+leave it to CI.
 
 **DB scope:** the integration suite runs locally only when the branch can reach
 it: a change under `packages/db`, `apps/api`, `apps/ai-worker` or
@@ -207,6 +217,10 @@ it: a change under `packages/db`, `apps/api`, `apps/ai-worker` or
 imports (`vitest list --changed`). Otherwise it is a non-required skip and CI
 runs it. The push gate seeds with `test-db.mjs run --seed-if-affected`, which
 seeds only in the same case. `PRESHIP_FULL_DB=1` forces the suite.
+
+**One heavy step at a time.** The gate runs its steps one after another, never
+two builds or two test runs inside one gate. Across gates the machine-wide limit
+below applies.
 
 **At most 3 full test runs at once, machine-wide.** Before any step the gate
 re-runs itself under the shared slot semaphore (`scripts/lib/test-slot.mjs`),
@@ -221,6 +235,22 @@ detached watchdog, started from `os.tmpdir()` (never the repo), covers a hard
 kill of the gate and the death of anything above it (the `git push`, the hook
 shell). See `scripts/lib/preship-gate.mjs`, `scripts/preship-process.mjs` and
 `scripts/preship-watchdog.mjs`.
+
+**Heavy commands run only in the queue** (owner ruling 2026-11-12). The web
+`build`, `lighthouse`, `lighthouse:ci`, web `lighthouse:auth`, `test:unit`,
+`test:integration`, `scripts/run-tests.js`, `scripts/run-coverage.js` and the
+dev servers (`dev` in web, api (and `dev:ws`), ai-worker and the three workers,
+so every root `dev:*` script and a local Playwright run too) and the heavy
+typechecks (root `typecheck` and `typecheck:all`; `typecheck` in web, api,
+ai-worker and adapters, each over 1 GB of memory when measured) exit 2 with a
+message unless a test slot is held (`with-slot.mjs` sets `TEST_SLOT_HELD` for
+its child) or `CI` is set. `pnpm test`, `pnpm test:coverage` and the pre-commit
+typecheck join the queue on their own, and a gate already holds a slot. To run
+one by hand, queue it:
+`node C:/Users/talys/ops/test-slots/with-slot.mjs --label <name> -- <command>`.
+Owner override for one deliberate run: `ALLOW_OUTSIDE_SLOT=1`. A machine without
+the semaphore (a contributor laptop, a Docker build) is not checked. See
+`slotRefusal` in `scripts/lib/test-slot.mjs`.
 
 ### Sprint_plan.csv is Single Source of Truth
 

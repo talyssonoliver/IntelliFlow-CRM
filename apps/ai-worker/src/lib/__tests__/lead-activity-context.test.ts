@@ -201,7 +201,13 @@ describe('lead activity context for scoring', () => {
     expect(context?.countsCapped).toBe(false);
     expect(prisma.lead.findFirst).toHaveBeenCalledWith({
       where: { id: 'lead-1', tenantId: 'tenant-1' },
-      select: { status: true, lastContactedAt: true },
+      select: expect.objectContaining({
+        status: true,
+        lastContactedAt: true,
+        email: true,
+        budget: true,
+        need: true,
+      }),
     });
     const select = { type: true, title: true, timestamp: true, metadata: true };
     expect(prisma.leadActivity.findMany).toHaveBeenCalledWith(
@@ -241,5 +247,95 @@ describe('lead activity context for scoring', () => {
       leadActivity: { findMany: vi.fn().mockResolvedValue([]), findFirst: vi.fn() },
     };
     await expect(loadLeadActivityContext(missing, 'l', 't')).resolves.toBeUndefined();
+  });
+
+  it('adds the enquiry data, email tracking and note count when the lead has them', () => {
+    const context = buildLeadActivityContext(
+      {
+        ...LEAD,
+        budget: 'around 3000 pounds',
+        need: 'a booking site for the studio',
+        timeline: 'short',
+        annualRevenue: null,
+        utmSource: 'google',
+        referrer: 'https://www.example.invalid/some/path?q=1',
+        landingPath: '/pilates?token=abc',
+        outreachSlug: 'studio-pilates-demo',
+        tags: ['studio', 'london'],
+      },
+      [],
+      {
+        emailTracking: {
+          sent: 3,
+          opened: 2,
+          clicked: 1,
+          openEvents: 5,
+          clickEvents: 1,
+          lastOpenedAt: at('2026-11-06T10:00:00Z'),
+          lastClickedAt: null,
+          received: 1,
+        },
+        noteCount: 2,
+      }
+    );
+    const lines = formatLeadActivityContext(context, NOW);
+    expect(lines).toContain(
+      'Email Tracking: 3 tracked emails sent, 2 opened (5 opens, most recent mail first opened 2026-11-06 (1 day ago)), 1 with a link clicked (1 clicks)'
+    );
+    expect(lines).toContain('Emails Received From The Lead (mailbox sync): 1');
+    expect(lines).toContain('Notes: 2 written by the team');
+    expect(lines).toContain('Stated Budget: around 3000 pounds');
+    expect(lines).toContain('Stated Timeline: short');
+    expect(lines).toContain('Arrived Via Campaign: google');
+    // Only the host of the referrer and the path of the landing page, never a query string.
+    expect(lines).toContain('Referrer: www.example.invalid');
+    expect(lines).toContain('Landing Page: /pilates');
+    expect(lines).not.toContain('token=abc');
+    expect(lines).toContain('Outreach Concept Page: studio-pilates-demo');
+    expect(lines).toContain('Tags: studio, london');
+  });
+
+  it('reads email tracking and the note count through the optional readers', async () => {
+    const queryRaw = vi.fn().mockResolvedValue([
+      {
+        sent: 2,
+        opened: 1,
+        clicked: 0,
+        open_events: 3,
+        click_events: 0,
+        last_opened_at: '2026-11-06T10:00:00Z',
+        last_clicked_at: null,
+        received: 0,
+      },
+    ]);
+    const prisma = {
+      lead: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValue({ ...LEAD, email: 'pat@example.invalid', need: 'new site' }),
+      },
+      leadActivity: { findMany: vi.fn().mockResolvedValue([]), findFirst: vi.fn() },
+      leadNote: { count: vi.fn().mockResolvedValue(4) },
+      $queryRaw: queryRaw,
+    };
+    const context = await loadLeadActivityContext(prisma, 'lead-1', 'tenant-1');
+    expect(context?.emailTracking).toMatchObject({ sent: 2, opened: 1, openEvents: 3 });
+    expect(context?.noteCount).toBe(4);
+    expect(context?.enquiry).toContain('Stated Need: new site');
+    expect(prisma.leadNote.count).toHaveBeenCalledWith({
+      where: { leadId: 'lead-1', tenantId: 'tenant-1' },
+    });
+  });
+
+  it('still scores when the extra reads fail', async () => {
+    const prisma = {
+      lead: { findFirst: vi.fn().mockResolvedValue({ ...LEAD, email: 'pat@example.invalid' }) },
+      leadActivity: { findMany: vi.fn().mockResolvedValue([]), findFirst: vi.fn() },
+      leadNote: { count: vi.fn().mockRejectedValue(new Error('x')) },
+      $queryRaw: vi.fn().mockRejectedValue(new Error('x')),
+    };
+    const context = await loadLeadActivityContext(prisma, 'l', 't');
+    expect(context?.emailTracking).toBeNull();
+    expect(context?.noteCount).toBe(0);
   });
 });

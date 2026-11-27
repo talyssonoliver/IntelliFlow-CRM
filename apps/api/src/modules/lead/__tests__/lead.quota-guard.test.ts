@@ -16,6 +16,27 @@ const conversion = {
   convertedAt: new Date(),
 };
 
+describe('lead scoreWithAI AI actions allowance guard', () => {
+  it('refuses with the plan limit before any scoring is queued', async () => {
+    const scoreLead = vi.fn();
+    const ctx = createTestContext({
+      services: {
+        ...mockServices,
+        lead: { scoreLead } as never,
+        quota: overQuota('aiActionsPerMonth', 1000, 1000) as never,
+      },
+    });
+
+    await expect(
+      leadRouter.createCaller(ctx).scoreWithAI({ leadId: TEST_UUIDS.lead1 })
+    ).rejects.toMatchObject({
+      ...quotaRejection('aiActionsPerMonth', 1000, 1000),
+      message: expect.stringContaining('1,000 of 1,000 AI actions'),
+    });
+    expect(scoreLead).not.toHaveBeenCalled();
+  });
+});
+
 describe('lead conversion quota guards', () => {
   describe('convert', () => {
     it('rejects when the tenant is at its contact limit', async () => {
@@ -72,7 +93,15 @@ describe('lead conversion quota guards', () => {
     };
 
     it('rejects when it would create a contact past the limit', async () => {
-      const execute = vi.fn();
+      // The use case calls beforeCreateContact only when it is about to create a new contact.
+      const saved = vi.fn();
+      const execute = vi.fn(
+        async (_input: unknown, hooks: { beforeCreateContact: () => Promise<void> }) => {
+          await hooks.beforeCreateContact();
+          saved();
+          return { isSuccess: true, isFailure: false, value: dealOutput };
+        }
+      );
       const ctx = createTestContext({
         services: {
           ...mockServices,
@@ -84,7 +113,7 @@ describe('lead conversion quota guards', () => {
       await expect(leadRouter.createCaller(ctx).convertToDeal(dealInput)).rejects.toMatchObject(
         quotaRejection('contacts', 2000, 2000)
       );
-      expect(execute).not.toHaveBeenCalled();
+      expect(saved).not.toHaveBeenCalled();
     });
 
     it('does not consume contact quota when no contact is created', async () => {
@@ -102,6 +131,32 @@ describe('lead conversion quota guards', () => {
 
       await leadRouter.createCaller(ctx).convertToDeal({ ...dealInput, createContact: false });
 
+      expect(quota.assertWithinQuota).not.toHaveBeenCalled();
+      expect(execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('links an existing contact even when the tenant is at its contact limit', async () => {
+      const quota = overQuota('contacts', 2000, 2000);
+      // Linking an existing contact never calls beforeCreateContact.
+      const execute = vi
+        .fn()
+        .mockResolvedValue({ isSuccess: true, isFailure: false, value: dealOutput });
+      const ctx = createTestContext({
+        services: {
+          ...mockServices,
+          convertLeadToDeal: { execute } as never,
+          quota: quota as never,
+        },
+      });
+
+      await leadRouter.createCaller(ctx).convertToDeal(dealInput);
+
+      expect(quota.withinQuota).toHaveBeenCalledWith(
+        TEST_UUIDS.tenant,
+        'contacts',
+        0,
+        expect.any(Function)
+      );
       expect(quota.assertWithinQuota).not.toHaveBeenCalled();
       expect(execute).toHaveBeenCalledTimes(1);
     });

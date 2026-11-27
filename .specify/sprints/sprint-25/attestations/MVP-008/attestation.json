@@ -1,0 +1,267 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "MVP-008",
+  "run_id": "plan-mvp-close-2026-11-17",
+  "attestor": "Claude Code (claude-sonnet-5-5), ifc-ui-2 lane (plan close for Aurora)",
+  "attestation_timestamp": "2026-11-17T19:26:06Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [],
+    "invariants_acknowledged": [
+      "Shipped in #1384, #1373, #1428, #1429, #1431. Production /dashboard, captured 2026-11-17T19:23Z (ops/reviews/owner-walk-1117-mvp005-008b): the header search for \"Pitshanger\" returns one result under LEADS, the lead's name \"Pitshanger Health and Fitn...\" first and its email on the line below (\"1 results in 33ms\"). The dashboard shows Sales Revenue \"£0\" and the deals empty state with \"£0\"; no dollar amount appears.",
+      "The production captures were taken signed in as the owner, at his instruction (his words on 17/11/2026: \"Why can't you do it? I'm driving\", relayed by Aurora): a headless browser, read-only, nothing created or changed in his workspace. The capture times are the file times recorded below.",
+      "The captures are not committed because this repository is public (they show the owner and his data). They are held privately; their SHA-256 hashes are recorded in artifact_hashes."
+    ],
+    "acknowledged_at": "2026-11-17T19:26:06Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "kpis_met": 1,
+    "kpis_missed": 0
+  },
+  "artifact_hashes": {
+    "ops/reviews/owner-walk-1117-mvp005-008b/_dashboard-desk.png": "sha256:b32fbba2b1f3eb9495632b3e6b577ea98f7bdebaeeb05b3d3a1afabb9b0f8969",
+    "ops/reviews/owner-walk-1117-mvp005-008b/_dashboard-phone.png": "sha256:ca950a527f4667ac542ae6892a4b68b2dddf73ef975b935f52c9373674f3a25f",
+    "ops/reviews/owner-walk-1117-mvp005-008b/report.json": "sha256:c6c33e927b3f2d55ff4a91ed55bb505d244562d536cf1c85cf209048716c4aad"
+  },
+  "manual_verification": {
+    "performed_by": "Claude Code (claude-sonnet-5-5), ifc-ui-2 lane, for Aurora (the evidence was captured as the owner)",
+    "performed_at": "2026-11-17T19:26:06Z",
+    "review_notes": "Checked on a lead search and on the dashboard; the deal value in search results and on a contact is covered by the merged PRs and their tests, and the workspace has no deals yet to show it on production.",
+    "items_checked": [
+      "#1384 merged 2026-11-16T09:32Z: search shows a lead by its name first and its email second",
+      "#1373 merged 2026-11-15T20:55Z: deal and pipeline money in pounds",
+      "#1428 merged 2026-11-17T09:02Z: a deal's value in pounds in the header search and on a contact",
+      "#1429 merged 2026-11-17T09:03Z: money to the AI model and in stale-deal alerts in pounds",
+      "#1431 merged 2026-11-17T12:15Z: the old /deals/pipeline link goes to the pipeline board",
+      "Production /dashboard, captured 2026-11-17T19:23Z (ops/reviews/owner-walk-1117-mvp005-008b): the header search for \"Pitshanger\" returns one result under LEADS, the lead's name \"Pitshanger Health and Fitn...\" first and its email on the line below (\"1 results in 33ms\"). The dashboard shows Sales Revenue \"£0\" and the deals empty state with \"£0\"; no dollar amount appears."
+    ]
+  },
+  "validation_results": [
+    {
+      "name": "Merged pull requests",
+      "command": "gh pr view <number> --repo talyssonoliver/IntelliFlow-CRM --json state,mergedAt (each PR listed in manual_verification.items_checked)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-17T19:26:06Z"
+    },
+    {
+      "name": "Production evidence hashed",
+      "command": "sha256 of each capture file listed in artifact_hashes",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-17T19:26:06Z"
+    },
+    {
+      "name": "TypeScript typecheck, web",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:01Z"
+    },
+    {
+      "name": "Lint, web",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:41Z"
+    },
+    {
+      "name": "Build, web",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:00:58Z"
+    },
+    {
+      "name": "Tests, web",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:14:11Z"
+    },
+    {
+      "name": "TypeScript typecheck, api",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:14:59Z"
+    },
+    {
+      "name": "Lint, api",
+      "command": "pnpm --filter @intelliflow/api lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:06Z"
+    },
+    {
+      "name": "Build, api",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:33Z"
+    },
+    {
+      "name": "Tests, api",
+      "command": "pnpm --filter @intelliflow/api test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:04:27Z"
+    },
+    {
+      "name": "TypeScript typecheck, ui",
+      "command": "pnpm --filter @intelliflow/ui typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:55:11Z"
+    },
+    {
+      "name": "Lint, ui",
+      "command": "pnpm --filter @intelliflow/ui lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:09Z"
+    },
+    {
+      "name": "Tests, ui",
+      "command": "pnpm --filter @intelliflow/ui test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:05:06Z"
+    },
+    {
+      "name": "TypeScript typecheck, adapters",
+      "command": "pnpm --filter @intelliflow/adapters typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:54:35Z"
+    },
+    {
+      "name": "Lint, adapters",
+      "command": "pnpm --filter @intelliflow/adapters lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:56:54Z"
+    },
+    {
+      "name": "Build, adapters",
+      "command": "pnpm --filter @intelliflow/adapters build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:54:01Z"
+    },
+    {
+      "name": "Tests, adapters",
+      "command": "pnpm --filter @intelliflow/adapters test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:02:00Z"
+    },
+    {
+      "name": "TypeScript typecheck, validators",
+      "command": "pnpm --filter @intelliflow/validators typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:54:05Z"
+    },
+    {
+      "name": "Lint, validators",
+      "command": "pnpm --filter @intelliflow/validators lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:56:34Z"
+    },
+    {
+      "name": "Build, validators",
+      "command": "pnpm --filter @intelliflow/validators build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:53:01Z"
+    },
+    {
+      "name": "Tests, validators",
+      "command": "pnpm --filter @intelliflow/validators test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:01:10Z"
+    },
+    {
+      "name": "TypeScript typecheck, ai-worker",
+      "command": "pnpm --filter @intelliflow/ai-worker typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:15:07Z"
+    },
+    {
+      "name": "Lint, ai-worker",
+      "command": "pnpm --filter @intelliflow/ai-worker lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:15Z"
+    },
+    {
+      "name": "Build, ai-worker",
+      "command": "pnpm --filter @intelliflow/ai-worker build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:40Z"
+    },
+    {
+      "name": "Tests, ai-worker",
+      "command": "pnpm --filter @intelliflow/ai-worker test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:06:06Z"
+    },
+    {
+      "name": "TypeScript typecheck, workers",
+      "command": "pnpm --filter @intelliflow/workers typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:17:20Z"
+    },
+    {
+      "name": "Lint, workers",
+      "command": "pnpm --filter @intelliflow/workers lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:21Z"
+    },
+    {
+      "name": "Build, workers",
+      "command": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/combined-worker build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:49Z"
+    },
+    {
+      "name": "Tests, workers",
+      "command": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/combined-worker --filter @intelliflow/worker-shared test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:56Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "merged-pr-evidence",
+      "passed": true
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Name first in every search result; no dollar amounts",
+      "target": "name first, no dollar amounts",
+      "actual": "search result shows the lead name first, email second; £ on the dashboard and the deals empty state",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "The owner can search for a lead by name and read the result at a glance on production for the Leangency workspace",
+      "met": true
+    }
+  ],
+  "notes": "Closed by the 17/11 plan close on the signed-in production evidence listed here. Checked on a lead search and on the dashboard; the deal value in search results and on a contact is covered by the merged PRs and their tests, and the workspace has no deals yet to show it on production. Checks recorded 2026-11-22 by re-running them on a fresh worktree of origin/main (3df6095e9), each through the test-slot wrapper, for the packages this row's merged PRs touched. Dependency packages (domain, validators, db, platform, webhooks, application, adapters, observability, partner-sdk, worker-shared, ai-worker) were built first; earlier attempts that ran before those builds failed with unresolved modules and were re-run after, only the passing re-runs are recorded. Packages with no build script (ui) have no Build record. The production captures above stay as the behaviour evidence."
+}

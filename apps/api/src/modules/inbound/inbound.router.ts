@@ -52,6 +52,7 @@ import type { Prisma, PrismaClient } from '@intelliflow/db';
 import type { Context } from '../../context';
 import { createTenantScopedPrisma, serviceTenantContext } from '../../security/tenant-context';
 import { describePipelineSyncCopy } from './pipeline-sync-copy';
+import { applyLastContact, isCoaReplyStage } from './pipeline-last-contact';
 import { enqueueLeadAiById } from '../lead/lead-scoring-enqueue';
 import { restrictionReader } from '../privacy/restriction-reader';
 
@@ -231,6 +232,8 @@ export const inboundPipelineLeadSchema = z.object({
   coaStage: z.string().max(50),
   /** When COA moved the lead (ISO datetime). */
   stageChangedAt: z.string().datetime(),
+  /** COA's latest send or reply to the lead. Absent = a contact stage dates it by stageChangedAt. */
+  lastContactedAt: z.string().datetime().optional(),
   /** COA concept-page slug (`<slug>.leangency.com`). Absent = leave the stored one alone. */
   outreachSlug: z
     .string()
@@ -368,18 +371,6 @@ const PIPELINE_RANK: Record<string, number> = {
  * `planPipelineSteps`).
  */
 const PIPELINE_LADDER: readonly PipelineLeadStatus[] = ['CONTACTED', 'QUALIFIED', 'NEGOTIATING'];
-
-/**
- * COA stages that mean the lead has replied (COA `CrmStage`: RESPONDED is "Replied";
- * MEETING_BOOKED and WON come only after it). Not a reply: COA's own QUALIFIED (a pre-contact
- * audit verdict) and PROPOSAL_READY, which COA can also reach before any contact
- * (AUDITED / QUALIFIED / CONTACT_FOUND -> PROPOSAL_READY when assets are generated).
- */
-const COA_REPLY_STAGES: ReadonlySet<string> = new Set(['RESPONDED', 'MEETING_BOOKED', 'WON']);
-
-function isCoaReplyStage(coaStage: string): boolean {
-  return COA_REPLY_STAGES.has(coaStage.trim().toUpperCase());
-}
 
 /**
  * The status the sync walks toward. A lead that replied is qualified here as an inbound reply,
@@ -1732,6 +1723,8 @@ export const inboundRouter = createTRPCRouter({
       // (status walk, tagging) can still fail with a retryable 500, and the retry then
       // plans nothing, because the stored name is no longer the listing name.
       const companyField = companyChange ? { companyChange } : {};
+      // The last contact (MVP-010), forward-only and before the repeat check, like the slug.
+      await applyLastContact(ctx.prismaWithTenant, input, leadId, tenantId);
       // The lead's AI work (scoring, qualification, next best action), from the lead as now
       // stored, so a corrected company is what the agents read. Fire-and-forget; a re-sync of
       // a lead whose fields have not changed queues nothing (deterministic job ids).

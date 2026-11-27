@@ -89,6 +89,42 @@ describe('proxy: pages that load', () => {
   });
 });
 
+describe('proxy: the home page', () => {
+  const rewrittenTo = (res: Response) => res.headers.get('x-middleware-rewrite');
+
+  it('rewrites a signed-in visit to / to the signed-in home, keeping the query', () => {
+    const res = proxy(request('/?_rsc=abc', { token: tokenExpiringIn(3600) }));
+
+    expect(res.status).toBe(200);
+    const target = new URL(rewrittenTo(res)!);
+    expect(target.pathname).toBe('/signed-in-home');
+    expect(target.searchParams.get('_rsc')).toBe('abc');
+    expect(res.headers.get('location')).toBeNull();
+  });
+
+  it('passes the request id on with the rewrite', () => {
+    const res = proxy(request('/', { token: tokenExpiringIn(3600), requestId: 'req-home' }));
+
+    expect(res.headers.get('x-middleware-request-x-request-id')).toBe('req-home');
+    expect(res.headers.get(CSP_REPORT_ONLY_HEADER)).toBeTruthy();
+  });
+
+  it('leaves a signed-out visit to / on the prerendered landing page', () => {
+    expect(rewrittenTo(proxy(request('/')))).toBeNull();
+  });
+
+  it('treats an expired token on / as signed out and drops the cookie', () => {
+    const res = proxy(request('/', { token: tokenExpiringIn(-60) }));
+
+    expect(rewrittenTo(res)).toBeNull();
+    expect(res.headers.get('set-cookie')).toMatch(/accessToken=;/);
+  });
+
+  it('rewrites only the home page, not other signed-in pages', () => {
+    expect(rewrittenTo(proxy(request('/pricing', { token: tokenExpiringIn(3600) })))).toBeNull();
+  });
+});
+
 describe('proxy: headers', () => {
   it('sends the policy report-only, never as an enforced policy', () => {
     const res = proxy(request('/'));
@@ -132,16 +168,30 @@ describe('proxy: headers', () => {
 });
 
 describe('config', () => {
+  const [home, pages] = config.matcher as [
+    { source: string; has: Array<{ type: string; key: string }> },
+    string,
+  ];
+
   it('is exported as config so Next.js runs the proxy', () => {
-    expect(config.matcher).toHaveLength(1);
+    expect(config.matcher).toHaveLength(2);
+  });
+
+  it('runs on / only when the request carries the access-token cookie', () => {
+    expect(home).toEqual({ source: '/', has: [{ type: 'cookie', key: 'accessToken' }] });
   });
 
   it('skips API routes, Next.js assets and static files', () => {
-    const matcher = new RegExp(`^${config.matcher[0]}$`);
+    const matcher = new RegExp(`^${pages}$`);
 
     expect(matcher.test('/deals/abc123')).toBe(true);
+    expect(matcher.test('/pricing')).toBe(true);
     expect(matcher.test('/api/trpc/auth.login')).toBe(false);
     expect(matcher.test('/_next/static/chunk.js')).toBe(false);
     expect(matcher.test('/brand/logo.svg')).toBe(false);
+  });
+
+  it('leaves / itself to the cookie rule, so a signed-out / runs no proxy', () => {
+    expect(new RegExp(`^${pages}$`).test('/')).toBe(false);
   });
 });

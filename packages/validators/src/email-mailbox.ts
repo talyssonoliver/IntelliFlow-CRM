@@ -64,6 +64,8 @@ export const saveSmtpMailboxInputSchema = z
       .transform((v) => v ?? null),
     imapUsername: mailboxUsernameSchema.nullish().transform((v) => v ?? null),
     imapPassword: secretUpdateSchema,
+    /** The user confirmed a personal (consumer-domain) mailbox when asked. */
+    acceptPersonal: z.boolean().optional(),
   })
   .strict();
 export type SaveSmtpMailboxInput = z.infer<typeof saveSmtpMailboxInputSchema>;
@@ -72,7 +74,14 @@ export const mailboxScopeInputSchema = z.object({ scope: mailboxScopeSchema }).s
 export type MailboxScopeInput = z.infer<typeof mailboxScopeInputSchema>;
 
 export const oauthStartInputSchema = z
-  .object({ provider: oauthMailboxProviderSchema, scope: mailboxScopeSchema })
+  .object({
+    provider: oauthMailboxProviderSchema,
+    scope: mailboxScopeSchema,
+    /** MVP-011, Google: ask for sending only (the Workspace domain does not trust Aurora yet). */
+    sendOnly: z.boolean().optional(),
+    /** The user confirmed a personal (consumer-domain) mailbox when asked. */
+    acceptPersonal: z.boolean().optional(),
+  })
   .strict();
 export type OAuthStartInput = z.infer<typeof oauthStartInputSchema>;
 
@@ -81,6 +90,8 @@ export const oauthCompleteInputSchema = z
     provider: oauthMailboxProviderSchema,
     code: z.string().min(1).max(4096),
     state: z.string().min(16).max(256),
+    /** Zoho only: the redirect's `accounts-server` (the account's data centre); checked server-side. */
+    accountsServer: z.string().min(1).max(100).optional(),
   })
   .strict();
 export type OAuthCompleteInput = z.infer<typeof oauthCompleteInputSchema>;
@@ -105,12 +116,44 @@ export interface MailboxDto extends SmtpEndpointDto, SmtpAccountDto {
   /** True when this mailbox can be scanned for bounce reports. */
   bounceReadingEnabled: boolean;
   accountAddress: string | null;
+  /** #1177: when the Outlook inbox sync last finished a round (ISO); null before the first. */
+  inboxSyncedAt?: string | null;
+  /** The history import's real progress; null when nothing is importing. */
+  historyImport?: { done: number; total: number; paused: boolean } | null;
+  /**
+   * MVP-001: replies logged (ON), the connection needs the read permission (NEEDS_RECONNECT), or
+   * n/a. MVP-011: NEEDS_ADMIN_TRUST, a Google mailbox sending only until its Workspace admin trusts
+   * Aurora.
+   */
+  replySync?: 'ON' | 'NEEDS_RECONNECT' | 'NEEDS_ADMIN_TRUST' | null;
+  /**
+   * MVP-013: whether the connected Google account let Aurora use its calendar (GRANTED), or the user
+   * left that permission unticked or connected before it was asked for (NOT_GRANTED); null for a
+   * mailbox that has no calendar (company mailbox, other providers).
+   */
+  calendarAccess?: 'GRANTED' | 'NOT_GRANTED' | null;
+  /**
+   * MVP-013: the calendar sync of a mailbox that has the permission: ON, or NEEDS_RECONNECT when Google
+   * refused its access (the user withdrew it); null when there is no calendar.
+   */
+  calendarSync?: 'ON' | 'NEEDS_RECONNECT' | null;
+  /** When the calendar sync last finished a round (ISO); null before the first. */
+  calendarSyncedAt?: string | null;
   updatedAt: string;
 }
 
 export interface OAuthProvidersAvailableDto {
   GMAIL: boolean;
   MICROSOFT: boolean;
+  ZOHO: boolean;
+}
+
+/** The user's own mailbox, the one-click providers, and (MVP-011) the Google client id to trust. */
+export interface MyMailboxDto {
+  mailbox: MailboxDto | null;
+  providersAvailable: OAuthProvidersAvailableDto;
+  /** Public (it is in every consent URL): what a Workspace admin trusts; null without Google. */
+  googleClientId: string | null;
 }
 
 /** Who a new email would be sent as, or why it could not be sent yet. */

@@ -34,6 +34,8 @@ vi.mock('@/lib/leads/use-lead-recent-views', () => ({
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
 const mockLogActivityMutate = vi.fn();
+// Two members by default so the "Filter by" people box shows; set one to test it hiding.
+let mockWorkspaceUsers: Array<{ id: string }> = [{ id: 'u1' }, { id: 'u2' }];
 const mockAddNoteMutate = vi.fn();
 
 // Mutable state refs so isPending tests can flip the flag without
@@ -131,6 +133,10 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   }),
 }));
 
+const mockEmailEngagement = vi.hoisted(() => ({
+  current: undefined as { sent: number; opened: number } | undefined,
+}));
+
 vi.mock('@/lib/api', () => ({
   api: {
     useUtils: () => ({
@@ -140,6 +146,8 @@ vi.mock('@/lib/api', () => ({
         getEntityFeed: { invalidate: mockActivityFeedEntityInvalidate },
       },
     }),
+    // Workspace members: the people filter shows only with more than one (MVP-005).
+    user: { list: { useQuery: () => ({ data: { users: mockWorkspaceUsers } }) } },
     lead: {
       getById: {
         useQuery: () => ({
@@ -165,6 +173,12 @@ vi.mock('@/lib/api', () => ({
           lane.mutationOpts.convert = opts ?? {};
           return { mutate: vi.fn(), isPending: false };
         },
+      },
+      qualify: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
+      convertToDeal: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
       },
       scoreWithAI: {
         useMutation: (opts?: (typeof lane.mutationOpts)[string]) => {
@@ -200,6 +214,12 @@ vi.mock('@/lib/api', () => ({
             isPending: mockLogActivityState.isPending,
           };
         },
+      },
+    },
+    // The profile card's open rate also reads the CRM's own email records for the lead.
+    emailLog: {
+      engagementForLead: {
+        useQuery: () => ({ data: mockEmailEngagement.current }),
       },
     },
     home: {
@@ -304,8 +324,15 @@ vi.mock('@intelliflow/ui', () => ({
   ),
 }));
 
+// Records the More sheet's extra actions so tests can check what lives under More.
+const mockActionSheetActions: { current: Array<{ label: string; onClick: () => void }> } = {
+  current: [],
+};
 vi.mock('@/components/shared/entity-action-sheet', () => ({
-  EntityActionSheet: () => null,
+  EntityActionSheet: (props: { extraActions?: Array<{ label: string; onClick: () => void }> }) => {
+    mockActionSheetActions.current = props.extraActions ?? [];
+    return null;
+  },
 }));
 
 vi.mock('@/components/shared/entity-hover-card', () => ({
@@ -315,9 +342,9 @@ vi.mock('@/components/shared/entity-hover-card', () => ({
 vi.mock('@/components/shared/more-actions-button', () => ({
   MoreActionsButton: () => <button type="button">More Actions</button>,
 }));
-
-// PG-203 DSAR: the banner has its own tests and reads a router these mocks do not stub.
+// PG-203 DSAR / MVP-012: these panels have their own tests and read routers not stubbed here.
 vi.mock('@/components/privacy/RestrictionBanner', () => ({ RestrictionBanner: () => null }));
+vi.mock('@/components/contacts/ReplyDraftsPanel', () => ({ ReplyDraftsPanel: () => null })); // MVP-012
 
 vi.mock('@/components/home/PinButton', () => ({
   PinButton: () => <button type="button">Pin</button>,
@@ -496,6 +523,24 @@ describe('LeadDetailPage - Real AI Insight Rendering (IFC-226)', () => {
     expect(screen.getByTestId('engagement-value')).toHaveTextContent('High');
   });
 
+  it('passes the stored score confidence to the score in the sidebar (register #49)', () => {
+    const data = mockLeadQueryState.data as { scoringStatus?: string; scoreConfidence?: number };
+    data.scoringStatus = 'NEEDS_REVIEW';
+    data.scoreConfidence = 0.4;
+    try {
+      const { unmount } = render(<Lead360Page />);
+      expect(screen.getByTestId('sidebar-lead-score')).toHaveTextContent('Low confidence');
+      unmount();
+
+      data.scoreConfidence = 0.7;
+      render(<Lead360Page />);
+      expect(screen.getByTestId('sidebar-lead-score')).toHaveTextContent('Few signals yet');
+      expect(screen.getByTestId('sidebar-lead-score')).not.toHaveTextContent('Low confidence');
+    } finally {
+      delete data.scoreConfidence;
+    }
+  });
+
   it('renders sentiment with green styling when real data exists', () => {
     render(<Lead360Page />);
     const aiTab = screen.getByRole('button', { name: /AI Insights/i });
@@ -535,7 +580,7 @@ describe('LeadDetailPage - Empty State CTA', () => {
   // EmptyState migration: packages/ui/src/components/empty-state.tsx gates the
   // CTA behind `phase === 'soft-cta'` (empty-state.tsx:387), so a passive
   // EmptyState never renders the button. Its AC-001/AC-002 coverage moved
-  // into AC-003's "activity-visible" path ÔÇö see below ÔÇö which is sufficient.
+  // into AC-003's "activity-visible" path — see below — which is sufficient.
 
   it('CTA button is NOT rendered when activities array has items (AC-003)', () => {
     mockLeadQueryState.data.activities = [
@@ -1049,6 +1094,58 @@ describe('LeadDetailPage - Activity Feed Toggle (IFC-247)', () => {
   });
 });
 
+// ─── MVP-006: the activity cards fit a phone screen ──────────────────────────
+
+describe('LeadDetailPage - activity card on a phone (MVP-006)', () => {
+  // The first card of the Greenleaf lead carries an email address and a ledger id in its
+  // description. Without min-w-0 the text column kept that width and pushed the expand button
+  // 9 px past a 390 px screen, so the whole page scrolled sideways.
+  // Long and unbroken, like a pasted address with no spaces (not a record id: those are stripped, #42).
+  const LONG =
+    'hello@greenleafgardens.example.invalid-and-a-very-long-unbroken-tail-of-text-without-spaces';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    mockLeadQueryState.data.aiInsights = [];
+    mockLeadQueryState.data.activities = [
+      {
+        id: 'act-long',
+        type: 'EMAIL' as const,
+        title: 'Price follow-up sent',
+        description: LONG,
+        timestamp: '2026-11-06T00:00:00.000Z',
+        userName: 'Test User',
+        metadata: {} as Record<string, unknown>,
+        sentiment: null,
+      },
+    ];
+  });
+  afterEach(() => {
+    mockLeadQueryState.data.activities = [];
+  });
+
+  it('lets the text column shrink and wrap a long unbroken string', () => {
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+
+    const column = screen.getByText(LONG).parentElement as HTMLElement;
+    expect(column.className).toContain('min-w-0');
+    expect(column.className).toContain('break-words');
+  });
+
+  it('keeps the expand button its own size instead of squeezing it', () => {
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+
+    const column = screen.getByText(LONG).parentElement as HTMLElement;
+    const expand = column.nextElementSibling as HTMLElement;
+    expect(expand.tagName).toBe('BUTTON');
+    expect(expand.className).toContain('shrink-0');
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Floating-promise handling: cache refreshes are returned from onSuccess and
 // failures are reported rather than left unhandled.
@@ -1210,7 +1307,8 @@ describe('LeadDetailPage - display name fallback (UI-016)', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Acme Corp');
     expect(screen.getByText(/permanently delete Acme Corp\?/)).toBeInTheDocument();
     expect(screen.getByText(/archive Acme Corp\?/)).toBeInTheDocument();
-    expect(screen.getByText(/Convert Acme Corp to a contact record\?/)).toBeInTheDocument();
+    // The header's "Convert to deal" opens the dialog on the deal form (MVP-003).
+    expect(screen.getByText(/Convert Acme Corp to a contact and open a deal/)).toBeInTheDocument();
   });
 
   it('falls back to the email when the lead has no name and no company', () => {
@@ -1226,10 +1324,62 @@ describe('LeadDetailPage - display name fallback (UI-016)', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('John Doe');
   });
 
+  describe('phone header (MVP-003)', () => {
+    it('shows the lead name as the visible page title on a phone, on one line', () => {
+      render(<Lead360Page />);
+      const title = screen.getByRole('heading', { level: 1 });
+      expect(title).toHaveTextContent('John Doe');
+      // Not screen-reader only: a phone shows the name (it was blank there, MVP-012).
+      expect(title).not.toHaveClass('sr-only');
+      expect(title).toHaveClass('truncate');
+    });
+
+    it('labels the actions "Convert to deal" and "Log call"', () => {
+      render(<Lead360Page />);
+      expect(screen.getByRole('button', { name: 'Convert to deal' })).toHaveTextContent(
+        'Convert to deal'
+      );
+      expect(
+        screen.getAllByRole('button', { name: /^call Log call$|^Log call$/ }).length
+      ).toBeGreaterThan(0);
+    });
+
+    it('keeps only Log call and the three dots in the header on a phone', () => {
+      render(<Lead360Page />);
+      // Log call and More actions are not inside anything hidden below sm...
+      for (const name of [/log call/i, /more actions/i]) {
+        expect(screen.getByRole('button', { name }).closest('.hidden')).toBeNull();
+      }
+      // ...while Qualify, Convert to deal and Edit sit in a wrapper that is hidden below sm.
+      for (const name of [/qualify lead/i, 'Convert to deal', 'Edit lead']) {
+        const wrapper = screen.getByRole('button', { name }).closest('.hidden');
+        expect(wrapper).not.toBeNull();
+        expect(wrapper).toHaveClass('sm:contents');
+      }
+    });
+
+    it('moves Qualify, Convert to deal, Edit and the rest into the three-dots sheet', () => {
+      render(<Lead360Page />);
+      const labels = mockActionSheetActions.current.map((a) => a.label);
+      expect(labels).toEqual(
+        expect.arrayContaining(['Qualify', 'Convert to deal', 'Edit', 'Archive', 'Delete'])
+      );
+      // A NEW lead is not qualified yet: Convert is listed but disabled, with its reason.
+      const convert = mockActionSheetActions.current.find((a) => a.label === 'Convert to deal') as
+        | { disabled?: boolean; hint?: string }
+        | undefined;
+      expect(convert?.disabled).toBe(true);
+      expect(convert?.hint).toBe('Lead must be qualified before conversion.');
+      // The sheet entries do what the header buttons do.
+      mockActionSheetActions.current.find((a) => a.label === 'Edit')?.onClick();
+      expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/^\/leads\/.+\/edit$/));
+    });
+  });
+
   it('gives the icon-only header actions accessible names', () => {
     render(<Lead360Page />);
     expect(screen.getByRole('button', { name: 'Edit lead' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Convert lead' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Convert to deal' })).toBeInTheDocument();
   });
 });
 
@@ -1537,5 +1687,445 @@ describe('LeadDetailPage - object-shaped recommendations (#1277 review)', () => 
     fireEvent.click(screen.getByRole('button', { name: /AI Insights/i }));
 
     expect(screen.getAllByText('Follow up this week').length).toBeGreaterThan(0);
+  });
+});
+
+// ─── #1277 dead controls: every control does something real, or is not shown ──
+
+describe('LeadDetailPage - dead controls (#1277)', () => {
+  // Read fresh each time: earlier suites replace mockLeadQueryState.data.
+  const data = () =>
+    mockLeadQueryState.data as unknown as {
+      email: string | null;
+      activities: unknown[];
+      files: unknown[];
+      location?: string;
+    };
+
+  const emailActivity = {
+    id: 'act-email-1',
+    type: 'EMAIL',
+    title: 'Proposal sent',
+    description: '',
+    timestamp: '2026-03-02T10:00:00.000Z',
+    userName: 'Alex Owner',
+    metadata: { subject: 'Your proposal', opened: true, openCount: 2 },
+    sentiment: null,
+  };
+
+  const callActivity = (recordingUrl: string) => ({
+    id: 'act-call-1',
+    type: 'CALL',
+    title: 'Discovery call',
+    description: '',
+    timestamp: '2026-03-02T11:00:00.000Z',
+    userName: 'Alex Owner',
+    metadata: { outcome: 'connected', duration: '12m', recordingUrl },
+    sentiment: null,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    data().email = 'john@example.com';
+    data().activities = [];
+    data().files = [];
+    delete data().location;
+  });
+
+  afterEach(() => {
+    data().email = 'john@example.com';
+    data().activities = [];
+    data().files = [];
+    delete data().location;
+  });
+
+  it('Open Rate reads "—" without tracked sends, and Touchpoints leaves out score changes (#1288)', () => {
+    data().activities = [
+      // A synced outreach email: no open tracking.
+      { ...emailActivity, id: 'act-sync-1', metadata: { subject: 'Outreach email sent' } },
+      {
+        id: 'act-score-1',
+        type: 'SCORE_UPDATE',
+        title: 'Lead Scored by AI',
+        description: '',
+        timestamp: '2026-03-02T12:00:00.000Z',
+        userName: 'AI Scoring Agent',
+        metadata: { previousScore: 32, newScore: 28 },
+        sentiment: null,
+      },
+      callActivity('https://calls.example.invalid/rec-1.mp3'),
+    ];
+    render(<Lead360Page />);
+    expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('—');
+    expect(screen.getByText('Touchpoints').previousElementSibling).toHaveTextContent('2');
+  });
+
+  it('Open Rate reads 0% when tracked emails went unopened (#1288)', () => {
+    data().activities = [
+      { ...emailActivity, metadata: { subject: 'Your proposal', opened: false, openCount: 0 } },
+    ];
+    render(<Lead360Page />);
+    expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('0%');
+  });
+
+  it('Open Rate reads the CRM email records for the lead, not only the activity metadata', () => {
+    // No activity carries open data, but the lead has 4 tracked sends to its address, 3 opened.
+    data().activities = [
+      { ...emailActivity, id: 'act-sync-2', metadata: { subject: 'Outreach email sent' } },
+    ];
+    mockEmailEngagement.current = { sent: 4, opened: 3 };
+    try {
+      render(<Lead360Page />);
+      expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('75%');
+    } finally {
+      mockEmailEngagement.current = undefined;
+    }
+  });
+
+  it('Open Rate never counts the same mail twice when the activity and the record both have it', () => {
+    data().activities = [
+      { ...emailActivity, metadata: { subject: 'Your proposal', opened: true, openCount: 1 } },
+    ];
+    mockEmailEngagement.current = { sent: 1, opened: 1 };
+    try {
+      render(<Lead360Page />);
+      expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('100%');
+    } finally {
+      mockEmailEngagement.current = undefined;
+    }
+  });
+
+  it('the tab strip wraps on a phone instead of scrolling sideways (#16)', () => {
+    render(<Lead360Page />);
+    const strip = screen.getByRole('button', { name: /^Overview/i }).parentElement!;
+    expect(strip).toHaveClass('flex-wrap', 'sm:flex-nowrap', 'sm:overflow-x-auto');
+    // Below sm the strip is not a scroll container.
+    expect(strip.className.split(/\s+/)).not.toContain('overflow-x-auto');
+    // Every tab is still there and keeps its name.
+    for (const name of [/^Overview/i, /^Activity/i, /^Tasks/i, /^Notes/i, /^Emails/i, /^Files/i]) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument();
+    }
+  });
+
+  it('does not show the sync machine id in an activity entry (#42)', () => {
+    data().activities = [
+      {
+        id: 'act-coa-1',
+        type: 'NOTE',
+        title: 'Reply logged',
+        description: 'Offer sent by email. COA ledger row cmw5j72u40001p5ug01kf3vot.',
+        timestamp: '2026-03-02T12:00:00.000Z',
+        userName: 'Owner',
+        metadata: {},
+        sentiment: null,
+      },
+    ];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    expect(screen.getByText('Offer sent by email.')).toBeInTheDocument();
+    expect(screen.queryByText(/cmw5j72u40001p5ug01kf3vot/)).toBeNull();
+    expect(screen.queryByText(/COA ledger row/)).toBeNull();
+  });
+
+  it('searches the text a person reads, not the sync id that is hidden (#42)', () => {
+    data().activities = [
+      {
+        id: 'act-coa-2',
+        type: 'NOTE',
+        title: 'Reply logged',
+        description: 'Offer sent by email. COA ledger row cmw5j72u40001p5ug01kf3vot.',
+        timestamp: '2026-03-02T12:00:00.000Z',
+        userName: 'Owner',
+        metadata: {},
+        sentiment: null,
+      },
+    ];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    fireEvent.change(screen.getByPlaceholderText(/search activities/i), {
+      target: { value: 'cmw5j72u' },
+    });
+    expect(screen.queryByText('Offer sent by email.')).toBeNull();
+  });
+
+  it('Compose opens the email composer addressed to the lead', () => {
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
+    expect(screen.getByRole('link', { name: 'Compose' })).toHaveAttribute(
+      'href',
+      '/email/compose?to=john%40example.com'
+    );
+  });
+
+  describe('activity feed (MVP-005)', () => {
+    const syncNote = {
+      id: 'act-sync-note',
+      type: 'NOTE',
+      title: 'COA stage moved to Proposal',
+      description: '',
+      timestamp: '2026-03-03T09:00:00.000Z',
+      userName: 'System (COA sync)',
+      metadata: { source: 'coa-pipeline-sync' },
+      sentiment: null,
+    };
+    const scored = {
+      id: 'act-score-2',
+      type: 'SCORE_UPDATE',
+      title: 'Lead Scored by AI',
+      description: '',
+      timestamp: '2026-03-03T10:00:00.000Z',
+      userName: 'AI Scoring Agent',
+      metadata: { previousScore: 30, newScore: 40 },
+      sentiment: null,
+    };
+    const openActivity = () =>
+      fireEvent.click(screen.getAllByRole('button', { name: /^Activity/i })[0]);
+
+    afterEach(() => {
+      mockWorkspaceUsers = [{ id: 'u1' }, { id: 'u2' }];
+    });
+
+    it('offers only All, Emails, Calls, Notes and Meetings filters', () => {
+      render(<Lead360Page />);
+      openActivity();
+      for (const label of ['All', 'Emails', 'Calls', 'Notes', 'Meetings']) {
+        expect(
+          screen.getAllByRole('button', { name: new RegExp(`${label}$`) }).length
+        ).toBeGreaterThan(0);
+      }
+      expect(screen.queryByRole('button', { name: /Web Forms$/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Scores$/ })).not.toBeInTheDocument();
+    });
+
+    it('folds sync and score entries into one System updates line', () => {
+      data().activities = [emailActivity, syncNote, scored];
+      render(<Lead360Page />);
+      openActivity();
+
+      expect(screen.getByText('Proposal sent')).toBeInTheDocument();
+      const group = screen.getByRole('button', { name: /System updates \(2\)/ });
+      expect(group).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByText('COA stage moved to Proposal')).not.toBeInTheDocument();
+
+      fireEvent.click(group);
+      expect(screen.getByText('COA stage moved to Proposal')).toBeInTheDocument();
+    });
+
+    describe('score rows and actions (UI-021)', () => {
+      const expandSystemRow = () => {
+        render(<Lead360Page />);
+        openActivity();
+        fireEvent.click(screen.getByRole('button', { name: /System updates \(1\)/ }));
+        fireEvent.click(screen.getByRole('button', { name: 'expand_more' }));
+      };
+
+      it('reads the previous score the scoring API writes, not an empty "from"', () => {
+        data().activities = [scored];
+        expandSystemRow();
+
+        const row = screen.getByTestId('score-change');
+        expect(row).toHaveTextContent('Score changed from');
+        expect(row).toHaveTextContent('30');
+        expect(row).toHaveTextContent('40');
+      });
+
+      it('says "First score" for a lead\'s first real score', () => {
+        data().activities = [
+          { ...scored, metadata: { previousScore: 0, newScore: 38, firstScore: true } },
+        ];
+        expandSystemRow();
+
+        const row = screen.getByTestId('score-change');
+        expect(row).toHaveTextContent('First score');
+        expect(row).not.toHaveTextContent('Score changed from');
+        expect(row).toHaveTextContent('38');
+      });
+
+      it('reads the score the events-worker writes as `score`', () => {
+        data().activities = [{ ...scored, metadata: { score: 52, previousScore: 38 } }];
+        expandSystemRow();
+
+        const row = screen.getByTestId('score-change');
+        expect(row).toHaveTextContent('Score changed from');
+        expect(row).toHaveTextContent('38');
+        expect(row).toHaveTextContent('52');
+      });
+
+      it('shows no score row for a failed scoring, which has no new score', () => {
+        data().activities = [
+          {
+            ...scored,
+            title: 'AI scoring failed',
+            metadata: { scoringStatus: 'FAILED', errorClass: 'PersistenceError' },
+          },
+        ];
+        expandSystemRow();
+
+        expect(screen.queryByTestId('score-change')).not.toBeInTheDocument();
+      });
+
+      it('offers no reply, react, note or share on a system record', () => {
+        data().activities = [scored];
+        expandSystemRow();
+
+        expect(screen.queryByText('Activity Feed Item Actions')).not.toBeInTheDocument();
+      });
+
+      it("still offers them on a person's own activity", () => {
+        data().activities = [emailActivity];
+        render(<Lead360Page />);
+        openActivity();
+        fireEvent.click(screen.getByRole('button', { name: 'expand_more' }));
+
+        expect(screen.getByText('Activity Feed Item Actions')).toBeInTheDocument();
+      });
+    });
+
+    it('shows the people filter only when the workspace has more than one person', () => {
+      render(<Lead360Page />);
+      openActivity();
+      expect(screen.getByRole('combobox', { name: 'Filter by person' })).toBeInTheDocument();
+    });
+
+    it('hides the people filter for a one-person workspace', () => {
+      mockWorkspaceUsers = [{ id: 'u1' }];
+      render(<Lead360Page />);
+      openActivity();
+      expect(screen.queryByRole('combobox', { name: 'Filter by person' })).not.toBeInTheDocument();
+    });
+  });
+
+  it('offers no Compose when the lead has no email address', () => {
+    data().email = null;
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
+    expect(screen.queryByRole('link', { name: 'Compose' })).not.toBeInTheDocument();
+  });
+
+  it('Open shows the email in the timeline, expanded, without changing the URL', () => {
+    data().activities = [emailActivity];
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0);
+      return 0;
+    });
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Open "Your proposal" in the activity timeline' })
+    );
+
+    // The Activity tab is showing the email with its rich preview expanded.
+    expect(screen.getByText('Proposal sent')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'expand_more' }).querySelector('span')).toHaveClass(
+      'rotate-180'
+    );
+    expect(scrollIntoView).toHaveBeenCalled();
+    // No navigation: the deep-link param never enters the URL.
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
+    raf.mockRestore();
+  });
+
+  it('a second Open scrolls again and the user can still change tab', () => {
+    data().activities = [emailActivity];
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0);
+      return 0;
+    });
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    render(<Lead360Page />);
+    const openEmail = () => {
+      fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Open "Your proposal" in the activity timeline' })
+      );
+    };
+
+    openEmail();
+    openEmail();
+    expect(scrollIntoView).toHaveBeenCalledTimes(2);
+
+    fireEvent.click(screen.getByRole('button', { name: /^Files/i }));
+    expect(screen.queryByText('Proposal sent')).not.toBeInTheDocument();
+    raf.mockRestore();
+  });
+
+  it('Files has no Upload, and offers Download only for files with a stored address', () => {
+    data().files = [
+      {
+        id: 'f1',
+        name: 'brief.pdf',
+        size: '1 MB',
+        uploadedAt: '2026-03-01T00:00:00.000Z',
+        url: 'https://files.example.invalid/brief.pdf',
+      },
+      {
+        id: 'f2',
+        name: 'notes.txt',
+        size: '2 KB',
+        uploadedAt: '2026-03-01T00:00:00.000Z',
+        url: null,
+      },
+      {
+        id: 'f3',
+        name: 'bad.html',
+        size: '2 KB',
+        uploadedAt: '2026-03-01T00:00:00.000Z',
+        url: 'javascript:alert(1)',
+      },
+    ];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Files/i }));
+
+    expect(screen.queryByText('Upload')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Download brief.pdf' })).toHaveAttribute(
+      'href',
+      'https://files.example.invalid/brief.pdf'
+    );
+    expect(screen.queryByRole('link', { name: 'Download notes.txt' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Download bad.html' })).not.toBeInTheDocument();
+  });
+
+  it('Play Recording opens the stored recording', () => {
+    data().activities = [callActivity('https://calls.example.invalid/rec-1.mp3')];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'expand_more' }));
+    const link = screen.getByRole('link', { name: /Play Recording/i });
+    expect(link).toHaveAttribute('href', 'https://calls.example.invalid/rec-1.mp3');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  it('shows no Play Recording for an unsafe recording address', () => {
+    data().activities = [callActivity('javascript:alert(1)')];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'expand_more' }));
+    expect(screen.getByText('Discovery call')).toBeInTheDocument();
+    expect(screen.queryByText(/Play Recording/i)).not.toBeInTheDocument();
+  });
+
+  it('View Map is disabled without a location and opens Google Maps with one (UI-026)', () => {
+    const withLocation = data();
+    const { unmount } = render(<Lead360Page />);
+    expect(screen.getByRole('button', { name: 'View Map' })).toBeDisabled();
+    unmount();
+
+    withLocation.location = '10 Downing Street, London';
+    render(<Lead360Page />);
+    // A real link (an anchor works on every phone browser), to Google Maps for that address.
+    const link = screen.getByRole('link', { name: 'View Map' });
+    expect(link).toHaveAttribute(
+      'href',
+      'https://www.google.com/maps/search/?api=1&query=10%20Downing%20Street%2C%20London'
+    );
+    expect(link).toHaveAttribute('target', '_blank');
+    delete withLocation.location;
   });
 });

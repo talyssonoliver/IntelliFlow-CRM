@@ -1,22 +1,34 @@
 {
   "sprint": "sprint-20",
   "name": "Sprint 20",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-13T13:04:02.148Z",
   "summary_source": "specify",
   "task_summary": {
-    "total": 34,
+    "total": 54,
     "completed": 0,
-    "backlog": 34,
+    "backlog": 54,
     "blocked": 0,
     "attested_completed": 0
   },
-  "context": "Primary focus areas: Core CRM (25), AI Foundation (2), Performance (2).",
+  "context": "Primary focus areas: Core CRM (30), Engineering Operations (11), Settings (3).",
   "section_summary": [
     {
       "section": "Core CRM",
-      "total": 25,
+      "total": 30,
       "completed": 0,
-      "open": 25
+      "open": 30
+    },
+    {
+      "section": "Engineering Operations",
+      "total": 11,
+      "completed": 0,
+      "open": 11
+    },
+    {
+      "section": "Settings",
+      "total": 3,
+      "completed": 0,
+      "open": 3
     },
     {
       "section": "AI Foundation",
@@ -29,6 +41,12 @@
       "total": 2,
       "completed": 0,
       "open": 2
+    },
+    {
+      "section": "AI/Intelligence",
+      "total": 1,
+      "completed": 0,
+      "open": 1
     },
     {
       "section": "AI/ML",
@@ -128,17 +146,17 @@
       }
     },
     {
-      "taskId": "PG-070",
+      "taskId": "PG-066",
       "sprint": 20,
       "status": "Backlog",
       "section": "Core CRM",
-      "title": "Account Detail",
-      "description": "Account Detail",
-      "summary": "response under 200ms, Lighthouse 90, complete view",
-      "definitionOfDone": "Response <200ms, Lighthouse ≥90, complete view; artifacts: page.tsx, account-detail.tsx, subsidiary-list.tsx",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, complete view",
+      "title": "Edit Contact",
+      "description": "Edit Contact",
+      "summary": "response under 200ms, Lighthouse 90, edits saved",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, edits saved; artifacts: page.tsx, contact-editor.tsx, duplicate-detector.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, edits saved",
       "dependencies": [
-        "PG-069"
+        "PG-065"
       ],
       "attestation": {
         "exists": false,
@@ -160,17 +178,17 @@
       }
     },
     {
-      "taskId": "PG-071",
+      "taskId": "PG-067",
       "sprint": 20,
       "status": "Backlog",
       "section": "Core CRM",
-      "title": "Edit Account",
-      "description": "Edit Account",
-      "summary": "response under 200ms, Lighthouse 90, updates saved",
-      "definitionOfDone": "Response <200ms, Lighthouse ≥90, updates saved; artifacts: page.tsx, account-editor.tsx, parent-selector.tsx",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, updates saved",
+      "title": "Import Contacts",
+      "description": "Import Contacts",
+      "summary": "response under 200ms, Lighthouse 90, imports clean",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports clean; artifacts: page.tsx, contact-importer.tsx, deduplicator.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports clean",
       "dependencies": [
-        "PG-070"
+        "PG-064"
       ],
       "attestation": {
         "exists": false,
@@ -192,17 +210,17 @@
       }
     },
     {
-      "taskId": "PG-072",
+      "taskId": "PG-068",
       "sprint": 20,
       "status": "Backlog",
       "section": "Core CRM",
-      "title": "Import Accounts",
-      "description": "Import Accounts",
-      "summary": "response under 200ms, Lighthouse 90, imports structured",
-      "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports structured; artifacts: page.tsx, account-importer.tsx, hierarchy-mapper.ts",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports structured",
+      "title": "Merge Contacts",
+      "description": "Merge Contacts",
+      "summary": "response under 200ms, Lighthouse 90, merges completed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, merges completed; artifacts: page.tsx, merge-wizard.tsx, conflict-resolver.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, merges completed",
       "dependencies": [
-        "PG-069"
+        "PG-064"
       ],
       "attestation": {
         "exists": false,
@@ -269,6 +287,102 @@
       "definitionOfDoneSnapshot": "Critical paths on edge, <50ms response globally",
       "dependencies": [
         "IFC-014"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-066",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Edit Contact",
+      "description": "Edit Contact",
+      "summary": "response under 200ms, Lighthouse 90, edits saved",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, edits saved; artifacts: page.tsx, contact-editor.tsx, duplicate-detector.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, edits saved",
+      "dependencies": [
+        "PG-065"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-067",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Import Contacts",
+      "description": "Import Contacts",
+      "summary": "response under 200ms, Lighthouse 90, imports clean",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports clean; artifacts: page.tsx, contact-importer.tsx, deduplicator.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports clean",
+      "dependencies": [
+        "PG-064"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-068",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Merge Contacts",
+      "description": "Merge Contacts",
+      "summary": "response under 200ms, Lighthouse 90, merges completed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, merges completed; artifacts: page.tsx, merge-wizard.tsx, conflict-resolver.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, merges completed",
+      "dependencies": [
+        "PG-064"
       ],
       "attestation": {
         "exists": false,
@@ -1266,6 +1380,38 @@
       }
     },
     {
+      "taskId": "IFC-305",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
+      "description": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
+      "summary": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility;...",
+      "definitionOfDone": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility; each component independently testable >=90% coverage; zero functional regression; verified by: pnpm typecheck + test + lint + build",
+      "definitionOfDoneSnapshot": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility;...",
+      "dependencies": [
+        "IFC-226"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
       "taskId": "PG-194",
       "sprint": 20,
       "status": "Backlog",
@@ -1279,6 +1425,519 @@
         "IFC-073",
         "IFC-100",
         "IFC-306"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-210",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "IFC-311 reassign UI wiring follow-up (contacts + accounts) — wire the four new tRPC procedures shipped by IFC-311 (api.contact.reassign, api.contact.bulkReassign, api.account.reassign, api.account.bulkReassign) into real UI so the notifyOnOwnerChange Cat-1 toggle is reachable for end users on both entities. Source: IFC-311 post-completion code review Finding 1 — all four procedures are dead-on-arrival at runtime (zero direct UI callers). The account SINGLE-reassign path is transitively reachable via AccountDetail.tsx:152 → api.account.assignOwner (refactored in IFC-311 to delegate to performAccountReassign, so the notification fires), but api.account.bulkReassign is fully orphaned and the account detail page still calls the legacy name. Scope: (a) contacts-list bulk-actions bar exposes a Reassign action that calls contact.bulkReassign; (b) contact detail page actions expose a Reassign option that calls contact.reassign; (c) accounts-list bulk-actions bar exposes a Reassign action that calls account.bulkReassign (brand-new UI surface — no legacy shim covers this); (d) migrate AccountDetail.tsx:152 from api.account.assignOwner.useMutation to api.account.reassign.useMutation so the canonical IFC-311 name is the production caller (assignOwner stays as a deprecated legacy alias); (e) one integration test per entity that exercises the toggle flipping the notification path end-to-end. Backend API surface is already shipped by IFC-311 — this task is UI + wiring + one cosmetic endpoint migration only.",
+      "description": "IFC-311 reassign UI wiring follow-up (contacts + accounts) — wire the four new tRPC procedures shipped by IFC-311 (api.contact.reassign, api.contact.bulkReassign, api.account.reassign, api.account.bulkReassign) into real UI so the notifyOnOwnerChange Cat-1 toggle is reachable for end users on both entities. Source: IFC-311 post-completion code review Finding 1 — all four procedures are dead-on-arrival at runtime (zero direct UI callers). The account SINGLE-reassign path is transitively reachable via AccountDetail.tsx:152 → api.account.assignOwner (refactored in IFC-311 to delegate to performAccountReassign, so the notification fires), but api.account.bulkReassign is fully orphaned and the account detail page still calls the legacy name. Scope: (a) contacts-list bulk-actions bar exposes a Reassign action that calls contact.bulkReassign; (b) contact detail page actions expose a Reassign option that calls contact.reassign; (c) accounts-list bulk-actions bar exposes a Reassign action that calls account.bulkReassign (brand-new UI surface — no legacy shim covers this); (d) migrate AccountDetail.tsx:152 from api.account.assignOwner.useMutation to api.account.reassign.useMutation so the canonical IFC-311 name is the production caller (assignOwner stays as a deprecated legacy alias); (e) one integration test per entity that exercises the toggle flipping the notification path end-to-end. Backend API surface is already shipped by IFC-311 — this task is UI + wiring + one cosmetic endpoint migration only.",
+      "summary": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src;...",
+      "definitionOfDone": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src; contacts-list bulk-actions Reassign calls contact.bulkReassign with selected ids + target owner; contact detail Reassign calls contact.reassign; accounts-list bulk-actions Reassign calls account.bulkReassign; AccountDetail.tsx migrated from account.assignOwner to account.reassign (canonical); two integration tests (one per entity) verify both parties receive the matching *_reassigned notification when notifyOnOwnerChange=true; Lighthouse >=90 on contacts-list and accounts-list",
+      "definitionOfDoneSnapshot": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src;...",
+      "dependencies": [
+        "IFC-311"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-313",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "AI/Intelligence",
+      "title": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
+      "description": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
+      "summary": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+      "definitionOfDone": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+      "definitionOfDoneSnapshot": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+      "dependencies": [
+        "IFC-312"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-002.R04",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Engineering Operations",
+      "title": "Remediation R04 [Critical/DDD-001][REVIEW]: Lead->Deal conversion transaction atomicity (unit-of-work across 4 aggregates) — HELD for design review",
+      "description": "Remediation R04 [Critical/DDD-001][REVIEW]: Lead->Deal conversion transaction atomicity (unit-of-work across 4 aggregates) — HELD for design review",
+      "summary": "Conversion commits/rolls back atomically; requires TransactionClient design",
+      "definitionOfDone": "Conversion commits/rolls back atomically; requires TransactionClient design; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Conversion commits/rolls back atomically; requires TransactionClient design",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-002.R05",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Engineering Operations",
+      "title": "Remediation R05 [Critical/HEX-001][REVIEW]: wire ticket port into composition root or delete orphan port — HELD for design decision",
+      "description": "Remediation R05 [Critical/HEX-001][REVIEW]: wire ticket port into composition root or delete orphan port — HELD for design decision",
+      "summary": "TicketService consumes TicketRepositoryPort OR orphan port removed",
+      "definitionOfDone": "TicketService consumes TicketRepositoryPort OR orphan port removed; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "TicketService consumes TicketRepositoryPort OR orphan port removed",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-002.R06",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Engineering Operations",
+      "title": "Remediation R06 [Critical/HEX-005][REVIEW]: appointments router use-case migration (~28 direct prisma sites) — HELD, 20+ file refactor",
+      "description": "Remediation R06 [Critical/HEX-005][REVIEW]: appointments router use-case migration (~28 direct prisma sites) — HELD, 20+ file refactor",
+      "summary": "Read/link/attendee surfaces routed through use cases",
+      "definitionOfDone": "Read/link/attendee surfaces routed through use cases; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Read/link/attendee surfaces routed through use cases",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-002.R07",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Engineering Operations",
+      "title": "Remediation R07 [Critical/QUAL-015][REVIEW]: consolidate diverging prompt-sanitizer into one canonical module — HELD, security design decision",
+      "description": "Remediation R07 [Critical/QUAL-015][REVIEW]: consolidate diverging prompt-sanitizer into one canonical module — HELD, security design decision",
+      "summary": "Single sanitizer source of truth re-exported to both call sites; architecture test guards duplication",
+      "definitionOfDone": "Single sanitizer source of truth re-exported to both call sites; architecture test guards duplication; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Single sanitizer source of truth re-exported to both call sites; architecture test guards duplication",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-002.R08",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Engineering Operations",
+      "title": "Remediation R08 [High/HEX-002+003]: ticket hexagonal extraction (TicketService/TicketRoutingService -> use cases behind port)",
+      "description": "Remediation R08 [High/HEX-002+003]: ticket hexagonal extraction (TicketService/TicketRoutingService -> use cases behind port)",
+      "summary": "Ticket orchestration + routing behind TicketRepositoryPort, unit-testable without Prisma",
+      "definitionOfDone": "Ticket orchestration + routing behind TicketRepositoryPort, unit-testable without Prisma; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Ticket orchestration + routing behind TicketRepositoryPort, unit-testable without Prisma",
+      "dependencies": [
+        "ENG-OPS-002.R05"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-002.R09",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Engineering Operations",
+      "title": "Remediation R09 [High/HEX-004]: LeadRoutingService depends on LeadRepositoryPort instead of raw PrismaClient",
+      "description": "Remediation R09 [High/HEX-004]: LeadRoutingService depends on LeadRepositoryPort instead of raw PrismaClient",
+      "summary": "LeadRoutingService uses PrismaLeadRepository via port",
+      "definitionOfDone": "LeadRoutingService uses PrismaLeadRepository via port; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "LeadRoutingService uses PrismaLeadRepository via port",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-002.R11",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Engineering Operations",
+      "title": "Remediation R11 [High/DDD-002]: persist domain events (outbox) inside the same transaction as aggregate state (ADR-011 zero-lost-events)",
+      "description": "Remediation R11 [High/DDD-002]: persist domain events (outbox) inside the same transaction as aggregate state (ADR-011 zero-lost-events)",
+      "summary": "Outbox rows written in the aggregate save transaction",
+      "definitionOfDone": "Outbox rows written in the aggregate save transaction; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Outbox rows written in the aggregate save transaction",
+      "dependencies": [
+        "ENG-OPS-002.R04"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-002.R12",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Engineering Operations",
+      "title": "Remediation R12 [High/DDD-003+004]: TenantId value object + move lead auto-qualify policy into the Lead aggregate",
+      "description": "Remediation R12 [High/DDD-003+004]: TenantId value object + move lead auto-qualify policy into the Lead aggregate",
+      "summary": "TenantId VO with Result.create; Lead.applyAiScore encapsulates auto-qualify",
+      "definitionOfDone": "TenantId VO with Result.create; Lead.applyAiScore encapsulates auto-qualify; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "TenantId VO with Result.create; Lead.applyAiScore encapsulates auto-qualify",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-002.R14",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Engineering Operations",
+      "title": "Remediation R14 [High/PERF-003]: enable pg_trgm + GIN trigram indexes for free-text search (kill ILIKE seq-scans)",
+      "description": "Remediation R14 [High/PERF-003]: enable pg_trgm + GIN trigram indexes for free-text search (kill ILIKE seq-scans)",
+      "summary": "pg_trgm migration + gin_trgm_ops indexes on searched columns",
+      "definitionOfDone": "pg_trgm migration + gin_trgm_ops indexes on searched columns; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "pg_trgm migration + gin_trgm_ops indexes on searched columns",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-002.R15",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Engineering Operations",
+      "title": "Remediation R15 [High/GOV-A-003]: triage 175/447 schema-validation failures (regenerate vs fix) and wire validate:schemas into pre-ship",
+      "description": "Remediation R15 [High/GOV-A-003]: triage 175/447 schema-validation failures (regenerate vs fix) and wire validate:schemas into pre-ship",
+      "summary": "validate:schemas green; wired as hard pre-ship gate",
+      "definitionOfDone": "validate:schemas green; wired as hard pre-ship gate; verified by: pnpm validate:schemas",
+      "definitionOfDoneSnapshot": "validate:schemas green; wired as hard pre-ship gate",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-002.R18",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Engineering Operations",
+      "title": "Remediation R18 [Medium batch]: triage the 39 Medium findings (ddd/hexagonal/security/perf/quality/stale) into focused Sprint-19 follow-ups",
+      "description": "Remediation R18 [Medium batch]: triage the 39 Medium findings (ddd/hexagonal/security/perf/quality/stale) into focused Sprint-19 follow-ups",
+      "summary": "All 39 Medium findings triaged and bucketed",
+      "definitionOfDone": "All 39 Medium findings triaged and bucketed; verified by: manual review",
+      "definitionOfDoneSnapshot": "All 39 Medium findings triaged and bucketed",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-211",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Public booking: booker self-service cancel/reschedule. A signed, single-purpose, expiring link in the PG-203 booking confirmation email lets the booker cancel or move a /book/<handle>/<slug> appointment without contacting the firm. The move goes through the same per-tenant booking advisory lock, availability re-check, notice/horizon and daily cap as publicBooking.book (ADR-083); tokens are stored only as HMACs and travel in the URL fragment (PG-203 DSAR pattern); the host is notified. Origin: PG-203 follow-up (spec Risks; PRD addendum).",
+      "description": "Public booking: booker self-service cancel/reschedule. A signed, single-purpose, expiring link in the PG-203 booking confirmation email lets the booker cancel or move a /book/<handle>/<slug> appointment without contacting the firm. The move goes through the same per-tenant booking advisory lock, availability re-check, notice/horizon and daily cap as publicBooking.book (ADR-083); tokens are stored only as HMACs and travel in the URL fragment (PG-203 DSAR pattern); the host is notified. Origin: PG-203 follow-up (spec Risks; PRD addendum).",
+      "summary": "A booker can cancel or reschedule their own public booking from the confirmation-email link until the notice cutoff; reschedule re-checks availability under the booking lock and returns CONFLICT when the slot is gone;...",
+      "definitionOfDone": "A booker can cancel or reschedule their own public booking from the confirmation-email link until the notice cutoff; reschedule re-checks availability under the booking lock and returns CONFLICT when the slot is gone; the token is single-purpose, expiring and HMAC-stored; the host gets an email; cross-tenant and replay negative tests pass; Lighthouse >=90 on the manage page",
+      "definitionOfDoneSnapshot": "A booker can cancel or reschedule their own public booking from the confirmation-email link until the notice cutoff; reschedule re-checks availability under the booking lock and returns CONFLICT when the slot is gone;...",
+      "dependencies": [
+        "PG-203"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-212",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Event types: per-type minimum notice and booking horizon. Replace the fixed BOOKING_MIN_NOTICE_MINUTES (60) and BOOKING_HORIZON_DAYS (60) constants (packages/domain/src/legal/appointments/event-types.ts) with per-event-type fields on event_types (Class A migration, named CHECKs, defaults 60 min / 60 days), editable in the /calendar/event-types dialog and honoured by listOpenSlots and the public booking re-check. Origin: PG-203 follow-up (PRD addendum).",
+      "description": "Event types: per-type minimum notice and booking horizon. Replace the fixed BOOKING_MIN_NOTICE_MINUTES (60) and BOOKING_HORIZON_DAYS (60) constants (packages/domain/src/legal/appointments/event-types.ts) with per-event-type fields on event_types (Class A migration, named CHECKs, defaults 60 min / 60 days), editable in the /calendar/event-types dialog and honoured by listOpenSlots and the public booking re-check. Origin: PG-203 follow-up (PRD addendum).",
+      "summary": "event_types gains minNoticeMinutes and horizonDays (Class A migration, CHECK-bounded, defaults equal to today's constants so behaviour is unchanged until edited); the dialog edits both with validation;...",
+      "definitionOfDone": "event_types gains minNoticeMinutes and horizonDays (Class A migration, CHECK-bounded, defaults equal to today's constants so behaviour is unchanged until edited); the dialog edits both with validation; listSlots and book use the per-type values; real-DB migration test and unit tests pass; Lighthouse >=90 on /calendar/event-types",
+      "definitionOfDoneSnapshot": "event_types gains minNoticeMinutes and horizonDays (Class A migration, CHECK-bounded, defaults equal to today's constants so behaviour is unchanged until edited); the dialog edits both with validation;...",
+      "dependencies": [
+        "PG-203"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-213",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Retention: purge public-booking PII after a firm-set period. Under the PG-206 retention policies, appointments.bookerName/bookerEmail/bookingAnswers/bookingConsentAt/bookingConsentVersion are cleared for public bookings older than a firm-configured retention period (the booking_attempts 48 h prune from PG-203 stays); the run is replica-safe and audit-logged with counts only. Origin: PG-203 follow-up (spec AC-022; PRD addendum).",
+      "description": "Retention: purge public-booking PII after a firm-set period. Under the PG-206 retention policies, appointments.bookerName/bookerEmail/bookingAnswers/bookingConsentAt/bookingConsentVersion are cleared for public bookings older than a firm-configured retention period (the booking_attempts 48 h prune from PG-203 stays); the run is replica-safe and audit-logged with counts only. Origin: PG-203 follow-up (spec AC-022; PRD addendum).",
+      "summary": "A firm sets a booker-PII retention period; a scheduled, advisory-locked job clears the five booker fields on public bookings past it, leaving the appointment itself; audit records counts only;...",
+      "definitionOfDone": "A firm sets a booker-PII retention period; a scheduled, advisory-locked job clears the five booker fields on public bookings past it, leaving the appointment itself; audit records counts only; real-DB test proves only expired rows of that tenant are cleared; the setting is reachable from the retention settings UI",
+      "definitionOfDoneSnapshot": "A firm sets a booker-PII retention period; a scheduled, advisory-locked job clears the five booker fields on public bookings past it, leaving the appointment itself; audit records counts only;...",
+      "dependencies": [
+        "PG-203",
+        "PG-206"
       ],
       "attestation": {
         "exists": false,

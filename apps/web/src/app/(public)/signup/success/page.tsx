@@ -316,7 +316,7 @@ function SuccessContent() {
               </span>
             </Link>
             <Link
-              href="/settings/profile"
+              href="/settings/account"
               className={cn(
                 'inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg',
                 'bg-slate-700 text-white font-medium',

@@ -97,6 +97,7 @@ describe('onboarding.getState', () => {
       flowDone: false,
       emailConfirmed: false,
       selectedPlan: null,
+      needsBusinessType: false,
     });
   });
 
@@ -292,5 +293,61 @@ describe('onboarding.complete', () => {
       expect((err as TRPCError).code).toBe('INTERNAL_SERVER_ERROR');
       expect((err as TRPCError).message).toContain('Write failed');
     }
+  });
+});
+
+// ============================================================
+// H. Business type — required for a new workspace (owner ruling 23/11/2026)
+// ============================================================
+
+describe('onboarding business type', () => {
+  function adminCtxWithBusinessType(businessType: string | null) {
+    const ctx = createTestContext({
+      user: { ...createTestContext().user!, role: 'ADMIN' },
+    } as any);
+    (ctx.container.get as any).mockImplementation((n: string) =>
+      n === 'moduleAccess'
+        ? { getBusinessType: vi.fn().mockResolvedValue(businessType) }
+        : undefined
+    );
+    return ctx;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSupabaseAdmin.auth.admin.getUserById.mockResolvedValue(makeGetUserByIdResponse({}));
+    mockSupabaseAdmin.auth.admin.updateUserById.mockResolvedValue(makeUpdateResponse());
+  });
+
+  it('getState asks the admin of a workspace with no business type', async () => {
+    const caller = onboardingRouter.createCaller(adminCtxWithBusinessType(null) as any);
+    expect((await caller.getState()).needsBusinessType).toBe(true);
+  });
+
+  it('getState does not ask once it is set', async () => {
+    const caller = onboardingRouter.createCaller(adminCtxWithBusinessType('AGENCY') as any);
+    expect((await caller.getState()).needsBusinessType).toBe(false);
+  });
+
+  it('getState does not ask an invited member', async () => {
+    const ctx = createTestContext();
+    (ctx.container.get as any).mockImplementation((n: string) =>
+      n === 'moduleAccess' ? { getBusinessType: vi.fn().mockResolvedValue(null) } : undefined
+    );
+    const caller = onboardingRouter.createCaller(ctx as any);
+    expect((await caller.getState()).needsBusinessType).toBe(false);
+  });
+
+  it('complete is refused until the admin has chosen a business type', async () => {
+    const caller = onboardingRouter.createCaller(adminCtxWithBusinessType(null) as any);
+
+    await expect(caller.complete({})).rejects.toMatchObject({ code: 'PRECONDITION_FAILED' });
+    expect(mockSupabaseAdmin.auth.admin.updateUserById).not.toHaveBeenCalled();
+  });
+
+  it('complete succeeds once the business type is set', async () => {
+    const caller = onboardingRouter.createCaller(adminCtxWithBusinessType('LAW_FIRM') as any);
+
+    expect(await caller.complete({})).toEqual({ success: true });
   });
 });

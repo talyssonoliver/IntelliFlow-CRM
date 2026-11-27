@@ -245,22 +245,6 @@ describe('ContactForm', () => {
       });
     });
 
-    it('shows error for empty last name', async () => {
-      const user = userEvent.setup();
-      render(
-        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
-      );
-
-      await user.click(screen.getByText('Next Step'));
-
-      await waitFor(() => {
-        expect(screen.getByText(/Please fix the following errors/i)).toBeInTheDocument();
-        const alerts = screen.getAllByRole('alert');
-        const errorSummary = alerts[0]; // First alert is the summary
-        expect(errorSummary).toHaveTextContent('Last name is required');
-      });
-    });
-
     it('shows error for empty email', async () => {
       const user = userEvent.setup();
       render(
@@ -694,7 +678,7 @@ describe('ContactForm', () => {
       );
 
       expect(screen.getByLabelText(/First Name/i)).toHaveAttribute('aria-required', 'true');
-      expect(screen.getByLabelText(/Last Name/i)).toHaveAttribute('aria-required', 'true');
+      expect(screen.getByLabelText(/Last Name/i)).not.toHaveAttribute('aria-required', 'true'); // MVP-003
       expect(screen.getByLabelText(/Email Address/i)).toHaveAttribute('aria-required', 'true');
     });
 

@@ -128,6 +128,36 @@ describe('useDriftDashboard', () => {
     expect(result.roi).toBeNull();
   });
 
+  it('unwraps the real API payload ({ roi: {...}, stats }) into a flat ROI with a numeric roi', () => {
+    setupMocks({
+      roiData: {
+        available: true,
+        roi: { totalCost: 10, totalValue: '30', netValue: 20, roi: '200', trendDirection: 'up' },
+        stats: { currentROI: 200 },
+      },
+    });
+    const result = useDriftDashboard();
+    expect(result.roi).toEqual({
+      totalCost: 10,
+      totalValue: 30,
+      netValue: 20,
+      roi: 200,
+      trendDirection: 'up',
+    });
+  });
+
+  it('keeps roi null-safe when the API roi is not a finite number', () => {
+    setupMocks({ roiData: { available: true, roi: { roi: null, totalCost: 0, totalValue: 0 } } });
+    expect(useDriftDashboard().roi?.roi).toBeNull();
+  });
+
+  it('returns null roi and available false for an unavailable payload', () => {
+    setupMocks({ roiData: { available: false } });
+    const result = useDriftDashboard();
+    expect(result.roi).toBeNull();
+    expect(result.available).toBe(false);
+  });
+
   it('aggregates isLoading from status and drift queries', () => {
     setupMocks({ status: { isLoading: true, data: undefined, error: null, refetch: vi.fn() } });
     const result = useDriftDashboard();
