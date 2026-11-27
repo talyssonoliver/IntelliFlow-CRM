@@ -22,6 +22,12 @@ describe('EMAIL_FRAME_SANDBOX', () => {
 });
 
 describe('buildEmailFrame', () => {
+  it('trims the body padding in a narrow frame only', () => {
+    const { srcDoc } = buildEmailFrame({ html: '<p>Hi</p>', showRemoteImages: false });
+    expect(srcDoc).toContain('padding:12px');
+    expect(srcDoc).toContain('@media (max-width:480px){body{padding:6px}}');
+  });
+
   it('carries a CSP that loads nothing but images, and blocks other sites by default', () => {
     const { srcDoc } = buildEmailFrame({ html: '<p>Hi</p>', showRemoteImages: false });
     expect(srcDoc).toContain("default-src 'none'");

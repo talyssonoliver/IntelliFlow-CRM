@@ -264,7 +264,7 @@ export function EmailBody({
             sandbox={EMAIL_FRAME_SANDBOX}
             referrerPolicy="no-referrer"
             srcDoc={frame.srcDoc}
-            className={`w-full rounded-md border border-border bg-white ${tall ? 'h-[80vh]' : 'h-[28rem]'}`}
+            className={`w-full rounded-md border border-border bg-white max-sm:rounded-none max-sm:border-0 ${tall ? 'h-[80vh]' : 'h-[28rem]'}`}
           />
           <button
             type="button"

@@ -64,6 +64,13 @@ describe('LeadEmailMessage', () => {
     expect(screen.getByText(/13\/11\/2026, 20:00/)).toBeInTheDocument();
   });
 
+  it('trims the card padding below sm so the mail keeps its width on a phone', () => {
+    m.query.mockReturnValue({ isLoading: false, data: email });
+    const { container } = render(<LeadEmailMessage leadId="lead-1" emailRecordId="rec-1" />);
+    const card = (container.firstElementChild?.getAttribute('class') ?? '').split(/\s+/);
+    expect(card).toEqual(expect.arrayContaining(['max-sm:px-1.5', 'p-3']));
+  });
+
   it('clears a cached mail when a refetch says it is gone', () => {
     m.query.mockReturnValue({
       isLoading: false,

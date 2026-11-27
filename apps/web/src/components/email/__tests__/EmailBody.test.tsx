@@ -40,6 +40,14 @@ describe('EmailBody', () => {
     expect(screen.queryByText('Robert')).toBeNull();
   });
 
+  it('gives a phone the full width: no frame border or rounding below sm, unchanged from sm up', () => {
+    render(<EmailBody emailId="e1" htmlBody="<p>Hi</p>" />);
+    const classes = (frame().getAttribute('class') ?? '').split(/\s+/);
+    expect(classes).toEqual(expect.arrayContaining(['max-sm:border-0', 'max-sm:rounded-none']));
+    // The desktop frame keeps its border and corners.
+    expect(classes).toEqual(expect.arrayContaining(['border', 'border-border', 'rounded-md']));
+  });
+
   it('falls back to the text when the mail has no HTML', () => {
     render(<EmailBody emailId="e1" textBody="Plain words" />);
     expect(screen.queryByTitle('Email content')).toBeNull();

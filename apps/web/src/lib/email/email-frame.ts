@@ -97,7 +97,9 @@ export interface EmailFrame {
 const FRAME_STYLE =
   'html{color-scheme:light}body{margin:0;padding:12px;background:#fff;color:#1f2937;' +
   'font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow-wrap:anywhere}' +
-  'img{max-width:100%;height:auto}table{max-width:100%}a{color:#2563eb}';
+  'img{max-width:100%;height:auto}table{max-width:100%}a{color:#2563eb}' +
+  // A narrow frame (a phone) keeps the mail's room for the mail itself.
+  '@media (max-width:480px){body{padding:6px}}';
 
 function csp(showRemoteImages: boolean): string {
   const images = showRemoteImages ? 'data: https:' : 'data:';

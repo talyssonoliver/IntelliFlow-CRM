@@ -40,7 +40,7 @@ export function LeadEmailsTab({
   const to = leadEmail?.trim();
   const [openId, setOpenId] = useState<string | null>(null);
   return (
-    <Card className="p-6">
+    <Card className="p-6 max-sm:p-3">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Emails</h3>
         {to && (
@@ -61,7 +61,7 @@ export function LeadEmailsTab({
       <div className="space-y-3">
         {emails.length > 0 ? (
           emails.map((email) => (
-            <div key={email.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+            <div key={email.id} className="p-3 max-sm:p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
                   <span className="material-symbols-outlined !text-[20px] text-orange-600">

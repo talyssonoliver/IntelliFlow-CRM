@@ -30,7 +30,7 @@ export function LeadEmailMessage({
   }
   const to = email.to.map((t) => t.address).join(', ');
   return (
-    <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+    <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3 max-sm:px-1.5 dark:border-slate-700 dark:bg-slate-900">
       <p className="text-xs text-slate-500 [overflow-wrap:anywhere]">
         From {email.from.name ? `${email.from.name} <${email.from.address}>` : email.from.address}
         {' to '}
