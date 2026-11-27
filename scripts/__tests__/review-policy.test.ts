@@ -110,12 +110,25 @@ describe('makeReviewer', () => {
   it('escalates once to the strong Codex when a light model fails without a cap', () => {
     const runCodex = vi
       .fn()
-      .mockReturnValueOnce({ raw: 'unknown model', status: 1, stderr: 'unknown model', stdout: '' })
+      .mockReturnValueOnce({ raw: 'boom', status: 1, stderr: 'boom', stdout: '' })
       .mockReturnValueOnce({ raw: GOOD, status: 0, stderr: '', stdout: '' });
     const { review, runClaude } = setup({ runCodex });
     const r = review('P');
     expect(r).toMatchObject({ reviewer: 'codex', model: 'strong-m' });
     expect(runCodex).toHaveBeenCalledTimes(2);
+    expect(runClaude).not.toHaveBeenCalled();
+  });
+
+  it('a model not on the plan retries once with no model and no effort, then passes and says why', () => {
+    const runCodex = vi
+      .fn()
+      .mockReturnValueOnce({ raw: '', status: 1, stderr: 'model_not_found', stdout: '' })
+      .mockReturnValueOnce({ raw: GOOD, status: 0, stderr: '', stdout: '' });
+    const { review, runClaude } = setup({ runCodex });
+    const r = review('P');
+    expect(runCodex).toHaveBeenNthCalledWith(2, 'P', { model: null, effort: null });
+    expect(r).toMatchObject({ reviewer: 'codex', model: null, effort: null });
+    expect(r.modelFallback.reason).toMatch(/light-m\/medium is not available on the plan/);
     expect(runClaude).not.toHaveBeenCalled();
   });
 
