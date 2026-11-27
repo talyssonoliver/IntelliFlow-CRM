@@ -6,12 +6,14 @@
  * same one the /email reader uses. The thread is one query for the lead, shared by every row.
  */
 import { trpc } from '@/lib/trpc';
+import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { EmailBody } from '@/components/email/EmailBody';
 
 export function LeadEmailMessage({
   leadId,
   emailRecordId,
 }: Readonly<{ leadId: string; emailRecordId: string }>) {
+  const { timezone } = useTimezoneContext();
   // By id: the lead's thread list is bounded, so an older row is not in it.
   const query = trpc.emailLog.leadEmail.useQuery({ leadId, emailRecordId }, { staleTime: 60_000 });
   const notFound = query.isError && query.error?.data?.code === 'NOT_FOUND';
@@ -35,7 +37,7 @@ export function LeadEmailMessage({
         {to}
         {' · '}
         <time dateTime={email.receivedAt}>
-          {new Date(email.receivedAt).toLocaleString('en-GB')}
+          {new Date(email.receivedAt).toLocaleString('en-GB', { timeZone: timezone })}
         </time>
       </p>
       <div className="mt-2">

@@ -19,7 +19,7 @@ import { readAutomationSignals, type MailAutomationSignals } from './mail-automa
 import { MailboxTransportError } from './mailbox-errors';
 import { displayName, zohoAddresses as headerAddresses, zohoBodyText } from './zoho-text';
 import { safeSegment, type MailContent } from './mail-content';
-import { gmailAttachmentMeta, gmailHtml } from './gmail-mail-content';
+import { gmailAttachmentMeta, gmailHtml, gmailHtmlPart } from './gmail-mail-content';
 
 const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -267,7 +267,7 @@ async function loadFull(
     const data = inline || (attachmentId ? await readPart(attachmentId) : undefined);
     text = partText(data ?? '', pick.html, maxChars);
   }
-  const html = await gmailHtml(firstPart(full.payload, 'text/html'), readPart);
+  const html = await gmailHtml(gmailHtmlPart(full.payload), readPart);
   const time = Number(full.internalDate);
   return {
     receivedAt: Number.isFinite(time) ? new Date(time) : null,

@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { readGmailLabel, type GmailReadOptions } from '../gmail-mail-reader';
-import { gmailAttachmentMeta, fetchGmailAttachment } from '../gmail-mail-content';
+import { gmailAttachmentMeta, gmailHtmlPart, fetchGmailAttachment } from '../gmail-mail-content';
 import { readGraphMailDelta, toSyncedMessage } from '../graph-mail-delta';
 import {
   fetchGraphAttachment,
@@ -244,6 +244,29 @@ describe('Gmail', () => {
     );
     expect(file.bytes.toString()).toBe('inline bytes');
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('takes the HTML of a multipart/related from the root its start parameter names', () => {
+    const html = (data: string, id: string) => ({
+      partId: id,
+      mimeType: 'text/html',
+      headers: [{ name: 'Content-ID', value: `<${id}@example.invalid>` }],
+      body: { data: b64(data), size: data.length },
+    });
+    const payload = {
+      mimeType: 'multipart/related',
+      headers: [
+        {
+          name: 'Content-Type',
+          value: 'multipart/related; type="text/html"; start="<root@example.invalid>"',
+        },
+      ],
+      parts: [html('<p>supplementary</p>', 'extra'), html('<p>the body</p>', 'root')],
+    };
+    expect(gmailHtmlPart(payload)?.partId).toBe('root');
+    // With no start, the first HTML part as before.
+    const noStart = { ...payload, headers: [{ name: 'Content-Type', value: 'multipart/related' }] };
+    expect(gmailHtmlPart(noStart)?.partId).toBe('extra');
   });
 
   it('lists a binary part that has no filename, disposition or Content-ID', () => {
@@ -671,7 +694,7 @@ describe('Zoho', () => {
         fileSize: 2048,
         isInline: false,
       },
-      { providerAttachmentId: '1100000000000000001:5002', contentId: 'c1', isInline: true },
+      { providerAttachmentId: '1100000000000000001:inline:c1', contentId: 'c1', isInline: true },
     ]);
     expect(String((fetchImpl.mock.calls[2] as unknown as [string])[0])).toBe(
       `${BASE}/folders/1100000000000000001/messages/9000000000000000006/attachmentinfo?includeInline=true`
@@ -733,6 +756,22 @@ describe('Zoho', () => {
         dead as never
       )
     ).rejects.toMatchObject({ code: 'AUTH_FAILED' });
+  });
+
+  it('downloads an inline image through the inline endpoint by its Content-ID', async () => {
+    const fetchImpl = vi.fn(
+      async () => new Response(Buffer.from('img'), { headers: { 'content-type': 'image/png' } })
+    );
+    const file = await fetchZohoAttachment(
+      TOKEN,
+      REF,
+      { messageId: '9000000000000000006', providerAttachmentId: '1100000000000000001:inline:c1@x' },
+      fetchImpl as never
+    );
+    expect(file.bytes.toString()).toBe('img');
+    expect(String((fetchImpl.mock.calls[0] as unknown as [string])[0])).toBe(
+      `${BASE}/folders/1100000000000000001/messages/9000000000000000006/inline?contentId=c1%40x`
+    );
   });
 
   it('keeps a 19-digit attachment id exact, never rounded', async () => {

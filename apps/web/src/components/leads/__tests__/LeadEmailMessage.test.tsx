@@ -6,6 +6,9 @@ const m = vi.hoisted(() => ({ query: vi.fn() }));
 vi.mock('@/lib/trpc', () => ({
   trpc: { emailLog: { leadEmail: { useQuery: m.query } } },
 }));
+vi.mock('@/providers/TimezoneProvider', () => ({
+  useTimezoneContext: () => ({ timezone: 'America/New_York' }),
+}));
 vi.mock('@/components/email/EmailBody', () => ({
   EmailBody: (props: { emailId: string; htmlBody?: string; textBody?: string }) => (
     <div data-testid="body">{`${props.emailId}|${props.htmlBody ?? ''}|${props.textBody ?? ''}`}</div>
@@ -49,6 +52,16 @@ describe('LeadEmailMessage', () => {
     });
     render(<LeadEmailMessage leadId="lead-1" emailRecordId="rec-1" />);
     expect(screen.getByText('This message is no longer available.')).toBeInTheDocument();
+  });
+
+  it("shows the mail's time in the user's timezone, not the browser's", () => {
+    m.query.mockReturnValue({
+      isLoading: false,
+      data: { ...email, receivedAt: '2026-11-14T01:00:00.000Z' },
+    });
+    render(<LeadEmailMessage leadId="lead-1" emailRecordId="rec-1" />);
+    // 01:00 UTC on the 14th is 20:00 on the 13th in New York.
+    expect(screen.getByText(/13\/11\/2026, 20:00/)).toBeInTheDocument();
   });
 
   it('clears a cached mail when a refetch says it is gone', () => {

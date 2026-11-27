@@ -15,7 +15,7 @@ import {
   type FetchedAttachment,
   type MailAttachmentMeta,
 } from './mail-content';
-import type { GmailApiMessage, GmailApiPart } from './gmail-mail-reader';
+import { firstPart, type GmailApiMessage, type GmailApiPart } from './gmail-mail-reader';
 
 const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -55,6 +55,46 @@ export function gmailAttachmentMeta(payload: GmailApiPart | undefined): MailAtta
   };
   if (payload) walk(payload);
   return found;
+}
+
+function contentTypeParam(part: GmailApiPart, name: string): string | null {
+  const header = partHeader(part, 'Content-Type') ?? '';
+  for (const piece of header.split(';').slice(1)) {
+    const eq = piece.indexOf('=');
+    if (eq > 0 && piece.slice(0, eq).trim().toLowerCase() === name) {
+      return piece
+        .slice(eq + 1)
+        .trim()
+        .replace(/^"|"$/g, '');
+    }
+  }
+  return null;
+}
+
+/**
+ * The HTML part that is the mail's body. In a multipart/related the root is the child whose
+ * Content-ID the `start` parameter names (RFC 2387), not just the first HTML part found; with no
+ * start, the first HTML part as before.
+ */
+export function gmailHtmlPart(payload: GmailApiPart | undefined): GmailApiPart | null {
+  const walk = (part: GmailApiPart): GmailApiPart | null => {
+    if ((part.mimeType ?? '').toLowerCase() === 'multipart/related') {
+      const start = bareContentId(contentTypeParam(part, 'start'));
+      const root = start
+        ? (part.parts ?? []).find(
+            (child) => bareContentId(partHeader(child, 'Content-ID')) === start
+          )
+        : undefined;
+      const found = root ? firstPart(root, 'text/html') : null;
+      if (found) return found;
+    }
+    for (const child of part.parts ?? []) {
+      const found = walk(child);
+      if (found) return found;
+    }
+    return null;
+  };
+  return (payload && walk(payload)) ?? firstPart(payload, 'text/html');
 }
 
 /** The HTML part's markup: inline, or read through the part's attachment id. */

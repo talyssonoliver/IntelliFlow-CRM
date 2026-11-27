@@ -36,7 +36,11 @@ function metaOf(
     if (taken + out.length >= MAX_ATTACHMENTS_PER_MAIL) break;
     if (a.attachmentId === undefined || a.attachmentId === null) continue;
     out.push({
-      providerAttachmentId: `${folderId}:${String(a.attachmentId)}`.slice(0, 512),
+      // An inline image is downloaded through its Content-ID (Zoho's /inline endpoint), a file through its id.
+      providerAttachmentId: (inline && bareContentId(a.cid)
+        ? `${folderId}:inline:${bareContentId(a.cid)}`
+        : `${folderId}:${String(a.attachmentId)}`
+      ).slice(0, 512),
       fileName:
         decodeEntities(a.attachmentName ?? '')
           .trim()
@@ -118,7 +122,10 @@ export async function fetchZohoAttachment(
   const split = locator.providerAttachmentId.indexOf(':');
   if (split < 1) throw new MailboxTransportError('REJECTED');
   const folderId = locator.providerAttachmentId.slice(0, split);
-  const attachmentId = locator.providerAttachmentId.slice(split + 1);
-  const path = `/folders/${encodeURIComponent(safeSegment(folderId))}/messages/${encodeURIComponent(safeSegment(locator.messageId))}/attachments/${encodeURIComponent(safeSegment(attachmentId))}`;
+  const rest = locator.providerAttachmentId.slice(split + 1);
+  const message = `/folders/${encodeURIComponent(safeSegment(folderId))}/messages/${encodeURIComponent(safeSegment(locator.messageId))}`;
+  const path = rest.startsWith('inline:')
+    ? `${message}/inline?contentId=${encodeURIComponent(safeSegment(rest.slice('inline:'.length)))}`
+    : `${message}/attachments/${encodeURIComponent(safeSegment(rest))}`;
   return zohoAccountGetBytes(fetchImpl, accessToken, ref, path, MAX_ATTACHMENT_BYTES);
 }

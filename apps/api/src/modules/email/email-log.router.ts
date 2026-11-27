@@ -242,7 +242,11 @@ export const emailLogRouter = createTRPCRouter({
         tenantId,
         metadata: { path: ['leadId'], equals: input.leadId },
         // Someone else's own mail is left out in the query, so it never uses up the limit.
-        ...(isEmailAdmin(c) ? {} : { OR: [{ userId: null }, { userId: c.tenant.userId }] }),
+        ...(isEmailAdmin(c)
+          ? {}
+          : {
+              OR: [{ userId: null }, { userId: c.tenant.userId }, { mailbox: { scope: 'TENANT' } }],
+            }),
       };
       // The thread is ordered by sentAt ?? createdAt, so the newest 200 are cut by that same date:
       // mail with a sentAt and mail without one (not yet backfilled: createdAt is its date) are read
@@ -287,7 +291,15 @@ export const emailLogRouter = createTRPCRouter({
               id: input.emailRecordId,
               tenantId,
               metadata: { path: ['leadId'], equals: input.leadId },
-              ...(isEmailAdmin(c) ? {} : { OR: [{ userId: null }, { userId: c.tenant.userId }] }),
+              ...(isEmailAdmin(c)
+                ? {}
+                : {
+                    OR: [
+                      { userId: null },
+                      { userId: c.tenant.userId },
+                      { mailbox: { scope: 'TENANT' } },
+                    ],
+                  }),
             },
             include: { attachments: true },
           })

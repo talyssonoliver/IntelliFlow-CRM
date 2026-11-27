@@ -65,7 +65,7 @@ describe('emailLog.leadEmails', () => {
     const base = {
       tenantId,
       metadata: { path: ['leadId'], equals: LEAD },
-      OR: [{ userId: null }, { userId: TEST_UUIDS.user1 }],
+      OR: [{ userId: null }, { userId: TEST_UUIDS.user1 }, { mailbox: { scope: 'TENANT' } }],
     };
     expect(calls[0][0].where).toEqual({ ...base, sentAt: { not: null } });
     expect(calls[1][0].where).toEqual({ ...base, sentAt: null });
@@ -127,7 +127,12 @@ describe('emailLog.leadEmails', () => {
   it("leaves other users' own mail out in the query, except for an email admin", async () => {
     serve([]);
     await member().leadEmails({ leadId: LEAD });
-    expect(streamWhere(0).OR).toEqual([{ userId: null }, { userId: TEST_UUIDS.user1 }]);
+    // Company-mailbox mail is visible whoever sent it through the CRM.
+    expect(streamWhere(0).OR).toEqual([
+      { userId: null },
+      { userId: TEST_UUIDS.user1 },
+      { mailbox: { scope: 'TENANT' } },
+    ]);
     (prismaMock.emailRecord.findMany as any).mockClear();
     serve([]);
     await admin().leadEmails({ leadId: LEAD });
@@ -224,7 +229,7 @@ describe('emailLog.leadEmail', () => {
       id: ID,
       tenantId,
       metadata: { path: ['leadId'], equals: LEAD },
-      OR: [{ userId: null }, { userId: TEST_UUIDS.user1 }],
+      OR: [{ userId: null }, { userId: TEST_UUIDS.user1 }, { mailbox: { scope: 'TENANT' } }],
     });
   });
 
