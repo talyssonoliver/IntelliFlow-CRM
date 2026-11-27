@@ -9,7 +9,7 @@ import * as React from 'react';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ColumnDef } from '@tanstack/react-table';
 import {
   DataTable,
@@ -29,6 +29,7 @@ import { revalidateDealCaches } from '@/app/deals/actions';
 import { type Deal, PIPELINE_STAGE_CONFIG, formatDealValue, transformDeals } from './types';
 import { DealAvatar, ProbabilityBar, StageBadge, formatDate } from './DealBadges';
 import { DealPhoneCards, usePhoneLayout } from './DealPhoneCards';
+import { dealSegmentFilter, parseDealSegment } from './deal-segments';
 
 // =============================================================================
 // Constants
@@ -247,6 +248,14 @@ export const DealListView = React.memo(function DealListView() {
   const [sortOrder, setSortOrder] = useState<string>('newest');
   const [currentPage, setCurrentPage] = useState(1);
 
+  // The sidebar's segments (/deals?segment=hot|stalled) filter the list for real (owner 26/11).
+  const searchParams = useSearchParams();
+  const segment = parseDealSegment(searchParams.get('segment'));
+  const segmentFilter = useMemo(
+    () => (segment ? dealSegmentFilter(segment, new Date()) : null),
+    [segment]
+  );
+
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   // Dialog state
@@ -272,7 +281,9 @@ export const DealListView = React.memo(function DealListView() {
   } = trpc.opportunity.list.useQuery(
     {
       search: debouncedSearch || undefined,
-      stage: stageFilter ? [stageFilter as OpportunityStage] : undefined,
+      stage: stageFilter ? [stageFilter as OpportunityStage] : segmentFilter?.stage,
+      minProbability: segmentFilter?.minProbability,
+      updatedBefore: segmentFilter?.updatedBefore,
       sortBy: sortParams.sortBy,
       sortOrder: sortParams.sortOrder,
       limit: PAGE_SIZE,
@@ -495,6 +506,22 @@ export const DealListView = React.memo(function DealListView() {
 
   return (
     <>
+      {segmentFilter && (
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-3 text-sm">
+          <span className="font-medium text-foreground">Showing: {segmentFilter.label}</span>
+          <button
+            type="button"
+            onClick={() => router.push('/deals')}
+            className="inline-flex min-h-11 items-center gap-1 px-2 text-ds-primary hover:underline"
+          >
+            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+              close
+            </span>
+            <span>Clear</span>
+          </button>
+        </div>
+      )}
+
       {/* Search and Filters */}
       <SearchFilterBar
         searchValue={searchQuery}

@@ -9,7 +9,11 @@ const state = vi.hoisted(() => ({
   data: undefined as unknown,
 }));
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+const nav = vi.hoisted(() => ({ search: '', listInput: undefined as unknown }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(nav.search),
+}));
 vi.mock('next/link', () => ({
   default: ({ href, children, ...rest }: any) => (
     <a href={href} {...rest}>
@@ -40,7 +44,8 @@ vi.mock('@/lib/trpc', () => {
       }),
       opportunity: {
         list: {
-          useQuery: () => ({
+          useQuery: (input: unknown) => ({
+            ...((nav.listInput = input), {}),
             data: state.data,
             isLoading: false,
             isError: false,
@@ -99,6 +104,17 @@ describe('DealListView layout (MVP-012 #43)', () => {
     expect(screen.getAllByRole('link')).toHaveLength(2);
     expect(screen.getAllByText('Proposal')).toHaveLength(2);
     expect(screen.getAllByText('60%')).toHaveLength(2);
+  });
+
+  it('filters for real by the sidebar segment and says so, with Clear (owner 26/11)', () => {
+    nav.search = 'segment=hot';
+    state.data = list(1);
+    phone(false);
+    render(<DealListView />);
+    expect(screen.getByText(/Showing: Hot deals/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Clear/ })).toHaveClass('min-h-11');
+    expect(nav.listInput).toMatchObject({ minProbability: 71 });
+    nav.search = '';
   });
 
   it('from md up keeps the table', () => {

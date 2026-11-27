@@ -424,6 +424,7 @@ function buildOpportunityWhereClause(input: {
   maxProbability?: number;
   dateFrom?: Date;
   dateTo?: Date;
+  updatedBefore?: Date;
 }): any {
   const where: any = { deletedAt: null };
 
@@ -446,6 +447,8 @@ function buildOpportunityWhereClause(input: {
 
   const dateFilter = buildDateRangeFilter(input.dateFrom, input.dateTo);
   if (dateFilter) where.expectedCloseDate = dateFilter;
+
+  if (input.updatedBefore) where.updatedAt = { lt: input.updatedBefore };
 
   return where;
 }
