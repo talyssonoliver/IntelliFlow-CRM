@@ -53,7 +53,13 @@ reconnect card until a connect captures one.
 
 One tick in the API process on Railway (the shared background tick, once a
 minute; never a Vercel cron) claims the due mailboxes one at a time with a lease
-(`FOR UPDATE SKIP LOCKED`), so two replicas never sync one calendar twice.
+(`FOR UPDATE SKIP LOCKED`), so two replicas never sync one calendar twice. The
+claim picks one mailbox in a materialised CTE and updates only that row. The
+shorter `UPDATE ... WHERE id IN (SELECT ... LIMIT 1 FOR UPDATE SKIP LOCKED)`
+form is run by Postgres as a join on some plans and then locks every due mailbox
+while the caller syncs only the first, leaving the rest locked for the lease
+(found by the real-database test; the Outlook inbox sync and the bounce scan
+still use that form).
 
 - Only connected, healthy, `USER`-scope Gmail mailboxes with the calendar
   permission are due. Idle accounts cost nothing.
