@@ -191,11 +191,10 @@ export interface WaitingDismissalRow {
 }
 
 /**
- * Drops the waits a person marked "handled without a reply". A dismissal hides only the wait it
- * was made for: the same first unanswered mail (`since`) and no inbound mail newer than the newest
- * one it saw (`latestAt`). A newer inbound email, or a later `since` once we replied, brings the
- * person back. The mail time, not the count, decides (codex 27/11): a count can fall when older
- * mail leaves the read window and then rise again without passing the dismissed count.
+ * Drops the waits a person marked "handled without a reply". A dismissal hides the person until an
+ * inbound email newer than the newest one it saw (`latestAt`) arrives; nothing else brings them
+ * back. Neither the count nor the first unanswered mail (`since`) decides (codex 27/11): both move
+ * when older mail leaves the read window, with no new mail at all.
  */
 export function withoutDismissed(
   items: WaitingItem[],
@@ -205,10 +204,6 @@ export function withoutDismissed(
   const byKey = new Map(dismissals.map((d) => [d.personKey, d]));
   return items.filter((item) => {
     const d = byKey.get(personKey(item.kind, item.id));
-    return !(
-      d &&
-      d.since.getTime() === item.since.getTime() &&
-      item.latestAt.getTime() <= d.latestAt.getTime()
-    );
+    return !(d && item.latestAt.getTime() <= d.latestAt.getTime());
   });
 }

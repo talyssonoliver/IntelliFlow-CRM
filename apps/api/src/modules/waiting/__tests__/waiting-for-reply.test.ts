@@ -1071,7 +1071,20 @@ describe('withoutDismissed (handled without a reply)', () => {
   });
 
   it('brings the person back when a new wait starts later (we replied, they wrote again)', () => {
-    expect(withoutDismissed([waiting({ since: day(15) })], [dismissal()])).toHaveLength(1);
+    expect(
+      withoutDismissed([waiting({ since: day(15), latestAt: day(15) })], [dismissal()])
+    ).toHaveLength(1);
+  });
+
+  it('keeps the person hidden when the oldest mail leaves the read window and nothing new came', () => {
+    // Codex 27/11: dismissed with mail on day 10 and 12; day 10 leaves the window, so `since`
+    // moves to day 12 while the newest mail is still day 12.
+    expect(
+      withoutDismissed(
+        [waiting({ since: day(12), latestAt: day(12) })],
+        [dismissal({ since: day(10), latestAt: day(12) })]
+      )
+    ).toEqual([]);
   });
 
   it('still hides the wait when fewer mails count now but none is newer', () => {
