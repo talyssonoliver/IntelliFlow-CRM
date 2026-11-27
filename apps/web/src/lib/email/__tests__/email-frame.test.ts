@@ -111,6 +111,34 @@ describe('referencedContentIds', () => {
     expect(srcDoc).toContain(PNG);
   });
 
+  it('changes only src values: text that looks like a cid src is left as written', () => {
+    const { srcDoc } = buildEmailFrame({
+      html: '<p>Write src=cid:Logo@mail in your template</p><img src="cid:Logo@mail">',
+      showRemoteImages: false,
+      inlineImages: { 'Logo@mail': PNG },
+    });
+    expect(srcDoc).toContain('Write src=cid:Logo@mail in your template');
+    expect(srcDoc).toContain(PNG);
+  });
+
+  it('reads an HTML-escaped Content-ID as the id it names', () => {
+    expect(referencedContentIds('<img src="cid:A&amp;B@mail">')).toEqual(['A&B@mail']);
+    const { srcDoc } = buildEmailFrame({
+      html: '<img src="cid:A&amp;B@mail">',
+      showRemoteImages: false,
+      inlineImages: { 'A&B@mail': PNG },
+    });
+    expect(srcDoc).toContain(PNG);
+    // A srcset naming a cid is dropped, never resolved or left to load.
+    const dropped = buildEmailFrame({
+      html: '<img src="cid:a" srcset="cid:a 1x, cid:b 2x">',
+      showRemoteImages: true,
+      inlineImages: { a: PNG },
+    }).srcDoc;
+    expect(dropped).not.toContain('srcset');
+    expect(dropped).not.toContain('cid:');
+  });
+
   it('keeps the case of a Content-ID, so ids that differ only by case stay different images', () => {
     expect(referencedContentIds('<img src="cid:Logo"><img src="cid:logo">')).toEqual([
       'Logo',

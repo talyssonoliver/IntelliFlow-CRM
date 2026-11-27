@@ -51,6 +51,18 @@ describe('LeadEmailMessage', () => {
     expect(screen.getByText('This message is no longer available.')).toBeInTheDocument();
   });
 
+  it('clears a cached mail when a refetch says it is gone', () => {
+    m.query.mockReturnValue({
+      isLoading: false,
+      isError: true,
+      error: { data: { code: 'NOT_FOUND' } },
+      data: email,
+    });
+    render(<LeadEmailMessage leadId="lead-1" emailRecordId="rec-1" />);
+    expect(screen.getByText('This message is no longer available.')).toBeInTheDocument();
+    expect(screen.queryByTestId('body')).toBeNull();
+  });
+
   it('says it could not load, rather than that the mail is gone, when the query fails', () => {
     m.query.mockReturnValue({
       isLoading: false,

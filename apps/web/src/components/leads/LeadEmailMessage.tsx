@@ -14,11 +14,13 @@ export function LeadEmailMessage({
 }: Readonly<{ leadId: string; emailRecordId: string }>) {
   // By id: the lead's thread list is bounded, so an older row is not in it.
   const query = trpc.emailLog.leadEmail.useQuery({ leadId, emailRecordId }, { staleTime: 60_000 });
-  const email = query.data;
+  const notFound = query.isError && query.error?.data?.code === 'NOT_FOUND';
+  // A mail that is gone or unlinked is never shown from the cache.
+  const email = notFound ? undefined : query.data;
   if (query.isLoading) {
     return <p className="mt-3 text-sm text-slate-500">Loading the message...</p>;
   }
-  if (query.isError && query.error?.data?.code !== 'NOT_FOUND') {
+  if (query.isError && !notFound) {
     return <p className="mt-3 text-sm text-slate-500">Could not load the message. Try again.</p>;
   }
   if (!email) {

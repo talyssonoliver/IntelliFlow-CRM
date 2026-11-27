@@ -19,16 +19,36 @@ export const MAX_INLINE_IMAGE_BYTES = 3 * 1024 * 1024;
 /** Only these are embedded from an attachment (never SVG, which can carry markup). */
 export const INLINE_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'] as const;
 
-/** `src=cid:x`, `src="cid:x"` or `src='cid:x'`. */
-const CID_SRC = /(\bsrc\s*=\s*)(["']?)cid:([^"'\s>]+)\2/gi;
+const CID_PREFIX = /^\s*cid:/i;
+
+/** An inert document for the body: nothing in it runs or loads. */
+function parseBody(html: string): Document {
+  return new DOMParser().parseFromString(html, 'text/html');
+}
+
+/**
+ * The `cid:` values of the body's image sources: read from the parsed `src` and `srcset`
+ * attributes (so HTML entities are already decoded and text that only looks like `src=cid:x` is
+ * not touched), each as an element and the Content-ID it names.
+ */
+function cidSources(doc: Document): Array<{ element: Element; attribute: string; id: string }> {
+  const found: Array<{ element: Element; attribute: string; id: string }> = [];
+  for (const element of Array.from(doc.querySelectorAll('[src], [srcset]'))) {
+    for (const attribute of ['src', 'srcset']) {
+      const value = element.getAttribute(attribute);
+      if (value !== null && CID_PREFIX.test(value)) {
+        // srcset holds "url descriptor" pairs: the first url is the one that names the image.
+        const url = value.replace(CID_PREFIX, '').split(/[\s,]/)[0] ?? '';
+        found.push({ element, attribute, id: safeDecode(url) });
+      }
+    }
+  }
+  return found;
+}
 
 /** The Content-IDs the body's images name (`cid:` URLs), decoded, case kept, once each. */
 export function referencedContentIds(html: string): string[] {
-  const found = new Set<string>();
-  for (const match of html.matchAll(CID_SRC)) {
-    found.add(safeDecode(match[3] ?? ''));
-  }
-  return [...found];
+  return [...new Set(cidSources(parseBody(html)).map((source) => source.id))];
 }
 
 /**
@@ -93,15 +113,14 @@ function csp(showRemoteImages: boolean): string {
 export function buildEmailFrame(input: EmailFrameInput): EmailFrame {
   const inline = input.inlineImages ?? {};
   // cid: images become the fetched data URL, or lose their source (DOMPurify would drop `cid:` anyway).
-  const resolved = input.html.replaceAll(
-    CID_SRC,
-    (_all, prefix: string, _quote: string, id: string) => {
-      const key = safeDecode(id);
-      const data = Object.hasOwn(inline, key) ? inline[key] : '';
-      return `${prefix}"${data}"`;
-    }
-  );
-  const body = DOMPurify.sanitize(resolved, {
+  // Only the attribute values are replaced; the rest of the markup and the text are left as sent.
+  const doc = parseBody(input.html);
+  for (const { element, attribute, id } of cidSources(doc)) {
+    const data = Object.hasOwn(inline, id) ? inline[id] : '';
+    if (attribute === 'src' && data) element.setAttribute('src', data);
+    else element.removeAttribute(attribute);
+  }
+  const body = DOMPurify.sanitize(doc.body.innerHTML, {
     RETURN_DOM: true,
     FORBID_TAGS: [
       'style',
