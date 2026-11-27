@@ -118,9 +118,14 @@ export function usePerformanceMetrics(range: DateRange, period: PeriodKey, enabl
       points: alignPeriods(trend.data, trendBefore.data),
       totalNow: sumValues(trend.data),
       totalBefore: sumValues(trendBefore.data),
-      pending: trend.isLoading,
-      failed: trend.isError && !trend.data,
-      retry: () => void trend.refetch(),
+      // Both periods (codex 27/11): a failed previous period no longer passes as "no data",
+      // and retry refetches whichever request failed.
+      pending: trend.isLoading || trendBefore.isLoading,
+      failed: (trend.isError && !trend.data) || (trendBefore.isError && !trendBefore.data),
+      retry: () => {
+        void trend.refetch();
+        void trendBefore.refetch();
+      },
     },
   };
 }

@@ -23,8 +23,13 @@ import { MetricDefinition } from '@/components/shared/MetricDefinition';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useAnalyticsDateRange, type PeriodKey } from '@/hooks/useAnalyticsDateRange';
 import type { Comparison, MaterialChange } from '@/lib/analytics/period-comparison';
-import { useCompactMoney, useReportExport, type ReportExportType } from './analytics-shared';
-import { AnalyticsViewTabs, PeriodFilters } from './AnalyticsWorkspace';
+import {
+  PERIOD_ITEMS,
+  useCompactMoney,
+  useReportExport,
+  type ReportExportType,
+} from './analytics-shared';
+import { AnalyticsViewTabs, PeriodComparisonNote } from './AnalyticsWorkspace';
 import { performanceChanges, usePerformanceMetrics } from './usePerformanceMetrics';
 
 const PeriodComparisonChart = dynamic(
@@ -64,19 +69,30 @@ export default function AnalyticsPerformancePage() {
         title="Analytics"
         description="Understand performance. Identify opportunities. Measure impact."
         controls={
-          <HeroMenu
-            label="Export"
-            icon="download"
-            variant="primary"
-            heading="CSV export"
-            items={EXPORT_ITEMS}
-            onSelect={(v) => handleExport(v as ReportExportType)}
-          />
+          <>
+            <HeroMenu
+              ariaLabel="Period"
+              label="Period"
+              icon="calendar_month"
+              items={PERIOD_ITEMS}
+              value={period}
+              onSelect={(v) => setPeriod(v as PeriodKey)}
+            />
+            <HeroMenu
+              label="Export"
+              icon="download"
+              variant="primary"
+              heading="CSV export"
+              items={EXPORT_ITEMS}
+              onSelect={(v) => handleExport(v as ReportExportType)}
+            />
+          </>
         }
-      />
+      >
+        <PeriodComparisonNote range={range} />
+      </PageHeader>
 
       <AnalyticsViewTabs active="performance" />
-      <PeriodFilters period={period} onPeriodChange={setPeriod} range={range} />
 
       <section aria-labelledby="business-performance" className="flex flex-col gap-4">
         <div>

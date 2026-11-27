@@ -59,6 +59,24 @@ function rangeLabel(range: DateRange): string {
 }
 
 /** The period picker and the comparison it is measured against, as the mockup's filter chips. */
+/**
+ * The compared dates, shown in the hero under the title (owner 22/11: "Why haven't you placed
+ * these on the header?"). The period itself is picked from the hero's Period menu.
+ */
+export function PeriodComparisonNote({ range }: Readonly<{ range: DateRange }>) {
+  const days = Math.round(
+    (new Date(range.endDate).getTime() - new Date(range.startDate).getTime()) / DAY
+  );
+  return (
+    <p className="inline-flex items-center gap-1.5 text-sm text-white/80">
+      <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+        compare_arrows
+      </span>
+      {rangeLabel(range)} vs the previous {days} days
+    </p>
+  );
+}
+
 export function PeriodFilters({
   period,
   onPeriodChange,

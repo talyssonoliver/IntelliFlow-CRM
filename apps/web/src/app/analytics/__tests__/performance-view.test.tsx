@@ -15,18 +15,23 @@ const state = vi.hoisted(() => ({
   sales: [] as Query[],
   leads: [] as Query[],
   trend: { data: [], isLoading: false, isError: false, refetch: () => {} } as Query,
+  // When set, the revenue trend answers per call too: this period, then the one before.
+  trends: null as Query[] | null,
 }));
 
 vi.mock('@/lib/trpc', () => {
   let salesCall = 0;
   let leadsCall = 0;
+  let trendCall = 0;
   return {
     trpc: {
       useUtils: () => ({ analytics: { exportReport: { fetch: vi.fn() } } }),
       analytics: {
         getSalesMetrics: { useQuery: () => state.sales[salesCall++ % 2] },
         getLeadMetrics: { useQuery: () => state.leads[leadsCall++ % 2] },
-        getTimeSeriesData: { useQuery: () => state.trend },
+        getTimeSeriesData: {
+          useQuery: () => (state.trends ? state.trends[trendCall++ % 2] : state.trend),
+        },
       },
     },
   };
@@ -56,6 +61,7 @@ describe('Analytics Performance view', () => {
   beforeEach(() => {
     state.sales = [q(salesNow), q(salesBefore)];
     state.leads = [q(leadsNow), q(leadsBefore)];
+    state.trends = null;
   });
 
   it('compares each figure with the previous period', () => {
@@ -94,5 +100,23 @@ describe('Analytics Performance view', () => {
     render(<AnalyticsPerformancePage />);
     expect(screen.getByText("Couldn't compare the periods.")).toBeInTheDocument();
     expect(screen.queryByText('+50%')).toBeNull();
+  });
+
+  it('reports the revenue chart as unavailable when the previous period fails, and retries both (codex 27/11)', () => {
+    const now = q([]);
+    const before = { ...q(undefined), isError: true };
+    state.trends = [now, before];
+    render(<AnalyticsPerformancePage />);
+    expect(screen.getByText("Couldn't load booked revenue.")).toBeInTheDocument();
+    screen.getByRole('button', { name: /retry|try again/i }).click();
+    expect(now.refetch).toHaveBeenCalled();
+    expect(before.refetch).toHaveBeenCalled();
+  });
+
+  it('picks the period in the hero, with the compared dates under the title (owner 22/11)', () => {
+    render(<AnalyticsPerformancePage />);
+    expect(screen.getByRole('button', { name: /Period/ })).toBeInTheDocument();
+    expect(screen.getByText(/vs the previous \d+ days/)).toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).toBeNull();
   });
 });
