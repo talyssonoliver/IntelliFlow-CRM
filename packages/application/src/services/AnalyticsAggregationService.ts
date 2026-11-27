@@ -754,17 +754,15 @@ export class AnalyticsAggregationService {
       if (data.length === 0) return '';
       const flat = data.map((item) => this.flattenObject(item));
       const headers = Object.keys(flat[0]);
-      const rows = flat.map((row) =>
-        headers.map((h) => (row[h] as string | null | undefined) ?? '').join(',')
-      );
-      return [headers.join(','), ...rows].join('\n');
+      const rows = flat.map((row) => headers.map((h) => csvField(row[h])).join(','));
+      return [headers.map(csvField).join(','), ...rows].join('\n');
     }
 
     if (typeof data === 'object' && data !== null) {
       const flat = this.flattenObject(data as Record<string, unknown>);
       const headers = Object.keys(flat);
-      const values = headers.map((h) => (flat[h] as string | null | undefined) ?? '');
-      return [headers.join(','), values.join(',')].join('\n');
+      const values = headers.map((h) => csvField(flat[h]));
+      return [headers.map(csvField).join(','), values.join(',')].join('\n');
     }
 
     return (data as string | null | undefined) ?? '';
@@ -789,4 +787,14 @@ export class AnalyticsAggregationService {
     }
     return result;
   }
+}
+
+/**
+ * One CSV field (RFC 4180). Codex 27/11: arrays are written as JSON, whose commas and quotes
+ * split the row, so the Lead Metrics export was malformed whenever a period had leads.
+ */
+export function csvField(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  const text = value instanceof Date ? value.toISOString() : String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
