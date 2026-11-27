@@ -108,6 +108,13 @@ describe('MyMailboxCard', () => {
     expect(screen.getByText('Connect your mailbox to send email.')).toBeInTheDocument();
   });
 
+  it('says the calendar comes with the user’s own Google connection, and not on the company mailbox', () => {
+    renderCard();
+    expect(screen.getByTestId('calendar-with-google')).toHaveTextContent(
+      'Connect with Google to also see your appointments in Google Calendar'
+    );
+  });
+
   it('offers only what works, and says in one line what does not yet', () => {
     renderCard();
     expect(screen.queryByRole('button', { name: 'Connect Microsoft' })).not.toBeInTheDocument();
