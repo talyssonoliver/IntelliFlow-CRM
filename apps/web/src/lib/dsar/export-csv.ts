@@ -22,12 +22,15 @@ export const UTF8_BOM = '\uFEFF';
 const FORMULA_START = /^[=+\-@\t\r\n]/;
 
 /**
- * Excel turns the text "00123" into 123 and rounds a number of more than 15 significant digits.
+ * Excel turns the text "00123" into 123, "1E10" into 10000000000, and rounds a number of more than
+ * 15 significant digits.
  * Such text gets the same leading single quote, so a phone number, postcode or reference keeps
  * every digit; the JSON file keeps the exact text either way.
  */
 function losesPrecisionInSpreadsheet(text: string): boolean {
   if (/^-?0\d+(?:\.\d+)?$/.test(text)) return true;
+  // Scientific notation (an id such as "1E10") is read as the number 10000000000.
+  if (/^-?\d+(?:\.\d+)?e[+-]?\d+$/i.test(text)) return true;
   const m = /^-?(\d+)(?:\.(\d+))?$/.exec(text);
   return m !== null && (m[1]! + (m[2] ?? '')).replace(/^0+/, '').length > 15;
 }

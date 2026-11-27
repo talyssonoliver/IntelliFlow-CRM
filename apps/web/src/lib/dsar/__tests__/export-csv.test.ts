@@ -169,12 +169,13 @@ describe('CSV export (IFC-317)', () => {
           year: '2026',
           count: 7,
           code: 'AB007',
+          clickId: '1E10',
         },
       ])
     );
     expect(csv).toBe(
-      'phone,postcode,ref,decimal,year,count,code\r\n' +
-        "'07700900000,'00123,'12345678901234567,0.5,2026,7,AB007\r\n"
+      'phone,postcode,ref,decimal,year,count,code,clickId\r\n' +
+        "'07700900000,'00123,'12345678901234567,0.5,2026,7,AB007,'1E10\r\n"
     );
   });
 
