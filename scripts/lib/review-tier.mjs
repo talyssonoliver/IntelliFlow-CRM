@@ -212,12 +212,24 @@ export function modelForTier(tier, env = process.env, available = null) {
   const def = DEFAULT_MODELS[tier];
   const model = env[`CODEX_REVIEW_${key}_MODEL`] || def.model;
   const effort = env[`CODEX_REVIEW_${key}_EFFORT`] || def.effort;
-  if (available && available.length > 0 && !available.includes(model)) {
-    return {
-      model: null,
-      effort,
-      note: `${model} is not on the plan; using the codex config model`,
-    };
+  if (available && available.length > 0) {
+    // `available` is a list of slugs or of { slug, efforts } (parseModelCatalog).
+    const entry = available.find((m) => (typeof m === 'string' ? m : m.slug) === model);
+    if (!entry) {
+      return {
+        model: null,
+        effort,
+        note: `${model} is not on the plan; using the codex config model`,
+      };
+    }
+    const efforts = typeof entry === 'string' ? null : entry.efforts;
+    if (efforts && efforts.length > 0 && !efforts.includes(effort)) {
+      return {
+        model,
+        effort: null,
+        note: `${model} does not support effort ${effort}; using the codex config effort`,
+      };
+    }
   }
   return { model, effort, note: '' };
 }
@@ -230,6 +242,29 @@ export function parseModelCache(text) {
     if (!Array.isArray(list)) return null;
     const slugs = list.map((m) => m.slug || m.id).filter(Boolean);
     return slugs.length > 0 ? slugs : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Models from the text of ~/.codex/models_cache.json with the reasoning efforts each supports:
+ * { slug, efforts: string[] | null }[], or null when unreadable. Read-only; the cache is codex's own.
+ */
+export function parseModelCatalog(text) {
+  try {
+    const parsed = JSON.parse(text);
+    const list = Array.isArray(parsed) ? parsed : parsed.models;
+    if (!Array.isArray(list)) return null;
+    const out = list
+      .map((m) => ({
+        slug: m.slug || m.id,
+        efforts: Array.isArray(m.supported_reasoning_levels)
+          ? m.supported_reasoning_levels.map((l) => l.effort || l).filter(Boolean)
+          : null,
+      }))
+      .filter((m) => m.slug);
+    return out.length > 0 ? out : null;
   } catch {
     return null;
   }

@@ -18,7 +18,7 @@ import {
 } from './codex-chunk-review.mjs';
 import { collectScopedDiff } from './codex-diff.mjs';
 import { makeReviewIo } from './codex-review-cache.mjs';
-import { classifyDiff, modelForTier, parseModelCache } from './review-tier.mjs';
+import { classifyDiff, modelForTier, parseModelCatalog } from './review-tier.mjs';
 import { deferredMessage, makeReviewer } from './review-policy.mjs';
 import {
   deltaAgainst,
@@ -55,9 +55,15 @@ export function summarizeRuns(runs) {
     reviewer: reviewers.length ? reviewers.join('+') : 'none',
     model: models.join('+') || null,
     effort: runs.find((r) => r.effort)?.effort ?? null,
+    fallback: runs.find((r) => r.modelFallback)?.modelFallback?.reason ?? null,
     tokens: total > 0 ? { total } : null,
     costUsd: runs.some((r) => typeof r.costUsd === 'number') ? cost : null,
   };
+}
+
+/** The sizing reason with the model-fallback reason, when a run had to drop its model. */
+export function withFallback(why, fallback) {
+  return fallback ? `${why}; ${fallback}` : why;
 }
 
 /** The prompt note for a round after the first: only unseen hunks are shown. */
@@ -118,7 +124,7 @@ export function createGate(d) {
   /** The model slugs the ChatGPT plan lists (codex's own cache), or null when unreadable. */
   function planModels() {
     try {
-      return parseModelCache(
+      return parseModelCatalog(
         fs.readFileSync(path.join(d.homedir(), '.codex', 'models_cache.json'), 'utf8')
       );
     } catch {
@@ -480,7 +486,7 @@ export function createGate(d) {
         reviewer: used.reviewer,
         model: plan.model,
         effort: plan.effort,
-        why: plan.why,
+        why: withFallback(plan.why, used.fallback),
         verdict: 'DEFERRED',
         findings: carried,
         blocking: carried.length,
@@ -496,7 +502,7 @@ export function createGate(d) {
         reviewer: used.reviewer,
         model: used.model,
         effort: plan.effort,
-        why: plan.why,
+        why: withFallback(plan.why, used.fallback),
         tokens: used.tokens,
         costUsd: used.costUsd,
         verdict: 'FAIL',
@@ -524,9 +530,10 @@ export function createGate(d) {
         reviewer: used.reviewer,
         model: used.model,
         effort: used.effort ?? plan.effort,
-        why: plan.why,
+        why: withFallback(plan.why, used.fallback),
         tokens: used.tokens,
         costUsd: used.costUsd,
+        note: used.fallback ? `model fallback: ${used.fallback}` : '',
       },
     });
   }
