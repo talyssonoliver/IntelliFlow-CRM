@@ -96,7 +96,7 @@ export default function AnalyticsPerformancePage() {
             value={money(m.now?.totalRevenue ?? 0)}
             pending={pending}
             failed={m.failed}
-            badge={<MetricDefinition label="Booked revenue" definition={DEFINITIONS.revenue} />}
+            labelHint={<MetricDefinition label="Booked revenue" definition={DEFINITIONS.revenue} />}
             footer={<VsPrevious comparison={m.kpis.revenue} format={money} />}
           />
           <KpiCard
@@ -106,7 +106,7 @@ export default function AnalyticsPerformancePage() {
             value={`${Math.round((m.now?.winRate ?? 0) * 10) / 10}%`}
             pending={pending}
             failed={m.failed}
-            badge={<MetricDefinition label="Win rate" definition={winRateDefinition(m.now)} />}
+            labelHint={<MetricDefinition label="Win rate" definition={winRateDefinition(m.now)} />}
             footer={<VsPrevious comparison={m.kpis.winRate} points />}
           />
           <KpiCard
@@ -120,7 +120,7 @@ export default function AnalyticsPerformancePage() {
             }
             pending={pending}
             failed={m.failed}
-            badge={<MetricDefinition label="Sales cycle" definition={DEFINITIONS.cycle} />}
+            labelHint={<MetricDefinition label="Sales cycle" definition={DEFINITIONS.cycle} />}
             footer={
               m.now?.avgSalesCycleDays == null ? (
                 <p className="text-xs text-muted-foreground">no deals won in this period</p>
@@ -136,7 +136,9 @@ export default function AnalyticsPerformancePage() {
             value={money(m.now?.pipelineValue ?? 0)}
             pending={pending}
             failed={m.failed}
-            badge={<MetricDefinition label="Pipeline created" definition={DEFINITIONS.pipeline} />}
+            labelHint={
+              <MetricDefinition label="Pipeline created" definition={DEFINITIONS.pipeline} />
+            }
             footer={<VsPrevious comparison={m.kpis.pipeline} format={money} />}
           />
         </div>
