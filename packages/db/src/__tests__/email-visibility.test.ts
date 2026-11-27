@@ -5,6 +5,10 @@ import {
   loggedPersonalMailIds,
   LOGGED_PERSONAL_MAIL_ID_CAP,
   mailViewerOf,
+  visibleEmailWhere,
+  visiblePeopleWhere,
+  emailActivityWhere,
+  emailActivitySql,
 } from '../email-visibility';
 
 type Where = ReturnType<typeof emailVisibilityWhere>;
@@ -86,6 +90,49 @@ describe('loggedPersonalMailIds bound', () => {
     await loggedPersonalMailIds(db as never, { tenantId: 'T', userId: 'U', role: 'ADMIN' });
     expect(seen[0].values).toContain(LOGGED_PERSONAL_MAIL_ID_CAP);
     expect(seen[0].strings.join(' ')).toContain('ORDER BY e."createdAt" DESC');
+  });
+});
+
+describe('visibleEmailWhere and the people scope', () => {
+  it('looks the logged ids up and folds them into the where', async () => {
+    const db = { $queryRaw: async () => [{ id: 'm1' }] };
+    const where = await visibleEmailWhere(db as never, { tenantId: 'T', userId: 'U' });
+    expect(JSON.stringify(where)).toContain('m1');
+  });
+
+  it('skips the lookup for an empty only list', async () => {
+    const db = {
+      $queryRaw: async () => {
+        throw new Error('not expected');
+      },
+    };
+    expect(await loggedPersonalMailIds(db as never, { tenantId: 'T', userId: 'U' }, [])).toEqual(
+      []
+    );
+  });
+
+  it('scopes people by role', () => {
+    expect(visiblePeopleWhere({ userId: 'u', role: 'ADMIN' })).toEqual({});
+    expect(visiblePeopleWhere({ userId: 'u', role: 'MANAGER', teamMemberIds: ['a'] })).toEqual({
+      ownerId: { in: ['u', 'a'] },
+    });
+    expect(visiblePeopleWhere({ userId: 'u', role: 'USER' })).toEqual({ ownerId: 'u' });
+  });
+
+  it('shows EMAIL timeline entries only for people the viewer can see', () => {
+    expect(emailActivityWhere('lead', null)).toEqual({ type: { not: 'EMAIL' } });
+    expect(emailActivityWhere('lead', { userId: 'u', role: 'USER' })).toEqual({
+      OR: [{ type: { not: 'EMAIL' } }, { lead: { is: { ownerId: 'u' } } }],
+    });
+  });
+
+  it('builds the SQL form of the timeline rule', () => {
+    const text = (q: { strings: string[] }) => q.strings.join('?');
+    expect(text(emailActivitySql('lead', 'T', null) as never)).toContain("<> 'EMAIL'");
+    const contact = emailActivitySql('contact', 'T', { userId: 'u', role: 'USER' });
+    expect(text(contact as never)).toContain('IN (');
+    const lead = emailActivitySql('lead', 'T', { userId: 'u', role: 'ADMIN' });
+    expect(text(lead as never)).toContain('IN (');
   });
 });
 

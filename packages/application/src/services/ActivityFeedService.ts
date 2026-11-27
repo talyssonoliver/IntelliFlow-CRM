@@ -290,7 +290,7 @@ export class ActivityFeedService {
  */
 function viewerKey(viewer?: ActivityFeedViewer): string {
   if (!viewer) return 'none';
-  const team = [...(viewer.teamMemberIds ?? [])].sort().join(',');
+  const team = [...(viewer.teamMemberIds ?? [])].sort((a, b) => a.localeCompare(b)).join(',');
   return `${viewer.userId}/${viewer.role ?? ''}/${team}`;
 }
 
