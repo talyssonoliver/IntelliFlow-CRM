@@ -383,11 +383,11 @@ export const inboundEmailRouter = createTRPCRouter({
           id: input.emailId,
           tenantId: (ctx as any).tenant.tenantId,
         },
-        include: { attachments: true },
+        include: { attachments: true, mailbox: { select: { scope: true, userId: true } } },
       });
       if (!record) return null;
-      // One rule for the view and the attachment proxy (email-read-access.ts).
-      if (!canReadEmailRecord((ctx as any).user.userId, record)) return null;
+      // One rule for the view, the thread and the attachment proxy (email-read-access.ts).
+      if (!(await canReadEmailRecord(ctx as unknown as EmailRouterCtx, record))) return null;
       const email = mapEmailRecord(record);
       // A draft is private to the person writing it, and they need all of it back.
       if (!email.isDraft) return email;
@@ -605,20 +605,27 @@ export const inboundEmailRouter = createTRPCRouter({
               },
             ],
           },
-          include: { attachments: true },
+          include: { attachments: true, mailbox: { select: { scope: true, userId: true } } },
           orderBy: { createdAt: 'asc' },
           take: input.limit,
         });
-        let emails = threadEmails.filter((email: any) => !email.metadata?.isDraft);
+        const readable = async (list: any[]): Promise<any[]> => {
+          const keep: any[] = [];
+          for (const email of list) {
+            if (await canReadEmailRecord(ctx as unknown as EmailRouterCtx, email)) keep.push(email);
+          }
+          return keep;
+        };
+        let emails = await readable(threadEmails.filter((email: any) => !email.metadata?.isDraft));
 
         // Fallback: if no emails found by threadId, try looking up by email ID
         // This handles emails that don't have metadata.threadId set
         if (emails.length === 0) {
           const single = await (ctx as any).prisma.emailRecord.findFirst({
             where: { id: input.threadId, tenantId },
-            include: { attachments: true },
+            include: { attachments: true, mailbox: { select: { scope: true, userId: true } } },
           });
-          if (single && (!single.metadata?.isDraft || single.userId === userId)) {
+          if (single && (await readable([single])).length === 1) {
             emails = [single];
           }
         }
