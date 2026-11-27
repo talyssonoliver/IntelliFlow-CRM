@@ -50,6 +50,9 @@ export const HOME_ONLY_RULES: readonly HomeOnlyRule[] = [
   { match: 'tenant.', profile: false, reserved: true, why: 'tenant admin, plan, ownership' },
   { match: 'apiKey.', profile: false, reserved: true, why: 'API credentials' },
   { match: 'platform.', profile: false, reserved: true, why: 'platform operator' },
+  // The whole-workspace data export hands out every record of the workspace: a pinned Portal
+  // staff session (a guest) must not fetch it. The workspace's own administrators still pass.
+  { match: 'workspaceExport.', profile: false, why: 'whole-workspace data export' },
   // Platform operations: any signed-in user can reach these today; a guest must not.
   { match: 'queuesAdmin.', profile: false, why: 'platform queue operations' },
 ];
