@@ -449,7 +449,7 @@ function dispatchTicketPostCreateSideEffects(
  * 30-day throttle, and never delays or fails the bulk call.
  */
 function queueSurveysForBulk(ctx: Context, tenantId: string, ids: string[]): void {
-  void (async () => {
+  (async () => {
     for (const id of ids) {
       await queueSurveyForResolvedTicket(
         ctx.prismaWithTenant as unknown as SurveyDb,
@@ -458,7 +458,7 @@ function queueSurveysForBulk(ctx: Context, tenantId: string, ids: string[]): voi
         id
       );
     }
-  })();
+  })().catch((err) => console.error('[ticket.router] Bulk survey queue failed:', err));
 }
 
 export const ticketRouter = createTRPCRouter({
@@ -616,12 +616,12 @@ export const ticketRouter = createTRPCRouter({
         before.status !== ticket.status &&
         (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED')
       ) {
-        void queueSurveyForResolvedTicket(
+        queueSurveyForResolvedTicket(
           ctx.prismaWithTenant as unknown as SurveyDb,
           ctx.adapters?.notificationService,
           tenantId,
           ticket.id
-        );
+        ).catch((err) => console.error('[ticket.router] Survey queue failed:', err));
       }
 
       // PG-185: existing escalation notification — now gated on

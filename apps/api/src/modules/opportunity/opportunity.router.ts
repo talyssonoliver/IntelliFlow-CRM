@@ -1162,12 +1162,12 @@ export const opportunityRouter = createTRPCRouter({
 
     // MVP-012: a won deal queues a satisfaction survey (tenant switch, one per contact per 30 days).
     if (input.targetStage === 'CLOSED_WON' && previousStage !== 'CLOSED_WON') {
-      void queueSurveyForWonDeal(
+      queueSurveyForWonDeal(
         ctx.prismaWithTenant as unknown as SurveyDb,
         ctx.adapters?.notificationService,
         typedCtx.tenant.tenantId,
         input.id
-      );
+      ).catch((err) => console.error('[opportunity.router] Survey queue failed:', err));
     }
 
     return mapOpportunityToResponse(result.value);
