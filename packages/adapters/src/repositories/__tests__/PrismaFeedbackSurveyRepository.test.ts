@@ -229,8 +229,8 @@ describe('PrismaFeedbackSurveyRepository', () => {
   describe('getSentimentBreakdown()', () => {
     it('returns correct sentiment counts', async () => {
       mockPrisma.$queryRawUnsafe.mockResolvedValue([
-        { sentiment: 'positive', count: 20n },
-        { sentiment: 'negative', count: 5n },
+        { sentiment: 'POSITIVE', count: 20n },
+        { sentiment: 'NEGATIVE', count: 5n },
         { sentiment: null, count: 10n },
       ]);
 
@@ -240,6 +240,19 @@ describe('PrismaFeedbackSurveyRepository', () => {
       expect(result.neutral).toBe(10);
       expect(result.negative).toBe(5);
       expect(result.total).toBe(35);
+    });
+
+    it('counts the stored enum values, not only lowercase ones', async () => {
+      mockPrisma.$queryRawUnsafe.mockResolvedValue([
+        { sentiment: 'POSITIVE', count: 7n },
+        { sentiment: 'positive', count: 1n },
+        { sentiment: 'NEUTRAL', count: 2n },
+        { sentiment: 'NEGATIVE', count: 3n },
+      ]);
+
+      const result = await repository.getSentimentBreakdown(tenantId, from, to);
+
+      expect(result).toEqual({ positive: 8, neutral: 2, negative: 3, total: 13 });
     });
 
     it('maps null sentiment to neutral', async () => {
@@ -290,6 +303,15 @@ describe('PrismaFeedbackSurveyRepository', () => {
   });
 
   describe('getResponseRateByType()', () => {
+    it('counts as sent only surveys whose email went out', async () => {
+      mockPrisma.$queryRaw.mockResolvedValue([]);
+
+      await repository.getResponseRateByType(tenantId, from, to);
+
+      const sql = (mockPrisma.$queryRaw.mock.calls[0][0] as readonly string[]).join('?');
+      expect(sql).toContain('COUNT(*) FILTER (WHERE "sentAt" IS NOT NULL) AS total_sent');
+    });
+
     it('returns correct response rates', async () => {
       mockPrisma.$queryRaw.mockResolvedValue([
         { type: 'NPS', total_sent: 100n, total_responded: 75n },

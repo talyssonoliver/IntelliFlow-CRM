@@ -58,6 +58,7 @@ function makeDb() {
     },
   ];
   const settings: Row[] = [];
+  const restrictions: Row[] = [];
   const deals: Row[] = [{ id: 'd1', tenantId: TENANT_A, contactId: 'c1' }];
   const tickets: Row[] = [
     { id: 't1', tenantId: TENANT_A, contactId: null, contactEmail: 'mara@example.invalid' },
@@ -77,6 +78,17 @@ function makeDb() {
     },
     ticket: {
       findFirst: vi.fn(async ({ where }: any) => tickets.find((t) => matches(t, where)) ?? null),
+    },
+    processingRestriction: {
+      findFirst: vi.fn(
+        async ({ where }: any) =>
+          restrictions.find(
+            (r) =>
+              r.tenantId === where.tenantId &&
+              r.subjectEmail === where.subjectEmail &&
+              r.liftedAt == null
+          ) ?? null
+      ),
     },
     feedbackSurveySetting: {
       findUnique: vi.fn(
@@ -101,7 +113,7 @@ function makeDb() {
       }),
     },
   };
-  return { db: db as unknown as SurveyDb, surveys, settings };
+  return { db: db as unknown as SurveyDb, surveys, settings, restrictions, raw: db };
 }
 
 function okSender(): SurveyEmailSender & { sendEmail: ReturnType<typeof vi.fn> } {
@@ -176,6 +188,55 @@ describe('createAndSendSurvey', () => {
     expect(surveys[0].tokenExpiresAt.getTime()).toBe(NOW.getTime() + 14 * DAY);
     expect(surveys[0]).toMatchObject({ status: 'SENT', accountId: 'acc1', trigger: 'MANUAL' });
     expect(sender.sendEmail.mock.calls[0][0].to).toEqual(['mara@example.invalid']);
+  });
+
+  it('sends nothing to a contact under a processing restriction', async () => {
+    const { db, surveys, restrictions } = makeDb();
+    restrictions.push({
+      tenantId: TENANT_A,
+      subjectEmail: 'mara@example.invalid',
+      liftedAt: null,
+      blocksMarketing: true,
+      createdAt: NOW,
+    });
+    const sender = okSender();
+    const result = await createAndSendSurvey(
+      db,
+      sender,
+      { tenantId: TENANT_A, contactId: 'c1', surveyType: 'NPS', trigger: 'MANUAL' },
+      NOW
+    );
+    expect(result).toEqual({ ok: false, reason: 'restricted' });
+    expect(surveys).toHaveLength(0);
+    expect(sender.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('sends nothing when the restriction check itself fails', async () => {
+    const { db, surveys, raw } = makeDb();
+    raw.processingRestriction.findFirst.mockRejectedValueOnce(new Error('db down'));
+    const sender = okSender();
+    const result = await createAndSendSurvey(
+      db,
+      sender,
+      { tenantId: TENANT_A, contactId: 'c1', surveyType: 'NPS', trigger: 'MANUAL' },
+      NOW
+    );
+    expect(result).toEqual({ ok: false, reason: 'restricted' });
+    expect(surveys).toHaveLength(0);
+    expect(sender.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('still sends when only another tenant restricted the same address', async () => {
+    const { db, restrictions } = makeDb();
+    restrictions.push({ tenantId: TENANT_B, subjectEmail: 'mara@example.invalid', liftedAt: null });
+    const sender = okSender();
+    const result = await createAndSendSurvey(
+      db,
+      sender,
+      { tenantId: TENANT_A, contactId: 'c1', surveyType: 'NPS', trigger: 'MANUAL' },
+      NOW
+    );
+    expect(result).toMatchObject({ ok: true, delivered: true });
   });
 
   it('refuses a contact that belongs to another tenant', async () => {
@@ -358,6 +419,15 @@ describe('automatic triggers', () => {
       'queued'
     );
     expect(surveys).toHaveLength(2);
+  });
+
+  it('skips a won deal whose contact restricted processing', async () => {
+    const { db, surveys, restrictions } = makeDb();
+    restrictions.push({ tenantId: TENANT_A, subjectEmail: 'mara@example.invalid', liftedAt: null });
+    const sender = okSender();
+    expect(await queueSurveyForWonDeal(db, sender, TENANT_A, 'd1')).toBe('restricted');
+    expect(surveys).toHaveLength(0);
+    expect(sender.sendEmail).not.toHaveBeenCalled();
   });
 
   it('a failed send does not count against the throttle', async () => {

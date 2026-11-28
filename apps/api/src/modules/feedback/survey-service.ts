@@ -8,6 +8,7 @@
  *   - the public lookup and answer find the row by the token's hash alone, and take the tenant from
  *     that row. Nothing the visitor sends can name a tenant.
  */
+import { PrismaProcessingRestrictionRepository } from '@intelliflow/adapters';
 import type { PrismaClient } from '@intelliflow/db';
 import type { SurveyType } from '@intelliflow/domain';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
@@ -22,7 +23,13 @@ import { generateSurveyToken, hashSurveyToken, surveyTokenExpiry } from './surve
 
 export type SurveyDb = Pick<
   PrismaClient,
-  'feedbackSurvey' | 'feedbackSurveySetting' | 'contact' | 'tenant' | 'opportunity' | 'ticket'
+  | 'feedbackSurvey'
+  | 'feedbackSurveySetting'
+  | 'contact'
+  | 'tenant'
+  | 'opportunity'
+  | 'ticket'
+  | 'processingRestriction'
 >;
 
 export interface SurveyEmailSender {
@@ -55,7 +62,22 @@ export interface CreateSurveyInput {
 
 export type CreateSurveyResult =
   | { ok: true; surveyId: string; delivered: boolean }
-  | { ok: false; reason: 'contact_not_found' | 'no_email' };
+  | { ok: false; reason: 'contact_not_found' | 'no_email' | 'restricted' };
+
+/**
+ * A data subject who asked for processing to be restricted (or an erased record) gets no survey.
+ * The same register the scoring, drafting and duplicate checks read. A failed check counts as
+ * restricted: an email cannot be recalled, so the survey waits rather than risk it.
+ */
+async function isProcessingRestricted(db: SurveyDb, tenantId: string, email: string) {
+  try {
+    const restrictions = new PrismaProcessingRestrictionRepository(db as never);
+    return (await restrictions.status(tenantId, email)).restricted;
+  } catch (err) {
+    console.warn('[feedback-survey] Restriction check failed; survey not sent', err);
+    return true;
+  }
+}
 
 function surveyLink(token: string): string {
   const appUrl = requiredProdEnv('APP_URL', process.env.APP_URL, 'http://localhost:3000');
@@ -75,6 +97,9 @@ export async function createAndSendSurvey(
   });
   if (!contact) return { ok: false, reason: 'contact_not_found' };
   if (!contact.email) return { ok: false, reason: 'no_email' };
+  if (await isProcessingRestricted(db, input.tenantId, contact.email)) {
+    return { ok: false, reason: 'restricted' };
+  }
 
   const tenant = await db.tenant.findUnique({
     where: { id: input.tenantId },
@@ -138,6 +163,7 @@ export type QueueReason =
   | 'not_sent'
   | 'no_contact'
   | 'no_sender'
+  | 'restricted'
   | 'error';
 
 const AUTO_TYPE: Record<'DEAL_WON' | 'TICKET_RESOLVED', SendableSurveyType> = {
@@ -208,7 +234,7 @@ export async function queueAutoSurvey(
       },
       now
     );
-    if (!result.ok) return 'no_contact';
+    if (!result.ok) return result.reason === 'restricted' ? 'restricted' : 'no_contact';
     return result.delivered ? 'queued' : 'not_sent';
   } catch (error) {
     console.error('[feedback-survey] Automatic survey failed', {

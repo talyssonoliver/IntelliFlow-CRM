@@ -34,6 +34,7 @@ function staffCtx(overrides: Record<string, unknown> = {}) {
       create: vi.fn(async () => ({ id: 's1' })),
       updateMany: vi.fn(async () => ({ count: 1 })),
     },
+    processingRestriction: { findFirst: vi.fn(async () => null) },
     feedbackSurveySetting: {
       findUnique: vi.fn(async () => null),
       upsert: vi.fn(async () => ({})),

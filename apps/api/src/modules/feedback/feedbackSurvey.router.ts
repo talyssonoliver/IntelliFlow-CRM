@@ -34,6 +34,12 @@ function getFeedbackSurveyService(ctx: Context) {
   return ctx.services.feedbackSurvey;
 }
 
+const SEND_REFUSED_MESSAGE = {
+  contact_not_found: 'Contact not found.',
+  no_email: 'This contact has no email address.',
+  restricted: 'This contact asked us to restrict use of their data, so no survey was sent.',
+} as const;
+
 export const feedbackSurveyRouter = createTRPCRouter({
   /**
    * Get full dashboard summary with NPS, CSAT, CES, sentiment, trends
@@ -103,10 +109,7 @@ export const feedbackSurveyRouter = createTRPCRouter({
     if (!result.ok) {
       throw new TRPCError({
         code: result.reason === 'contact_not_found' ? 'NOT_FOUND' : 'BAD_REQUEST',
-        message:
-          result.reason === 'contact_not_found'
-            ? 'Contact not found.'
-            : 'This contact has no email address.',
+        message: SEND_REFUSED_MESSAGE[result.reason],
       });
     }
     return { surveyId: result.surveyId, delivered: result.delivered };

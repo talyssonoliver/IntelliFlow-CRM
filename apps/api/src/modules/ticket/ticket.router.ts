@@ -461,6 +461,26 @@ function queueSurveysForBulk(ctx: Context, tenantId: string, ids: string[]): voi
   })().catch((err) => console.error('[ticket.router] Bulk survey queue failed:', err));
 }
 
+/**
+ * MVP-012: sets one ticket's status in a bulk call and says whether it should be surveyed: only
+ * when it moved into RESOLVED or CLOSED. A ticket already in that status (closed months ago, say)
+ * is updated but never surveyed again, as the single update does. Throws when the update fails.
+ */
+type TicketService = ReturnType<typeof getTicketService>;
+type TicketStatusUpdate = NonNullable<Parameters<TicketService['update']>[1]['status']>;
+
+async function setStatusForBulk(
+  ticketService: TicketService,
+  ticketId: string,
+  status: TicketStatusUpdate
+): Promise<boolean> {
+  const before = await ticketService.findById(ticketId).catch(() => null);
+  await ticketService.update(ticketId, { status });
+  return (
+    (status === 'RESOLVED' || status === 'CLOSED') && before != null && before.status !== status
+  );
+}
+
 export const ticketRouter = createTRPCRouter({
   /**
    * Create a new ticket
@@ -793,9 +813,9 @@ export const ticketRouter = createTRPCRouter({
       const surveyIds: string[] = [];
       for (const ticketId of ticketIds) {
         try {
-          await ticketService.update(ticketId, { status });
+          const survey = await setStatusForBulk(ticketService, ticketId, status);
           successCount++;
-          if (status === 'RESOLVED' || status === 'CLOSED') surveyIds.push(ticketId);
+          if (survey) surveyIds.push(ticketId);
         } catch {
           // Continue with other tickets
         }
@@ -823,9 +843,9 @@ export const ticketRouter = createTRPCRouter({
       const surveyIds: string[] = [];
       for (const ticketId of ticketIds) {
         try {
-          await ticketService.update(ticketId, { status: 'RESOLVED' });
+          const survey = await setStatusForBulk(ticketService, ticketId, 'RESOLVED');
           successCount++;
-          surveyIds.push(ticketId);
+          if (survey) surveyIds.push(ticketId);
         } catch {
           // Continue with other tickets
         }
@@ -879,9 +899,9 @@ export const ticketRouter = createTRPCRouter({
       const surveyIds: string[] = [];
       for (const ticketId of ticketIds) {
         try {
-          await ticketService.update(ticketId, { status: 'CLOSED' });
+          const survey = await setStatusForBulk(ticketService, ticketId, 'CLOSED');
           successCount++;
-          surveyIds.push(ticketId);
+          if (survey) surveyIds.push(ticketId);
         } catch {
           // Continue with other tickets
         }

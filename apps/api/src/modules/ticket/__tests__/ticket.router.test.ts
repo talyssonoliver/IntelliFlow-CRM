@@ -8,6 +8,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { ticketRouter } from '../ticket.router';
+import { queueSurveyForResolvedTicket } from '../../feedback/survey-service';
+
+// MVP-012: the bulk paths queue CSAT surveys in the background; the tests check which tickets.
+vi.mock('../../feedback/survey-service', () => ({
+  queueSurveyForResolvedTicket: vi.fn(async () => 'queued'),
+}));
 import type { UserSession } from '../../../context';
 import type { TenantContext } from '../../../security/tenant-context';
 
@@ -608,6 +614,49 @@ describe('ticketRouter', () => {
       expect(result.success).toBe(true);
       expect(result.updated).toBe(2);
       expect(mockTicketService.update).toHaveBeenCalledWith('ticket_1', { status: 'RESOLVED' });
+    });
+  });
+
+  describe('bulk status changes and CSAT surveys (MVP-012)', () => {
+    const queued = () => vi.mocked(queueSurveyForResolvedTicket).mock.calls.map((call) => call[3]);
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    beforeEach(() => vi.mocked(queueSurveyForResolvedTicket).mockClear());
+
+    it('surveys only the tickets a bulk close actually moved to CLOSED', async () => {
+      mockTicketService.findById.mockImplementation(async (id: string) => ({
+        ...mockTicket,
+        id,
+        status: id === 'ticket_old' ? 'CLOSED' : 'OPEN',
+      }));
+      const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
+
+      const result = await caller.bulkClose({ ticketIds: ['ticket_new', 'ticket_old'] });
+      await flush();
+
+      expect(result.updated).toBe(2);
+      expect(queued()).toEqual(['ticket_new']);
+    });
+
+    it('does not survey tickets a bulk resolve finds already resolved', async () => {
+      mockTicketService.findById.mockResolvedValue({ ...mockTicket, status: 'RESOLVED' });
+      const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
+
+      await caller.bulkResolve({ ticketIds: ['ticket_1', 'ticket_2'] });
+      await flush();
+
+      expect(queued()).toEqual([]);
+    });
+
+    it('bulk status update surveys a move into RESOLVED, never a move to another status', async () => {
+      mockTicketService.findById.mockResolvedValue({ ...mockTicket, status: 'OPEN' });
+      const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
+
+      await caller.bulkUpdateStatus({ ticketIds: ['ticket_1'], status: 'IN_PROGRESS' });
+      await caller.bulkUpdateStatus({ ticketIds: ['ticket_2'], status: 'RESOLVED' });
+      await flush();
+
+      expect(queued()).toEqual(['ticket_2']);
     });
   });
 

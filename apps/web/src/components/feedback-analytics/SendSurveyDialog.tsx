@@ -35,6 +35,18 @@ export function SendSurveyDialog({
   const [surveyType, setSurveyType] = useState<SurveyType>('NPS');
   const utils = trpc.useUtils();
 
+  // A sent email cannot be recalled, so the choice never outlives what is on screen: a new search
+  // or closing the dialog clears it, and Send needs the chosen contact to be in the list shown.
+  const close = () => {
+    setContactId(null);
+    setSearch('');
+    onOpenChange(false);
+  };
+  const changeSearch = (value: string) => {
+    setSearch(value);
+    setContactId(null);
+  };
+
   const contacts = trpc.contact.list.useQuery(
     { page: 1, limit: 8, ...(search.trim() ? { search: search.trim() } : {}) },
     { enabled: open }
@@ -43,8 +55,7 @@ export function SendSurveyDialog({
     onSuccess: async (result) => {
       if (result.delivered) {
         toast({ title: 'Survey sent' });
-        onOpenChange(false);
-        setContactId(null);
+        close();
       } else {
         toast({
           title: 'The email could not be sent',
@@ -58,10 +69,12 @@ export function SendSurveyDialog({
       toast({ title: 'Could not send', description: error.message, variant: 'destructive' }),
   });
 
-  const rows = contacts.data?.contacts ?? [];
+  const rows: Array<{ id: string; firstName: string; lastName: string; email: string }> =
+    contacts.data?.contacts ?? [];
+  const selected = rows.find((c) => c.id === contactId) ?? null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : close())}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Send a survey</DialogTitle>
@@ -78,10 +91,10 @@ export function SendSurveyDialog({
               id="survey-contact-search"
               value={search}
               placeholder="Search by name or email"
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => changeSearch(e.target.value)}
             />
             <ul className="max-h-48 space-y-1 overflow-y-auto" aria-label="Contacts">
-              {rows.map((c: { id: string; firstName: string; lastName: string; email: string }) => (
+              {rows.map((c) => (
                 <li key={c.id}>
                   <button
                     type="button"
@@ -126,12 +139,12 @@ export function SendSurveyDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={close}>
             Cancel
           </Button>
           <Button
-            disabled={!contactId || send.isPending}
-            onClick={() => contactId && send.mutate({ contactId, surveyType })}
+            disabled={!selected || send.isPending}
+            onClick={() => selected && send.mutate({ contactId: selected.id, surveyType })}
           >
             {send.isPending ? 'Sending...' : 'Send survey'}
           </Button>
