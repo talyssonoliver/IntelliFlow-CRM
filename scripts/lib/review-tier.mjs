@@ -27,6 +27,17 @@ export const DEFAULT_MODELS = Object.freeze({
   strong: Object.freeze({ model: 'gpt-6.2-sol', effort: 'high' }),
 });
 
+/**
+ * Models to fall back to, best first, when neither the tier's model nor the user's codex config
+ * model is on the ChatGPT plan (28/11/2026: the config named a model missing from models_cache.json,
+ * so every review deferred). The first one the plan's catalog lists is used; none listed = defer.
+ * CODEX_REVIEW_{LIGHT,STRONG}_FALLBACKS (comma separated) override them.
+ */
+export const PREFERRED_MODELS = Object.freeze({
+  light: Object.freeze(['gpt-6-luna', 'gpt-5.6-luna']),
+  strong: Object.freeze(['gpt-6.1-sol', 'gpt-6-sol', 'gpt-5.6-sol']),
+});
+
 const normalize = (file) => file.replace(/\\/g, '/');
 
 const DOC_RE = /(^docs\/|\.(md|mdx|txt|rst)$|(^|\/)(LICENSE|CHANGELOG)[^/]*$)/i;
@@ -232,6 +243,44 @@ export function modelForTier(tier, env = process.env, available = null) {
     }
   }
   return { model, effort, note: '' };
+}
+
+/**
+ * The top-level `model = "..."` of ~/.codex/config.toml text, or null. Read-only: only text is
+ * parsed here and the user's config is never written. Keys inside a [table] are not the default.
+ */
+export function parseCodexConfigModel(text) {
+  for (const raw of String(text || '').split(/\r?\n/)) {
+    const line = raw.trim();
+    if (line.startsWith('[')) return null;
+    const m = /^model\s*=\s*(?:"([^"]*)"|'([^']*)')/.exec(line);
+    if (m) return m[1] ?? m[2] ?? null;
+  }
+  return null;
+}
+
+/**
+ * The first model of the tier's preference list that the plan's catalog lists, with the tier's
+ * effort (null when that model's cached efforts lack it), or null when none is available.
+ * `available` is parseModelCatalog output (or slugs).
+ */
+export function catalogFallbackFor(tier, available, env = process.env) {
+  if (tier === 'skip' || !available || available.length === 0) return null;
+  const key = tier === 'light' ? 'LIGHT' : 'STRONG';
+  const override = (env[`CODEX_REVIEW_${key}_FALLBACKS`] || '')
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const wanted = override.length > 0 ? override : PREFERRED_MODELS[tier];
+  const effort = env[`CODEX_REVIEW_${key}_EFFORT`] || DEFAULT_MODELS[tier].effort;
+  for (const slug of wanted) {
+    const entry = available.find((m) => (typeof m === 'string' ? m : m.slug) === slug);
+    if (!entry) continue;
+    const efforts = typeof entry === 'string' ? null : entry.efforts;
+    const ok = !efforts || efforts.length === 0 || efforts.includes(effort);
+    return { model: slug, effort: ok ? effort : null };
+  }
+  return null;
 }
 
 /** Model slugs from the text of ~/.codex/models_cache.json, or null when unreadable. */

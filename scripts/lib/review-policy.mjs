@@ -112,6 +112,8 @@ export function deferredMessage({ reason, resetAt, risky, claudeUsable }) {
  * @param {{out: Function, err: Function}} deps.log
  * @param {(ms: number) => void} deps.sleep
  * @param {() => Date} deps.now
+ * @param {() => ({model: string, effort: string|null, reason: string}|null)} [deps.catalogFallback]
+ *   the tier's first catalog-listed model, asked only when the codex config model is missing too
  * @param {{strongModel: {model: string|null, effort: string|null}}} deps.models
  */
 export function makeReviewer({
@@ -126,6 +128,7 @@ export function makeReviewer({
   now = () => new Date(),
   models,
   env = process.env,
+  catalogFallback = () => null,
 }) {
   const state = {
     codexDown: !codexUsable,
@@ -201,6 +204,38 @@ export function makeReviewer({
           status: a.r.status ?? -1,
           capped: isCapped(failText),
         });
+        // The codex config model is not on the plan either: the first model of the tier's
+        // preference list that the plan's catalog lists, or the usual deferral when none is.
+        const alt = isModelUnavailable(failText) ? catalogFallback() : null;
+        if (alt) {
+          state.modelFallback = {
+            ...state.modelFallback,
+            catalog: { model: alt.model, effort: alt.effort },
+            reason: `${state.modelFallback.reason}; the codex config model is not on the plan either (${alt.reason}), retried with ${alt.model}/${alt.effort ?? 'config effort'}`,
+          };
+          log.err(`[codex-review] WARN: ${state.modelFallback.reason}.\n`);
+          opts = { model: alt.model, effort: alt.effort };
+          a = tryCodex(prompt, opts, 'retry on the first catalog-listed preferred model');
+          if (a.parsed) {
+            state.fallbackOpts = opts;
+            return {
+              parsed: a.parsed,
+              reviewer: 'codex',
+              raw: a.raw,
+              ...opts,
+              tokens: a.r.tokens ?? null,
+              attempts,
+              modelFallback: state.modelFallback,
+            };
+          }
+          failText = `${a.r.stderr || ''}\n${a.r.stdout || ''}\n${a.raw}`;
+          attempts.push({
+            reviewer: 'codex',
+            ...opts,
+            status: a.r.status ?? -1,
+            capped: isCapped(failText),
+          });
+        }
       }
       if (!fellBack && !isCapped(failText) && plan.tier === 'light') {
         // A light model that errors (not a cap) may be unknown to this CLI: one escalation to the strong model.

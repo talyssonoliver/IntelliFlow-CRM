@@ -285,3 +285,40 @@ describe('deferredMessage', () => {
     ).toMatch(/Claude fallback was tried/);
   });
 });
+
+describe('makeReviewer: the codex config model is missing from the plan too', () => {
+  const NOT_ON_PLAN = { raw: '', status: 1, stderr: 'model_not_found', stdout: '' };
+  const ok = { raw: GOOD, status: 0, stderr: '', stdout: '' };
+  const alt = { model: 'gpt-6.1-sol', effort: 'high', reason: 'config model c-x is missing' };
+
+  it('retries on the catalog preference after the config retry fails, and says so', () => {
+    const runCodex = vi
+      .fn()
+      .mockReturnValueOnce(NOT_ON_PLAN)
+      .mockReturnValueOnce(NOT_ON_PLAN)
+      .mockReturnValue(ok);
+    const { review } = setup({ runCodex, catalogFallback: () => alt });
+    const r = review('P');
+    expect(runCodex).toHaveBeenNthCalledWith(3, 'P', { model: 'gpt-6.1-sol', effort: 'high' });
+    expect(r).toMatchObject({ reviewer: 'codex', model: 'gpt-6.1-sol' });
+    expect(r.modelFallback.reason).toMatch(
+      /config model c-x is missing.*retried with gpt-6\.1-sol/
+    );
+    review('Q');
+    expect(runCodex).toHaveBeenNthCalledWith(4, 'Q', { model: 'gpt-6.1-sol', effort: 'high' });
+  });
+
+  it('defers as before when no catalog model is available', () => {
+    const runCodex = vi.fn(() => NOT_ON_PLAN);
+    const { review, runClaude } = setup({
+      runCodex,
+      catalogFallback: () => null,
+      claudeUsable: false,
+    });
+    const r = review('P');
+    expect(runCodex).toHaveBeenCalledTimes(2);
+    expect(r.parsed).toBeNull();
+    expect(r.deferred).toBeTruthy();
+    expect(runClaude).not.toHaveBeenCalled();
+  });
+});

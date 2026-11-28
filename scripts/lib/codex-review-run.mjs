@@ -18,7 +18,13 @@ import {
 } from './codex-chunk-review.mjs';
 import { collectScopedDiff } from './codex-diff.mjs';
 import { makeReviewIo } from './codex-review-cache.mjs';
-import { classifyDiff, modelForTier, parseModelCatalog } from './review-tier.mjs';
+import {
+  catalogFallbackFor,
+  classifyDiff,
+  modelForTier,
+  parseCodexConfigModel,
+  parseModelCatalog,
+} from './review-tier.mjs';
 import { deferredMessage, makeReviewer } from './review-policy.mjs';
 import {
   deltaAgainst,
@@ -124,9 +130,19 @@ export function createGate(d) {
   /** The model slugs the ChatGPT plan lists (codex's own cache), or null when unreadable. */
   function planModels() {
     try {
-      return parseModelCatalog(
-        fs.readFileSync(path.join(d.homedir(), '.codex', 'models_cache.json'), 'utf8')
-      );
+      const file =
+        env.CODEX_REVIEW_MODELS_CACHE || path.join(d.homedir(), '.codex', 'models_cache.json');
+      return parseModelCatalog(fs.readFileSync(file, 'utf8'));
+    } catch {
+      return null;
+    }
+  }
+
+  /** The default model of the user's codex config, or null. Read-only; never written. */
+  function codexConfigModel() {
+    try {
+      const file = env.CODEX_REVIEW_CODEX_CONFIG || path.join(d.homedir(), '.codex', 'config.toml');
+      return parseCodexConfigModel(fs.readFileSync(file, 'utf8'));
     } catch {
       return null;
     }
@@ -448,6 +464,20 @@ export function createGate(d) {
       now,
       models: { strong },
       env,
+      // Asked only after the codex config model failed as "not on the plan" too.
+      catalogFallback: () => {
+        const available = planModels();
+        const configModel = codexConfigModel();
+        if (!available || (configModel && available.some((m) => m.slug === configModel))) {
+          return null;
+        }
+        const alt = catalogFallbackFor(plan.tier, available, env);
+        if (!alt) return null;
+        const why = configModel
+          ? `config model ${configModel} is missing from the plan catalog`
+          : 'no config model is set';
+        return { ...alt, reason: why };
+      },
     });
     out('[codex-review] Preparing diff + review prompt ...\n');
     const result = runChunkedReview({

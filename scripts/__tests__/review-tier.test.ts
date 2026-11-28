@@ -5,12 +5,15 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   DEFAULT_MODELS,
+  PREFERRED_MODELS,
   LIGHT_MAX_LINES,
   RISKY_LINES,
+  catalogFallbackFor,
   classifyDiff,
   classifyFile,
   isCommentOnlyDiff,
   modelForTier,
+  parseCodexConfigModel,
   parseModelCache,
   parseModelCatalog,
   parseNumstat,
@@ -320,5 +323,55 @@ describe('parseModelCatalog and effort validation', () => {
       effort: 'high',
       note: '',
     });
+  });
+});
+
+describe('catalog fallback models', () => {
+  it('lists the strong and light preferences next to the tier models', () => {
+    expect(PREFERRED_MODELS.strong).toEqual(['gpt-6.1-sol', 'gpt-6-sol', 'gpt-5.6-sol']);
+    expect(PREFERRED_MODELS.light).toEqual(['gpt-6-luna', 'gpt-5.6-luna']);
+  });
+
+  it('takes the first preference the catalog lists, in preference order', () => {
+    const catalog = [
+      { slug: 'gpt-5.6-sol', efforts: null },
+      { slug: 'gpt-6-sol', efforts: null },
+    ];
+    expect(catalogFallbackFor('strong', catalog, {})).toEqual({
+      model: 'gpt-6-sol',
+      effort: 'high',
+    });
+    expect(catalogFallbackFor('light', [{ slug: 'gpt-5.6-luna', efforts: null }], {})).toEqual({
+      model: 'gpt-5.6-luna',
+      effort: 'medium',
+    });
+  });
+
+  it('drops an effort the cached model lacks, and returns null when none is listed', () => {
+    const lowOnly = [{ slug: 'gpt-6.1-sol', efforts: ['low'] }];
+    expect(catalogFallbackFor('strong', lowOnly, {})).toEqual({
+      model: 'gpt-6.1-sol',
+      effort: null,
+    });
+    expect(catalogFallbackFor('strong', [{ slug: 'other', efforts: null }], {})).toBeNull();
+    expect(catalogFallbackFor('strong', null, {})).toBeNull();
+    expect(catalogFallbackFor('skip', [{ slug: 'gpt-6.1-sol', efforts: null }], {})).toBeNull();
+  });
+
+  it('reads the preference list from an env override', () => {
+    const env = { CODEX_REVIEW_STRONG_FALLBACKS: 'x-1, x-2' };
+    expect(catalogFallbackFor('strong', ['x-2', 'gpt-6.1-sol'], env)?.model).toBe('x-2');
+  });
+});
+
+describe('parseCodexConfigModel', () => {
+  it('reads the top-level model, quoted either way, and ignores tables and comments', () => {
+    expect(parseCodexConfigModel('# c\nmodel = "gpt-6.2-astra"\neffort = "high"\n')).toBe(
+      'gpt-6.2-astra'
+    );
+    expect(parseCodexConfigModel("model='m-1'\r\n")).toBe('m-1');
+    expect(parseCodexConfigModel('[profiles.x]\nmodel = "inner"\n')).toBeNull();
+    expect(parseCodexConfigModel('approval = "never"\n')).toBeNull();
+    expect(parseCodexConfigModel('')).toBeNull();
   });
 });
