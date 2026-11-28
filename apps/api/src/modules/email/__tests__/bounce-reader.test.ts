@@ -575,7 +575,10 @@ describe('runBounceScan', () => {
     const { d } = deps(fake, []);
     await runBounceScan(d);
     const sql = String((fake.db.$queryRaw.mock.calls[0] as any)[0].join('?'));
-    expect(sql).toContain('RETURNING id');
+    expect(sql).toContain('RETURNING m.id, m."lockedUntil"');
+    // The row is picked once in a materialised CTE (#1586), not by `id IN (SELECT ...)`.
+    expect(sql).toContain('WITH picked AS MATERIALIZED');
+    expect(sql).not.toMatch(/WHERE id IN \(/);
     // One at a time, leased just before its scan (a batch lease could expire mid-tick).
     expect(sql).toContain('LIMIT 1');
     expect(sql).not.toMatch(/RETURNING[^;]*(Password|refreshToken)/i);

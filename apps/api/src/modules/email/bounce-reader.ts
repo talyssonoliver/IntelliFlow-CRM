@@ -216,9 +216,12 @@ interface MailboxClaim {
  */
 async function claimNextMailbox(deps: BounceReaderDeps, now: Date): Promise<MailboxClaim | null> {
   const leaseUntil = new Date(now.getTime() + LEASE_MS);
+  // The mailbox is picked once, in a materialised CTE, and only that row is updated. The shorter
+  // `WHERE id IN (SELECT ... LIMIT 1 FOR UPDATE SKIP LOCKED)` form is run by Postgres as a join on
+  // some plans, and then updates (locks) every due mailbox while the caller uses only the first:
+  // the others would sit locked, unscanned, until their lease ran out (#1586).
   const rows: Array<{ id: string; lockedUntil: Date }> = await deps.prisma.$queryRaw`
-    UPDATE email_mailboxes SET "lockedUntil" = ${leaseUntil}
-    WHERE id IN (
+    WITH picked AS MATERIALIZED (
       SELECT id FROM email_mailboxes
       WHERE status = 'ACTIVE' AND "nextScanAt" <= ${now}
         -- A Zoho mailbox may send only (MVP-001): nothing is read from it.
@@ -228,7 +231,10 @@ async function claimNextMailbox(deps: BounceReaderDeps, now: Date): Promise<Mail
       LIMIT 1
       FOR UPDATE SKIP LOCKED
     )
-    RETURNING id, "lockedUntil"`;
+    UPDATE email_mailboxes m SET "lockedUntil" = ${leaseUntil}
+    FROM picked
+    WHERE m.id = picked.id
+    RETURNING m.id, m."lockedUntil"`;
   const row = rows[0];
   return row ? { id: row.id, leaseUntil: row.lockedUntil } : null;
 }
