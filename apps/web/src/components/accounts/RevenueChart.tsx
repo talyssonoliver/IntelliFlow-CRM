@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react';
 import { Card, EmptyState } from '@intelliflow/ui';
-import { formatCurrency } from '@/lib/pricing/calculator';
+import { formatMoney } from '@/lib/format/money';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 
 interface OpportunityForChart {
   value: number;
@@ -48,6 +49,7 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ stageBreakdown, opportunities }: Readonly<RevenueChartProps>) {
+  const currency = useTenantCurrency();
   const monthlyData = useMemo(() => transformPipelineData(opportunities ?? []), [opportunities]);
 
   const hasStageData = stageBreakdown && Object.keys(stageBreakdown).length > 0;
@@ -75,7 +77,7 @@ export function RevenueChart({ stageBreakdown, opportunities }: Readonly<Revenue
                   key={stage}
                   className={`${STAGE_COLORS[stage] ?? 'bg-slate-400'} relative group`}
                   style={{ width: `${pct}%` }}
-                  title={`${stage.replaceAll('_', ' ')}: ${formatCurrency(value)}`}
+                  title={`${stage.replaceAll('_', ' ')}: ${formatMoney(value, currency)}`}
                 >
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="text-[10px] font-medium text-white drop-shadow">
@@ -91,7 +93,7 @@ export function RevenueChart({ stageBreakdown, opportunities }: Readonly<Revenue
               <div key={stage} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span className={`w-2 h-2 rounded-full ${STAGE_COLORS[stage] ?? 'bg-slate-400'}`} />
                 <span>{stage.replaceAll('_', ' ')}</span>
-                <span className="font-medium text-foreground">{formatCurrency(value)}</span>
+                <span className="font-medium text-foreground">{formatMoney(value, currency)}</span>
               </div>
             ))}
           </div>
@@ -113,7 +115,7 @@ export function RevenueChart({ stageBreakdown, opportunities }: Readonly<Revenue
                       style={{ height: `${Math.max(heightPct, 2)}%` }}
                     >
                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-[10px] px-1.5 py-0.5 rounded shadow whitespace-nowrap">
-                        {formatCurrency(bucket.value)}
+                        {formatMoney(bucket.value, currency)}
                       </div>
                     </div>
                     <span className="text-[10px] text-muted-foreground">

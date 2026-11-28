@@ -15,6 +15,7 @@
  * @see .specify/sprints/sprint-17/planning/IFC-300-plan.md
  */
 import { PrismaClient } from '../generated/prisma/client';
+import { assertHostedDbAllowed } from '../src/hosted-db-guard';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { SEED_IDS } from '../src/seed-ids';
 import snapshot from './data/help-articles.snapshot.json';
@@ -81,6 +82,7 @@ let cachedClient: SeedPrismaClient | null = null;
 
 export function getPrisma(): SeedPrismaClient {
   if (!cachedClient) {
+    assertHostedDbAllowed(process.env.DATABASE_URL, { variableName: 'DATABASE_URL' });
     const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
     cachedClient = new PrismaClient({ adapter }) as unknown as SeedPrismaClient;
   }

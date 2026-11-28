@@ -129,3 +129,5 @@ describe('dashboard widget accessibility', () => {
     ).toBeInTheDocument();
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

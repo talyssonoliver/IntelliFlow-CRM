@@ -427,10 +427,35 @@
   color: #f1f5f9 !important;
 }
 
-/* Today indicator */
+/* Today indicator: white on blue (dark text on blue was hard to read) */
 .sx__month-grid-day__header-date.sx__is-today {
   background-color: #2a78f6 !important;
-  color: #0f172a !important;
+  color: #fff !important;
+}
+
+/* Owner 26/11: the desktop month view was not polished. One surface per day: no grey header
+   band striping every week, the number top-left where the eye starts, today's cell tinted. */
+.sx__month-grid-day__header {
+  background-color: transparent !important;
+  align-items: flex-start !important;
+  padding: 6px 8px 2px !important;
+}
+.sx__month-grid-day__header-date {
+  justify-content: center !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+}
+.sx__month-grid-day__header-day-name {
+  font-size: 0.6875rem !important;
+}
+.sx__month-grid-day:has(.sx__is-today) {
+  background-color: rgb(42 120 246 / 0.05) !important;
+}
+.sx__month-grid-day.is-leading-or-trailing {
+  background-color: rgb(248 250 252 / 0.6) !important;
+}
+.dark .sx__month-grid-day.is-leading-or-trailing {
+  background-color: rgb(15 23 42 / 0.35) !important;
 }
 
 /* Leading/trailing days (outside current month) */
@@ -749,6 +774,17 @@
 .sx-calendar-container .sx__date-grid-event,
 .sx-calendar-container .sx__time-grid-event {
   cursor: pointer !important;
+}
+
+/* All-day row (week/day): every day the same width; a long task title is cut with an
+   ellipsis instead of widening its day (it made a task due Wednesday start on Monday). */
+.sx-calendar-container .sx__date-grid-day {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+.sx-calendar-container .sx__date-grid-event {
+  min-width: 0 !important;
+  overflow: hidden !important;
 }
 
 /* Small top padding so first event doesn't touch the day header */

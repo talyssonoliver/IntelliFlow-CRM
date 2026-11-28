@@ -31,6 +31,12 @@ vi.mock('@/components/sidebar', async (importOriginal) => ({
   SidebarProvider: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   SidebarInset: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   SidebarTrigger: () => <button type="button">Toggle sidebar</button>,
+  SectionMobileBar: ({ title }: Readonly<{ title: string }>) => (
+    <div>
+      <button type="button">Toggle sidebar</button>
+      {title}
+    </div>
+  ),
   SidebarWithSuspense: () => <aside>Email sidebar</aside>,
   createEmailSidebarConfig: (...args: unknown[]) =>
     (mockCreateEmailSidebarConfig as (...params: unknown[]) => unknown)(...args),

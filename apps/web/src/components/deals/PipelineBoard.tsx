@@ -37,6 +37,7 @@ import {
   NO_DEAL_VALUE_LABEL,
 } from './types';
 import { StageColumn } from './StageColumn';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 
 interface PipelineBoardProps {
   readonly deals: Deal[];
@@ -66,6 +67,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
   onDealNavigate,
   pendingDealId,
 }: Readonly<PipelineBoardProps>) {
+  const currency = useTenantCurrency();
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
 
   const sensors = useSensors(
@@ -204,7 +206,9 @@ export const PipelineBoard = React.memo(function PipelineBoard({
                   payments
                 </span>
                 <span className="font-semibold text-foreground text-xs sm:text-sm">
-                  {activeDeal.value ? formatCurrencyCompact(activeDeal.value) : NO_DEAL_VALUE_LABEL}
+                  {activeDeal.value
+                    ? formatCurrencyCompact(activeDeal.value, currency)
+                    : NO_DEAL_VALUE_LABEL}
                 </span>
               </div>
             </div>

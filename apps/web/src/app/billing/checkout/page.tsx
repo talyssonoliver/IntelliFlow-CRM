@@ -182,7 +182,7 @@ export default function CheckoutPage() {
     <div className="checkout-page">
       <PageHeader
         breadcrumbs={[
-          { label: 'Home', href: '/' },
+          { label: 'Dashboard', href: '/dashboard' },
           { label: 'Billing', href: '/billing' },
           { label: 'Checkout' },
         ]}

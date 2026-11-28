@@ -36,7 +36,7 @@ const DESCRIPTION =
   'How long AI work may wait for review, who may approve it, and when it escalates.';
 
 const BREADCRUMBS = [
-  { label: 'Home', href: '/' },
+  { label: 'Dashboard', href: '/dashboard' },
   { label: 'AI & Agents', href: '/agent-approvals' },
   { label: 'AI Settings', href: '/agent-approvals/ai-settings' },
   { label: 'Approval Policies' },

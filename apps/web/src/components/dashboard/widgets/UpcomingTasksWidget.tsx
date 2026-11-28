@@ -16,17 +16,23 @@ import { FollowUpsDueSection } from './FollowUpsDueSection';
 import { useFollowUpsDue } from './useFollowUpsDue';
 import { WaitingForReplySection } from './WaitingForReplySection';
 import { useWaitingForReply } from './useWaitingForReply';
+import { useFollowUpDone, useWaitingDismiss } from './useTodoDone';
+import { TodoRow } from './CardListSection';
 import type { WidgetProps } from './index';
 import type { TaskStatus } from '@intelliflow/domain';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { WidgetHeader } from '../WidgetHeader';
 
-const priorityColors: Record<string, string> = {
-  URGENT: 'text-red-600 dark:text-red-400',
-  HIGH: 'text-red-600 dark:text-red-400',
-  MEDIUM: 'text-amber-600 dark:text-amber-400',
-  LOW: 'text-green-600 dark:text-green-400',
-};
+/** "High · Overdue": the task's part of the meta line, after "Task ·". */
+function taskDetail(
+  priority: string | null | undefined,
+  dueDate: Date | string | null,
+  timezone: string
+): string {
+  const level = priority ? priority.charAt(0) + priority.slice(1).toLowerCase() : '';
+  const due = formatDueDate(dueDate, timezone);
+  return level ? `${level} · ${due}` : due;
+}
 
 function formatDueDate(date: Date | string | null, timezone: string = 'Europe/London'): string {
   if (!date) return 'No due date';
@@ -77,6 +83,8 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
   const followUps = useFollowUpsDue();
   // Leads and contacts whose last email to us is unanswered (MVP-014).
   const waiting = useWaitingForReply();
+  const followUpDone = useFollowUpDone();
+  const waitingDismiss = useWaitingDismiss();
 
   return (
     <div className="p-4 sm:p-6 h-full flex flex-col">
@@ -131,46 +139,33 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
             // second button for the same thing.
             <EmptyState entity="tasks" showCta={false} className="py-2" />
           )}
-        {!isLoading &&
-          tasks.map((task) => (
-            <Link
-              key={task.id}
-              href={`/tasks/${task.id}`}
-              className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              <input
-                type="checkbox"
-                className="mt-1 rounded border-slate-300 dark:border-slate-600 cursor-pointer"
-                checked={false}
-                title="Mark as complete"
-                onChange={() => completeMutation.mutate({ taskId: task.id })}
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                aria-label={`Complete task: ${task.title}`}
+        {!isLoading && tasks.length > 0 && (
+          <ul className="divide-y divide-border" aria-label="Tasks">
+            {tasks.map((task) => (
+              <TodoRow
+                key={task.id}
+                href={`/tasks/${task.id}`}
+                title={task.title}
+                kind="Task"
+                detail={taskDetail(task.priority, task.dueDate, timezone)}
+                detailClassName={getDueDateColor(task.dueDate) || 'text-muted-foreground'}
+                doneLabel={`Complete task: ${task.title}`}
+                onDone={() => completeMutation.mutate({ taskId: task.id })}
+                pending={
+                  completeMutation.isPending && completeMutation.variables?.taskId === task.id
+                }
               />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                  {task.title}
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span
-                    className={`text-xs font-medium ${priorityColors[task.priority] ?? 'text-slate-500'}`}
-                  >
-                    {task.priority?.charAt(0) + task.priority?.slice(1).toLowerCase()}
-                  </span>
-                  <span className={`text-xs ${getDueDateColor(task.dueDate)}`}>
-                    {formatDueDate(task.dueDate, timezone)}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
+            ))}
+          </ul>
+        )}
         {!isLoading && (
           <FollowUpsDueSection
             leads={followUps.leads}
             total={followUps.total}
             dueToday={followUps.dueToday}
             dueTodayIsLowerBound={followUps.dueTodayIsLowerBound}
+            onDone={followUpDone.markDone}
+            pendingLeadId={followUpDone.pendingLeadId}
           />
         )}
         {!isLoading && (
@@ -178,6 +173,8 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
             people={waiting.people}
             total={waiting.total}
             leadTotal={waiting.leadTotal}
+            onDone={(p) => waitingDismiss.markDone(p.kind, p.id)}
+            pendingKey={waitingDismiss.pendingKey}
           />
         )}
       </div>

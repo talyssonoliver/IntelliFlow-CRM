@@ -100,6 +100,7 @@ export const EXCLUDED_MODELS: Readonly<Record<string, string>> = {
   TenantModule: 'plan module switches set by the operator',
   TermsAcceptance: 'record of the platform terms the workspace accepted',
   WorkspaceExportRequest: 'the export requests themselves',
+  WaitingDismissal: 'screen state: which waiting-for-reply people a user hid, not customer data',
 
   // Delivery plumbing and platform access control
   EmailBounceReceipt: PLUMBING,

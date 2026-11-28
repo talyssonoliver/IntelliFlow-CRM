@@ -302,7 +302,7 @@ export default function TaskAutomationContent() {
   const header = (
     <PageHeader
       breadcrumbs={[
-        { label: 'Home', href: '/' },
+        { label: 'Dashboard', href: '/dashboard' },
         { label: 'Tasks', href: '/tasks' },
         { label: 'Automation' },
       ]}

@@ -410,6 +410,21 @@ describeDb('waiting list in SQL equals the original algorithm', () => {
     await lead('order');
     await inbound('orderB', em('order'), day(12), { subject: 'second' });
     await inbound('orderA', em('order'), day(11), { subject: 'first' });
+    // 20. "Handled without a reply" (MVP-012): a dismissal hides a person up to the newest inbound
+    //     it saw. plain: dismissed at its newest mail (hidden). order: dismissed after its newest
+    //     (hidden). twice: dismissed before its newest mail (re-surfaced). solo: a contact,
+    //     dismissed by contact key (hidden). both: only ANOTHER tenant dismissed it (still shown).
+    //     A dismissal under the wrong kind of key hides nobody.
+    const dismissal = (tenant: string, key: string, latestAt: Date) =>
+      prisma.waitingDismissal.create({
+        data: { tenantId: tenant, personKey: key, since: day(1), unanswered: 1, latestAt },
+      });
+    await dismissal(tenantId, `lead:${RUN}_plain`, day(10));
+    await dismissal(tenantId, `lead:${RUN}_order`, day(13));
+    await dismissal(tenantId, `lead:${RUN}_twice`, day(10));
+    await dismissal(tenantId, `contact:${RUN}_solo`, day(9));
+    await dismissal(otherTenantId, `lead:${RUN}_both`, day(30));
+    await dismissal(tenantId, `contact:${RUN}_mgrLead`, day(30));
   }, 120_000);
 
   afterAll(async () => {
@@ -473,7 +488,6 @@ describeDb('waiting list in SQL equals the original algorithm', () => {
     const page = await loadWaitingPage(prisma, cases()[0]![1], {});
     const ids = page.items.map((i) => i.id.replace(`${RUN}_`, ''));
     const expected = [
-      'plain',
       'replyFirst',
       'twice',
       'both',
@@ -485,7 +499,6 @@ describeDb('waiting list in SQL equals the original algorithm', () => {
       'neverBOUNCED',
       'titled',
       'twin',
-      'solo',
       'linkedBounced',
       'lostHuman',
       'privReply',
@@ -501,13 +514,15 @@ describeDb('waiting list in SQL equals the original algorithm', () => {
       'noSentAt',
       'mgrLead',
       'otherLead',
-      'order',
       'semi',
     ];
     // Not waiting: answered by a send, a Cc, a Bcc, a contact's reply, a contact link, a logged
     // reply, a reply on a logged personal mail, a stored outbound; an automated sender; a title
     // that only starts like "Reply received".
     const gone = [
+      'plain',
+      'order',
+      'solo',
       'answered',
       'bouncedOther',
       'cc',
@@ -530,10 +545,36 @@ describeDb('waiting list in SQL equals the original algorithm', () => {
     expect(by('twice').unanswered).toBe(2);
     expect(by('twice').since).toEqual(day(10));
     expect(by('both').unanswered).toBe(1);
-    expect(by('order').subject).toBe('first');
-    expect(by('order').since).toEqual(day(11));
     expect(by('twin').kind).toBe('lead');
-    expect(by('solo').kind).toBe('contact');
+  });
+
+  it('honours dismissals: hidden up to the newest mail seen, back on newer mail, per tenant', async () => {
+    const v = cases()[0]![1];
+    const page = await loadWaitingPage(prisma, v, {});
+    const ids = page.items.map((i) => i.id.replace(`${RUN}_`, ''));
+    expect(ids).not.toContain('plain'); // dismissed at its newest inbound
+    expect(ids).not.toContain('order'); // dismissed after its newest inbound
+    expect(ids).not.toContain('solo'); // a contact, dismissed by contact key
+    expect(ids).toContain('twice'); // dismissed before its newest inbound: re-surfaced
+    expect(ids).toContain('both'); // only another tenant dismissed it
+    expect(ids).toContain('mgrLead'); // a dismissal under the wrong kind hides nobody
+    const twice = page.items.find((i) => i.id === `${RUN}_twice`)!;
+    expect(twice.latestAt).toEqual(day(12));
+    // Same as the loader, which reads the same table, with and without the dismissals.
+    expect(page.items).toEqual(await oracle(v));
+    await prisma.waitingDismissal.deleteMany({ where: { tenantId } });
+    const without = await loadWaitingPage(prisma, v, {});
+    expect(without.items.map((i) => i.id.replace(`${RUN}_`, ''))).toEqual(
+      expect.arrayContaining(['plain', 'order', 'solo'])
+    );
+    expect(without.items).toEqual(await oracle(v));
+    expect(without.total).toBe(page.total + 3);
+    // The subject and `since` come from the FIRST unanswered mail; a later one does not move them.
+    const order = without.items.find((i) => i.id === `${RUN}_order`)!;
+    expect(order.subject).toBe('first');
+    expect(order.since).toEqual(day(11));
+    expect(order.latestAt).toEqual(day(12));
+    expect(without.items.find((i) => i.id === `${RUN}_solo`)?.kind).toBe('contact');
   });
 
   it('personal mail stays private: the rep sees their own mailbox, a colleague does not', async () => {

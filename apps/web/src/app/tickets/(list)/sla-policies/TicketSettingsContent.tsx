@@ -182,7 +182,7 @@ export default function TicketSettingsContent() {
   return (
     <ModuleSettingsShell
       breadcrumbs={[
-        { label: 'Home', href: '/' },
+        { label: 'Dashboard', href: '/dashboard' },
         { label: 'Tickets', href: '/tickets' },
         { label: 'SLA Policies & Settings' },
       ]}

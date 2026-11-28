@@ -11,6 +11,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import type { ModuleSettingsTab, ModuleSettingsBreadcrumb } from '../ModuleSettingsLayout';
 
 vi.mock('@intelliflow/ui', () => ({
+  cn: (...a: unknown[]) => a.filter(Boolean).join(' '),
   Tabs: ({ children, ...props }: any) => (
     <div data-testid="tabs" {...props}>
       {children}
@@ -100,6 +101,19 @@ describe('ModuleSettingsLayout', () => {
     // Last breadcrumb has no link — verify it exists within the nav
     const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
     expect(nav.textContent).toContain('Module Settings');
+  });
+
+  it('prepends the Dashboard root when the trail does not start with it', () => {
+    render(
+      <ModuleSettingsLayout
+        {...defaultProps}
+        breadcrumbs={[{ label: 'Calendar', href: '/calendar' }, { label: 'Settings' }]}
+      />
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/dashboard');
+    expect(nav.textContent).toMatch(/Dashboard.*Calendar.*Settings/);
   });
 
   it('renders all tabs from config', () => {

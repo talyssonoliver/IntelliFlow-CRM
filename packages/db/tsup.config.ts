@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/client.ts', 'src/seed-ids.ts'],
+  entry: ['src/index.ts', 'src/client.ts', 'src/seed-ids.ts', 'src/hosted-db-guard.ts'],
   format: ['cjs', 'esm'],
   dts: true,
   // Externalize the generated Prisma client — it lives at packages/db/generated/prisma/

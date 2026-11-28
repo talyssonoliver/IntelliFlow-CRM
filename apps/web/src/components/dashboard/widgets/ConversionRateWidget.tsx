@@ -27,6 +27,7 @@ export function ConversionRateWidget(_props: Readonly<WidgetProps>) {
 
   return (
     <KpiCard
+      href="/analytics"
       variant="compact"
       label="Conversion Rate"
       icon="bolt"

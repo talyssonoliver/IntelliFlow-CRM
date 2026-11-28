@@ -6,7 +6,8 @@ import { Button, EmptyState, Skeleton, Badge, Card } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { OPPORTUNITY_STAGES, type OpportunityStage } from '@intelliflow/domain';
 import { formatLabel } from '@/lib/shared/filter-utils';
-import { formatCurrency } from '@/lib/pricing/calculator';
+import { formatMoney } from '@/lib/format/money';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { NO_DEAL_VALUE_LABEL } from '@/components/deals/types';
 
 const OPP_GRID_SKELETON_KEYS = ['opp-grid-0', 'opp-grid-1', 'opp-grid-2'] as const;
@@ -35,6 +36,7 @@ export function AccountOpportunitiesList({
   accountId,
   onCreateOpportunity,
 }: Readonly<AccountOpportunitiesListProps>) {
+  const currency = useTenantCurrency();
   const router = useRouter();
   const [cursor, setCursor] = useState<string | undefined>();
   const [stageFilter, setStageFilter] = useState<OpportunityStage | undefined>();
@@ -93,13 +95,13 @@ export function AccountOpportunitiesList({
           <Card className="p-4">
             <p className="text-xs text-muted-foreground">Total Pipeline</p>
             <p className="text-lg font-semibold text-foreground">
-              {formatCurrency(summary.totalValue)}
+              {formatMoney(summary.totalValue, currency)}
             </p>
           </Card>
           <Card className="p-4">
             <p className="text-xs text-muted-foreground">Weighted Value</p>
             <p className="text-lg font-semibold text-foreground">
-              {formatCurrency(summary.weightedValue)}
+              {formatMoney(summary.weightedValue, currency)}
             </p>
           </Card>
           <Card className="p-4">
@@ -141,7 +143,7 @@ export function AccountOpportunitiesList({
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{opp.name}</p>
               <p className="text-xs text-muted-foreground">
-                {opp.value ? formatCurrency(opp.value) : NO_DEAL_VALUE_LABEL} &middot;{' '}
+                {opp.value ? formatMoney(opp.value, currency) : NO_DEAL_VALUE_LABEL} &middot;{' '}
                 {opp.probability}% probability
               </p>
             </div>

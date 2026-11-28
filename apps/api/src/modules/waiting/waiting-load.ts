@@ -19,6 +19,7 @@ import {
   pickWaiting,
   recordDirection,
   splitAddresses,
+  withoutDismissed,
   type MailEvent,
   type WaitingItem,
   type WaitingKind,
@@ -284,7 +285,7 @@ function recordMail(records: RecordRow[], people: WaitingPerson[], floor: number
   return events;
 }
 
-/** Everyone waiting for our reply in the tenant, oldest first. */
+/** Everyone waiting for our reply in the tenant, oldest first, less those marked handled. */
 export async function loadWaiting(
   db: PrismaClient,
   viewer: MailViewer,
@@ -305,8 +306,14 @@ export async function loadWaiting(
     ],
     cap
   );
-  return pickWaiting(people, [
+  const waiting = pickWaiting(people, [
     ...activityMail(rows, people, records, floor),
     ...recordMail(records, people, floor),
   ]);
+  // "Handled without a reply" (MVP-012): the tenant's dismissals hide the waits they were made for.
+  const dismissals = await db.waitingDismissal.findMany({
+    where: { tenantId: viewer.tenantId },
+    select: { personKey: true, since: true, latestAt: true },
+  });
+  return withoutDismissed(waiting, dismissals);
 }

@@ -22,6 +22,8 @@
  *    the person is not a reply;
  *  - a lead and a contact with one email address are one person (pickWaiting): their histories
  *    merge and the person is listed as the lead(s), else as the contact(s);
+ *  - a person marked "handled without a reply" (waiting_dismissals, MVP-012) is hidden until an
+ *    inbound newer than the newest one the dismissal saw arrives (withoutDismissed);
  *  - waiting = an inbound after the last outbound; `since` is the first such inbound, `unanswered`
  *    the distinct mails since; oldest first.
  *
@@ -202,18 +204,24 @@ waiting AS (
   SELECT grp,
          (array_agg(etime ORDER BY etime, src, ref))[1] AS since,
          (array_agg(subject ORDER BY etime, src, ref))[1] AS subject,
+         max(etime) AS latest,
          count(DISTINCT COALESCE('r:' || ref,
            't:' || floor(extract(epoch FROM etime) * 1000)::bigint::text || '|' || subject)) AS unanswered
   FROM open_in GROUP BY grp
 ),
 listed AS (
   SELECT p.kind, p.id, p."firstName", p."lastName", p.email, p.company,
-         w.since, w.subject, w.unanswered
+         w.since, w.subject, w.unanswered, w.latest
   FROM waiting w
   JOIN people p ON p.ekey = w.grp
    AND (p.kind = 'lead' OR NOT EXISTS (SELECT 1 FROM people q WHERE q.ekey = w.grp AND q.kind = 'lead'))
+  -- "Handled without a reply" (MVP-012, withoutDismissed): a dismissal hides the person until an
+  -- inbound mail newer than the newest one it saw arrives; only this tenant's dismissals count.
+  WHERE NOT EXISTS (
+    SELECT 1 FROM waiting_dismissals d
+    WHERE d."tenantId" = ${t} AND d."personKey" = p.kind || ':' || p.id AND w.latest <= d."latestAt")
 )
-SELECT kind, id, "firstName", "lastName", email, company, since, subject,
+SELECT kind, id, "firstName", "lastName", email, company, since, subject, latest,
        unanswered::int AS unanswered,
        count(*) OVER ()::int AS total,
        (count(*) FILTER (WHERE kind = 'lead') OVER ())::int AS "leadTotal",
@@ -232,6 +240,7 @@ interface Row {
   company: string | null;
   since: Date | string;
   subject: string;
+  latest: Date | string;
   unanswered: number;
   total: number;
   leadTotal: number;
@@ -276,6 +285,7 @@ export async function loadWaitingPage(
       since: asDate(r.since),
       subject: r.subject,
       unanswered: Number(r.unanswered),
+      latestAt: asDate(r.latest),
     })),
     total: Number(first.total),
     leadTotal: Number(first.leadTotal),

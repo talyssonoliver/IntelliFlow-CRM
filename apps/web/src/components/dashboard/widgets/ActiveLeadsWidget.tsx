@@ -18,6 +18,7 @@ export function ActiveLeadsWidget(_props: Readonly<WidgetProps>) {
 
   return (
     <KpiCard
+      href="/leads"
       variant="compact"
       label="Active Leads"
       icon="person"

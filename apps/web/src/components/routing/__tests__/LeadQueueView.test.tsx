@@ -14,7 +14,7 @@ const mockLeads = [
     score: 85,
     source: 'WEBSITE',
     status: 'NEW',
-    estimatedValue: 5000,
+    estimatedValue: 500000, // pence: £5,000
     createdAt: new Date().toISOString(),
   },
   {

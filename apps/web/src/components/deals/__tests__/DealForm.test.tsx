@@ -4,10 +4,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup } from '@testing-library/react';
 
 const ACCOUNT_ID_1 = '11111111-1111-4111-8111-111111111111';
 const ACCOUNT_ID_2 = '22222222-2222-4222-8222-222222222222';
 const CONTACT_ID_1 = '33333333-3333-4333-8333-333333333333';
+
+// The tenant currency every deal is saved in (owner 22/11); `ready` once the setting has loaded.
+const currencyState = vi.hoisted(() => ({
+  currency: 'GBP',
+  ready: true,
+  failed: false,
+  retry: () => {},
+}));
+vi.mock('@/lib/format/useTenantCurrency', () => ({
+  useTenantCurrency: () => currencyState.currency,
+  useTenantCurrencyForSave: () => currencyState,
+}));
 
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
@@ -172,6 +185,25 @@ describe('DealForm', () => {
       name: 'Pilates website',
       value: { amount: 0 },
     });
+  });
+
+  // Codex review 26/11: a deal stores no currency, so every save uses the tenant's, and the
+  // form waits until that setting has loaded instead of saving the GBP placeholder.
+  it('saves an edit in the tenant currency and waits for it to load', async () => {
+    const onSubmit = vi.fn();
+    currencyState.currency = 'EUR';
+    currencyState.ready = false;
+    renderDealForm({ onSubmit, mode: 'edit', initialData: unknownValueDeal });
+    expect(screen.getByText('Save Changes').closest('button')).toBeDisabled();
+    currencyState.ready = true;
+    currencyState.currency = 'EUR';
+    cleanup();
+    renderDealForm({ onSubmit, mode: 'edit', initialData: unknownValueDeal });
+    fireEvent.change(screen.getByLabelText(/deal name/i), { target: { value: 'Pilates website' } });
+    fireEvent.click(screen.getByText('Save Changes'));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ value: { currency: 'EUR' } });
+    currencyState.currency = 'GBP';
   });
 
   it('still requires a value above 0 once the deal has one (MVP-003)', async () => {

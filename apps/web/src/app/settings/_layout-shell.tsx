@@ -10,9 +10,9 @@
 import {
   SidebarProvider,
   SidebarInset,
-  SidebarTrigger,
   SidebarWithSuspense,
   settingsSidebarConfig,
+  SectionMobileBar,
 } from '@/components/sidebar';
 
 export default function SettingsLayoutShell({
@@ -28,11 +28,7 @@ export default function SettingsLayoutShell({
             className="flex flex-1 flex-col h-full min-w-0 overflow-hidden bg-background relative"
             id="main-content"
           >
-            {/* Mobile header with sidebar trigger */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-border lg:hidden">
-              <SidebarTrigger />
-              <span className="text-sm font-medium text-foreground">Settings</span>
-            </div>
+            <SectionMobileBar title="Settings" />
             <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 md:p-4">
               {children}
             </div>

@@ -15,7 +15,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: routerPush }) }));
 // Mock @intelliflow/ui (partial — preserve real exports like EmptyState)
 vi.mock('@intelliflow/ui', async (importOriginal) => ({
   ...((await importOriginal()) as Record<string, unknown>),
-  DataTable: ({ columns, data, onRowClick, bulkActions, canSelectRow }: any) => (
+  DataTable: ({ columns, data, onRowClick, bulkActions, canSelectRow, getRowId }: any) => (
     <div data-testid="data-table">
       <table>
         <thead>
@@ -31,6 +31,7 @@ vi.mock('@intelliflow/ui', async (importOriginal) => ({
               key={row.id}
               data-testid={`task-row-${row.id}`}
               data-selectable={canSelectRow ? String(canSelectRow(row)) : 'true'}
+              data-row-id={getRowId ? getRowId(row) : ''}
               onClick={() => onRowClick?.(row)}
             >
               {columns.map((col: any, i: number) => (
@@ -110,6 +111,20 @@ describe('TaskList', () => {
     vi.clearAllMocks();
   });
 
+  it('names a lead that has only a company by the company, not "Unknown Lead" (owner 27/11)', () => {
+    const task = {
+      ...defaultProps.tasks[0],
+      id: 'task-company-lead',
+      lead: { id: 'lead-c', firstName: null, lastName: null, company: 'Northfield Plumbing' },
+      contact: null,
+      opportunity: null,
+    };
+    render(<TaskList {...defaultProps} tasks={[task]} />);
+    const row = screen.getByTestId('task-row-task-company-lead');
+    expect(row).toHaveTextContent('Northfield Plumbing');
+    expect(row).not.toHaveTextContent('Unknown Lead');
+  });
+
   it('renders loading skeleton when isLoading', () => {
     render(<TaskList {...defaultProps} isLoading={true} tasks={[]} />);
 
@@ -130,6 +145,25 @@ describe('TaskList', () => {
   });
 
   describe('follow-up rows (owner 21/11: follow-ups in the same task table)', () => {
+    it("keys selection by the row's own id, so it never moves to another row", () => {
+      const owned = followUpTaskRows([
+        {
+          id: 'lead-8',
+          firstName: 'Sam',
+          lastName: 'Example',
+          company: null,
+          email: 'sam@example.invalid',
+          lastContactedAt: '2026-11-13T09:00:00.000Z',
+          owner: { id: 'user-3', email: 'owner@example.invalid', name: 'Pat Owner' },
+        },
+      ])[0];
+      render(<TaskList {...defaultProps} tasks={[...defaultProps.tasks, owned]} />);
+      const row = screen.getByTestId(`task-row-${owned.id}`);
+      expect(row).toHaveAttribute('data-row-id', owned.id);
+      // The lead's owner owns the follow-up (owner 27/11: one model).
+      expect(row).toHaveTextContent('Pat Owner');
+    });
+
     const followUp = followUpTaskRows([
       {
         id: 'lead-9',
@@ -154,7 +188,7 @@ describe('TaskList', () => {
       );
     });
 
-    it('opens the lead on tap and offers only "Open lead", never complete or delete', () => {
+    it('opens the lead on tap and offers "Mark done" and "Open lead", never Complete or Delete', () => {
       routerPush.mockClear();
       render(<TaskList {...defaultProps} tasks={[followUp]} />);
       const row = screen.getByTestId(`task-row-${followUp.id}`);
@@ -166,7 +200,15 @@ describe('TaskList', () => {
       expect(defaultProps.onRowClick).not.toHaveBeenCalledWith(followUp.id);
     });
 
-    it('never sends a follow-up id to bulk complete, archive or delete', () => {
+    it('"Mark done" on a follow-up row hands its row id to onComplete', () => {
+      const onComplete = vi.fn();
+      render(<TaskList {...defaultProps} onComplete={onComplete} tasks={[followUp]} />);
+      const row = screen.getByTestId(`task-row-${followUp.id}`);
+      fireEvent.click(within(row).getByRole('button', { name: 'Mark done' }));
+      expect(onComplete).toHaveBeenCalledWith(followUp.id);
+    });
+
+    it('bulk Mark Complete includes follow-ups; delete never touches them (owner 27/11)', () => {
       const onBulkComplete = vi.fn();
       const onBulkDelete = vi.fn();
       render(
@@ -180,15 +222,15 @@ describe('TaskList', () => {
       // The DataTable mock hands every row to the action, as a stale selection could.
       fireEvent.click(screen.getByTestId('bulk-mark-complete'));
       fireEvent.click(screen.getByTestId('bulk-delete'));
-      expect(onBulkComplete).toHaveBeenCalledWith([defaultProps.tasks[0].id]);
+      expect(onBulkComplete).toHaveBeenCalledWith([defaultProps.tasks[0].id, followUp.id]);
       expect(onBulkDelete).toHaveBeenCalledWith([defaultProps.tasks[0].id]);
     });
 
-    it('gives follow-ups no selection checkbox, so bulk actions never touch them', () => {
+    it('gives follow-ups the same selection checkbox as tasks (owner 27/11: one model)', () => {
       render(<TaskList {...defaultProps} tasks={[...defaultProps.tasks, followUp]} />);
       expect(screen.getByTestId(`task-row-${followUp.id}`)).toHaveAttribute(
         'data-selectable',
-        'false'
+        'true'
       );
       expect(screen.getByTestId(`task-row-${defaultProps.tasks[0].id}`)).toHaveAttribute(
         'data-selectable',

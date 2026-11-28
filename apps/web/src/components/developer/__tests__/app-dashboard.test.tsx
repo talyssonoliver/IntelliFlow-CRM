@@ -174,8 +174,8 @@ describe('AppDashboard', () => {
     expect(breadcrumbNav).toBeInTheDocument();
     const link = within(breadcrumbNav).getByText('Developer Apps');
     expect(link.closest('a')).toHaveAttribute('href', '/developers/apps');
-    const currentCrumb = within(breadcrumbNav).getByText('Aurora Dashboard');
-    expect(currentCrumb).toHaveAttribute('aria-current', 'page');
+    // (owner 27/11: the trail holds ancestors; the title names the page)
+    expect(within(breadcrumbNav).queryByText('Aurora Dashboard')).toBeNull();
   });
 
   // D-020: Edit App link points to /developers/apps/{id}/edit

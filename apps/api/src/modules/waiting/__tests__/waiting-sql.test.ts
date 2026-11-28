@@ -21,6 +21,7 @@ const row = (over: Record<string, unknown> = {}) => ({
   since: new Date('2026-10-10T09:00:00.000Z'),
   subject: 'Quote?',
   unanswered: 2,
+  latest: new Date('2026-10-12T09:00:00.000Z'),
   total: 7,
   leadTotal: 5,
   contactTotal: 2,
@@ -53,6 +54,14 @@ describe('waitingSql', () => {
     const admin = sqlOf({ ...viewer, role: 'ADMIN' });
     expect(admin.text).not.toContain('l."ownerId"');
     expect(admin.text).not.toContain('c."ownerId"');
+  });
+
+  it('hides dismissed people, per tenant, by the newest mail the dismissal saw', () => {
+    const { text, values } = sqlOf(viewer);
+    expect(text).toContain('FROM waiting_dismissals d');
+    expect(text).toContain('w.latest <= d."latestAt"');
+    expect(text).toContain(`d."personKey" = p.kind || ':' || p.id`);
+    expect(values.filter((v) => v === 't1').length).toBeGreaterThanOrEqual(5);
   });
 
   it('reads mail through the visibility policy and applies the limit only when given', () => {
@@ -105,6 +114,7 @@ describe('loadWaitingPage', () => {
       since: new Date('2026-10-10T09:00:00.000Z'),
       subject: 'Quote?',
       unanswered: 2,
+      latestAt: new Date('2026-10-12T09:00:00.000Z'),
     });
     // No name and no company: the address names them, as the lead's display name does.
     expect(page.items[1]).toMatchObject({ kind: 'contact', name: 'jane@example.invalid' });

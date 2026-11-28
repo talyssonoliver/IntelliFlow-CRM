@@ -13,6 +13,7 @@ import {
 } from '@intelliflow/ui';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { api } from '@/lib/api';
+import { useTenantCurrencyForSave } from '@/lib/format/useTenantCurrency';
 
 export interface OpportunityCreateSheetProps {
   readonly open: boolean;
@@ -45,6 +46,9 @@ export function OpportunityCreateSheet({
   accountName,
   onSuccess,
 }: Readonly<OpportunityCreateSheetProps>) {
+  // Saved with the deal, so it must be the tenant's real currency, not the GBP placeholder.
+  const currencyState = useTenantCurrencyForSave();
+  const { currency } = currencyState;
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -90,11 +94,11 @@ export function OpportunityCreateSheet({
 
   function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
-    if (!validate()) return;
+    if (!currencyState.ready || !validate()) return;
 
     createMutation.mutate({
       name: form.name.trim(),
-      value: { amount: parseFloat(form.value), currency: 'GBP' },
+      value: { amount: parseFloat(form.value), currency },
       stage: form.stage as (typeof OPPORTUNITY_STAGES)[number],
       probability: 10,
       accountId,
@@ -130,7 +134,7 @@ export function OpportunityCreateSheet({
           </div>
 
           <div>
-            <Label htmlFor="opp-value">Value (GBP) *</Label>
+            <Label htmlFor="opp-value">Value ({currency}) *</Label>
             <Input
               id="opp-value"
               type="number"
@@ -191,7 +195,16 @@ export function OpportunityCreateSheet({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createMutation.isPending}>
+            {currencyState.failed && (
+              <button
+                type="button"
+                onClick={currencyState.retry}
+                className="min-h-11 text-sm text-destructive underline"
+              >
+                Couldn&apos;t load your currency. Try again
+              </button>
+            )}
+            <Button type="submit" disabled={createMutation.isPending || !currencyState.ready}>
               {createMutation.isPending ? 'Creating...' : 'Create Deal'}
             </Button>
           </div>

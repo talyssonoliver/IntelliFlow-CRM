@@ -40,6 +40,8 @@ export interface WaitingItem extends WaitingPerson {
   subject: string;
   /** Inbound emails received since our last outbound one. */
   unanswered: number;
+  /** The newest of those inbound emails: a dismissal hides the wait only up to this mail. */
+  latestAt: Date;
 }
 
 export const personKey = (kind: WaitingKind, id: string): string => `${kind}:${id}`;
@@ -130,7 +132,7 @@ function bareAddress(part: string): string {
 
 function unansweredSince(
   events: MailEvent[]
-): { since: Date; subject: string; count: number } | null {
+): { since: Date; subject: string; count: number; latestAt: Date } | null {
   const sorted = [...events].sort((a, b) => a.at.getTime() - b.at.getTime());
   let lastOutbound = -Infinity;
   for (const e of sorted) if (e.direction === 'outbound') lastOutbound = e.at.getTime();
@@ -139,7 +141,10 @@ function unansweredSince(
   // The same mail can reach a person twice (synced mail logs an activity and a record), so mail is
   // counted by the record it is; one without a record falls back to its time and subject.
   const distinct = new Set(open.map((e) => e.ref ?? `${e.at.getTime()}|${e.subject}`)).size;
-  return first ? { since: first.at, subject: first.subject, count: distinct } : null;
+  const last = open.at(-1);
+  return first && last
+    ? { since: first.at, subject: first.subject, count: distinct, latestAt: last.at }
+    : null;
 }
 
 /**
@@ -165,8 +170,40 @@ export function pickWaiting(people: WaitingPerson[], mail: MailEvent[]): Waiting
     if (!open) continue;
     const leads = group.filter((p) => p.kind === 'lead');
     for (const p of leads.length > 0 ? leads : group) {
-      items.push({ ...p, since: open.since, subject: open.subject, unanswered: open.count });
+      items.push({
+        ...p,
+        since: open.since,
+        subject: open.subject,
+        unanswered: open.count,
+        latestAt: open.latestAt,
+      });
     }
   }
   return items.sort((a, b) => a.since.getTime() - b.since.getTime() || a.id.localeCompare(b.id));
+}
+
+/** What a dismissal remembers about the wait it hid. */
+export interface WaitingDismissalRow {
+  personKey: string;
+  since: Date;
+  /** The newest unanswered inbound email when it was dismissed. */
+  latestAt: Date;
+}
+
+/**
+ * Drops the waits a person marked "handled without a reply". A dismissal hides the person until an
+ * inbound email newer than the newest one it saw (`latestAt`) arrives; nothing else brings them
+ * back. Neither the count nor the first unanswered mail (`since`) decides (codex 27/11): both move
+ * when older mail leaves the read window, with no new mail at all.
+ */
+export function withoutDismissed(
+  items: WaitingItem[],
+  dismissals: readonly WaitingDismissalRow[]
+): WaitingItem[] {
+  if (dismissals.length === 0) return items;
+  const byKey = new Map(dismissals.map((d) => [d.personKey, d]));
+  return items.filter((item) => {
+    const d = byKey.get(personKey(item.kind, item.id));
+    return !(d && item.latestAt.getTime() <= d.latestAt.getTime());
+  });
 }

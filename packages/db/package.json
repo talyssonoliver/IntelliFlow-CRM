@@ -18,6 +18,11 @@
       "import": "./dist/client.mjs",
       "require": "./dist/client.js"
     },
+    "./hosted-db-guard": {
+      "types": "./dist/hosted-db-guard.d.ts",
+      "import": "./dist/hosted-db-guard.mjs",
+      "require": "./dist/hosted-db-guard.js"
+    },
     "./seed-ids": {
       "types": "./dist/seed-ids.d.ts",
       "import": "./dist/seed-ids.mjs",

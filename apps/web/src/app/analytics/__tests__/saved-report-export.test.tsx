@@ -290,3 +290,5 @@ describe('Saved Report Export', () => {
     );
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

@@ -17,6 +17,8 @@ import {
   SelectValue,
 } from '@intelliflow/ui';
 import { EntitySearchField } from '@/components/tasks/EntitySearchField';
+import { useTenantCurrencyForSave } from '@/lib/format/useTenantCurrency';
+import { currencySymbol } from '@/lib/format/money';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -133,6 +135,11 @@ export function DealForm({
   onDirtyChange,
   onCancel,
 }: DealFormProps) {
+  // A new deal is saved in this currency, so it must be known (not the GBP placeholder).
+  const currencyState = useTenantCurrencyForSave();
+  const tenantCurrency = currencyState.currency;
+  const waitingForCurrency = !currencyState.ready;
+  const symbol = currencySymbol(tenantCurrency).trim();
   const initialFormData = useMemo<DealFormData>(
     () => ({
       ...DEFAULT_FORM_DATA,
@@ -193,11 +200,15 @@ export function DealForm({
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
+      if (waitingForCurrency) return;
       if (validateForm()) {
-        onSubmit(formData);
+        // Every deal is in the tenant currency (owner 22/11, one real currency). A deal stores
+        // no currency of its own (no column; the repository rebuilds the value as GBP), so a
+        // new deal and an edit both save in the tenant's.
+        onSubmit({ ...formData, value: { ...formData.value, currency: tenantCurrency } });
       }
     },
-    [formData, validateForm, onSubmit]
+    [formData, validateForm, onSubmit, tenantCurrency, waitingForCurrency]
   );
 
   const updateField = useCallback(
@@ -272,10 +283,10 @@ export function DealForm({
 
           {/* Deal Value */}
           <div>
-            <Label htmlFor="deal-value">Deal Value (GBP) *</Label>
+            <Label htmlFor="deal-value">Deal Value ({tenantCurrency}) *</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                £
+                {symbol}
               </span>
               <Input
                 id="deal-value"
@@ -290,7 +301,7 @@ export function DealForm({
                   })
                 }
                 placeholder="0.00"
-                className="pl-7"
+                className={symbol.length > 2 ? 'pl-12' : 'pl-7'}
                 aria-invalid={!!errors.value}
                 aria-describedby={errors.value ? 'deal-value-error' : undefined}
               />
@@ -422,7 +433,16 @@ export function DealForm({
 
           {/* Actions */}
           <div className="flex items-center gap-3 pt-4 border-t">
-            <Button type="submit" disabled={isSubmitting}>
+            {currencyState.failed && (
+              <button
+                type="button"
+                onClick={currencyState.retry}
+                className="min-h-11 text-sm text-destructive underline"
+              >
+                Couldn&apos;t load your currency. Try again
+              </button>
+            )}
+            <Button type="submit" disabled={isSubmitting || waitingForCurrency}>
               {isSubmitting ? submittingLabel : submitLabel}
             </Button>
             {onCancel ? (

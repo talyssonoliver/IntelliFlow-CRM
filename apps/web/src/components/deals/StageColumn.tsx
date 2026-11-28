@@ -16,6 +16,7 @@ import { useDroppable } from '@dnd-kit/core';
 import type { Deal, OpportunityStage } from './types';
 import { PIPELINE_STAGE_CONFIG, formatCurrencyCompact } from './types';
 import { DealCard } from './DealCard';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 
 interface StageColumnProps {
   readonly stage: OpportunityStage;
@@ -31,13 +32,14 @@ export const StageColumn = React.memo(function StageColumn({
   pendingDealId,
 }: Readonly<StageColumnProps>) {
   const config = PIPELINE_STAGE_CONFIG[stage];
+  const currency = useTenantCurrency();
   const totalValue = deals.reduce((sum, deal) => sum + deal.value, 0);
   const { setNodeRef } = useDroppable({ id: stage });
 
   return (
     <section
       className="flex-1 min-w-[240px] sm:min-w-[280px] max-w-[300px]"
-      aria-label={`${config.label} stage - ${deals.length} deals, ${formatCurrencyCompact(totalValue)}`}
+      aria-label={`${config.label} stage - ${deals.length} deals, ${formatCurrencyCompact(totalValue, currency)}`}
     >
       {/* Column Header */}
       <div className="flex items-center justify-between mb-3 px-1">
@@ -55,7 +57,7 @@ export const StageColumn = React.memo(function StageColumn({
           </span>
         </div>
         <span className="text-xs sm:text-sm font-medium text-muted-foreground flex-shrink-0">
-          {formatCurrencyCompact(totalValue)}
+          {formatCurrencyCompact(totalValue, currency)}
         </span>
       </div>
 

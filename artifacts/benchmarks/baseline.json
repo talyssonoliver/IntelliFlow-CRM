@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-27T16:41:25.334Z",
+  "timestamp": "2026-11-27T18:48:58.416Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 85,
-    "total_endpoints": 628,
+    "total_endpoints": 629,
     "total_queries": 270,
-    "total_mutations": 358,
+    "total_mutations": 359,
     "routers": [
       {
         "name": "contact",
@@ -1459,6 +1459,12 @@
         "mutations": 1
       },
       {
+        "name": "waiting",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
         "name": "zepBudget",
         "endpoints": 2,
         "queries": 1,
@@ -1519,12 +1525,6 @@
         "mutations": 0
       },
       {
-        "name": "waiting",
-        "endpoints": 1,
-        "queries": 1,
-        "mutations": 0
-      },
-      {
         "name": "webhooks",
         "endpoints": 1,
         "queries": 0,
@@ -1533,16 +1533,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 221,
-    "total_fields": 3310,
-    "total_indexes": 974,
-    "total_relations": 325,
+    "total_tables": 222,
+    "total_fields": 3320,
+    "total_indexes": 977,
+    "total_relations": 326,
     "tables_with_embeddings": 4,
     "enums": 86,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 198,
+        "fields": 199,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -2767,6 +2767,13 @@
       },
       {
         "name": "DocumentRetentionPolicy",
+        "fields": 9,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "WaitingDismissal",
         "fields": 9,
         "indexes": 3,
         "relations": 1,
@@ -7262,6 +7269,11 @@
         "name": "waiting.list",
         "method": "GET",
         "description": "List waitings with pagination"
+      },
+      {
+        "name": "waiting.dismiss",
+        "method": "POST",
+        "description": "Dismiss"
       }
     ],
     "webhooks": [

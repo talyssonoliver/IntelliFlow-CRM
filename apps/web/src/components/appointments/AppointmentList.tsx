@@ -17,6 +17,8 @@ import type {
   AppointmentFilters,
   CalendarTask,
 } from './types';
+import { SearchFilterBar } from '@/components/shared/search-filter-bar';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 export interface AppointmentListProps {
   appointments: AppointmentListItem[];
@@ -111,6 +113,14 @@ function SortableHeader({
   );
 }
 
+const APPOINTMENT_SORT_OPTIONS = [
+  { value: 'startTime:asc', label: 'Time (Earliest)' },
+  { value: 'startTime:desc', label: 'Time (Latest)' },
+  { value: 'createdAt:desc', label: 'Newest First' },
+  { value: 'createdAt:asc', label: 'Oldest First' },
+  { value: 'updatedAt:desc', label: 'Recently Updated' },
+];
+
 export function AppointmentList({
   appointments,
   total,
@@ -185,131 +195,104 @@ export function AppointmentList({
   return (
     <div className="space-y-4" data-testid="appointment-list">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Owner 22/11: "Why are these KPIs totally different from the others?" The shared KpiCard,
+          as on the Dashboard; each keeps its colour in the icon tile. */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         {STAT_CARDS.map((card) => (
-          <div key={card.key} className={`rounded-lg border p-4 ${card.bg}`}>
-            <div className="flex items-center gap-2">
-              <span className={`material-symbols-outlined text-xl ${card.color}`}>{card.icon}</span>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{getStatValue(card.key)}</p>
-                <p className="text-xs text-gray-600">{card.label}</p>
-              </div>
-            </div>
-          </div>
+          <KpiCard
+            key={card.key}
+            framed
+            label={card.label}
+            icon={card.icon}
+            iconClassName={`${card.bg} ${card.color}`}
+            value={getStatValue(card.key)}
+          />
         ))}
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="flex-1 min-w-[200px]">
-          <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
-              search
-            </span>
-            <input
-              type="text"
-              value={filters.search}
-              onChange={(e) => onFilterChange({ search: e.target.value })}
-              placeholder="Search appointments..."
-              className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 text-sm"
-            />
-          </div>
-        </div>
-
-        <select
-          value={filters.status}
-          onChange={(e) =>
-            onFilterChange({ status: e.target.value as AppointmentFilters['status'] })
-          }
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          aria-label="Status filter"
-        >
-          <option value="">All Statuses</option>
-          {APPOINTMENT_STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={filters.appointmentType}
-          onChange={(e) =>
-            onFilterChange({
-              appointmentType: e.target.value as AppointmentFilters['appointmentType'],
-            })
-          }
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          aria-label="Type filter"
-        >
-          <option value="">All Types</option>
-          {APPOINTMENT_TYPE_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={`${filters.sortBy}:${filters.sortOrder}`}
-          onChange={(e) => {
-            const [sortBy, sortOrder] = e.target.value.split(':') as [
+      {/* Owner 21/11: the shared toolbar, like every list; the date range rides in its extra slot
+          (a row from md, inside the Filters sheet on phones). */}
+      <SearchFilterBar
+        searchValue={filters.search}
+        onSearchChange={(search) => onFilterChange({ search })}
+        searchPlaceholder="Search appointments..."
+        searchAriaLabel="Search appointments"
+        filters={[
+          {
+            id: 'status',
+            label: 'Status',
+            icon: 'filter_list',
+            options: APPOINTMENT_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+            value: filters.status,
+            onChange: (v) => onFilterChange({ status: v as AppointmentFilters['status'] }),
+          },
+          {
+            id: 'type',
+            label: 'Type',
+            icon: 'category',
+            options: APPOINTMENT_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+            value: filters.appointmentType,
+            onChange: (v) =>
+              onFilterChange({ appointmentType: v as AppointmentFilters['appointmentType'] }),
+          },
+        ]}
+        sort={{
+          options: APPOINTMENT_SORT_OPTIONS,
+          value: `${filters.sortBy}:${filters.sortOrder}`,
+          onChange: (value) => {
+            const [sortBy, sortOrder] = value.split(':') as [
               AppointmentFilters['sortBy'],
               AppointmentFilters['sortOrder'],
             ];
             onFilterChange({ sortBy, sortOrder });
-          }}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          aria-label="Sort by"
-        >
-          <option value="startTime:asc">Time (Earliest)</option>
-          <option value="startTime:desc">Time (Latest)</option>
-          <option value="createdAt:desc">Newest First</option>
-          <option value="createdAt:asc">Oldest First</option>
-          <option value="updatedAt:desc">Recently Updated</option>
-        </select>
-      </div>
-
-      {/* Date Range Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <label className="flex items-center gap-2 text-sm text-gray-600">
-          {'From'}
-          <input
-            type="date"
-            value={filters.startTimeFrom ? toDateInputValue(filters.startTimeFrom) : ''}
-            onChange={(e) =>
-              onFilterChange({
-                startTimeFrom: e.target.value ? new Date(e.target.value + 'T00:00:00') : undefined,
-              })
-            }
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-            aria-label="Date from"
-          />
-        </label>
-        <label className="flex items-center gap-2 text-sm text-gray-600">
-          {'To'}
-          <input
-            type="date"
-            value={filters.startTimeTo ? toDateInputValue(filters.startTimeTo) : ''}
-            onChange={(e) =>
-              onFilterChange({
-                startTimeTo: e.target.value ? new Date(e.target.value + 'T23:59:59') : undefined,
-              })
-            }
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-            aria-label="Date to"
-          />
-        </label>
-        {(filters.startTimeFrom || filters.startTimeTo) && (
-          <button
-            type="button"
-            onClick={() => onFilterChange({ startTimeFrom: undefined, startTimeTo: undefined })}
-            className="text-sm text-primary hover:underline"
-          >
-            Clear dates
-          </button>
-        )}
-      </div>
+          },
+        }}
+        extra={
+          <>
+            <label className="flex items-center gap-2 text-sm text-gray-600">
+              {'From'}
+              <input
+                type="date"
+                value={filters.startTimeFrom ? toDateInputValue(filters.startTimeFrom) : ''}
+                onChange={(e) =>
+                  onFilterChange({
+                    startTimeFrom: e.target.value
+                      ? new Date(e.target.value + 'T00:00:00')
+                      : undefined,
+                  })
+                }
+                className="rounded-md border border-gray-300 min-h-11 px-3 text-sm"
+                aria-label="Date from"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-600">
+              {'To'}
+              <input
+                type="date"
+                value={filters.startTimeTo ? toDateInputValue(filters.startTimeTo) : ''}
+                onChange={(e) =>
+                  onFilterChange({
+                    startTimeTo: e.target.value
+                      ? new Date(e.target.value + 'T23:59:59')
+                      : undefined,
+                  })
+                }
+                className="rounded-md border border-gray-300 min-h-11 px-3 text-sm"
+                aria-label="Date to"
+              />
+            </label>
+            {(filters.startTimeFrom || filters.startTimeTo) && (
+              <button
+                type="button"
+                onClick={() => onFilterChange({ startTimeFrom: undefined, startTimeTo: undefined })}
+                className="text-sm text-primary hover:underline"
+              >
+                Clear dates
+              </button>
+            )}
+          </>
+        }
+      />
 
       {/* Appointments table */}
       {appointments.length === 0 && visibleTasks.length === 0 && (

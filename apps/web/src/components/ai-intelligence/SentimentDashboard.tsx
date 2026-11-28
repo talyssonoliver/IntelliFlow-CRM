@@ -49,6 +49,7 @@ const SentimentTrend = lazy(() => import('./SentimentTrend'));
 // ============================================
 
 const BREADCRUMBS = [
+  { label: 'Dashboard', href: '/dashboard' },
   { label: 'AI & Agents', href: '/agent-approvals' },
   { label: 'Sentiment Analysis' },
 ];
