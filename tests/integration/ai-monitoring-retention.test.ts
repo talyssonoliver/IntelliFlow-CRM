@@ -161,7 +161,12 @@ describeDb('ai-monitoring-retention against a real database', () => {
       const result = await run(db, args(), NOW, () => undefined);
 
       expect(result).toMatchObject({ days: 2, events: 7, deleted: 7 });
-      const left = await tx.aIMonitoringEvent.findMany({ orderBy: { recordedAt: 'asc' } });
+      // Only this test's window (Aug 31 - Sep 2, 2026): the shared test DB also holds other
+      // suites' and lanes' events dated "now", which are not ours to assert on.
+      const left = await tx.aIMonitoringEvent.findMany({
+        where: { recordedAt: { lt: new Date(Date.UTC(2026, 8, 3)) } },
+        orderBy: { recordedAt: 'asc' },
+      });
       expect(await tx.aIMonitoringEvent.count()).toBe(before - 7);
       expect(left.map((e: any) => e.eventType).sort()).toEqual(['drift', 'latency']);
 
