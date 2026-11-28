@@ -47,6 +47,11 @@ describe('signed-in home route files', () => {
   });
 
   it('uses the public error boundary', () => {
-    expect(SignedInHomeError).toBe(PublicError);
+    const props = { error: new Error('boom'), reset: vi.fn() };
+
+    const tree = SignedInHomeError(props);
+
+    expect(tree.type).toBe(PublicError);
+    expect(tree.props).toEqual(props);
   });
 });
