@@ -1,14 +1,14 @@
 /**
  * MVP-014 "Who is waiting": the dashboard card reads this. The leads list filter
- * "Waiting for reply" uses the same loader (see lead.list), so the two always agree.
+ * "Waiting for reply" reads the same rows through waiting-load.ts (see lead.list); waiting-sql.ts
+ * is proven equal to it, and the list and the dismissal both use that SQL.
  */
 
 import { z } from 'zod';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
-import { createTenantWhereClause, getTenantContext } from '../../security/tenant-context';
+import { getTenantContext } from '../../security/tenant-context';
 import { mailViewerOf } from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
-import { loadWaiting } from './waiting-load';
 import { loadWaitingPage } from './waiting-sql';
 import { personKey } from './waiting-for-reply';
 
@@ -33,11 +33,10 @@ export const waitingRouter = createTRPCRouter({
     .input(z.object({ kind: z.enum(['lead', 'contact']), id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       const typed = getTenantContext(ctx);
-      const all = await loadWaiting(
+      // The same SQL as the list, over the full history, so anyone the list shows can be dismissed.
+      const { items: all } = await loadWaitingPage(
         typed.prismaWithTenant,
-        mailViewerOf(typed.tenant),
-        createTenantWhereClause(typed.tenant),
-        createTenantWhereClause(typed.tenant)
+        mailViewerOf(typed.tenant)
       );
       const item = all.find((i) => i.kind === input.kind && i.id === input.id);
       if (!item) {
