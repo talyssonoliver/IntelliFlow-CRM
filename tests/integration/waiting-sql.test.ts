@@ -556,7 +556,9 @@ describeDb('waiting list in SQL equals the original algorithm', () => {
     // The app's database role can be subject to RLS: the policies compare "tenantId" with the
     // session's app.current_tenant_id. A raw statement skips the tenant client's per-model SET, so
     // the loader binds the tenant itself, inside its transaction.
-    const role = `${RUN}_rls`;
+    // Supabase's `authenticated` role: SELECT on these tables and no RLS bypass. No DDL here, so
+    // this cannot collide with other test files creating roles or grants in parallel.
+    const role = 'authenticated';
     /** The client, with every transaction running as the RLS role (the owner would bypass RLS). */
     const asRole = () =>
       ({
@@ -566,19 +568,6 @@ describeDb('waiting list in SQL equals the original algorithm', () => {
             return fn(tx);
           }),
       }) as never;
-
-    beforeAll(async () => {
-      await prisma.$executeRawUnsafe(`CREATE ROLE "${role}" NOLOGIN`);
-      await prisma.$executeRawUnsafe(
-        `GRANT SELECT ON leads, contacts, email_records, email_mailboxes, lead_activities, contact_activities TO "${role}"`
-      );
-    });
-    afterAll(async () => {
-      await prisma.$executeRawUnsafe(
-        `REVOKE ALL ON leads, contacts, email_records, email_mailboxes, lead_activities, contact_activities FROM "${role}"`
-      );
-      await prisma.$executeRawUnsafe(`DROP ROLE IF EXISTS "${role}"`);
-    });
 
     it('returns the same list as the owner role, with no tenant set on the session', async () => {
       const v = cases()[0]![1];
