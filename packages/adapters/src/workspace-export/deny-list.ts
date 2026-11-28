@@ -48,6 +48,7 @@ export const EXPLICIT_SECRET_DENYLIST: Readonly<Record<string, readonly string[]
   WebhookEndpoint: ['secret'],
   // Privacy request tokens and anti-abuse hashes.
   DsarRequest: ['verificationTokenHash', 'exportTokenHash', 'capEmailHash', 'ipHash'],
+  DsarTransfer: ['tokenHash'],
   BookingAttempt: ['emailHash', 'ipHash'],
 };
 

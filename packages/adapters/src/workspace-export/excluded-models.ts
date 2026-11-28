@@ -28,6 +28,8 @@ export const EXCLUDED_MODELS: Readonly<Record<string, string>> = {
   PartnerLoginGrant: `${CREDENTIAL} (operator staff login links)`,
   CustomActionHandler: 'executable handler configuration that can carry endpoints and secrets',
   DsarRequest: `${CREDENTIAL} (privacy request verification tokens) and anti-abuse hashes`,
+  DsarTransfer: `${CREDENTIAL} (Art 20(2) transfer link hashes) and the recipient controller's contact details`,
+  DsarTransferEvent: AUDIT,
   BookingAttempt: 'anti-abuse record holding hashed visitor email and IP, not a customer record',
 
   // AI derived
