@@ -5,7 +5,7 @@
  * a crawler or an uptime probe is served from the CDN without running a function.
  *
  * Signed in, the proxy rewrites `/` to {@link SIGNED_IN_HOME_PATH}, which renders the portal home
- * per request (`app/(public)/signed-in-home`). The browser keeps showing `/`.
+ * per request (`app/(signed-in)/signed-in-home`). The browser keeps showing `/`.
  *
  * Code that asks "is this the home page?" from a pathname must accept both, because a rewritten
  * request can report either path.

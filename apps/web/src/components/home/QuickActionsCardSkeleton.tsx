@@ -1,7 +1,7 @@
 /**
  * Loading placeholder for the home page's Quick Actions card: a title bar and a 2x2 grid of
  * action tiles. Shared by the app-wide loading screen (app/loading.tsx) and the signed-in home's
- * own (app/(public)/signed-in-home/loading.tsx), which drew the same markup twice.
+ * own (app/(signed-in)/signed-in-home/loading.tsx), which drew the same markup twice.
  */
 export function QuickActionsCardSkeleton() {
   return (

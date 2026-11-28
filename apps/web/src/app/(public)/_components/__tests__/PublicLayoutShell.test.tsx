@@ -105,6 +105,25 @@ afterEach(() => {
 });
 
 // ===========================================================================
+// Prerendered public pages: the chrome is marked while the session is unknown,
+// so CSS can hide it from a visitor who has an access-token cookie.
+// ===========================================================================
+describe('data-auth-pending marks the public chrome until auth resolves', () => {
+  it('is set while auth is loading', () => {
+    mockAuthLoading = true;
+    const { container } = renderShell({ pathname: '/pricing' });
+
+    expect(container.querySelector('.aurora-site')?.hasAttribute('data-auth-pending')).toBe(true);
+  });
+
+  it('is gone once a signed-out session is confirmed', () => {
+    const { container } = renderShell({ pathname: '/pricing' });
+
+    expect(container.querySelector('.aurora-site')?.hasAttribute('data-auth-pending')).toBe(false);
+  });
+});
+
+// ===========================================================================
 // 1. authLoading=true → overlays NOT mounted
 // ===========================================================================
 describe('authLoading=true → overlays suppressed', () => {

@@ -3,9 +3,8 @@
 /**
  * AppFooter — the slim footer of the signed-in shell (#1224, UI-007).
  *
- * `(public)/layout.tsx` leaves the Aurora site footer out for signed-in users
- * on purpose (it is decided on the server, so the header never flashes), which
- * left no signed-in screen linking to the legal pages. This footer closes that
+ * `PublicLayoutShell` leaves the Aurora site footer out for signed-in users on
+ * purpose, which left no signed-in screen linking to the legal pages. This footer closes that
  * gap: it is rendered by the root layout and shows on the signed-in home (`/`) and
  * the site pages, when the signed-in header (`Navigation`) shows.
  *
@@ -29,7 +28,7 @@ export const APP_FOOTER_LINKS: ReadonlyArray<{ href: string; label: string }> = 
 ];
 
 /**
- * The signed-in home: `/` (served by `(public)/signed-in-home`, the browser keeps `/`). Owner
+ * The signed-in home: `/` (served by `(signed-in)/signed-in-home`, the browser keeps `/`). Owner
  * 21/11: the footer belongs there, not on the Dashboard.
  */
 export const APP_HOME_PATH = '/';

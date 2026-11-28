@@ -15,12 +15,11 @@ import { isHomePath } from '@/lib/auth/home-paths';
  * Thin client shell for the public route group.
  *
  * Handles the path-based rules (auth pages skip header/wrapper) via
- * `usePathname()`. The auth-based decision is seeded from the server
- * (via `isAuthenticated` prop from the cookie at SSR time) to avoid a
- * flash of PublicHeader for authed users on hard navigation, but is
- * ALSO re-evaluated client-side via `useAuth()` so that a race between
- * cookie write and post-login redirect cannot leave the public header
- * visible after hydration.
+ * `usePathname()`. The auth-based decision is made client-side via
+ * `useAuth()`. The signed-in home also seeds it from the cookie on the server
+ * (`isAuthenticated`). Public pages are prerendered and pass `false`;
+ * `data-auth-pending` lets CSS hide their chrome from a signed-in visitor
+ * until the session resolves (lib/auth/session-hint).
  *
  * Aurora: logged-out visitors get the Aurora header and footer. On `/` the
  * landing page brings its own header and footer, so the shell adds nothing.
@@ -87,7 +86,7 @@ export function PublicLayoutShell({
   );
 
   const content = showPublicHeader ? (
-    <div className="aurora-site">
+    <div className="aurora-site" data-auth-pending={authLoading ? '' : undefined}>
       <AuroraSiteHeader />
       <main id="aurora-site-main" className="as-main" tabIndex={-1}>
         {children}
