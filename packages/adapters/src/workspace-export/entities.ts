@@ -84,6 +84,7 @@ ticket_categories|TicketCategory|Ticket categories (with nested parents and a de
 ticket_next_steps|TicketNextStep|Next steps recorded on tickets.
 related_tickets|RelatedTicket|Links between related tickets.
 feedback_surveys|FeedbackSurvey|Customer feedback surveys and the answers received.
+feedback_survey_settings|FeedbackSurveySetting|Whether surveys are sent automatically when a deal is won or a ticket is resolved.
 article_feedback|ArticleFeedback|Reader feedback on help articles.
 deal_renewals|DealRenewal|Renewal records of deals.
 document_shares|DocumentShare|Who each document was shared with, and with what permission.
