@@ -14,7 +14,16 @@ import { mailViewerOf, type MailViewer } from '../../packages/db/src/email-visib
 import { measureResult } from '../../packages/db/src/egress-meter';
 import { createTenantWhereClause } from '../../apps/api/src/security/tenant-context';
 import { loadWaiting } from '../../apps/api/src/modules/waiting/waiting-load';
-import { loadWaitingPage, waitingSql } from '../../apps/api/src/modules/waiting/waiting-sql';
+import {
+  loadWaitingLeadIds,
+  loadWaitingPage,
+  waitingSql,
+} from '../../apps/api/src/modules/waiting/waiting-sql';
+import { narrowToWaiting } from '../../apps/api/src/modules/waiting/waiting-lead-filter';
+import {
+  buildLeadListWhere,
+  leadListOrderBy,
+} from '../../apps/api/src/modules/lead/lead-list-query';
 
 const DB_URL = process.env.DATABASE_URL;
 const describeDb = DB_URL ? describe : describe.skip;
@@ -483,6 +492,145 @@ describeDb('waiting list in SQL equals the original algorithm', () => {
       }
     });
   }
+
+  describe('leads-list "Waiting for reply" filter: SQL ids equal the original loader', () => {
+    const tenantOf = (v: MailViewer) => ({
+      tenantId: v.tenantId,
+      userId: v.userId,
+      role: v.role ?? 'USER',
+      teamMemberIds: v.teamMemberIds ? [...v.teamMemberIds] : [],
+    });
+    const ctxOf = (db: PrismaClient, v: MailViewer) =>
+      ({ prismaWithTenant: db, tenant: tenantOf(v) }) as never;
+    /** What narrowToWaiting did before: every waiting lead the original loader finds. */
+    const oldIds = async (v: MailViewer, ids?: string[]) => {
+      const lead = (await oracle(v)).filter((w) => w.kind === 'lead').map((w) => w.id);
+      const allowed = ids ? new Set(ids) : undefined;
+      return allowed ? lead.filter((id) => allowed.has(id)) : lead;
+    };
+
+    for (const name of ['admin', 'manager', 'rep', 'other']) {
+      it(`${name}: the same lead ids in the same order, with and without an ids restriction`, async () => {
+        const v = cases().find(([n]) => n === name)![1];
+        const old = await oldIds(v);
+        expect(old.length).toBeGreaterThan(0); // the seed must mean something
+        expect(await narrowToWaiting(ctxOf(prisma, v), { waitingForReply: true })).toEqual(old);
+        expect(await loadWaitingLeadIds(prisma as never, v)).toEqual(old);
+        // Within an ids restriction: some waiting, some not, one unknown.
+        const some = [...old.slice(0, 3), `${RUN}_plain`, `${RUN}_answered`, 'no-such-lead'];
+        expect(
+          await narrowToWaiting(ctxOf(prisma, v), { waitingForReply: true, ids: some })
+        ).toEqual(await oldIds(v, some));
+        expect(await narrowToWaiting(ctxOf(prisma, v), { waitingForReply: true, ids: [] })).toEqual(
+          []
+        );
+        // Off: untouched, no query.
+        expect(await narrowToWaiting(ctxOf(prisma, v), { ids: some })).toEqual(some);
+      });
+
+      it(`${name}: the leads list pages and totals are exactly the same`, async () => {
+        const v = cases().find(([n]) => n === name)![1];
+        const scope = tenantOf(v) as never;
+        const listWith = async (ids: string[], page: number, limit: number) => {
+          const where = createTenantWhereClause(scope, buildLeadListWhere({ ids }));
+          return {
+            rows: await prisma.lead.findMany({
+              where: where as never,
+              skip: (page - 1) * limit,
+              take: limit,
+              orderBy: leadListOrderBy('createdAt', 'desc') as never,
+              select: { id: true },
+            }),
+            total: await prisma.lead.count({ where: where as never }),
+          };
+        };
+        const oldNarrow = await oldIds(v);
+        const newNarrow = (await narrowToWaiting(ctxOf(prisma, v), {
+          waitingForReply: true,
+        })) as string[];
+        for (const [page, limit] of [
+          [1, 5],
+          [2, 5],
+          [3, 5],
+          [1, 100],
+        ] as const) {
+          expect(await listWith(newNarrow, page, limit)).toEqual(
+            await listWith(oldNarrow, page, limit)
+          );
+        }
+      });
+    }
+
+    it('lists exactly the waiting leads the card lists (contacts left out), hand-checked', async () => {
+      const v = cases()[0]![1];
+      const ids = (await loadWaitingLeadIds(prisma as never, v)).map((i) =>
+        i.replace(`${RUN}_`, '')
+      );
+      const card = (await loadWaitingPage(prisma, v, {})).items.filter((i) => i.kind === 'lead');
+      expect(ids).toEqual(card.map((i) => i.id.replace(`${RUN}_`, '')));
+      expect(ids).toContain('twice'); // re-surfaced after its dismissal
+      expect(ids).toContain('both'); // another tenant's dismissal does not hide it
+      expect(ids).toContain('twin'); // lead merged with a same-address contact
+      expect(ids).not.toContain('plain'); // dismissed
+      expect(ids).not.toContain('answered');
+      expect(ids).not.toContain('robot'); // automated sender
+      expect(ids).not.toContain('solo'); // a contact, never a lead id
+    });
+
+    it("keeps personal mail private: a colleague's filter ignores the rep's mailbox", async () => {
+      const otherV = cases()[3]![1];
+      const ids = await narrowToWaiting(ctxOf(prisma, otherV), { waitingForReply: true });
+      expect(ids).not.toContain(`${RUN}_priv`);
+      expect(ids).toContain(`${RUN}_privReply`);
+      expect(ids).not.toContain(`${RUN}_privLogged`);
+    });
+
+    it('does not see another tenant', async () => {
+      const foreign = mailViewerOf({
+        tenantId: otherTenantId,
+        userId: admin,
+        role: 'ADMIN',
+        teamMemberIds: null,
+      });
+      expect(await loadWaitingLeadIds(prisma as never, foreign)).toEqual([]);
+    });
+
+    it('under row level security gives the same ids as the owner role, tenant bound by itself', async () => {
+      const v = cases()[0]![1];
+      const asRole = {
+        $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
+          prisma.$transaction(async (tx) => {
+            await tx.$executeRawUnsafe(`SET LOCAL ROLE "authenticated"`);
+            return fn(tx);
+          }),
+      } as never;
+      const ids = await loadWaitingLeadIds(asRole, v);
+      expect(ids).toEqual(await oldIds(v));
+      expect(ids.length).toBeGreaterThan(0);
+    });
+
+    it('row count: one query, one id per waiting lead, never the mail', async () => {
+      const v = cases()[0]![1];
+      const scope = createTenantWhereClause(tenantOf(v) as never);
+      const before = metered(prisma);
+      const old = (await loadWaiting(before.db, v, scope as never, scope as never)).filter(
+        (w) => w.kind === 'lead'
+      );
+      expect(old.length).toBeGreaterThan(0);
+      const after = metered(prisma);
+      const ids = await narrowToWaiting(ctxOf(after.db, v), { waitingForReply: true });
+      expect(after.stat.calls).toBe(1);
+      expect(after.stat.rows).toBe(ids!.length);
+      expect(after.stat.rows).toBe(old.length);
+      const mails = await prisma.emailRecord.count({ where: { tenantId } });
+      const acts =
+        (await prisma.leadActivity.count({ where: { tenantId } })) +
+        (await prisma.contactActivity.count({ where: { tenantId } }));
+      // The old path read every mail row, activity row and person of the tenant.
+      expect(before.stat.rows).toBeGreaterThanOrEqual(mails + acts);
+      expect(after.stat.rows).toBeLessThan(before.stat.rows / 3);
+    });
+  });
 
   it('lists exactly the expected people for the admin (hand-checked, not just old == new)', async () => {
     const page = await loadWaitingPage(prisma, cases()[0]![1], {});
