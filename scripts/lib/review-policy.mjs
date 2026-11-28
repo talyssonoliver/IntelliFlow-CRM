@@ -204,14 +204,14 @@ export function makeReviewer({
           status: a.r.status ?? -1,
           capped: isCapped(failText),
         });
-        // The codex config model is not on the plan either: the first model of the tier's
+        // The retry on the codex config model was rejected as not on the plan too: the first model of the tier's
         // preference list that the plan's catalog lists, or the usual deferral when none is.
         const alt = isModelUnavailable(failText) ? catalogFallback() : null;
         if (alt) {
           state.modelFallback = {
             ...state.modelFallback,
             catalog: { model: alt.model, effort: alt.effort },
-            reason: `${state.modelFallback.reason}; the codex config model is not on the plan either (${alt.reason}), retried with ${alt.model}/${alt.effort ?? 'config effort'}`,
+            reason: `${state.modelFallback.reason}; ${alt.reason}, retried with the catalog preference ${alt.model}/${alt.effort ?? 'config effort'}`,
           };
           log.err(`[codex-review] WARN: ${state.modelFallback.reason}.\n`);
           opts = { model: alt.model, effort: alt.effort };

@@ -22,7 +22,6 @@ import {
   catalogFallbackFor,
   classifyDiff,
   modelForTier,
-  parseCodexConfigModel,
   parseModelCatalog,
 } from './review-tier.mjs';
 import { deferredMessage, makeReviewer } from './review-policy.mjs';
@@ -133,16 +132,6 @@ export function createGate(d) {
       const file =
         env.CODEX_REVIEW_MODELS_CACHE || path.join(d.homedir(), '.codex', 'models_cache.json');
       return parseModelCatalog(fs.readFileSync(file, 'utf8'));
-    } catch {
-      return null;
-    }
-  }
-
-  /** The default model of the user's codex config, or null. Read-only; never written. */
-  function codexConfigModel() {
-    try {
-      const file = env.CODEX_REVIEW_CODEX_CONFIG || path.join(d.homedir(), '.codex', 'config.toml');
-      return parseCodexConfigModel(fs.readFileSync(file, 'utf8'));
     } catch {
       return null;
     }
@@ -464,19 +453,12 @@ export function createGate(d) {
       now,
       models: { strong },
       env,
-      // Asked only after the codex config model failed as "not on the plan" too.
+      // Asked only after the retry on the codex config model was rejected as "not on the plan" too.
+      // Reads the plan catalog (plain JSON) only; the codex config is never read.
       catalogFallback: () => {
         const available = planModels();
-        const configModel = codexConfigModel();
-        if (!available || (configModel && available.some((m) => m.slug === configModel))) {
-          return null;
-        }
-        const alt = catalogFallbackFor(plan.tier, available, env);
-        if (!alt) return null;
-        const why = configModel
-          ? `config model ${configModel} is missing from the plan catalog`
-          : 'no config model is set';
-        return { ...alt, reason: why };
+        const alt = available ? catalogFallbackFor(plan.tier, available, env) : null;
+        return alt ? { ...alt, reason: 'codex rejected its config model too' } : null;
       },
     });
     out('[codex-review] Preparing diff + review prompt ...\n');

@@ -289,7 +289,11 @@ describe('deferredMessage', () => {
 describe('makeReviewer: the codex config model is missing from the plan too', () => {
   const NOT_ON_PLAN = { raw: '', status: 1, stderr: 'model_not_found', stdout: '' };
   const ok = { raw: GOOD, status: 0, stderr: '', stdout: '' };
-  const alt = { model: 'gpt-6.1-sol', effort: 'high', reason: 'config model c-x is missing' };
+  const alt = {
+    model: 'gpt-6.1-sol',
+    effort: 'high',
+    reason: 'codex rejected its config model too',
+  };
 
   it('retries on the catalog preference after the config retry fails, and says so', () => {
     const runCodex = vi
@@ -302,7 +306,7 @@ describe('makeReviewer: the codex config model is missing from the plan too', ()
     expect(runCodex).toHaveBeenNthCalledWith(3, 'P', { model: 'gpt-6.1-sol', effort: 'high' });
     expect(r).toMatchObject({ reviewer: 'codex', model: 'gpt-6.1-sol' });
     expect(r.modelFallback.reason).toMatch(
-      /config model c-x is missing.*retried with gpt-6\.1-sol/
+      /codex rejected its config model too, retried with the catalog preference gpt-6\.1-sol/
     );
     review('Q');
     expect(runCodex).toHaveBeenNthCalledWith(4, 'Q', { model: 'gpt-6.1-sol', effort: 'high' });

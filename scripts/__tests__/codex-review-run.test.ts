@@ -609,9 +609,10 @@ describe('isModelUnavailable', () => {
   });
 });
 
-describe('createGate: the codex config model is missing from the plan catalog', () => {
+describe('createGate: the codex config model is rejected too', () => {
   // A fake codex that fails like the real one for any -m model outside FAKE_CODEX_OK (a comma
-  // list), and treats "no -m" as the config model, which FAKE_CODEX_CONFIG_OK says works or not.
+  // list), and treats "no -m" as the config model: FAKE_CODEX_CONFIG says how that one behaves
+  // (ok, rejected as not on the plan, or a capacity error).
   const FAKE = [
     "const fs = require('node:fs');",
     'const a = process.argv.slice(2);',
@@ -619,22 +620,20 @@ describe('createGate: the codex config model is missing from the plan catalog', 
     "const m = a.indexOf('-m');",
     "const ok = (process.env.FAKE_CODEX_OK || '').split(',');",
     "const bad = (slug) => { console.error('ERROR: The ' + slug + ' model is not supported when using Codex with a ChatGPT account.'); process.exit(1); };",
-    "if (m === -1 && process.env.FAKE_CODEX_CONFIG_OK !== '1') bad('gpt-6.2-astra');",
+    "if (m === -1 && process.env.FAKE_CODEX_CONFIG === 'capacity') { console.error('ERROR: usage limit reached. try again later'); process.exit(1); }",
+    "if (m === -1 && process.env.FAKE_CODEX_CONFIG !== 'ok') bad('gpt-6.2-astra');",
     'if (m !== -1 && !ok.includes(a[m + 1])) bad(a[m + 1]);',
     "fs.writeFileSync(a[a.indexOf('-o') + 1], JSON.stringify({ findings: [] }));",
     'process.exit(0);',
   ].join(String.fromCharCode(10));
 
-  const CONFIG = 'model = "gpt-6.2-astra"\nmodel_reasoning_effort = "high"\n';
-
-  function setup(opts: { catalog: string[]; config: string; configOk?: boolean; ok?: string }) {
+  function setup(opts: { catalog: string[]; config: 'ok' | 'rejected' | 'capacity'; ok?: string }) {
     const bigCode = text(Array.from({ length: 200 }, (_, i) => `export const v${i} = ${i};`));
     const { dir } = makeRepo({ 'apps/web/src/a.ts': bigCode });
     const fakePath = path.join(dir, 'fake-codex.cjs');
     fs.writeFileSync(fakePath, FAKE);
     const argvLog = path.join(dir, 'fake-codex-argv.log');
     const catalogPath = path.join(dir, 'fake-models-cache.json');
-    const configPath = path.join(dir, 'fake-config.toml');
     fs.writeFileSync(
       catalogPath,
       JSON.stringify({
@@ -644,7 +643,6 @@ describe('createGate: the codex config model is missing from the plan catalog', 
         })),
       })
     );
-    fs.writeFileSync(configPath, opts.config);
     const calls = () =>
       fs.existsSync(argvLog)
         ? fs
@@ -668,27 +666,22 @@ describe('createGate: the codex config model is missing from the plan catalog', 
           ...gitEnv(process.env),
           FAKE_CODEX_LOG: argvLog,
           FAKE_CODEX_OK: opts.ok ?? '',
-          FAKE_CODEX_CONFIG_OK: opts.configOk ? '1' : '0',
+          FAKE_CODEX_CONFIG: opts.config,
         },
       });
-    const env = {
-      CODEX_REVIEW_MAX_WAIT_MIN: '0',
-      CODEX_REVIEW_MODELS_CACHE: catalogPath,
-      CODEX_REVIEW_CODEX_CONFIG: configPath,
-    };
-    return { dir, calls, runCodexReviewer, env, configPath };
+    const env = { CODEX_REVIEW_MAX_WAIT_MIN: '0', CODEX_REVIEW_MODELS_CACHE: catalogPath };
+    return { dir, calls, runCodexReviewer, env };
   }
 
   const usedModels = (calls: string[][]) =>
     calls.map((argv) => (argv.includes('-m') ? argv[argv.indexOf('-m') + 1] : null));
 
-  it('config model missing: retries on the first catalog-listed preference, passes, records which', () => {
+  it('config model rejected: retries on the first catalog-listed preference, passes, records which', () => {
     const t = setup({
       catalog: ['gpt-6-sol', 'gpt-5.6-sol', 'gpt-6-luna'],
-      config: CONFIG,
+      config: 'rejected',
       ok: 'gpt-6-sol',
     });
-    const before = fs.readFileSync(t.configPath, 'utf8');
     const g = gate(t.dir, { runCodexReviewer: t.runCodexReviewer, env: t.env });
     expect(g.run()).toBe(0);
     const used = usedModels(t.calls());
@@ -696,33 +689,32 @@ describe('createGate: the codex config model is missing from the plan catalog', 
     expect(used).not.toContain('gpt-5.6-sol');
     const rec = g.metrics().at(-1);
     expect(rec).toMatchObject({ verdict: 'PASS', reviewer: 'codex', model: 'gpt-6-sol' });
-    expect(rec.why).toMatch(/config model gpt-6\.2-astra is missing from the plan catalog/);
-    expect(rec.why).toMatch(/retried with gpt-6-sol\/high/);
-    expect(fs.readFileSync(t.configPath, 'utf8')).toBe(before);
+    expect(rec.why).toMatch(
+      /codex rejected its config model too, retried with the catalog preference/
+    );
+    expect(rec.why).toMatch(/gpt-6-sol\/high/);
   });
 
-  it('config model on the plan: current behaviour, no catalog fallback is tried', () => {
-    const t = setup({ catalog: ['gpt-6.2-astra', 'gpt-6.1-sol'], config: CONFIG, configOk: true });
+  it('config model works: current behaviour, the catalog is not used', () => {
+    const t = setup({ catalog: ['gpt-6.1-sol'], config: 'ok', ok: 'gpt-6.1-sol' });
     const g = gate(t.dir, { runCodexReviewer: t.runCodexReviewer, env: t.env });
     expect(g.run()).toBe(0);
     const used = usedModels(t.calls());
     expect(used).not.toContain('gpt-6.1-sol');
     expect(used.at(-1)).toBeNull();
-    expect(g.metrics().at(-1).why).not.toMatch(/catalog/);
+    expect(g.metrics().at(-1).why).not.toMatch(/catalog preference/);
+  });
 
-    const u = setup({
-      catalog: ['gpt-6.2-astra', 'gpt-6.1-sol'],
-      config: CONFIG,
-      ok: 'gpt-6.1-sol',
-    });
-    const gu = gate(u.dir, { runCodexReviewer: u.runCodexReviewer, env: u.env });
-    expect(gu.run()).toBe(1);
-    expect(usedModels(u.calls())).not.toContain('gpt-6.1-sol');
-    expect(gu.out()).toMatch(/REVIEW_DEFERRED: codex unavailable/);
+  it('config model fails with a capacity error: deferred, the catalog is not tried', () => {
+    const t = setup({ catalog: ['gpt-6.1-sol'], config: 'capacity', ok: 'gpt-6.1-sol' });
+    const g = gate(t.dir, { runCodexReviewer: t.runCodexReviewer, env: t.env });
+    expect(g.run()).toBe(1);
+    expect(usedModels(t.calls())).not.toContain('gpt-6.1-sol');
+    expect(g.metrics().at(-1)).toMatchObject({ verdict: 'DEFERRED' });
   });
 
   it('nothing in the catalog is a preferred model: deferred as before', () => {
-    const t = setup({ catalog: ['unrelated-model'], config: CONFIG, ok: 'unrelated-model' });
+    const t = setup({ catalog: ['unrelated-model'], config: 'rejected', ok: 'unrelated-model' });
     const g = gate(t.dir, { runCodexReviewer: t.runCodexReviewer, env: t.env });
     expect(g.run()).toBe(1);
     expect(usedModels(t.calls())).not.toContain('unrelated-model');

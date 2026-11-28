@@ -16,7 +16,6 @@ import {
   isCommentOnlyDiff,
   isReviewGateFile,
   modelForTier,
-  parseCodexConfigModel,
   parseModelCache,
   parseModelCatalog,
   parseNumstat,
@@ -367,29 +366,6 @@ describe('catalog fallback models', () => {
   it('reads the preference list from an env override', () => {
     const env = { CODEX_REVIEW_STRONG_FALLBACKS: 'x-1, x-2' };
     expect(catalogFallbackFor('strong', ['x-2', 'gpt-6.1-sol'], env)?.model).toBe('x-2');
-  });
-});
-
-describe('parseCodexConfigModel', () => {
-  it('reads the top-level model, quoted either way, and ignores tables and comments', () => {
-    expect(parseCodexConfigModel('# c\nmodel = "gpt-6.2-astra"\neffort = "high"\n')).toBe(
-      'gpt-6.2-astra'
-    );
-    expect(parseCodexConfigModel("model='m-1'\r\n")).toBe('m-1');
-    expect(parseCodexConfigModel('[profiles.x]\nmodel = "inner"\n')).toBeNull();
-    expect(parseCodexConfigModel('approval = "never"\n')).toBeNull();
-    expect(parseCodexConfigModel('')).toBeNull();
-  });
-
-  it('does not read a model line inside a multi-line string', () => {
-    const SQ = "'".repeat(3);
-    const DQ = '"'.repeat(3);
-    const toml = `instructions = ${SQ}\nmodel = "inside"\n${SQ}\nmodel = "real"\n`;
-    expect(parseCodexConfigModel(toml)).toBe('real');
-    const basic = `notes = ${DQ}\nmodel = "inside"\nmore\n${DQ}\nmodel = "real-2" # comment\n`;
-    expect(parseCodexConfigModel(basic)).toBe('real-2');
-    expect(parseCodexConfigModel(`x = ${SQ}a${SQ}\nmodel = 'one-line'\n`)).toBe('one-line');
-    expect(parseCodexConfigModel(`x = ${SQ}\nmodel = "inside"\n${SQ}\n`)).toBeNull();
   });
 });
 

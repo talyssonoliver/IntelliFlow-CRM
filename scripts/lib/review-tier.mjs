@@ -261,40 +261,6 @@ export function modelForTier(tier, env = process.env, available = null) {
 }
 
 /**
- * The top-level `model = "..."` of ~/.codex/config.toml text, or null. Read-only: only text is
- * parsed here and the user's config is never written. Keys inside a [table] are not the default,
- * and lines inside a multi-line string (triple double or triple single quotes) are string
- * content, never keys.
- */
-export function parseCodexConfigModel(text) {
-  let open = null; // the delimiter of the multi-line string we are inside, if any
-  for (const raw of String(text || '').split(/\r?\n/)) {
-    let rest = raw;
-    if (open) {
-      const end = rest.indexOf(open);
-      if (end === -1) continue;
-      rest = rest.slice(end + 3);
-      open = null;
-      if (rest.trim() !== '' && !rest.trim().startsWith('#')) continue;
-    }
-    const line = rest.trim();
-    if (line.startsWith('[')) return null;
-    const m = /^model\s*=\s*(?:"([^"]*)"|'([^']*)')\s*(#.*)?$/.exec(line);
-    if (m) return m[1] ?? m[2] ?? null;
-    // A value that opens a multi-line string and does not close it on the same line.
-    const eq = line.indexOf('=');
-    if (eq !== -1) {
-      const value = line.slice(eq + 1);
-      for (const delim of ['"'.repeat(3), "'".repeat(3)]) {
-        const start = value.indexOf(delim);
-        if (start !== -1 && value.indexOf(delim, start + 3) === -1) open = delim;
-      }
-    }
-  }
-  return null;
-}
-
-/**
  * The first model of the tier's preference list that the plan's catalog lists, with the tier's
  * effort (or, when that model's cached efforts lack it, the best one it lists), or null when none
  * is available.
