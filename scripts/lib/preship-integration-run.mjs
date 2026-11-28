@@ -26,18 +26,60 @@ function firstInt(text) {
   return m ? Number(m[1]) : null;
 }
 
-/** Node major the repo pins: .nvmrc wins; else the lower bound of engines.node. */
+/**
+ * Does a Node MAJOR satisfy one engines.node range? Majors are all that matters here.
+ * Handles `||` alternatives and space-separated comparators of the forms `N`, `N.x`, `^N`,
+ * `~N`, `=N`, `>=N`, `>N`, `<=N`, `<N` (a minor or patch after N is ignored). Returns null
+ * for anything else (a tag, a hyphen range): the caller then enforces nothing rather than
+ * failing a good run on a range it cannot read.
+ */
+export function majorSatisfies(range, major) {
+  const alternatives = String(range ?? '').split('||');
+  let readable = false;
+  for (const alternative of alternatives) {
+    const parts = alternative.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) continue;
+    let ok = true;
+    for (const part of parts) {
+      const m = /^(>=|<=|>|<|=|\^|~)?v?(\d+)(?:\.(?:\d+|[xX*]))*$/.exec(part);
+      if (!m) return null;
+      readable = true;
+      const n = Number(m[2]);
+      const op = m[1] ?? '';
+      if (op === '>=') ok = ok && major >= n;
+      else if (op === '>') ok = ok && major > n;
+      else if (op === '<=') ok = ok && major <= n;
+      else if (op === '<') ok = ok && major < n;
+      else ok = ok && major === n;
+    }
+    if (ok) return true;
+  }
+  return readable ? false : null;
+}
+
+/**
+ * What the repo pins: .nvmrc (an exact major) wins; else the engines.node range.
+ * `{ label, source, allows(major) }`, or null when nothing readable is pinned.
+ */
 export function pinnedNodeMajor(repoRoot) {
   try {
     const major = firstInt(fs.readFileSync(path.join(repoRoot, '.nvmrc'), 'utf8'));
-    if (major !== null) return { major, exact: true, source: '.nvmrc' };
+    if (major !== null) {
+      return { label: String(major), source: '.nvmrc', allows: (actual) => actual === major };
+    }
   } catch {
     // fall through to engines
   }
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
-    const major = firstInt(pkg?.engines?.node);
-    if (major !== null) return { major, exact: false, source: 'package.json engines.node' };
+    const range = pkg?.engines?.node;
+    if (typeof range === 'string' && majorSatisfies(range, 0) !== null) {
+      return {
+        label: range,
+        source: 'package.json engines.node',
+        allows: (actual) => majorSatisfies(range, actual) === true,
+      };
+    }
   } catch {
     // unreadable: no pin known
   }
@@ -48,12 +90,11 @@ export function pinnedNodeMajor(repoRoot) {
 export function nodeMismatch(nodeVersion, pin) {
   if (!pin) return null;
   const actual = firstInt(nodeVersion);
-  const wrong = pin.exact ? actual !== pin.major : actual < pin.major;
-  if (!wrong) return null;
+  if (pin.allows(actual)) return null;
   return (
-    `${NOT_RUN}: running Node ${nodeVersion}, but this repo requires Node ${pin.major} ` +
+    `${NOT_RUN}: running Node ${nodeVersion}, but this repo requires Node ${pin.label} ` +
     `(${pin.source}). Under another Node major the integration setup cannot load and ` +
-    `would skip silently. Switch to Node ${pin.major} and re-run.`
+    `would skip silently. Switch to Node ${pin.label} and re-run.`
   );
 }
 

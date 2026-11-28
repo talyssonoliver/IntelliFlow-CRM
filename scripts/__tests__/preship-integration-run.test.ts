@@ -12,6 +12,7 @@ import {
   NOT_RUN,
   countExecutedTests,
   listIntegrationTestFiles,
+  majorSatisfies,
   nodeMismatch,
   pinnedNodeMajor,
   zeroExecuted,
@@ -77,7 +78,7 @@ describe('pinnedNodeMajor / nodeMismatch (pre-ship preflight)', () => {
       'package.json': JSON.stringify({ engines: { node: '>=20.0.0' } }),
     });
     const pin = pinnedNodeMajor(repo);
-    expect(pin).toEqual({ major: 24, exact: true, source: '.nvmrc' });
+    expect(pin).toMatchObject({ label: '24', source: '.nvmrc' });
     expect(nodeMismatch('v24.3.0', pin)).toBeNull();
     const msg = nodeMismatch('v25.2.1', pin);
     expect(msg).toContain(NOT_RUN);
@@ -85,17 +86,53 @@ describe('pinnedNodeMajor / nodeMismatch (pre-ship preflight)', () => {
     expect(msg).toContain('requires Node 24');
   });
 
-  it('falls back to the engines lower bound, which only refuses a Node below it', () => {
+  it('falls back to the engines range: "24.x" refuses Node 25 (the repo pin)', () => {
+    const repo = tmpRepo({ 'package.json': JSON.stringify({ engines: { node: '24.x' } }) });
+    const pin = pinnedNodeMajor(repo);
+    expect(pin).toMatchObject({ label: '24.x', source: 'package.json engines.node' });
+    expect(nodeMismatch('v24.21.0', pin)).toBeNull();
+    const msg = nodeMismatch('v25.2.1', pin);
+    expect(msg).toContain(NOT_RUN);
+    expect(msg).toContain('requires Node 24.x');
+  });
+
+  it('a lower-bound engines range only refuses a Node below it', () => {
     const repo = tmpRepo({ 'package.json': JSON.stringify({ engines: { node: '>=20.0.0' } }) });
     const pin = pinnedNodeMajor(repo);
-    expect(pin).toEqual({ major: 20, exact: false, source: 'package.json engines.node' });
     expect(nodeMismatch('v25.2.1', pin)).toBeNull();
     expect(nodeMismatch('v18.19.0', pin)).toContain(NOT_RUN);
+  });
+
+  it('does not enforce an engines range it cannot read', () => {
+    const repo = tmpRepo({ 'package.json': JSON.stringify({ engines: { node: 'lts/*' } }) });
+    expect(pinnedNodeMajor(repo)).toBeNull();
   });
 
   it('has nothing to enforce when no pin can be read', () => {
     expect(pinnedNodeMajor(tmpRepo({}))).toBeNull();
     expect(nodeMismatch('v25.2.1', null)).toBeNull();
+  });
+});
+
+describe('majorSatisfies', () => {
+  it.each([
+    ['24.x', 24, true],
+    ['24.x', 25, false],
+    ['^22 || ^24', 24, true],
+    ['^22 || ^24', 23, false],
+    ['>=20 <25', 24, true],
+    ['>=20 <25', 25, false],
+    ['>20', 20, false],
+    ['<=22', 22, true],
+    ['v24.1.0', 24, true],
+  ])('%s vs Node %i -> %s', (range, major, expected) => {
+    expect(majorSatisfies(range, major)).toBe(expected);
+  });
+
+  it('returns null for a range it cannot read', () => {
+    expect(majorSatisfies('lts/*', 24)).toBeNull();
+    expect(majorSatisfies('18 - 20', 19)).toBeNull();
+    expect(majorSatisfies('', 24)).toBeNull();
   });
 });
 
