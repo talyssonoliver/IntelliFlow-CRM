@@ -32,6 +32,11 @@ export interface KpiCardProps {
   failed?: boolean;
   /** Top-right on `default` (a trend or status pill). */
   badge?: React.ReactNode;
+  /**
+   * Shown right after the label, e.g. a definition (i). Owner 27/11: an (i) passed as the badge sat
+   * on its own line under the figure and read as a stray mark.
+   */
+  labelHint?: React.ReactNode;
   /** Under the number (a comparison line, a progress bar, a warning). */
   footer?: React.ReactNode;
   variant?: 'default' | 'compact';
@@ -129,6 +134,7 @@ function KpiCardBody({
   pending = false,
   failed = false,
   badge: badgeProp,
+  labelHint,
   footer: footerProp,
   variant = 'default',
   framed = false,
@@ -221,9 +227,18 @@ function KpiCardBody({
             </span>
           </div>
           <div className="min-w-0 flex-1 flex flex-col @max-[9rem]:w-full">
-            <LabelTag className="text-xs leading-4 @min-[14rem]:text-sm @min-[14rem]:leading-5 text-muted-foreground line-clamp-2 break-words">
-              {label}
-            </LabelTag>
+            {labelHint ? (
+              <div className="flex min-w-0 items-start gap-1">
+                <LabelTag className="min-w-0 text-xs leading-4 @min-[14rem]:text-sm @min-[14rem]:leading-5 text-muted-foreground line-clamp-2 break-words">
+                  {label}
+                </LabelTag>
+                <span className="shrink-0">{labelHint}</span>
+              </div>
+            ) : (
+              <LabelTag className="text-xs leading-4 @min-[14rem]:text-sm @min-[14rem]:leading-5 text-muted-foreground line-clamp-2 break-words">
+                {label}
+              </LabelTag>
+            )}
             <div className="mt-0.5 @min-[14rem]:mt-1 min-w-0">{figure}</div>
             {badge ? <div className="mt-1">{badge}</div> : null}
           </div>

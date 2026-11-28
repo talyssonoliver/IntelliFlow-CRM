@@ -30,4 +30,20 @@ describe('useUtcDay (codex 27/11: the Stalled cutoff froze on the day the tab op
     });
     expect(result.current).toBe('2026-11-29');
   });
+
+  it('catches up when midnight passes between the first render and the effect (codex 27/11)', () => {
+    const real = Date;
+    let calls = 0;
+    // The first Date read (initial state) is before midnight, every later one after it.
+    vi.spyOn(globalThis, 'Date').mockImplementation(function (...args: unknown[]) {
+      if (args.length) return new real(...(args as [string]));
+      calls += 1;
+      return new real(calls === 1 ? '2026-11-27T23:59:59.999Z' : '2026-11-28T00:00:00.010Z');
+    } as unknown as DateConstructor);
+    const { result, unmount } = renderHook(() => useUtcDay());
+    vi.restoreAllMocks();
+    expect(calls).toBeGreaterThanOrEqual(2);
+    expect(result.current).toBe('2026-11-28');
+    unmount();
+  });
 });
