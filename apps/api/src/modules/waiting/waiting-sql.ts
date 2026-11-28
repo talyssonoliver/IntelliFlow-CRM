@@ -35,9 +35,15 @@ import { Prisma, emailVisibleSql, type MailViewer } from '@intelliflow/db';
 import { AUTOMATED_SENDER_TAG, toPerson } from './waiting-load';
 import type { WaitingItem, WaitingKind } from './waiting-for-reply';
 
-/** Anything with the raw query method (a Prisma client, the tenant-scoped one included). */
-export interface RawDb {
+/** The raw query methods of a Prisma client, or of one of its transactions. */
+export interface RawQueries {
   $queryRaw: <T = unknown>(query: Prisma.Sql) => Promise<T>;
+  $executeRaw: (query: Prisma.Sql) => Promise<number>;
+}
+
+/** A Prisma client (the tenant-scoped one included): raw queries, and transactions for the tenant binding. */
+export interface RawDb {
+  $transaction: <T>(fn: (tx: RawQueries) => Promise<T>) => Promise<T>;
 }
 
 export interface WaitingPage {
@@ -247,7 +253,18 @@ export async function loadWaitingPage(
   viewer: MailViewer,
   opts: { limit?: number | undefined } = {}
 ): Promise<WaitingPage> {
-  const rows = await db.$queryRaw<Row[]>(waitingSql(viewer, opts));
+  const statement = waitingSql(viewer, opts);
+  // A raw query skips the tenant client's per-operation `SET app.current_tenant_id` (it only hooks
+  // model operations), so with row level security on, a session with no tenant, or another one's,
+  // would see none of the tenant's rows. Bind the tenant for this transaction only (set_config
+  // with is_local) and run the statement on the same connection, so the answer never depends on
+  // what an earlier request left on a pooled connection.
+  const rows = await db.$transaction(async (tx) => {
+    await tx.$executeRaw(
+      Prisma.sql`SELECT set_config('app.current_tenant_id', ${viewer.tenantId}, true)`
+    );
+    return tx.$queryRaw<Row[]>(statement);
+  });
   const first = rows[0];
   if (!first) {
     // A limit past the end of an empty result: nothing waits (rows carry the totals).

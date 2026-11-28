@@ -65,9 +65,26 @@ describe('waitingSql', () => {
 });
 
 describe('loadWaitingPage', () => {
-  const dbOf = (rows: unknown[]) => ({
-    $queryRaw: vi.fn(async (_q: Prisma.Sql) => rows as never),
-  });
+  /** A client whose transaction hands the callback one connection (`tx`) that records its calls. */
+  const dbOf = (rows: unknown[]) => {
+    const order: string[] = [];
+    const tx = {
+      $executeRaw: vi.fn(async (q: Prisma.Sql) => {
+        order.push(`bind:${q.values.join(',')}`);
+        return 1;
+      }),
+      $queryRaw: vi.fn(async (_q: Prisma.Sql) => {
+        order.push('query');
+        return rows as never;
+      }),
+    };
+    return {
+      order,
+      tx,
+      $transaction: vi.fn(async (fn: (t: typeof tx) => Promise<unknown>) => fn(tx)) as never,
+      $queryRaw: tx.$queryRaw,
+    };
+  };
 
   it('maps rows to items with the totals of everyone waiting', async () => {
     const db = dbOf([
@@ -75,7 +92,7 @@ describe('loadWaitingPage', () => {
       row({ kind: 'contact', id: 'contact-1', firstName: null, lastName: null, company: null }),
     ]);
     const page = await loadWaitingPage(db, viewer, { limit: 2 });
-    expect(db.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(db.tx.$queryRaw).toHaveBeenCalledTimes(1);
     expect(page.total).toBe(7);
     expect(page.leadTotal).toBe(5);
     expect(page.contactTotal).toBe(2);
@@ -91,6 +108,12 @@ describe('loadWaitingPage', () => {
     });
     // No name and no company: the address names them, as the lead's display name does.
     expect(page.items[1]).toMatchObject({ kind: 'contact', name: 'jane@example.invalid' });
+  });
+
+  it('binds the tenant for the transaction before the statement, on the same connection', async () => {
+    const db = dbOf([row()]);
+    await loadWaitingPage(db, viewer);
+    expect(db.order).toEqual(['bind:t1', 'query']);
   });
 
   it('is empty, with zero totals, when nobody is waiting', async () => {
@@ -129,6 +152,10 @@ describe('waiting.list', () => {
   const call = (input?: { limit: number }) => {
     const ctx = createAdminContext();
     (prismaMock.$queryRaw as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([row()]);
+    (prismaMock.$executeRaw as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(1);
+    (prismaMock.$transaction as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      async (fn: (tx: unknown) => unknown) => fn(prismaMock)
+    );
     return waitingRouter.createCaller(ctx as never).list(input);
   };
 

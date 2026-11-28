@@ -14,7 +14,7 @@ import { mailViewerOf, type MailViewer } from '../../packages/db/src/email-visib
 import { measureResult } from '../../packages/db/src/egress-meter';
 import { createTenantWhereClause } from '../../apps/api/src/security/tenant-context';
 import { loadWaiting } from '../../apps/api/src/modules/waiting/waiting-load';
-import { loadWaitingPage } from '../../apps/api/src/modules/waiting/waiting-sql';
+import { loadWaitingPage, waitingSql } from '../../apps/api/src/modules/waiting/waiting-sql';
 
 const DB_URL = process.env.DATABASE_URL;
 const describeDb = DB_URL ? describe : describe.skip;
@@ -43,6 +43,25 @@ function metered(db: PrismaClient) {
   const proxy = new Proxy(db as unknown as Record<string, unknown>, {
     get(t, k) {
       const v = t[k as string];
+      if (k === '$transaction' && typeof v === 'function') {
+        return (fn: (tx: unknown) => unknown) =>
+          (v as (f: (tx: unknown) => unknown) => unknown).call(t, (tx: unknown) =>
+            fn(
+              new Proxy(tx as Record<string, unknown>, {
+                get(tt, kk) {
+                  const f = tt[kk as string];
+                  if (kk !== '$queryRaw' || typeof f !== 'function') {
+                    return typeof f === 'function'
+                      ? (f as (...x: unknown[]) => unknown).bind(tt)
+                      : f;
+                  }
+                  return async (...a: unknown[]) =>
+                    count(await (f as (...x: unknown[]) => unknown).apply(tt, a));
+                },
+              })
+            )
+          );
+      }
       if (k === '$queryRaw' && typeof v === 'function') {
         return async (...a: unknown[]) =>
           count(await (v as (...x: unknown[]) => unknown).apply(t, a));
@@ -531,6 +550,62 @@ describeDb('waiting list in SQL equals the original algorithm', () => {
     expect(forOther).not.toContain(`${RUN}_priv`);
     expect(forOther).toContain(`${RUN}_privReply`);
     expect(forOther).not.toContain(`${RUN}_privLogged`);
+  });
+
+  describe('under row level security', () => {
+    // The app's database role can be subject to RLS: the policies compare "tenantId" with the
+    // session's app.current_tenant_id. A raw statement skips the tenant client's per-model SET, so
+    // the loader binds the tenant itself, inside its transaction.
+    const role = `${RUN}_rls`;
+    /** The client, with every transaction running as the RLS role (the owner would bypass RLS). */
+    const asRole = () =>
+      ({
+        $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
+          prisma.$transaction(async (tx) => {
+            await tx.$executeRawUnsafe(`SET LOCAL ROLE "${role}"`);
+            return fn(tx);
+          }),
+      }) as never;
+
+    beforeAll(async () => {
+      await prisma.$executeRawUnsafe(`CREATE ROLE "${role}" NOLOGIN`);
+      await prisma.$executeRawUnsafe(
+        `GRANT SELECT ON leads, contacts, email_records, email_mailboxes, lead_activities, contact_activities TO "${role}"`
+      );
+    });
+    afterAll(async () => {
+      await prisma.$executeRawUnsafe(
+        `REVOKE ALL ON leads, contacts, email_records, email_mailboxes, lead_activities, contact_activities FROM "${role}"`
+      );
+      await prisma.$executeRawUnsafe(`DROP ROLE IF EXISTS "${role}"`);
+    });
+
+    it('returns the same list as the owner role, with no tenant set on the session', async () => {
+      const v = cases()[0]![1];
+      const page = await loadWaitingPage(asRole(), v, {});
+      expect(page.items).toEqual(await oracle(v));
+      expect(page.total).toBeGreaterThan(0);
+    });
+
+    it('is what makes it work: the bare statement sees nothing without the binding', async () => {
+      const v = cases()[0]![1];
+      const bare = await prisma.$transaction(async (tx) => {
+        await tx.$executeRawUnsafe(`SET LOCAL ROLE "${role}"`);
+        await tx.$executeRawUnsafe(
+          `SELECT set_config('app.current_tenant_id', 'other-tenant', true)`
+        );
+        return tx.$queryRaw<unknown[]>(waitingSql(v, {}));
+      });
+      expect(bare).toEqual([]);
+    });
+
+    it('binds only for its own transaction: nothing leaks to the next one', async () => {
+      const v = cases()[0]![1];
+      await loadWaitingPage(asRole(), v, {});
+      const [{ t }] = await prisma.$queryRaw<{ t: string | null }[]>`
+        SELECT current_setting('app.current_tenant_id', true) AS t`;
+      expect(t === null || t === '' || t !== tenantId).toBe(true);
+    });
   });
 
   describe('rows leaving the database follow the list shown, not the mail', () => {
