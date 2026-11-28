@@ -45,6 +45,52 @@ const AUTH_PAGES_NO_CHROME = [
   '/dsar/',
 ];
 
+const APP_MAIN_CLASS = 'min-h-screen bg-[#f6f7f8] dark:bg-[#101922]';
+
+/**
+ * One element tree for both states. A prerendered page starts signed-out and may
+ * resolve to signed-in; different ancestors would remount the page and clear
+ * whatever the visitor had typed. Signed in, the app shell replaces the public
+ * header and footer, but every public page's styles are scoped under .aurora-site,
+ * so the inner element keeps that scope.
+ */
+function PublicPageFrame({
+  publicChrome,
+  authPending,
+  footer,
+  overlays,
+  children,
+}: Readonly<{
+  publicChrome: boolean;
+  authPending: boolean;
+  footer?: React.ReactNode;
+  overlays: React.ReactNode;
+  children: React.ReactNode;
+}>) {
+  return (
+    <div
+      className={publicChrome ? 'aurora-site' : 'contents'}
+      data-auth-pending={publicChrome && authPending ? '' : undefined}
+    >
+      {publicChrome && <AuroraSiteHeader />}
+      <main
+        id={publicChrome ? 'aurora-site-main' : undefined}
+        className={publicChrome ? 'as-main' : APP_MAIN_CLASS}
+        tabIndex={publicChrome ? -1 : undefined}
+      >
+        <div
+          className={publicChrome ? 'contents' : 'aurora-site as-in-app'}
+          data-testid={publicChrome ? undefined : 'public-page-scope'}
+        >
+          {children}
+        </div>
+      </main>
+      {publicChrome && footer}
+      {overlays}
+    </div>
+  );
+}
+
 export function PublicLayoutShell({
   isAuthenticated: serverIsAuthenticated,
   footer,
@@ -85,31 +131,22 @@ export function PublicLayoutShell({
     </>
   );
 
-  const content = showPublicHeader ? (
-    <div className="aurora-site" data-auth-pending={authLoading ? '' : undefined}>
-      <AuroraSiteHeader />
-      <main id="aurora-site-main" className="as-main" tabIndex={-1}>
-        {children}
-      </main>
-      {footer}
-      {overlays}
-    </div>
-  ) : (
+  // `/` signed in is the app itself: no site chrome and no .aurora-site scope.
+  // Signed out it returned above, so reaching here on the home path means signed in.
+  const content = isHomePath(pathname) ? (
     <>
-      <main className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
-        {/* Signed in, the app shell replaces the public header and footer, but every
-            public page's styles are scoped under .aurora-site, so the page keeps that
-            scope. `/` is the signed-in home (the app itself) and stays outside it. */}
-        {isHomePath(pathname) ? (
-          children
-        ) : (
-          <div className="aurora-site as-in-app" data-testid="public-page-scope">
-            {children}
-          </div>
-        )}
-      </main>
+      <main className={APP_MAIN_CLASS}>{children}</main>
       {overlays}
     </>
+  ) : (
+    <PublicPageFrame
+      publicChrome={showPublicHeader}
+      authPending={authLoading}
+      footer={footer}
+      overlays={overlays}
+    >
+      {children}
+    </PublicPageFrame>
   );
 
   if (shouldMountPublicOverlays && tourIsActiveRoute) {

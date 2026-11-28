@@ -436,3 +436,32 @@ describe('signed in, a public page keeps the .aurora-site scope', () => {
     expect(container.querySelector('.aurora-site')).toBeNull();
   });
 });
+
+// ===========================================================================
+// A prerendered page starts signed-out; resolving the session must not remount
+// it, or whatever the visitor has typed is lost.
+// ===========================================================================
+describe('page content survives the session resolving', () => {
+  it.each([
+    ['a signed-in session', true],
+    ['a signed-out session', false],
+  ])('keeps typed input when auth resolves to %s', (_label, signedIn) => {
+    currentPathname = '/contact';
+    mockAuthLoading = true;
+    const tree = () => (
+      <PublicLayoutShell isAuthenticated={false} footer={<footer>Footer</footer>}>
+        <input data-testid="draft" defaultValue="" />
+      </PublicLayoutShell>
+    );
+    const { rerender } = render(tree());
+    const draft = screen.getByTestId<HTMLInputElement>('draft');
+    draft.value = 'typed before auth';
+
+    mockAuthLoading = false;
+    mockClientAuthenticated = signedIn;
+    rerender(tree());
+
+    expect(screen.getByTestId('draft')).toBe(draft);
+    expect(draft.value).toBe('typed before auth');
+  });
+});
