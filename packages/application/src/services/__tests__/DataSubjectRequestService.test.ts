@@ -1360,3 +1360,165 @@ describe('complete (D-AC-06/08)', () => {
     expect(subjectData.erase).not.toHaveBeenCalled();
   });
 });
+
+describe('stored files after an erasure (IFC-316)', () => {
+  const completeInput = (id: string) => ({
+    tenantId: 'tenant-a',
+    id,
+    actorId: 'admin-2',
+    note: 'Erased',
+    noHoldConfirmed: true as const,
+    now: NOW,
+  });
+
+  async function erasureWith(
+    erasedFiles: Partial<{
+      purge: ReturnType<typeof vi.fn>;
+      leftFor: ReturnType<typeof vi.fn>;
+      keptFiles: ReturnType<typeof vi.fn>;
+      expireLocators: ReturnType<typeof vi.fn>;
+    }>
+  ) {
+    const withFiles = new DataSubjectRequestService({
+      repo,
+      subjectData,
+      restrictions,
+      notifications,
+      tokens,
+      appUrl: () => 'https://app.example.invalid',
+      erasedFiles: {
+        purge: vi.fn(),
+        leftFor: vi.fn(),
+        keptFiles: vi.fn(),
+        expireLocators: vi.fn(),
+        ...erasedFiles,
+      },
+    });
+    await submit({ type: 'ERASURE' });
+    const id = [...repo.rows.keys()][0];
+    await withFiles.verify({ requestId: id, token: 'token-1', now: NOW });
+    return { withFiles, id };
+  }
+
+  it('deletes the queued files after the commit and reports only what is left, 0 when none', async () => {
+    subjectData.erase.mockResolvedValueOnce({
+      outcome: 'ERASED',
+      result: {
+        counts: { leads: 1 },
+        checklist: { deals: 2, storedLeadFiles: 3, storedEmailAttachments: 1 },
+      },
+    });
+    const purge = vi.fn().mockResolvedValue({ deleted: 4, remaining: { storedLeadFiles: 1 } });
+    const { withFiles, id } = await erasureWith({ purge });
+    const done = await withFiles.complete(completeInput(id));
+    expect(purge).toHaveBeenCalledWith('tenant-a', id, NOW);
+    expect(done).toEqual({
+      outcome: 'OK',
+      erasure: {
+        counts: { leads: 1, storedFilesDeleted: 4 },
+        checklist: {
+          deals: 2,
+          storedLeadFiles: 1,
+          storedEmailAttachments: 0,
+          storedChatAttachments: 0,
+          storedTicketAttachments: 0,
+        },
+      },
+    });
+  });
+
+  it('a failing cleanup never fails the committed erasure: the queued counts stay', async () => {
+    const purge = vi.fn().mockRejectedValue(new Error('storage down'));
+    const { withFiles, id } = await erasureWith({ purge });
+    expect(await withFiles.complete(completeInput(id))).toEqual({
+      outcome: 'OK',
+      erasure: { counts: { leads: 1 }, checklist: { emailRecords: 2 } },
+    });
+  });
+
+  it('retries the cleanup only for a completed erasure, and returns what is left', async () => {
+    const purge = vi.fn().mockResolvedValue({ deleted: 2, remaining: {} });
+    const { withFiles, id } = await erasureWith({ purge });
+    // Still open: nothing to retry.
+    expect(await withFiles.retryFileCleanup({ tenantId: 'tenant-a', id, now: NOW })).toEqual({
+      outcome: 'INVALID',
+      field: 'status',
+    });
+    await withFiles.complete(completeInput(id));
+    // The real adapter completes the request inside the erasure transaction; the mock does not.
+    repo.rows.get(id)!.status = 'COMPLETED';
+    purge.mockClear();
+    const retried = await withFiles.retryFileCleanup({ tenantId: 'tenant-a', id, now: NOW });
+    expect(purge).toHaveBeenCalledWith('tenant-a', id, NOW);
+    expect(retried).toEqual({
+      outcome: 'OK',
+      deleted: 2,
+      checklist: {
+        storedLeadFiles: 0,
+        storedEmailAttachments: 0,
+        storedChatAttachments: 0,
+        storedTicketAttachments: 0,
+      },
+    });
+    // Another firm's request is not found; a service with no cleanup says so.
+    expect(await withFiles.retryFileCleanup({ tenantId: 'tenant-b', id, now: NOW })).toEqual({
+      outcome: 'NOT_FOUND',
+    });
+    expect(await service.retryFileCleanup({ tenantId: 'tenant-a', id, now: NOW })).toEqual({
+      outcome: 'INVALID',
+      field: 'storage',
+    });
+  });
+
+  it('lists what each completed erasure still has, and says so when it cannot know', async () => {
+    const left = { r1: { queued: 1, keptShared: 2, keptUnmanaged: 1, deleted: 3 } };
+    const leftFor = vi.fn().mockResolvedValue(left);
+    const { withFiles } = await erasureWith({ leftFor });
+    expect(await withFiles.storedFilesLeft('tenant-a', ['r1'])).toEqual(left);
+    expect(await withFiles.storedFilesLeft('tenant-a', [])).toEqual({});
+    // Unknown is null, never an empty answer the list could read as "all deleted".
+    leftFor.mockRejectedValueOnce(new Error('db down'));
+    expect(await withFiles.storedFilesLeft('tenant-a', ['r1'])).toBeNull();
+    expect(await service.storedFilesLeft('tenant-a', ['r1'])).toBeNull();
+  });
+
+  it('shows where kept files are, only for a completed erasure and only for 30 days', async () => {
+    const files = [{ id: 'k1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/a' }];
+    const keptFiles = vi.fn().mockResolvedValue(files);
+    const { withFiles, id } = await erasureWith({ keptFiles });
+    const input = { tenantId: 'tenant-a', id, now: NOW };
+    // Still open: nothing to show.
+    expect(await withFiles.keptFiles(input)).toEqual({ outcome: 'INVALID', field: 'status' });
+    repo.rows.get(id)!.status = 'COMPLETED';
+    repo.rows.get(id)!.completedAt = NOW;
+    expect(await withFiles.keptFiles(input)).toEqual({ outcome: 'OK', files });
+    // The 29th day still shows; from the 30th day on the list is empty, whatever the database holds.
+    const day = 86_400_000;
+    expect(
+      await withFiles.keptFiles({ ...input, now: new Date(NOW.getTime() + 29 * day) })
+    ).toEqual({ outcome: 'OK', files });
+    keptFiles.mockClear();
+    expect(
+      await withFiles.keptFiles({ ...input, now: new Date(NOW.getTime() + 30 * day) })
+    ).toEqual({ outcome: 'OK', files: [] });
+    expect(keptFiles).not.toHaveBeenCalled();
+    // Another firm's request is not found; a service with no cleanup says so.
+    expect(await withFiles.keptFiles({ ...input, tenantId: 'tenant-b' })).toEqual({
+      outcome: 'NOT_FOUND',
+    });
+    expect(await service.keptFiles(input)).toEqual({ outcome: 'INVALID', field: 'storage' });
+  });
+
+  it('clears kept locations 30 days after completion, never throws', async () => {
+    const expireLocators = vi.fn().mockResolvedValue(3);
+    const { withFiles } = await erasureWith({ expireLocators });
+    await withFiles.expireKeptLocations('tenant-a', NOW);
+    expect(expireLocators).toHaveBeenCalledWith(
+      'tenant-a',
+      new Date(NOW.getTime() - 30 * 86_400_000)
+    );
+    expireLocators.mockRejectedValueOnce(new Error('db down'));
+    await expect(withFiles.expireKeptLocations('tenant-a', NOW)).resolves.toBeUndefined();
+    await expect(service.expireKeptLocations('tenant-a', NOW)).resolves.toBeUndefined();
+  });
+});

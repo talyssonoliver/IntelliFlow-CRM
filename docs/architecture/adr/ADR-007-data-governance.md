@@ -636,8 +636,8 @@ so a double click or two admins cannot run it twice. It anonymises in place:
 - **Booking fields.** The booker name, email, answers and consent fields on
   appointments are cleared. The slot stays.
 - **Derived AI data** (scores and lead, contact and entity insights) is deleted.
-- **Lead file rows** lose their name. The storage locator stays so the stored
-  object can be found and deleted by hand.
+- **Lead file rows** lose their name and their storage locator; the object is
+  queued for deletion (below).
 - **Communications (IFC-316)** in the same transaction
   (`subject-communications.ts`). Email records: subject and body replaced, and
   the person's address replaced in From, To, CC and BCC (other addresses kept,
@@ -645,13 +645,42 @@ so a double click or two admins cannot run it twice. It anonymises in place:
   feedback, notifications to or about the person and calendar events lose their
   text and the person's name and address; staff names stay. Auto-response and
   reply drafts, ticket AI insights and experiment assignments are deleted. Email
-  attachment rows lose their name and keep their storage locator; a ticket
-  attachment's inline content URL is cleared. Bounce reports naming the person's
-  address lose it (a stand-in address per row keeps the idempotency key); reply
-  drafts are matched by contact or lead.
-- **Left on a counted checklist.** Deals and tasks (Q23) and stored files: lead
-  files and email and chat attachments, whose objects are deleted from storage
-  by hand until a storage cleanup job exists. Legal holds: no hold register
+  attachment, ticket attachment and chat message rows lose their name or
+  attachment list and their storage locator; the objects are queued for deletion
+  (below). Bounce reports naming the person's address lose it (a stand-in
+  address per row keeps the idempotency key); reply drafts are matched by
+  contact or lead.
+- **Stored files (IFC-316).** A storage delete cannot join the database
+  transaction, so the erasure transaction writes one queue row per object
+  (`dsar_stored_objects`, `PENDING`) and takes the locator off the lead file,
+  email attachment, ticket attachment and chat message rows; it commits with the
+  erasure. After the commit `ErasedFilesCleanupService` deletes the objects with
+  bounded retries (three passes over the failures, growing pauses) through
+  `StoredObjectDeletionPort` (`SupabaseStorageAdapter`). A deleted row becomes
+  `DELETED` and loses its locator; a failed one stays `PENDING` with an attempt
+  count and an error code, so it survives a restart and an admin's **Retry file
+  deletion** runs only what is left (idempotent). The adapter deletes only a
+  path under `<tenantId>/` in the one bucket the CRM writes files to (email
+  attachments, `EMAIL_ATTACHMENTS_BUCKET`; lead, chat and ticket files have no
+  upload path, so they are kept as unmanaged until one registers its bucket),
+  and only an object no retained record still uses (decided on the full bucket
+  and path, under a transaction advisory lock on the object, so two erasures
+  sharing a file cannot both keep it). Anything else is queued `KEPT` (reason
+  `SHARED_KEPT` or `UNMANAGED`): never sent to storage, read-only and resolved,
+  with no delete or confirm action. A shared file stores no locator. An
+  UNMANAGED file keeps its location on the erasure record so an administrator
+  can find it (read-only, administrators only); that location is cleared exactly
+  30 days after the erasure completes (never shown after, and removed from the
+  database by an hourly job in the combined worker, with the privacy requests
+  page as a fallback). Other people's data is not erased; only the erased
+  person's link to it is removed. Failed deletes are retried least-tried first,
+  so a stuck object cannot starve the rest. A request with no queue rows (an
+  erasure from before the queue) is shown without any claim about its files. The
+  cleanup never fails the erasure.
+- **Left on a counted checklist.** Deals and tasks (Q23) and, per source, the
+  stored files the CRM owns and has not yet deleted (failed): the result and the
+  request list count exactly what remains, 0 when all are gone. Kept files are
+  shown apart as resolved, with their reason. Legal holds: no hold register
   exists yet, so the admin's no-hold confirmation is the check.
 - **Audit logs** keep counts and the admin id, never erased values. The audit
   row is awaited.

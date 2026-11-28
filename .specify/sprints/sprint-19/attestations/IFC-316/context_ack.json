@@ -1,0 +1,36 @@
+{
+  "task_id": "IFC-316",
+  "title": "Automate erasure of communications left on the PG-203 erasure checklist",
+  "sprint": 19,
+  "acknowledged_by": "Claude Code (claude-sonnet-5-5), pg-208 lane",
+  "acknowledged_at": "2026-11-27T18:00:00Z",
+  "files_read": [
+    "packages/adapters/src/repositories/PrismaSubjectDataRepository.ts",
+    "packages/adapters/src/repositories/subject-communications.ts",
+    "packages/adapters/src/repositories/subject-stored-files.ts",
+    "packages/adapters/src/repositories/PrismaStoredObjectRepository.ts",
+    "packages/application/src/ports/repositories/SubjectDataPort.ts",
+    "packages/application/src/ports/repositories/StoredObjectOutboxPort.ts",
+    "packages/application/src/ports/external/StorageServicePort.ts",
+    "packages/application/src/services/DataSubjectRequestService.ts",
+    "packages/application/src/services/ErasedFilesCleanupService.ts",
+    "packages/domain/src/legal/privacy/stored-object.ts",
+    "packages/adapters/src/storage/SupabaseStorageAdapter.ts",
+    "apps/api/src/modules/privacy/privacy-admin.router.ts",
+    "apps/web/src/app/settings/privacy-requests/PrivacyRequestsContent.tsx",
+    "packages/db/prisma/schema.prisma",
+    "packages/db/prisma/migrations/20261127110000_dsar_stored_objects/migration.sql",
+    "docs/compliance-and-governance/data-governance/dsar-process.md",
+    "docs/architecture/adr/ADR-007-data-governance.md"
+  ],
+  "invariants_acknowledged": [
+    "ERASURE SCOPE: one person in one firm, matched by dsar_normalise_email; every communication row found by the lead/contact ids or by the exact address (each To/CC/BCC entry compared on its own). Delivered in #1361.",
+    "ONE TRANSACTION: communications are anonymised or deleted inside the existing erasure transaction, after the request row and the address lock; a failure rolls everything back, including the stored-file queue.",
+    "STORAGE CANNOT JOIN THE TRANSACTION: the erasure transaction writes one dsar_stored_objects row per stored object (PENDING) and takes the locator off the lead file, email attachment, ticket attachment and chat message rows; it commits with the erasure. The objects are deleted after the commit, so a crash cannot lose one.",
+    "BOUNDED RETRIES, RECORDED ON THE REQUEST: up to three passes over the objects that failed, with growing pauses; each failure raises the row's attempts and stores an error code (never a message). A failed object stays PENDING with its locator, and the request list shows it. Retry file deletion touches only what is still queued (idempotent); pending objects are tried least-tried first so failures cannot starve the rest.",
+    "TENANT-SCOPED DELETES, OWNED FILES ONLY: the CRM deletes an object only if its path is under <tenantId>/ with no traversal, escape or backslash (checked on the raw locator, before URL normalisation) in the only bucket it writes files to today, email-attachments (EMAIL_ATTACHMENTS_BUCKET), and no retained record still uses it (decided on the full bucket and path, under a transaction advisory lock on the object, so two erasures sharing a file cannot both keep it). Nothing uploads lead, chat or ticket files to storage, so those locators are kept as UNMANAGED; a ticket's inline data: URL is no object and is cleared. A future upload path must register its bucket. The storage adapter re-checks every object and refuses the rest. Every other file is KEPT, read-only and resolved, with reason SHARED_KEPT or UNMANAGED: never sent to storage, no delete or confirm action; a shared file stores no locator, an UNMANAGED one keeps its location read-only for administrators, cleared exactly 30 days after the erasure completes by an hourly, idempotent job in the combined worker (clearing only rows whose erasure completed more than 30 days ago; the privacy requests page is a fallback). Other people's data is not erased; only the erased person's link is removed.",
+    "THE CHECKLIST SHOWS ONLY WHAT REMAINS: deals and tasks (owner ruling Q23) and, per source, the stored files the CRM owns and has not deleted yet (failed). Kept files are resolved and shown apart by reason. A request with no queue rows (an erasure from before the queue) or an unreadable count shows no claim, never 'deleted'. A location that is not an object (empty, inline data: URL, the app's own download route) is cleared.",
+    "KEPT: deals and tasks, staff names and avatars, dates and statuses, audit rows (counts and ids only).",
+    "LEGAL HOLDS: no hold register exists; the admin's no-hold confirmation remains the check."
+  ]
+}

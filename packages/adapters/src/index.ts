@@ -12,6 +12,7 @@ export * from './common';
 // Storage Adapters
 export * from './storage/SupabaseStorageAdapter';
 export * from './storage/InMemoryStorageAdapter';
+export * from './storage/stored-object-config'; // IFC-316
 
 // Whole-workspace data export (agreement clause 5)
 export * from './workspace-export';

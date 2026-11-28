@@ -4,18 +4,24 @@
  * Seeds one person with mail (as one of several recipients), a ticket with its activity and an
  * attachment, a chat, feedback, a notification, drafts and a calendar event, and another person
  * in the same firm. After the erasure, the person's text, name and address are gone from every
- * row, other people's addresses and rows are untouched, and the checklist lists only deals,
- * tasks and stored files.
+ * row, other people's addresses and rows are untouched, and the stored files (lead files, email,
+ * chat and ticket attachments) are queued in the same transaction, deleted from storage after it
+ * commits, with a failure recorded on the request until a retry deletes it.
  *
  * Skips cleanly (with a visible reason) when DATABASE_URL is not set.
  */
 
 import { randomBytes } from 'node:crypto';
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { PrismaDsarRepository } from '../../packages/adapters/src/repositories/PrismaDsarRepository';
 import { PrismaSubjectDataRepository } from '../../packages/adapters/src/repositories/PrismaSubjectDataRepository';
+import { PrismaStoredObjectRepository } from '../../packages/adapters/src/repositories/PrismaStoredObjectRepository';
+import { SupabaseStorageAdapter } from '../../packages/adapters/src/storage/SupabaseStorageAdapter';
+import { runKeptLocationsSweep } from '../../apps/api/src/modules/privacy/dsar-kept-locations-scheduler';
+import { ErasedFilesCleanupService } from '../../packages/application/src/services/ErasedFilesCleanupService';
+import type { StoredObjectDeletionPort } from '../../packages/application/src/ports/external/StorageServicePort';
 import { ensureMigrationSql } from './dsar-setup';
 
 const DB_URL = process.env.DATABASE_URL;
@@ -28,11 +34,19 @@ const ADMIN = `${RUN}_admin`;
 const SUBJECT = `${RUN}-ada@example.invalid`;
 const OTHER = `${RUN}-grace@example.invalid`;
 const HOUR = 3_600_000;
+/** Where this test's stored files live: a tenant path, or a URL the CRM cannot delete. */
+const STORAGE = {
+  storageHost: 'abc.supabase.example.invalid',
+  emailBucket: 'email-attachments',
+};
+const FOREIGN = 'https://files.example.invalid/ada-id.pdf';
+const SHARED = `${TENANT}/mail/shared-terms.pdf`;
 
 describeDb('IFC-316 erasure of communications (real DB)', () => {
   let prisma: any;
   let dbReady = false;
   let subjects: PrismaSubjectDataRepository;
+  let requestId = '';
   const seeded: Record<string, string> = {};
 
   beforeEach((ctx) => {
@@ -54,7 +68,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     await prisma.user.create({
       data: { id: ADMIN, tenantId: TENANT, email: `${ADMIN}@example.invalid`, role: 'ADMIN' },
     });
-    subjects = new PrismaSubjectDataRepository(prisma);
+    subjects = new PrismaSubjectDataRepository(prisma, () => STORAGE);
     await seed();
     dbReady = true;
   });
@@ -92,7 +106,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         fileName: 'ada-passport.pdf',
         fileSize: 10,
         fileType: 'application/pdf',
-        fileUrl: `${RUN}/mail/1`,
+        fileUrl: `${TENANT}/mail/1-ada-passport.pdf`,
       },
     });
     const otherMail = await prisma.emailRecord.create({
@@ -103,6 +117,27 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         fromEmail: OTHER,
         toEmail: OTHER,
       },
+    });
+    // One upload attached to both Ada's mail and Grace's: erasing Ada must not delete it.
+    await prisma.emailAttachment.createMany({
+      data: [
+        {
+          ...t,
+          emailId: mail.id,
+          fileName: 'terms.pdf',
+          fileSize: 5,
+          fileType: 'application/pdf',
+          fileUrl: SHARED,
+        },
+        {
+          ...t,
+          emailId: otherMail.id,
+          fileName: 'terms.pdf',
+          fileSize: 5,
+          fileType: 'application/pdf',
+          fileUrl: SHARED,
+        },
+      ],
     });
     const ticket = await prisma.ticket.create({
       data: {
@@ -149,8 +184,39 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         authorAvatar: 'https://avatars.example.invalid/sam.png',
       },
     });
+    // An inline data: URL (what the ticket API stores): no object behind it.
     await prisma.ticketAttachment.create({
-      data: { ...t, ticketId: ticket.id, name: 'ada-id.png', size: '1 KB', url: `${RUN}/t/1` },
+      data: {
+        ...t,
+        ticketId: ticket.id,
+        name: 'ada-id.png',
+        size: '1 KB',
+        url: 'data:image/png;base64,AAAA...',
+      },
+    });
+    await prisma.ticketAttachment.create({
+      data: {
+        ...t,
+        ticketId: ticket.id,
+        name: 'ada-scan.pdf',
+        size: '1 KB',
+        url: `${TENANT}/tickets/ada-scan.pdf`,
+      },
+    });
+    // Lead files: one in the CRM's bucket, one on a host the CRM cannot delete from, one under
+    // ANOTHER tenant's prefix (never deleted: it stays for the admin).
+    await prisma.leadFile.createMany({
+      data: [
+        {
+          ...t,
+          leadId: lead.id,
+          name: 'ada-cv.pdf',
+          size: '2 KB',
+          url: `${TENANT}/leads/ada-cv.pdf`,
+        },
+        { ...t, leadId: lead.id, name: 'ada-id.pdf', size: '2 KB', url: FOREIGN },
+        { ...t, leadId: lead.id, name: 'x.pdf', size: '2 KB', url: `${RUN}_b/leads/other.pdf` },
+      ],
     });
     const chat = await prisma.chatConversation.create({
       data: { ...t, contactName: 'Ada', contactEmail: SUBJECT, subject: 'Ada asks' },
@@ -162,6 +228,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         content: 'Ada here',
         senderType: 'contact',
         senderName: 'Ada',
+        attachments: [{ name: 'ada-photo.png', url: `${TENANT}/chat/ada-photo.png` }],
       },
     });
     await prisma.feedbackSurvey.create({
@@ -282,17 +349,22 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       contactReplyDrafts: 2,
       calendarEvents: 1,
     });
-    expect(preview.checklist).toMatchObject({
-      storedEmailAttachments: 1,
-      deals: 0,
-      tasks: 0,
-    });
+    // Nothing uploads lead, chat or ticket files to storage, so the only object the CRM owns and
+    // deletes is the email attachment. Kept, resolved and read-only, counted by reason: the
+    // upload another person's mail still uses (shared), and five files outside the CRM's storage
+    // (three lead files and the chat and ticket files). Only deals and tasks stay for the admin.
+    expect(preview.counts.storedFilesDeleted).toBe(1);
+    expect(preview.counts.storedFilesKeptShared).toBe(1);
+    expect(preview.counts.storedFilesKeptUnmanaged).toBe(5);
+    expect(preview.counts).not.toHaveProperty('storedFilesKept');
+    expect(preview.checklist).toEqual({ deals: 0, tasks: 0 });
   });
 
-  it('erases them in the same transaction and leaves only stored files, deals and tasks', async () => {
+  it('erases them in the same transaction and queues the stored files', async () => {
+    requestId = await verifiedErasure();
     const result = await subjects.erase({
       tenantId: TENANT,
-      requestId: await verifiedErasure(),
+      requestId,
       subjectEmail: SUBJECT,
       resolvedById: ADMIN,
       note: 'No hold applies',
@@ -302,18 +374,62 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     expect(result.outcome).toBe('ERASED');
     if (result.outcome !== 'ERASED') return;
     expect(result.result.counts).toMatchObject({ emailRecords: 1, tickets: 1, chats: 1 });
-    const remaining = Object.entries(result.result.checklist).filter(([, n]) => n > 0);
-    expect(remaining).toEqual([['storedEmailAttachments', 1]]);
-    // The result names the attachment row, so its stored object can still be found.
-    const attachment = await prisma.emailAttachment.findFirst({ where: { emailId: seeded.mail } });
-    expect(result.result.storedFiles).toEqual({
-      emailAttachmentIds: [attachment.id],
-      chatMessageIds: [],
-      leadFileIds: [],
+    // Until the cleanup has run every object still to delete counts as left, per source; kept
+    // files are resolved and not in it.
+    expect(result.result.counts).toMatchObject({
+      storedFilesKeptShared: 1,
+      storedFilesKeptUnmanaged: 5,
     });
+    expect(result.result.checklist).toEqual({
+      deals: 0,
+      tasks: 0,
+      storedLeadFiles: 0,
+      storedEmailAttachments: 1,
+      storedChatAttachments: 0,
+      storedTicketAttachments: 0,
+    });
+    // The queue committed with the erasure: the locators moved there from the rows.
+    const queued = await prisma.dsarStoredObject.findMany({
+      where: { tenantId: TENANT, requestId },
+    });
+    // Sorted here: the database's collation orders URLs and paths its own way.
+    const byKey = (row: unknown[]) => JSON.stringify(row);
+    expect(
+      queued
+        .map((q: any) => [q.source, q.state, q.bucket, q.locator, q.reason])
+        .sort((x: unknown[], y: unknown[]) => byKey(x).localeCompare(byKey(y)))
+    ).toEqual(
+      [
+        ['CHAT_ATTACHMENT', 'KEPT', null, `${TENANT}/chat/ada-photo.png`, 'UNMANAGED'],
+        [
+          'EMAIL_ATTACHMENT',
+          'PENDING',
+          'email-attachments',
+          `${TENANT}/mail/1-ada-passport.pdf`,
+          null,
+        ],
+        // Used by another person's retained mail: kept, with no location stored.
+        ['EMAIL_ATTACHMENT', 'KEPT', null, null, 'SHARED_KEPT'],
+        // Outside the CRM's storage (no CRM upload path writes these; another host, another
+        // firm's prefix): kept, no location.
+        ['LEAD_FILE', 'KEPT', null, `${TENANT}/leads/ada-cv.pdf`, 'UNMANAGED'],
+        ['LEAD_FILE', 'KEPT', null, FOREIGN, 'UNMANAGED'],
+        ['LEAD_FILE', 'KEPT', null, `${RUN}_b/leads/other.pdf`, 'UNMANAGED'],
+        ['TICKET_ATTACHMENT', 'KEPT', null, `${TENANT}/tickets/ada-scan.pdf`, 'UNMANAGED'],
+      ].sort((x, y) => byKey(x).localeCompare(byKey(y)))
+    );
+    const rowsWithLocator = await Promise.all([
+      prisma.leadFile.count({ where: { tenantId: TENANT, url: { not: null } } }),
+      prisma.emailAttachment.count({
+        where: { tenantId: TENANT, emailId: seeded.mail, fileUrl: { not: '' } },
+      }),
+      prisma.ticketAttachment.count({ where: { tenantId: TENANT, url: { not: null } } }),
+      prisma.chatMessage.count({ where: { tenantId: TENANT, attachments: { not: null } } }),
+    ]);
+    expect(rowsWithLocator).toEqual([0, 0, 0, 0]);
     await expect(
-      prisma.ticketAttachment.findFirst({ where: { ticketId: seeded.ticket } })
-    ).resolves.toMatchObject({ name: 'erased', url: null });
+      prisma.ticketAttachment.findMany({ where: { ticketId: seeded.ticket } })
+    ).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ name: 'erased' })]));
 
     const mail = await prisma.emailRecord.findUnique({ where: { id: seeded.mail } });
     expect(mail.subject).toBe('Erased email');
@@ -323,7 +439,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     expect(mail.fromEmail).toBe(OTHER);
     expect(mail.ccEmails).toBe(OTHER);
     const file = await prisma.emailAttachment.findFirst({ where: { emailId: seeded.mail } });
-    expect(file).toMatchObject({ fileName: 'erased', fileUrl: `${RUN}/mail/1` });
+    expect(file).toMatchObject({ fileName: 'erased', fileUrl: '' });
     await expect(
       prisma.emailRecord.findUnique({ where: { id: seeded.otherMail } })
     ).resolves.toMatchObject({ subject: 'Grace only', body: 'Not about Ada' });
@@ -364,5 +480,430 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     // Previewed again, nothing about the person is left to erase.
     const after = await subjects.previewErasure(TENANT, SUBJECT);
     expect(Object.values(after.counts).every((n) => n === 0)).toBe(true);
+  });
+
+  describe('after the erasure commits: deleting the stored objects', () => {
+    const outbox = () => new PrismaStoredObjectRepository(prisma);
+
+    /** Storage that records every path it is asked to delete; `failPath` fails that one. */
+    function storage(failPath: () => string | null) {
+      const calls: string[][] = [];
+      const port: StoredObjectDeletionPort = {
+        async deleteStoredObjects(_tenant, objects) {
+          calls.push(objects.map((o) => o.path));
+          const bad = failPath();
+          return {
+            failed: objects
+              .filter((o) => o.path === bad)
+              .map((o) => ({ id: o.id, code: 'STORAGE_ERROR' as const })),
+          };
+        },
+      };
+      return { port, calls };
+    }
+
+    const states = async () =>
+      (
+        await prisma.dsarStoredObject.findMany({
+          where: { tenantId: TENANT, requestId },
+          orderBy: [{ source: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+        })
+      ).map((q: any) => ({
+        source: q.source,
+        state: q.state,
+        attempts: q.attempts,
+        error: q.lastError,
+        locator: q.locator,
+      }));
+
+    it('records a failed delete on the request and keeps the object queued with its locator', async () => {
+      let bad: string | null = `${TENANT}/mail/1-ada-passport.pdf`;
+      const { port, calls } = storage(() => bad);
+      const cleanup = new ErasedFilesCleanupService(outbox(), port, {
+        attempts: 2,
+        sleep: async () => undefined,
+      });
+      const first = await cleanup.purge(TENANT, requestId, new Date());
+      // Only this tenant's objects went to storage; the other tenant's path and the foreign URL
+      // are kept and were never sent.
+      const sent = calls.flat();
+      expect(sent.every((path) => path.startsWith(`${TENANT}/`))).toBe(true);
+      expect(sent).not.toContain(FOREIGN);
+      expect(sent).not.toContain(`${RUN}_b/leads/other.pdf`);
+      // The upload another person's mail still uses was never sent to storage either.
+      expect(sent).not.toContain(SHARED);
+      // The one owned object failed on both passes: nothing was deleted yet.
+      expect(first.deleted).toBe(0);
+      // What remains is exactly what the checklist shows: the failed attachment. Kept files are
+      // resolved.
+      expect(first.remaining).toEqual({ storedEmailAttachments: 1 });
+      const failed = (await states()).find(
+        (s: any) => s.source === 'EMAIL_ATTACHMENT' && s.state === 'PENDING'
+      );
+      expect(failed).toMatchObject({
+        state: 'PENDING',
+        attempts: 2,
+        error: 'STORAGE_ERROR',
+        locator: `${TENANT}/mail/1-ada-passport.pdf`,
+      });
+
+      // The admin's list shows the request with what is left.
+      expect(await outbox().leftFor(TENANT, [requestId])).toEqual({
+        [requestId]: { queued: 1, keptShared: 1, keptUnmanaged: 5, deleted: 0 },
+      });
+
+      // Storage recovers: a retry deletes only what was still queued.
+      bad = null;
+      calls.length = 0;
+      const retried = await cleanup.purge(TENANT, requestId, new Date());
+      expect(calls).toEqual([[`${TENANT}/mail/1-ada-passport.pdf`]]);
+      expect(retried).toEqual({ deleted: 1, remaining: {} });
+      const done = await states();
+      expect(
+        done.filter((s: any) => s.state === 'DELETED').every((s: any) => s.locator === null)
+      ).toBe(true);
+      expect(done.filter((s: any) => s.state === 'DELETED')).toHaveLength(1);
+      // Only now is something deleted, so only now may it be said.
+      expect((await outbox().leftFor(TENANT, [requestId]))[requestId]).toMatchObject({
+        queued: 0,
+        deleted: 1,
+      });
+
+      // Running it again is safe: nothing is pending, nothing is sent.
+      calls.length = 0;
+      expect(await cleanup.purge(TENANT, requestId, new Date())).toEqual({
+        deleted: 0,
+        remaining: {},
+      });
+      expect(calls).toEqual([]);
+      // Grace's mail still has its attachment, untouched.
+      await expect(
+        prisma.emailAttachment.findFirst({ where: { emailId: seeded.otherMail } })
+      ).resolves.toMatchObject({ fileUrl: SHARED, fileName: 'terms.pdf' });
+    });
+
+    it('never reads or settles another tenant’s queue', async () => {
+      expect(await outbox().pending(`${TENANT}_x`, requestId, 10)).toEqual([]);
+      expect(await outbox().remaining(`${TENANT}_x`, requestId)).toEqual({});
+      await outbox().settle(`${TENANT}_x`, requestId, [{ id: 'nope', deleted: true }], new Date());
+      expect(await outbox().leftFor(`${TENANT}_x`, [requestId])).toEqual({});
+    });
+
+    it('makes no claim for a request that never queued a file', async () => {
+      expect(await outbox().leftFor(TENANT, ['a-request-from-before-the-queue'])).toEqual({});
+    });
+
+    it('the real storage adapter refuses an object outside the tenant, even if the queue holds one', async () => {
+      const remove = vi.fn(async () => ({ data: [], error: null }));
+      const adapter = new SupabaseStorageAdapter('http://localhost:54321', 'k');
+      (adapter as any).client = { storage: { from: () => ({ remove }) } };
+      await prisma.dsarStoredObject.create({
+        data: {
+          tenantId: TENANT,
+          requestId,
+          source: 'LEAD_FILE',
+          state: 'PENDING',
+          bucket: 'email-attachments',
+          locator: `${RUN}_b/leads/other.pdf`,
+        },
+      });
+      const result = await new ErasedFilesCleanupService(outbox(), adapter, {
+        sleep: async () => undefined,
+      }).purge(TENANT, requestId, new Date());
+      expect(remove).not.toHaveBeenCalled();
+      // Still queued (the adapter refused it): the only thing left on the checklist.
+      expect(result.remaining).toEqual({ storedLeadFiles: 1 });
+    });
+
+    it('kept files are read-only: a shared one has no location, an unmanaged one keeps its own, and the cleanup never touches them', async () => {
+      const kept = await prisma.dsarStoredObject.findMany({
+        where: { tenantId: TENANT, requestId, state: 'KEPT' },
+      });
+      expect(kept.map((k: any) => k.reason).sort()).toEqual([
+        'SHARED_KEPT',
+        'UNMANAGED',
+        'UNMANAGED',
+        'UNMANAGED',
+        'UNMANAGED',
+        'UNMANAGED',
+      ]);
+      expect(kept.every((k: any) => k.bucket === null)).toBe(true);
+      expect(kept.find((k: any) => k.reason === 'SHARED_KEPT').locator).toBeNull();
+      expect(
+        kept
+          .filter((k: any) => k.reason === 'UNMANAGED')
+          .map((k: any) => k.locator)
+          .sort()
+      ).toEqual(
+        [
+          `${TENANT}/chat/ada-photo.png`,
+          `${TENANT}/leads/ada-cv.pdf`,
+          FOREIGN,
+          `${RUN}_b/leads/other.pdf`,
+          `${TENANT}/tickets/ada-scan.pdf`,
+        ].sort()
+      );
+      // The admin's read lists only the unmanaged ones, with their locations, and no one can act on them.
+      const listed = await outbox().unmanaged(TENANT, requestId, 100);
+      expect(listed).toHaveLength(5);
+      expect(listed.map((l) => l.locator)).not.toContain(null);
+      expect(await outbox().unmanaged(`${TENANT}_x`, requestId, 100)).toEqual([]);
+      // Not pending, so never sent to storage; settling them changes nothing.
+      const pending = await outbox().pending(TENANT, requestId, 100);
+      expect(pending.map((o) => o.id)).not.toEqual(
+        expect.arrayContaining(kept.map((k: any) => k.id))
+      );
+      await outbox().settle(
+        TENANT,
+        requestId,
+        kept.map((k: any) => ({ id: k.id, deleted: true })),
+        new Date()
+      );
+      const after = await prisma.dsarStoredObject.count({
+        where: { tenantId: TENANT, requestId, state: 'KEPT' },
+      });
+      expect(after).toBe(6);
+    });
+
+    it('clears the kept locations 30 days after the erasure completes, and only then', async () => {
+      const day = 86_400_000;
+      const completed = (await prisma.dsarRequest.findUnique({ where: { id: requestId } }))
+        .completedAt;
+      // Day 29: nothing is cleared yet.
+      expect(
+        await outbox().expireLocators(
+          TENANT,
+          new Date(completed.getTime() - 29 * day + 29 * day - day)
+        )
+      ).toBe(0);
+      expect(await outbox().unmanaged(TENANT, requestId, 100)).toHaveLength(5);
+      // Another firm's expiry never touches this firm's rows.
+      expect(
+        await outbox().expireLocators(`${TENANT}_x`, new Date(completed.getTime() + 31 * day))
+      ).toBe(0);
+      expect(await outbox().unmanaged(TENANT, requestId, 100)).toHaveLength(5);
+      // Day 30 on: the five unmanaged locations are cleared; the shared row had none.
+      expect(await outbox().expireLocators(TENANT, new Date(completed.getTime() + 1))).toBe(5);
+      expect(await outbox().unmanaged(TENANT, requestId, 100)).toEqual([]);
+      // The rows and their counts stay (resolved), only the locations are gone; a second run is a no-op.
+      expect((await outbox().leftFor(TENANT, [requestId]))[requestId]).toMatchObject({
+        keptUnmanaged: 5,
+        keptShared: 1,
+      });
+      expect(await outbox().expireLocators(TENANT, new Date(completed.getTime() + 1))).toBe(0);
+    });
+
+    it('tries the least-tried objects first, so failures cannot starve the rest', async () => {
+      const stuck = await prisma.dsarStoredObject.create({
+        data: {
+          tenantId: TENANT,
+          requestId,
+          source: 'LEAD_FILE',
+          state: 'PENDING',
+          bucket: 'email-attachments',
+          locator: `${TENANT}/leads/stuck.pdf`,
+          attempts: 9,
+          createdAt: new Date(Date.now() - 86_400_000),
+        },
+      });
+      const fresh = await prisma.dsarStoredObject.create({
+        data: {
+          tenantId: TENANT,
+          requestId,
+          source: 'LEAD_FILE',
+          state: 'PENDING',
+          bucket: 'email-attachments',
+          locator: `${TENANT}/leads/new.pdf`,
+        },
+      });
+      const next = await outbox().pending(TENANT, requestId, 1);
+      expect(next.map((o) => o.id)).not.toContain(stuck.id);
+      await prisma.dsarStoredObject.deleteMany({ where: { id: { in: [stuck.id, fresh.id] } } });
+    });
+  });
+
+  it('two erasures that share an object cannot both keep it: exactly one queues the delete', async () => {
+    const tenant = `${RUN}_race`;
+    const admin = `${tenant}_admin`;
+    const mails = [`${RUN}-ann@example.invalid`, `${RUN}-bob@example.invalid`];
+    const path = `${tenant}/mail/shared-by-two.pdf`;
+    await prisma.tenant.create({ data: { id: tenant, name: 'Race Law', slug: tenant } });
+    try {
+      await prisma.user.create({
+        data: { id: admin, tenantId: tenant, email: `${admin}@example.invalid`, role: 'ADMIN' },
+      });
+      const requests: string[] = [];
+      for (const [i, address] of mails.entries()) {
+        const mail = await prisma.emailRecord.create({
+          data: { tenantId: tenant, subject: 's', body: 'b', fromEmail: address, toEmail: address },
+        });
+        await prisma.emailAttachment.create({
+          data: {
+            tenantId: tenant,
+            emailId: mail.id,
+            fileName: 'shared.pdf',
+            fileSize: 1,
+            fileType: 'application/pdf',
+            fileUrl: path,
+          },
+        });
+        const record = await new PrismaDsarRepository(prisma).createStaff({
+          tenantId: tenant,
+          type: 'ERASURE',
+          subjectEmail: address,
+          capEmailHash: String(i + 1).repeat(64),
+          details: null,
+          objectionScope: null,
+          identityMethod: 'IN_PERSON_ID',
+          identityNote: 'Passport checked at the front desk',
+          receivedAt: new Date(),
+          receivedOnReason: null,
+          verifiedAt: new Date(),
+          slaDeadline: new Date(Date.now() + 30 * 24 * HOUR),
+          createdById: admin,
+        });
+        requests.push(record.id);
+      }
+      const results = await Promise.all(
+        mails.map((address, i) =>
+          subjects.erase({
+            tenantId: tenant,
+            requestId: requests[i]!,
+            subjectEmail: address,
+            resolvedById: admin,
+            note: 'No hold applies',
+            now: new Date(),
+            clockBreached: false,
+          })
+        )
+      );
+      expect(results.map((r) => r.outcome)).toEqual(['ERASED', 'ERASED']);
+      const rows = await prisma.dsarStoredObject.findMany({ where: { tenantId: tenant } });
+      // Neither both PENDING (a delete queued while the other still uses it) nor both KEPT (the
+      // object orphaned once both links are gone): the erasure that removes the LAST reference
+      // queues the delete.
+      expect(rows.map((r: any) => r.state).sort()).toEqual(['KEPT', 'PENDING']);
+      expect(rows.find((r: any) => r.state === 'KEPT').reason).toBe('SHARED_KEPT');
+      expect(rows.find((r: any) => r.state === 'PENDING').locator).toBe(path);
+      expect(
+        await prisma.emailAttachment.count({ where: { tenantId: tenant, fileUrl: path } })
+      ).toBe(0);
+    } finally {
+      await prisma.tenant.deleteMany({ where: { id: tenant } });
+    }
+  });
+
+  it('the job clears only expired kept locations, across firms, and leaves the rest', async () => {
+    const day = 86_400_000;
+    const now = new Date();
+    const tenants = [`${RUN}_sweep1`, `${RUN}_sweep2`];
+    const made: Array<{ tenant: string; old: string; recent: string; open: string }> = [];
+    try {
+      for (const [t, tenant] of tenants.entries()) {
+        await prisma.tenant.create({ data: { id: tenant, name: `Sweep ${t}`, slug: tenant } });
+        const admin = `${tenant}_admin`;
+        await prisma.user.create({
+          data: { id: admin, tenantId: tenant, email: `${admin}@example.invalid`, role: 'ADMIN' },
+        });
+        const request = async (label: string, completedDaysAgo: number | null) => {
+          const record = await new PrismaDsarRepository(prisma).createStaff({
+            tenantId: tenant,
+            type: 'ERASURE',
+            subjectEmail: `${RUN}-${label}-${t}@example.invalid`,
+            capEmailHash: String(t + 1).repeat(64),
+            details: null,
+            objectionScope: null,
+            identityMethod: 'IN_PERSON_ID',
+            identityNote: 'Passport checked at the front desk',
+            receivedAt: new Date(),
+            receivedOnReason: null,
+            verifiedAt: new Date(),
+            slaDeadline: new Date(Date.now() + 30 * day),
+            createdById: admin,
+          });
+          if (completedDaysAgo !== null) {
+            await prisma.dsarRequest.update({
+              where: { id: record.id },
+              data: { completedAt: new Date(now.getTime() - completedDaysAgo * day) },
+            });
+          }
+          await prisma.dsarStoredObject.createMany({
+            data: [
+              {
+                tenantId: tenant,
+                requestId: record.id,
+                source: 'LEAD_FILE',
+                state: 'KEPT',
+                reason: 'UNMANAGED',
+                locator: `https://files.example.invalid/${label}-${t}.pdf`,
+              },
+              {
+                tenantId: tenant,
+                requestId: record.id,
+                source: 'EMAIL_ATTACHMENT',
+                state: 'KEPT',
+                reason: 'SHARED_KEPT',
+              },
+              {
+                tenantId: tenant,
+                requestId: record.id,
+                source: 'EMAIL_ATTACHMENT',
+                state: 'PENDING',
+                bucket: 'email-attachments',
+                locator: `${tenant}/mail/${label}.pdf`,
+              },
+            ],
+          });
+          return record.id;
+        };
+        made.push({
+          tenant,
+          old: await request('old', 31),
+          recent: await request('recent', 29),
+          open: await request('open', null),
+        });
+      }
+      const locatorOf = async (requestId: string) =>
+        (
+          await prisma.dsarStoredObject.findFirst({
+            where: { requestId, state: 'KEPT', reason: 'UNMANAGED' },
+          })
+        ).locator;
+
+      const first = await runKeptLocationsSweep(new PrismaStoredObjectRepository(prisma), now);
+      // Only the two expired ones, one per firm.
+      expect(first).toEqual({ cleared: 2 });
+      for (const m of made) {
+        expect(await locatorOf(m.old)).toBeNull();
+        // Younger than 30 days, and not completed at all: untouched.
+        expect(await locatorOf(m.recent)).toMatch(/^https:\/\/files\.example\.invalid\/recent-/);
+        expect(await locatorOf(m.open)).toMatch(/^https:\/\/files\.example\.invalid\/open-/);
+        // Rows still to delete are never touched, and an expired row stays counted (resolved).
+        const pending = await prisma.dsarStoredObject.count({
+          where: { tenantId: m.tenant, state: 'PENDING', locator: { not: null } },
+        });
+        expect(pending).toBe(3);
+        expect(
+          await prisma.dsarStoredObject.count({
+            where: { requestId: m.old, state: 'KEPT', reason: 'UNMANAGED' },
+          })
+        ).toBe(1);
+      }
+      // A second run finds nothing more.
+      expect(await runKeptLocationsSweep(new PrismaStoredObjectRepository(prisma), now)).toEqual({
+        cleared: 0,
+      });
+      // Thirty days later the recent ones expire too; the open request never does.
+      const later = new Date(now.getTime() + 2 * day);
+      expect(await runKeptLocationsSweep(new PrismaStoredObjectRepository(prisma), later)).toEqual({
+        cleared: 2,
+      });
+      for (const m of made) {
+        expect(await locatorOf(m.recent)).toBeNull();
+        expect(await locatorOf(m.open)).not.toBeNull();
+      }
+    } finally {
+      await prisma.tenant.deleteMany({ where: { id: { in: tenants } } });
+    }
   });
 });

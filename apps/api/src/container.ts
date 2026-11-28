@@ -35,6 +35,7 @@ import {
   PrismaDsarRepository,
   PrismaProcessingRestrictionRepository,
   PrismaSubjectDataRepository,
+  PrismaStoredObjectRepository,
   InMemoryEventBus,
   PrismaTransactionManager,
   MockAIService,
@@ -91,6 +92,7 @@ import {
   NotificationService,
   ConversationSearchService,
   DataSubjectRequestService,
+  ErasedFilesCleanupService,
 } from '@intelliflow/application';
 import {
   getAuditLogger,
@@ -356,6 +358,8 @@ const createAdapters = async (prismaClient: PrismaClient) => {
   const dsarRepository = new PrismaDsarRepository(prismaClient);
   const processingRestrictionRepository = new PrismaProcessingRestrictionRepository(prismaClient);
   const subjectDataRepository = new PrismaSubjectDataRepository(prismaClient);
+  // IFC-316: the queue of an erased person's stored files.
+  const storedObjectRepository = new PrismaStoredObjectRepository(prismaClient);
 
   // Storage & AV (IFC-094)
   const storageService = new SupabaseStorageAdapter(
@@ -513,6 +517,7 @@ const createAdapters = async (prismaClient: PrismaClient) => {
     dsarRepository,
     processingRestrictionRepository,
     subjectDataRepository,
+    storedObjectRepository,
     eventBus,
     transactionManager,
     aiService,
@@ -581,6 +586,11 @@ const createServices = async (prismaClient: PrismaClient) => {
   const dataSubjectRequestService = new DataSubjectRequestService({
     repo: adapters.dsarRepository,
     subjectData: adapters.subjectDataRepository,
+    // IFC-316: after an erasure commits, its stored files are deleted from storage.
+    erasedFiles: new ErasedFilesCleanupService(
+      adapters.storedObjectRepository,
+      adapters.storageService
+    ),
     restrictions: adapters.processingRestrictionRepository,
     notifications: createDsarEmailNotifier({
       sender: adapters.notificationService,

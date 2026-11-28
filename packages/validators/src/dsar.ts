@@ -236,6 +236,23 @@ export interface DsarRequestDto {
   resolutionNote: string | null;
   clockBreached: boolean;
   createdAt: string;
+  /**
+   * A completed erasure that queued stored files (IFC-316): how many are not deleted yet, and how
+   * many were kept (resolved, read-only) because another retained record still uses them or
+   * because they are outside the CRM's storage. Absent when unknown or never queued.
+   */
+  storedFilesLeft?: number;
+  storedFilesKeptShared?: number;
+  storedFilesKeptUnmanaged?: number;
+  /** Deleted from storage: "Stored files deleted" is said only when this is above 0. */
+  storedFilesDeleted?: number;
+}
+
+/** Where a file kept outside the CRM's storage is (IFC-316): read-only, administrators only. */
+export interface DsarKeptFileDto {
+  id: string;
+  source: 'LEAD_FILE' | 'EMAIL_ATTACHMENT' | 'CHAT_ATTACHMENT' | 'TICKET_ATTACHMENT';
+  locator: string;
 }
 
 export interface DsarErasureResultDto {

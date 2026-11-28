@@ -63,6 +63,11 @@ vi.mock('@intelliflow/adapters', () => ({
       return { name: 'subjectDataRepo' };
     }
   },
+  PrismaStoredObjectRepository: class {
+    constructor() {
+      return { name: 'storedObjectRepo' };
+    }
+  },
   PrismaLeadRepository: class {
     constructor() {
       return { name: 'leadRepo' };
@@ -328,6 +333,12 @@ vi.mock('@intelliflow/application', () => ({
       wiring.leadServiceArgs = args;
       return { name: 'leadService' };
     }
+  },
+  ErasedFilesCleanupService: class {
+    constructor(
+      public outbox: unknown,
+      public storage: unknown
+    ) {}
   },
   DataSubjectRequestService: class {
     constructor(deps: Record<string, unknown>) {
@@ -801,6 +812,12 @@ describe('Container', () => {
       expect(typeof (deps.notifications as { send: unknown }).send).toBe('function');
       expect(typeof (deps.tokens as { issue: unknown }).issue).toBe('function');
       expect((deps.appUrl as () => string)()).toMatch(/^https?:\/\//);
+    });
+
+    it('wires the stored-file cleanup to its queue and to storage (IFC-316)', () => {
+      const cleanup = wiring.dsarServiceDeps!.erasedFiles as { outbox: unknown; storage: unknown };
+      expect(cleanup.outbox).toEqual({ name: 'storedObjectRepo' });
+      expect(cleanup.storage).toBeDefined();
     });
 
     it('should have all security services defined', () => {

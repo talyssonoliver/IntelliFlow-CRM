@@ -4,8 +4,8 @@
  * the erasure transaction.
  *
  * What the erasure leaves is the checklist: deals and tasks (exported and kept, owner ruling
- * Q23) and stored files, whose objects live in storage and are deleted by hand. The rows keep
- * their storage locators so nobody loses track of the objects.
+ * Q23) and any stored file the CRM cannot delete. Stored files are queued and deleted by
+ * subject-stored-files.ts and the cleanup service.
  */
 import { Prisma, type PrismaClient } from '@intelliflow/db';
 import { ERASED_EMAIL_DOMAIN } from '@intelliflow/domain';
@@ -118,7 +118,7 @@ export async function addressIds(db: Db, tenantId: string, email: string): Promi
 }
 
 /** The ids of every communication row about the person, per table. */
-interface CommunicationIds {
+export interface CommunicationIds {
   emailRecords: string[];
   tickets: string[];
   chats: string[];
@@ -128,7 +128,7 @@ interface CommunicationIds {
   dealIds: string[];
 }
 
-async function communicationIds(
+export async function communicationIds(
   db: Db,
   tenantId: string,
   email: string,
@@ -191,57 +191,6 @@ export async function communicationCounts(
   };
 }
 
-/** The rows behind the stored files the erasure leaves, by id (ids carry no personal data). */
-export interface StoredFileIds {
-  emailAttachmentIds: string[];
-  chatMessageIds: string[];
-  leadFileIds: string[];
-}
-
-/**
- * What the erasure leaves for the admin: deals and tasks (Q23) and stored files, as counts, with
- * the ids of the stored-file rows. Read before the erasure: those rows are found through the
- * person's address, which it removes; the ids keep them findable (their storage locators stay).
- */
-export async function storedFiles(
-  db: Db,
-  tenantId: string,
-  email: string,
-  ids: SubjectIds
-): Promise<{ checklist: Record<string, number>; files: StoredFileIds }> {
-  const c = await communicationIds(db, tenantId, email, ids);
-  const idsOf = (rows: Array<{ id: string }>) => rows.map((r) => r.id);
-  const select = { id: true } as const;
-  const [deals, tasks, leadFiles, emailFiles, chatFiles] = await Promise.all([
-    db.opportunity.count({ where: { tenantId, contactId: { in: ids.contactIds } } }),
-    db.task.count({ where: subjectTaskWhere(tenantId, ids, c.dealIds) }),
-    db.leadFile.findMany({
-      where: { tenantId, leadId: { in: ids.leadIds }, url: { not: null } },
-      select,
-    }),
-    db.emailAttachment.findMany({ where: { tenantId, emailId: { in: c.emailRecords } }, select }),
-    db.chatMessage.findMany({
-      where: { tenantId, conversationId: { in: c.chats }, attachments: { not: Prisma.DbNull } },
-      select,
-    }),
-  ]);
-  const files = {
-    emailAttachmentIds: idsOf(emailFiles),
-    chatMessageIds: idsOf(chatFiles),
-    leadFileIds: idsOf(leadFiles),
-  };
-  return {
-    checklist: {
-      deals,
-      tasks,
-      storedLeadFiles: files.leadFileIds.length,
-      storedEmailAttachments: files.emailAttachmentIds.length,
-      storedChatAttachments: files.chatMessageIds.length,
-    },
-    files,
-  };
-}
-
 /** A comma-separated address list with the person's address replaced, order kept. */
 function withoutAddress(column: string, email: string): Prisma.Sql {
   const col = Prisma.raw(`"${column}"`);
@@ -260,7 +209,7 @@ async function eraseEmailRecords(tx: Tx, tenantId: string, email: string, ids: s
       "ccEmails" = ${withoutAddress('ccEmails', email)},
       "bccEmails" = ${withoutAddress('bccEmails', email)}
     WHERE "tenantId" = ${tenantId} AND id = ANY(${ids}::text[])`;
-  // The file's name goes; its storage locator stays, and the erasure result names the row.
+  // The file's name goes; its locator moves to the stored-file queue (subject-stored-files.ts).
   await tx.emailAttachment.updateMany({
     where: { tenantId, emailId: { in: ids } },
     data: { fileName: 'erased' },
@@ -305,11 +254,10 @@ async function eraseTickets(tx: Tx, tenantId: string, ids: string[], now: Date) 
     where: { tenantId, ticketId: { in: ids } },
     data: { title: 'Erased step' },
   });
-  // A ticket attachment's url is an inline data: URL holding the start of the file (no stored
-  // object exists), so it goes with the name.
+  // The name goes; a locator moves to the stored-file queue (subject-stored-files.ts).
   await tx.ticketAttachment.updateMany({
     where: { tenantId, ticketId: { in: ids } },
-    data: { name: 'erased', url: null },
+    data: { name: 'erased' },
   });
   await tx.ticketAIInsight.deleteMany({ where: { tenantId, ticketId: { in: ids } } });
   return tickets.count;
@@ -326,7 +274,7 @@ async function eraseChats(tx: Tx, tenantId: string, ids: string[], now: Date) {
       updatedAt: now,
     },
   });
-  // Attachments keep their locators for the stored-file checklist item.
+  // Attachments are queued for deletion with the stored files (subject-stored-files.ts).
   await tx.$executeRaw`
     UPDATE chat_messages SET content = ${ERASED_NOTE}, metadata = NULL,
       "senderName" = CASE WHEN lower(btrim("senderType")) = 'contact' THEN ${ERASED_NAME} ELSE "senderName" END

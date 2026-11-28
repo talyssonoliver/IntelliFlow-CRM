@@ -201,37 +201,108 @@ no legal hold register in the system, so this confirmation is the check.
 
 Everything below runs in **one database transaction**, after the request row is
 locked, so a double click or two admins cannot run it twice. If any step fails,
-nothing changes.
+nothing changes. The only thing that cannot join that transaction is deleting
+files from storage; it runs right after the commit (see Stored files).
 
 **Erased automatically** (anonymised in place, scoped to the firm and email):
 
-| Data                         | Result                                                                                                                                                                                                                                    |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Leads                        | Email becomes `erased-<row id>@erased.invalid`. Names, company, phone, location, qualification fields, UTM and referrer fields, tags and embedding are cleared, and the score is reset.                                                   |
-| Contacts                     | Same address rule. First and last name become `Erased`. Contact details, notes field, tags and embedding are cleared.                                                                                                                     |
-| Lead and contact notes       | Text replaced with a marker. Embedding and search vector cleared.                                                                                                                                                                         |
-| Lead and contact activities  | Title replaced, description and metadata cleared.                                                                                                                                                                                         |
-| Lead files                   | File name cleared. The storage location is kept so the stored object can be found and deleted by hand.                                                                                                                                    |
-| AI scores and insights       | Deleted: lead scores, lead and contact insights, and insights about the person's deals.                                                                                                                                                   |
-| Bookings made with the email | Booker name, email, answers and consent fields cleared. The slot stays in the firm's calendar.                                                                                                                                            |
-| Email records (IFC-316)      | Subject and body replaced. The person's address is replaced in From, To, CC and BCC; other recipients stay. Attachment names cleared, storage locations kept. A bounce report's recipient address is replaced and its diagnostic cleared. |
-| Tickets and chats            | Subject, description and every message's text replaced; the person's name and address removed. Staff names stay. Ticket AI insights deleted; attachment names and inline content cleared.                                                 |
-| Feedback, notifications      | Comments, follow-up notes, notification text and the person's address and phone cleared.                                                                                                                                                  |
-| Calendar events              | Title, description, location and attendees cleared.                                                                                                                                                                                       |
-| Drafts and experiments       | Auto-response drafts, reply drafts (to a contact or a lead) and experiment assignments deleted.                                                                                                                                           |
+| Data                         | Result                                                                                                                                                                                                                                                                            |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Leads                        | Email becomes `erased-<row id>@erased.invalid`. Names, company, phone, location, qualification fields, UTM and referrer fields, tags and embedding are cleared, and the score is reset.                                                                                           |
+| Contacts                     | Same address rule. First and last name become `Erased`. Contact details, notes field, tags and embedding are cleared.                                                                                                                                                             |
+| Lead and contact notes       | Text replaced with a marker. Embedding and search vector cleared.                                                                                                                                                                                                                 |
+| Lead and contact activities  | Title replaced, description and metadata cleared.                                                                                                                                                                                                                                 |
+| Lead files                   | File name cleared. The storage location moves to the request's stored-file queue (see Stored files), and the file is deleted from storage after the commit.                                                                                                                       |
+| AI scores and insights       | Deleted: lead scores, lead and contact insights, and insights about the person's deals.                                                                                                                                                                                           |
+| Bookings made with the email | Booker name, email, answers and consent fields cleared. The slot stays in the firm's calendar.                                                                                                                                                                                    |
+| Email records (IFC-316)      | Subject and body replaced. The person's address is replaced in From, To, CC and BCC; other recipients stay. Attachment names cleared; the stored attachments are queued and deleted after the commit. A bounce report's recipient address is replaced and its diagnostic cleared. |
+| Tickets and chats            | Subject, description and every message's text replaced; the person's name and address removed. Staff names stay. Ticket AI insights deleted; attachment names and inline content cleared, stored files queued for deletion.                                                       |
+| Feedback, notifications      | Comments, follow-up notes, notification text and the person's address and phone cleared.                                                                                                                                                                                          |
+| Calendar events              | Title, description, location and attendees cleared.                                                                                                                                                                                                                               |
+| Drafts and experiments       | Auto-response drafts, reply drafts (to a contact or a lead) and experiment assignments deleted.                                                                                                                                                                                   |
 
 Database triggers then stop AI-derived rows being written for an erased lead or
 contact, and stop an old edit from writing the erased address back.
 
-**Counted checklist** (kept, shown to the admin as counts, to be cleaned up by
-hand). Since IFC-316 it holds only:
+**Stored files (IFC-316).** Lead files, email attachments, chat attachments and
+ticket attachments are deleted from storage, in four steps:
+
+1. In the erasure transaction, one row per stored object is written to the
+   request's queue (`dsar_stored_objects`, state `PENDING`) and the location is
+   taken off the lead file, email attachment, ticket attachment and chat message
+   (a chat message's attachment list, which names the files, is cleared whole).
+   The queue commits with the erasure, so a crash after the commit loses
+   nothing.
+2. After the commit the objects are deleted, per bucket, with up to three passes
+   over the ones that failed and a growing pause between passes.
+3. A deleted object's queue row becomes `DELETED` and its location is cleared. A
+   failed one stays `PENDING` with its attempt count and an error code (never a
+   message), and is listed.
+4. The admin's request list shows "N stored files not deleted yet" with a
+   **Retry file deletion** button. A retry touches only what is still queued, so
+   it is safe to press again; with nothing queued it does nothing. The list says
+   nothing about an erasure from before the queue existed (it has no queue
+   rows), or when the count cannot be read: it never shows "deleted" without a
+   record.
+
+The CRM deletes only a file **it alone owns**: a path under `<firm id>/` (no
+`..`, escapes, backslashes or empty parts) in the one bucket the CRM writes
+files to today, the email-attachments bucket (`EMAIL_ATTACHMENTS_BUCKET`), or a
+URL of this project's own storage that names such a path, and that **no retained
+record still uses**. Whether a retained record uses it is decided on the full
+storage identity (bucket and path), under a transaction lock on that object, so
+two erasures that share a file cannot both keep it: the erasure that removes the
+last reference queues the delete.
+
+Nothing in the CRM uploads lead files, chat attachments or ticket attachments to
+storage today (a ticket attachment keeps only a short inline `data:` URL, which
+the erasure clears and does not treat as a stored object). So any locator on
+those rows is not a CRM object and is kept as unmanaged. **When a CRM upload
+path is added for any of them, it must register its bucket here** (the
+stored-object configuration), or its files will be kept, not deleted, on an
+erasure.
+
+Every other file is **kept, read-only and resolved**. It is never sent to
+storage and the request has no delete or confirm action on it. A shared file
+stores no location; a file outside the CRM's storage keeps its location, as
+described below. The request shows why, as a count per reason:
+
+- **Shared (`SHARED_KEPT`):** "N files kept because another record still uses
+  them". Another person's retained data (one upload attached to someone else's
+  mail) is not erased, and the erased person's link to it is removed: their own
+  lead file, attachment or chat row loses its location.
+- **Outside the CRM's storage (`UNMANAGED`):** "N files kept: outside the CRM's
+  storage, delete where stored". Another host or bucket, or another firm's path.
+  The CRM never touches it. The firm deletes it where it lives. So that the
+  admin can find it, the erasure record keeps the file's location (the original
+  record's own link to it is still removed). The request's **Where are they?**
+  button shows each file's source and location to administrators only,
+  read-only: no delete, confirm or mark-as-done action. **The locations are
+  cleared exactly 30 days after the erasure completes**: they are never shown
+  from that moment. A **job in the combined worker** (the same timers as the
+  compliance snapshots, ticking hourly so a restarted worker still reaches it;
+  `DSAR_KEPT_LOCATIONS_INTERVAL_MS`, default 1 hour, 0 turns it off) clears
+  every firm's expired locations from the database. It only ever clears a
+  location whose erasure completed more than 30 days ago. Opening the privacy
+  requests page clears that firm's expired ones as a fallback. The row and its
+  count stay (resolved); only the location goes. When a request kept more than
+  500 files the list shows the first 500 and says "Showing 500 of N": the rest
+  are not shown, and the rule is the same time-based one for all of them.
+
+A location that is not an object (empty, an inline `data:` URL, or the app's own
+download route) is simply cleared.
+
+**Counted checklist** (shown to the admin as counts, after the cleanup has run,
+so it lists only what remains; 0 when everything is deleted). It holds:
 
 - deals of the person's contacts (exported with their descriptions withheld; not
   erased, because the firm may need them for its own records, and the admin
   decides)
 - tasks linked to the person's leads, contacts or deals (same)
-- stored files: lead files, and email and chat attachments (the objects behind
-  the cleared rows, deleted from storage by hand)
+- stored files the CRM owns and has not deleted yet: objects whose delete failed
+  (retry), counted per source: lead files, email, chat and ticket attachments.
+  Kept files (shared or outside the CRM's storage) are not in this list: they
+  are resolved, and shown apart with their reason
 
 **Kept on purpose**: audit log entries (legal obligation). The erasure audit row
 holds counts and the admin id, never erased values.
@@ -391,14 +462,13 @@ track training. The previous training record was fabricated and was removed (see
 | Gap                                                                                                                                                                                                     | Issue or status     |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
 | A rejected restriction can survive on an address changed during the rejection (fails safe: stays restricted).                                                                                           | #1007               |
-| The erasure cleanup checklist is not stored. After the dialog closes, the admin loses the real counts.                                                                                                  | #1009               |
+| The stored-file part of the erasure checklist is stored on the request (IFC-316). Deals and tasks are still counted only in the dialog.                                                                 | #1009               |
 | AI-created tasks keep insight text about an erased person (tasks made before the erasure).                                                                                                              | #1010               |
 | A failed rejection, completion or extension email is not retried and the admin is not told.                                                                                                             | #1014               |
 | Conversations and messages carry no person key, so RAG, export and erasure cannot reach them.                                                                                                           | #1015               |
 | An access request completed at verification can later withhold data added before the download, with the wrong note.                                                                                     | #1020               |
 | AI search can return too few results when many matches are restricted (filtered after the row limit; fail-safe).                                                                                        | #1021               |
 | Email suppressions and bounce receipts are not in the export (bounce receipts of the person are anonymised by the erasure; suppressions are kept so a bounced address is never mailed again).           | #956                |
-| Erasure of communications (emails, tickets, chats, feedback, notifications, drafts) and stored files is manual.                                                                                         | IFC-316 (Sprint 19) |
 | No direct transfer to another controller (Article 20(2)). CSV export is built.                                                                                                                          | IFC-317 (Sprint 19) |
 | No Article 19 notice to recipients of erased, corrected or restricted data.                                                                                                                             | IFC-318 (Sprint 19) |
 | The firm's retention period and transfer safeguards are not stated by Aurora. The export links to the firm's privacy notice, or says the firm has not published one and the person may ask it directly. | By design           |

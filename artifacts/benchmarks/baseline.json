@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-27T16:41:25.334Z",
+  "timestamp": "2026-11-27T18:38:48.522Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1533,16 +1533,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 221,
-    "total_fields": 3310,
-    "total_indexes": 974,
-    "total_relations": 325,
+    "total_tables": 222,
+    "total_fields": 3326,
+    "total_indexes": 976,
+    "total_relations": 327,
     "tables_with_embeddings": 4,
     "enums": 86,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 198,
+        "fields": 199,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -1577,7 +1577,7 @@
       },
       {
         "name": "DsarRequest",
-        "fields": 39,
+        "fields": 40,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -2070,6 +2070,13 @@
         "fields": 14,
         "indexes": 4,
         "relations": 3,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DsarStoredObject",
+        "fields": 14,
+        "indexes": 2,
+        "relations": 2,
         "hasEmbedding": false
       },
       {

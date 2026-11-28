@@ -334,6 +334,7 @@ export const mockAdapters = {
   dsarRepository: mockDeep<any>(),
   processingRestrictionRepository: mockDeep<any>(),
   subjectDataRepository: mockDeep<any>(),
+  storedObjectRepository: mockDeep<any>(),
   quotaRepository: mockDeep<any>(),
   mailboxTransports: mockDeep<any>(),
 };

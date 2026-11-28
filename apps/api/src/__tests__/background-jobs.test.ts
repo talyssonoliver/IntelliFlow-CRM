@@ -30,6 +30,11 @@ const m = vi.hoisted(() => ({
   complianceSnapshotIntervalFromEnv: vi.fn(() => 555),
   runComplianceSnapshots: vi.fn().mockResolvedValue({ tenants: 0, failed: 0 }),
   createComplianceSnapshotDb: vi.fn().mockResolvedValue({ marker: 'compliance-db' }),
+  startKeptLocationsScheduler: vi.fn((_options: SchedulerOptions) => true),
+  stopKeptLocationsScheduler: vi.fn<() => Promise<void>>(async () => undefined),
+  keptLocationsIntervalFromEnv: vi.fn(() => 666),
+  runKeptLocationsSweep: vi.fn().mockResolvedValue({ cleared: 0 }),
+  createKeptLocationsStore: vi.fn().mockResolvedValue({ marker: 'kept-store' }),
   runInboxSync: vi.fn().mockResolvedValue({ mailboxesSynced: 0 }),
   createInboxSyncDeps: vi.fn().mockResolvedValue({ marker: 'sync-deps' }),
   startInboxSync: vi.fn((_options: SchedulerOptions) => true),
@@ -84,6 +89,13 @@ vi.mock('../modules/compliance/compliance-snapshot-scheduler', () => ({
   runComplianceSnapshots: m.runComplianceSnapshots,
   createComplianceSnapshotDb: m.createComplianceSnapshotDb,
 }));
+vi.mock('../modules/privacy/dsar-kept-locations-scheduler', () => ({
+  startKeptLocationsScheduler: m.startKeptLocationsScheduler,
+  stopKeptLocationsScheduler: m.stopKeptLocationsScheduler,
+  keptLocationsIntervalFromEnv: m.keptLocationsIntervalFromEnv,
+  runKeptLocationsSweep: m.runKeptLocationsSweep,
+  createKeptLocationsStore: m.createKeptLocationsStore,
+}));
 vi.mock('../background-jobs-heartbeat', () => ({
   checkBackgroundJobsHeartbeat: m.checkBackgroundJobsHeartbeat,
   closeHeartbeatStore: m.closeHeartbeatStore,
@@ -126,6 +138,11 @@ beforeEach(() => {
   m.complianceSnapshotIntervalFromEnv.mockReturnValue(555);
   m.runComplianceSnapshots.mockResolvedValue({ tenants: 0, failed: 0 });
   m.createComplianceSnapshotDb.mockResolvedValue({ marker: 'compliance-db' });
+  m.startKeptLocationsScheduler.mockReturnValue(true);
+  m.stopKeptLocationsScheduler.mockResolvedValue(undefined);
+  m.keptLocationsIntervalFromEnv.mockReturnValue(666);
+  m.runKeptLocationsSweep.mockResolvedValue({ cleared: 0 });
+  m.createKeptLocationsStore.mockResolvedValue({ marker: 'kept-store' });
   m.runInboxSync.mockResolvedValue({ mailboxesSynced: 0 });
   m.runCalendarSyncTick.mockResolvedValue(undefined);
   m.calendarSyncEnabled.mockReturnValue(true);
@@ -171,6 +188,7 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
       inboxSync: true,
       dsarSla: true,
       complianceSnapshot: true,
+      keptLocations: true,
     });
     expect(m.approvalSweepIntervalFromEnv).toHaveBeenCalledWith(env);
     expect(m.bounceScanIntervalFromEnv).toHaveBeenCalledWith(env);
@@ -187,7 +205,24 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
       inboxSync: true,
       dsarSla: true,
       complianceSnapshot: true,
+      keptLocations: true,
     });
+  });
+
+  // IFC-316: the daily clearing of kept file locations.
+  it('starts the kept-locations clearing with its env interval; a run builds the store and sweeps', async () => {
+    const env = { MARK: 'k' } as NodeJS.ProcessEnv;
+    startBackgroundJobs({ env, ready: async () => undefined });
+    expect(m.keptLocationsIntervalFromEnv).toHaveBeenCalledWith(env);
+    const options = m.startKeptLocationsScheduler.mock.calls[0]![0] as SchedulerOptions;
+    expect(options.intervalMs).toBe(666);
+    await options.run();
+    expect(m.runKeptLocationsSweep).toHaveBeenCalledWith({ marker: 'kept-store' });
+  });
+
+  it('stops the kept-locations clearing with the other timers', async () => {
+    await stopBackgroundJobs();
+    expect(m.stopKeptLocationsScheduler).toHaveBeenCalled();
   });
 
   // PG-194: the daily compliance snapshots start with their env interval and run against the db.

@@ -4,7 +4,6 @@ import {
   ERASED_NOTE,
   communicationCounts,
   eraseCommunications,
-  storedFiles,
 } from '../subject-communications';
 
 const TABLES = (
@@ -54,10 +53,9 @@ describe('eraseCommunications (IFC-316)', () => {
       where: { tenantId: 't1', contactId: { in: ['c1'] } },
       data: { title: 'Erased event', description: null, location: null },
     });
-    // Its url is inline file content, not a locator, so it goes too.
+    // Its locator moves to the stored-file queue (subject-stored-files.ts), not erased here.
     expect(tx.ticketAttachment.updateMany.mock.calls[0][0].data).toEqual({
       name: 'erased',
-      url: null,
     });
     expect(tx.ticketAIInsight.deleteMany).toHaveBeenCalled();
   });
@@ -116,31 +114,5 @@ describe('what the erasure covers and leaves', () => {
   it('counts the communications it erases', async () => {
     const counts = await communicationCounts(db({ ticket: ['k1', 'k2'] }) as never, 't1', 'a', IDS);
     expect(counts).toMatchObject({ tickets: 2, emailRecords: 0, chats: 0 });
-  });
-
-  it('names the stored-file rows it leaves, by id', async () => {
-    const { checklist, files } = await storedFiles(
-      db({ emailAttachment: ['m1', 'm2'], chatMessage: ['h1'] }) as never,
-      't1',
-      'a',
-      IDS
-    );
-    expect(files).toEqual({
-      emailAttachmentIds: ['m1', 'm2'],
-      chatMessageIds: ['h1'],
-      leadFileIds: [],
-    });
-    expect(checklist).toMatchObject({ storedEmailAttachments: 2, storedChatAttachments: 1 });
-  });
-
-  it('leaves only deals, tasks and stored files on the checklist', async () => {
-    const { checklist } = await storedFiles(db() as never, 't1', 'a', IDS);
-    expect(Object.keys(checklist).sort()).toEqual([
-      'deals',
-      'storedChatAttachments',
-      'storedEmailAttachments',
-      'storedLeadFiles',
-      'tasks',
-    ]);
   });
 });

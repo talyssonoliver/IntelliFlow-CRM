@@ -1,7 +1,13 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { randomUUID } from 'node:crypto';
-import type { EmailAttachmentStoragePort, StorageServicePort } from '@intelliflow/application';
-import { isAttachmentPathInTenant } from '@intelliflow/domain';
+import type {
+  EmailAttachmentStoragePort,
+  StorageServicePort,
+  StoredObjectDeleteFailure,
+  StoredObjectDeletionPort,
+} from '@intelliflow/application';
+import { isAttachmentPathInTenant, isManagedRef } from '@intelliflow/domain';
+import { storedObjectConfigFromEnv } from './stored-object-config';
 
 /**
  * Supabase Storage Adapter
@@ -9,7 +15,9 @@ import { isAttachmentPathInTenant } from '@intelliflow/domain';
  * Implements file storage using Supabase Storage (S3-compatible).
  * Follows the quarantine-then-promote pattern for antivirus scanning.
  */
-export class SupabaseStorageAdapter implements StorageServicePort, EmailAttachmentStoragePort {
+export class SupabaseStorageAdapter
+  implements StorageServicePort, EmailAttachmentStoragePort, StoredObjectDeletionPort
+{
   private readonly client: SupabaseClient;
   private readonly quarantineBucket = 'case-documents-quarantine';
   private readonly primaryBucket = 'case-documents';
@@ -151,6 +159,39 @@ export class SupabaseStorageAdapter implements StorageServicePort, EmailAttachme
       .createSignedUrl(storagePath, expiresInSeconds);
     if (error || !data) throw new Error('Email attachment link failed');
     return data.signedUrl;
+  }
+
+  /**
+   * IFC-316: deletes an erased person's stored objects, per bucket. An object is deleted only if
+   * it is under `<tenantId>/` (no traversal) in a bucket the CRM owns; anything else is
+   * refused and never sent to storage. A path already gone is not an error. A storage failure is
+   * returned, not thrown, so the caller can keep the object queued.
+   */
+  async deleteStoredObjects(
+    tenantId: string,
+    objects: ReadonlyArray<{ id: string; bucket: string; path: string }>
+  ): Promise<{ failed: Array<{ id: string; code: StoredObjectDeleteFailure }> }> {
+    const config = storedObjectConfigFromEnv();
+    const failed: Array<{ id: string; code: StoredObjectDeleteFailure }> = [];
+    const byBucket = new Map<string, Array<{ id: string; path: string }>>();
+    for (const object of objects) {
+      if (!isManagedRef({ bucket: object.bucket, path: object.path }, tenantId, config)) {
+        failed.push({ id: object.id, code: 'REFUSED' });
+        continue;
+      }
+      const group = byBucket.get(object.bucket) ?? [];
+      group.push({ id: object.id, path: object.path });
+      byBucket.set(object.bucket, group);
+    }
+    for (const [bucket, group] of byBucket) {
+      const ok = await this.client.storage
+        .from(bucket)
+        .remove(group.map((g) => g.path))
+        .then(({ error }) => !error)
+        .catch(() => false);
+      if (!ok) failed.push(...group.map((g) => ({ id: g.id, code: 'STORAGE_ERROR' as const })));
+    }
+    return { failed };
   }
 
   /**

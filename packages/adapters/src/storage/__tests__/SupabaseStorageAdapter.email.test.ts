@@ -5,6 +5,7 @@ const storageMock = vi.hoisted(() => {
     upload: vi.fn(),
     download: vi.fn(),
     createSignedUrl: vi.fn(),
+    remove: vi.fn(),
   };
   return {
     bucketApi,
@@ -132,5 +133,71 @@ describe('SupabaseStorageAdapter — email attachments (PG-207)', () => {
     await expect(adapter.downloadEmailAttachment('t', 't/a.pdf')).rejects.toThrow(
       'Email attachment download failed'
     );
+  });
+});
+
+describe('SupabaseStorageAdapter — deleting an erased person’s objects (IFC-316)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    storageMock.bucketApi.remove.mockResolvedValue({ data: [], error: null });
+  });
+  const adapter = () => new SupabaseStorageAdapter('http://localhost:54321', 'k');
+
+  it('deletes in one call per bucket, only inside the tenant prefix and only from the email bucket', async () => {
+    const result = await adapter().deleteStoredObjects('tenant-a', [
+      { id: '1', bucket: 'email-attachments', path: 'tenant-a/1-a.pdf' },
+      { id: '2', bucket: 'email-attachments', path: 'tenant-a/b.png' },
+      { id: '3', bucket: 'email-attachments', path: 'tenant-a/c.png' },
+    ]);
+    expect(result).toEqual({ failed: [] });
+    expect(storageMock.from).toHaveBeenCalledWith('email-attachments');
+    expect(storageMock.bucketApi.remove).toHaveBeenCalledTimes(1);
+    expect(storageMock.bucketApi.remove).toHaveBeenCalledWith([
+      'tenant-a/1-a.pdf',
+      'tenant-a/b.png',
+      'tenant-a/c.png',
+    ]);
+  });
+
+  it('refuses, and never sends to storage, a path outside the tenant, a traversal or a foreign bucket', async () => {
+    const result = await adapter().deleteStoredObjects('tenant-a', [
+      { id: '1', bucket: 'email-attachments', path: 'tenant-b/x.pdf' },
+      { id: '2', bucket: 'email-attachments', path: 'tenant-a/../tenant-b/x.pdf' },
+      { id: '3', bucket: 'email-attachments', path: 'tenant-a/%2e%2e/x.pdf' },
+      { id: '4', bucket: 'case-documents', path: 'tenant-a/x.pdf' },
+      // A bucket that no CRM upload path writes to is not ours either.
+      { id: '6', bucket: 'crm-files', path: 'tenant-a/x.pdf' },
+      { id: '5', bucket: 'email-attachments', path: 'tenant-a' },
+    ]);
+    expect(result.failed).toEqual(
+      ['1', '2', '3', '4', '6', '5'].map((id) => ({ id, code: 'REFUSED' }))
+    );
+    expect(storageMock.bucketApi.remove).not.toHaveBeenCalled();
+  });
+
+  it('refuses the bad object only; the good ones in the same call are still deleted', async () => {
+    const result = await adapter().deleteStoredObjects('tenant-a', [
+      { id: '1', bucket: 'email-attachments', path: 'tenant-a/ok.pdf' },
+      { id: '2', bucket: 'email-attachments', path: 'tenant-b/no.pdf' },
+    ]);
+    expect(result.failed).toEqual([{ id: '2', code: 'REFUSED' }]);
+    expect(storageMock.bucketApi.remove).toHaveBeenCalledWith(['tenant-a/ok.pdf']);
+  });
+
+  it('returns a storage failure instead of throwing, whether it is an error or an exception', async () => {
+    storageMock.bucketApi.remove.mockResolvedValueOnce({ data: null, error: { message: 'x' } });
+    const objects = [{ id: '1', bucket: 'email-attachments', path: 'tenant-a/a.pdf' }];
+    expect(await adapter().deleteStoredObjects('tenant-a', objects)).toEqual({
+      failed: [{ id: '1', code: 'STORAGE_ERROR' }],
+    });
+    storageMock.bucketApi.remove.mockRejectedValueOnce(new Error('network'));
+    expect(await adapter().deleteStoredObjects('tenant-a', objects)).toEqual({
+      failed: [{ id: '1', code: 'STORAGE_ERROR' }],
+    });
+  });
+
+  it('does nothing for an empty list', async () => {
+    expect(await adapter().deleteStoredObjects('tenant-a', [])).toEqual({ failed: [] });
+    expect(storageMock.from).not.toHaveBeenCalled();
   });
 });

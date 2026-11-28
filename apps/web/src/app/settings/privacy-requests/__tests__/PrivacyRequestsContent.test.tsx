@@ -16,6 +16,7 @@ const h = vi.hoisted(() => ({
   list: { data: undefined as unknown, isLoading: false, isError: false, error: null as unknown },
   restrictions: { data: undefined as unknown },
   preview: { data: undefined as unknown },
+  kept: { data: undefined as unknown, error: null as unknown },
   mutations: {} as Record<string, { mutateAsync: ReturnType<typeof vi.fn>; isPending: boolean }>,
   invalidate: vi.fn(),
   toast: vi.fn(),
@@ -52,6 +53,8 @@ vi.mock('@/lib/trpc', () => {
           logRequest: m('logRequest'),
           liftRestriction: m('liftRestriction'),
           exportData: m('exportData'),
+          retryFileCleanup: m('retryFileCleanup'),
+          keptFiles: { useQuery: () => h.kept },
         },
       },
     },
@@ -97,6 +100,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.list = { data: [request()], isLoading: false, isError: false, error: null };
   h.restrictions = { data: [] };
+  h.kept = { data: undefined, error: null };
   h.preview = { data: { counts: { leads: 1, contacts: 1 }, checklist: { tickets: 2 } } };
   h.mutations = Object.fromEntries(
     [
@@ -109,6 +113,7 @@ beforeEach(() => {
       'logRequest',
       'liftRestriction',
       'exportData',
+      'retryFileCleanup',
     ].map((name) => [name, mutation()])
   );
 });
@@ -154,6 +159,193 @@ describe('PrivacyRequestsContent', () => {
       })
     );
     expect(h.toast).toHaveBeenCalledWith({ title: 'Data erased and the person told' });
+  });
+
+  it('says how many stored files are not deleted yet after an erasure (IFC-316)', async () => {
+    h.mutations.complete!.mutateAsync.mockResolvedValue({
+      erasure: {
+        counts: { leads: 1 },
+        checklist: { deals: 1, storedLeadFiles: 2, storedEmailAttachments: 1 },
+      },
+    });
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Complete: Erasure/ }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Note for the record'), {
+      target: { value: 'Checked with the partner' },
+    });
+    fireEvent.click(within(dialog).getByRole('checkbox'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Complete request' }));
+    await waitFor(() =>
+      expect(h.toast).toHaveBeenCalledWith({
+        title:
+          'Data erased and the person told. 3 stored files are not deleted yet; retry from the request.',
+      })
+    );
+  });
+
+  it('shows what a completed erasure still has in storage and retries the deletion', async () => {
+    h.list.data = [
+      request({
+        id: 'clhleft0000000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 2,
+      }),
+      request({
+        id: 'clhclean000000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 0,
+        storedFilesDeleted: 3,
+      }),
+      // An erasure from before the queue: nothing is claimed either way.
+      request({ id: 'clhlegacy00000000', status: 'COMPLETED' }),
+    ];
+    h.mutations.retryFileCleanup!.mutateAsync.mockResolvedValue({
+      deleted: 2,
+      checklist: { storedLeadFiles: 0 },
+    });
+    render(<PrivacyRequestsContent />);
+    expect(screen.getByText('2 stored files not deleted yet')).toBeTruthy();
+    expect(screen.getAllByText('Stored files deleted')).toHaveLength(1);
+    // Only the request with files the CRM can still delete offers the retry.
+    const retry = screen.getAllByRole('button', { name: /^Retry deleting stored files/ });
+    expect(retry).toHaveLength(1);
+    fireEvent.click(retry[0]!);
+    await waitFor(() =>
+      expect(h.mutations.retryFileCleanup!.mutateAsync).toHaveBeenCalledWith({
+        id: 'clhleft0000000000',
+      })
+    );
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith({ title: 'Stored files deleted' }));
+  });
+
+  it('says what was kept and why, read-only: no delete, confirm or retry action on kept files', () => {
+    h.list.data = [
+      request({
+        id: 'clhkept000000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 0,
+        storedFilesDeleted: 0,
+        storedFilesKeptShared: 2,
+        storedFilesKeptUnmanaged: 1,
+      }),
+    ];
+    render(<PrivacyRequestsContent />);
+    expect(screen.getByText('2 files kept because another record still uses them')).toBeTruthy();
+    expect(
+      screen.getByText("1 file kept: outside the CRM's storage, delete where stored")
+    ).toBeTruthy();
+    // Nothing was deleted, so it is never said to be: neutral text, and no action on kept files.
+    expect(screen.queryByText('Stored files deleted')).toBeNull();
+    expect(screen.getByText('No stored files to delete')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Retry deleting stored files/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /by hand|Mark as deleted/ })).toBeNull();
+  });
+
+  it('shows where the files kept outside the CRM are, read-only, with no action', async () => {
+    h.list.data = [
+      request({
+        id: 'clhkept000000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 0,
+        storedFilesDeleted: 0,
+        storedFilesKeptUnmanaged: 1,
+      }),
+    ];
+    h.kept = {
+      data: [{ id: 'k1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/a.pdf' }],
+      error: null,
+    };
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Show where the kept files are/ }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Lead file')).toBeTruthy();
+    expect(within(dialog).getByText('https://files.example.invalid/a.pdf')).toBeTruthy();
+    // Reference only: the one button closes the dialog; nothing deletes, confirms or marks.
+    expect(
+      within(dialog)
+        .getAllByRole('button')
+        .map((b) => b.textContent)
+    ).not.toContain('Mark as deleted');
+    expect(within(dialog).queryByRole('checkbox')).toBeNull();
+    expect(within(dialog).getByText(/removed 30 days after the erasure/)).toBeTruthy();
+  });
+
+  it('says honestly when it lists fewer files than were kept', async () => {
+    h.list.data = [
+      request({
+        id: 'clhkept000000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 0,
+        storedFilesKeptUnmanaged: 503,
+      }),
+    ];
+    h.kept = {
+      data: Array.from({ length: 500 }, (_, i) => ({
+        id: `k${i}`,
+        source: 'LEAD_FILE',
+        locator: `https://files.example.invalid/${i}.pdf`,
+      })),
+      error: null,
+    };
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Show where the kept files are/ }));
+    const dialog = await screen.findByRole('dialog');
+    expect(
+      within(dialog).getByText(/Showing 500 of 503 files. The other 3 are not shown here/)
+    ).toBeTruthy();
+    expect(
+      within(dialog).getByText(/removed 30 days after the erasure like the rest/)
+    ).toBeTruthy();
+  });
+
+  it('says there is nothing to show once the locations have expired', async () => {
+    h.list.data = [
+      request({
+        id: 'clhkept000000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 0,
+        storedFilesKeptUnmanaged: 1,
+      }),
+    ];
+    h.kept = { data: [], error: null };
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Show where the kept files are/ }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(/cleared 30 days after the erasure/)).toBeTruthy();
+  });
+
+  it('puts the files an erasure keeps under "Left to handle by hand", not under "This erases"', async () => {
+    h.preview = {
+      data: {
+        counts: {
+          leads: 1,
+          storedFilesDeleted: 1,
+          storedFilesKeptShared: 2,
+          storedFilesKeptUnmanaged: 3,
+        },
+        checklist: { deals: 1 },
+      },
+    };
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Complete: Erasure/ }));
+    const dialog = await screen.findByRole('dialog');
+    const erases = within(dialog).getByText('This erases, in one step:').nextElementSibling!;
+    expect(
+      within(erases as HTMLElement).getByText('Stored files deleted from storage: 1')
+    ).toBeTruthy();
+    expect(within(erases as HTMLElement).queryByText(/kept/i)).toBeNull();
+    const byHand = within(dialog).getByText('Left to handle by hand:').nextElementSibling!;
+    expect(
+      within(byHand as HTMLElement).getByText(
+        'Files kept because another record still uses them: 2'
+      )
+    ).toBeTruthy();
+    expect(
+      within(byHand as HTMLElement).getByText(
+        "Files kept: outside the CRM's storage, delete them where they are stored: 3"
+      )
+    ).toBeTruthy();
   });
 
   it('keeps a server refusal inside the dialog', async () => {

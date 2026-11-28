@@ -216,6 +216,7 @@ model Tenant {
   bookingAttempts           BookingAttempt[]          @ignore // PG-203
   dsarRequests              DsarRequest[]             @ignore // PG-203 DSAR
   processingRestrictions    ProcessingRestriction[]   @ignore // PG-203 DSAR
+  dsarStoredObjects         DsarStoredObject[]        @ignore // IFC-316
   reportSettings            ReportSettings[]          @ignore
   reportTemplates           ReportTemplate[]          @ignore
   reportScheduleTags        ReportScheduleTag[]       @ignore
@@ -2838,12 +2839,46 @@ model DsarRequest {
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 
+  storedObjects         DsarStoredObject[]
+
   @@unique([tenantId, id])
   @@index([tenantId, status, slaDeadline])
   @@index([tenantId, subjectEmail, createdAt])
   @@index([tenantId, ipHash, createdAt])
   @@index([capEmailHash, createdAt])
   @@map("dsar_requests")
+}
+
+/// IFC-316: a stored file of an erased person, queued by the erasure transaction so its object can
+/// be deleted after the commit. PENDING = delete it (the checklist while it is not done);
+/// KEPT = the CRM does not delete it, read-only and resolved: SHARED_KEPT (another retained record
+/// uses the object) or UNMANAGED (outside the CRM's own storage); DELETED = done.
+/// A SHARED_KEPT or DELETED row holds no locator; an UNMANAGED row keeps its location, read-only,
+/// until 30 days after the erasure completes.
+model DsarStoredObject {
+  id        String      @id @default(cuid())
+  tenantId  String
+  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  requestId String
+  request   DsarRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  /// LEAD_FILE | EMAIL_ATTACHMENT | CHAT_ATTACHMENT | TICKET_ATTACHMENT (CHECK)
+  source    String      @db.VarChar(20)
+  /// PENDING | KEPT | DELETED (CHECK)
+  state     String      @default("PENDING") @db.VarChar(10)
+  /// KEPT: SHARED_KEPT | UNMANAGED. Otherwise null (CHECK).
+  reason    String?     @db.VarChar(20)
+  bucket    String?     @db.VarChar(100)
+  /// The storage path while PENDING; the location of an UNMANAGED file until it is cleared;
+  /// null for SHARED_KEPT and DELETED.
+  locator   String?
+  attempts  Int         @default(0)
+  /// An error code only, never a message that could carry a name.
+  lastError String?     @db.VarChar(40)
+  createdAt DateTime    @default(now())
+  settledAt DateTime?
+
+  @@index([tenantId, requestId, state])
+  @@map("dsar_stored_objects")
 }
 
 /// One ACTIVE row per (tenantId, subjectEmail) (partial unique index WHERE "liftedAt" IS NULL, SQL-only).

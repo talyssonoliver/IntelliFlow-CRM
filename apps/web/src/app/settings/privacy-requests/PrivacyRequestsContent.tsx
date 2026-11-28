@@ -34,10 +34,17 @@ import {
   type ActionInput,
   type RequestAction,
 } from './components/RequestActionDialog';
+import { KeptFilesDialog } from './components/KeptFilesDialog';
 import { LogRequestDialog, TYPE_LABELS } from './components/LogRequestDialog';
 import { WorkspaceExportCard } from './components/WorkspaceExportCard';
 
 const OPEN_TITLE_ID = 'open-requests-title';
+
+/** What a completed erasure says about its stored files: "deleted" only when something was. */
+function storedFilesText(left: number, deleted: number): string {
+  if (left > 0) return `${left} stored ${left === 1 ? 'file' : 'files'} not deleted yet`;
+  return deleted > 0 ? 'Stored files deleted' : 'No stored files to delete';
+}
 // The server requires a reason of at least 10 characters to lift a restriction.
 const LIFT_NOTE_MIN = 10;
 
@@ -114,12 +121,19 @@ function RequestRow({
   request,
   onAction,
   onExport,
+  onRetryFiles,
+  onKeptFiles,
+  retrying,
 }: Readonly<{
   request: DsarRequestDto;
   onAction: (action: RequestAction, request: DsarRequestDto) => void;
   onExport: (request: DsarRequestDto) => void;
+  onRetryFiles: (request: DsarRequestDto) => void;
+  onKeptFiles: (request: DsarRequestDto) => void;
+  retrying: boolean;
 }>) {
   const isExport = request.type === 'ACCESS' || request.type === 'PORTABILITY';
+  const retryable = request.storedFilesLeft ?? 0;
   return (
     <li className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="space-y-1">
@@ -139,6 +153,21 @@ function RequestRow({
             </Badge>
           )}
           {request.clockBreached && <Badge variant="destructive">Answered late</Badge>}
+          {(request.storedFilesKeptShared ?? 0) > 0 && (
+            <Badge variant="outline">
+              {`${request.storedFilesKeptShared} ${request.storedFilesKeptShared === 1 ? 'file' : 'files'} kept because another record still uses ${request.storedFilesKeptShared === 1 ? 'it' : 'them'}`}
+            </Badge>
+          )}
+          {(request.storedFilesKeptUnmanaged ?? 0) > 0 && (
+            <Badge variant="outline">
+              {`${request.storedFilesKeptUnmanaged} ${request.storedFilesKeptUnmanaged === 1 ? 'file' : 'files'} kept: outside the CRM's storage, delete where stored`}
+            </Badge>
+          )}
+          {request.storedFilesLeft !== undefined && (
+            <Badge variant={request.storedFilesLeft > 0 ? 'destructive' : 'outline'}>
+              {storedFilesText(request.storedFilesLeft, request.storedFilesDeleted ?? 0)}
+            </Badge>
+          )}
         </div>
         {request.details && (
           <p className="max-w-prose whitespace-pre-wrap text-sm text-muted-foreground">
@@ -156,6 +185,29 @@ function RequestRow({
             aria-label={`Download data: ${TYPE_LABELS[request.type]} for ${request.subjectEmail}`}
           >
             Download data
+          </Button>
+        )}
+        {(request.storedFilesKeptUnmanaged ?? 0) > 0 && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onKeptFiles(request)}
+            aria-label={`Show where the kept files are: erasure for ${request.subjectEmail}`}
+          >
+            Where are they?
+          </Button>
+        )}
+        {retryable > 0 && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={retrying}
+            onClick={() => onRetryFiles(request)}
+            aria-label={`Retry deleting stored files: erasure for ${request.subjectEmail}`}
+          >
+            Retry file deletion
           </Button>
         )}
         {actionsFor(request).map((action) => (
@@ -222,6 +274,13 @@ export default function PrivacyRequestsContent() {
   const logRequest = trpc.privacy.admin.logRequest.useMutation({ onSuccess: refresh });
   const liftRestriction = trpc.privacy.admin.liftRestriction.useMutation({ onSuccess: refresh });
   const exportData = trpc.privacy.admin.exportData.useMutation();
+  const retryFiles = trpc.privacy.admin.retryFileCleanup.useMutation({ onSuccess: refresh });
+  // IFC-316: where the files kept outside the CRM's storage are. Read-only.
+  const [keptFor, setKeptFor] = useState<DsarRequestDto | null>(null);
+  const keptFiles = trpc.privacy.admin.keptFiles.useQuery(
+    { id: keptFor?.id ?? '' },
+    { enabled: keptFor !== null, retry: false }
+  );
 
   const pending =
     complete.isPending ||
@@ -255,7 +314,14 @@ export default function PrivacyRequestsContent() {
             note: input.note ?? '',
             ...input,
           });
-          done = result.erasure ? 'Data erased and the person told' : 'Request completed';
+          const left = Object.entries(result.erasure?.checklist ?? {})
+            .filter(([key]) => key.startsWith('stored'))
+            .reduce((sum, [, n]) => sum + n, 0);
+          const notDeleted =
+            left > 0 ? `. ${left} stored files are not deleted yet; retry from the request.` : '';
+          done = result.erasure
+            ? `Data erased and the person told${notDeleted}`
+            : 'Request completed';
           break;
         }
         case 'completeAccess':
@@ -294,6 +360,23 @@ export default function PrivacyRequestsContent() {
       setActive(null);
     } catch (error) {
       setActionError(errorMessage(error));
+    }
+  };
+
+  const runRetryFiles = async (request: DsarRequestDto) => {
+    try {
+      const result = await retryFiles.mutateAsync({ id: request.id });
+      const left = Object.values(result.checklist).reduce((sum, n) => sum + n, 0);
+      toast({
+        title: left === 0 ? 'Stored files deleted' : `${left} stored files are still not deleted`,
+        ...(left > 0 ? { description: 'Try again later, or delete what is left by hand.' } : {}),
+      });
+    } catch (error) {
+      toast({
+        title: 'Could not delete the stored files',
+        description: errorMessage(error),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -370,6 +453,9 @@ export default function PrivacyRequestsContent() {
               onExport={(row) => {
                 runExport(row).catch(() => undefined);
               }}
+              onRetryFiles={() => undefined}
+              onKeptFiles={() => undefined}
+              retrying={false}
             />
           ))}
         </ul>
@@ -446,6 +532,11 @@ export default function PrivacyRequestsContent() {
                   setActive({ action, request: row });
                 }}
                 onExport={() => undefined}
+                onRetryFiles={(row) => {
+                  runRetryFiles(row).catch(() => undefined);
+                }}
+                onKeptFiles={(row) => setKeptFor(row)}
+                retrying={retryFiles.isPending}
               />
             ))}
           </ul>
@@ -463,6 +554,14 @@ export default function PrivacyRequestsContent() {
         }}
         onClose={() => setActive(null)}
         onCloseAutoFocus={onDialogCloseAutoFocus}
+      />
+
+      <KeptFilesDialog
+        request={keptFor}
+        files={keptFiles.data ?? null}
+        total={keptFor?.storedFilesKeptUnmanaged ?? 0}
+        error={keptFiles.error ? errorMessage(keptFiles.error) : null}
+        onClose={() => setKeptFor(null)}
       />
 
       <LogRequestDialog
