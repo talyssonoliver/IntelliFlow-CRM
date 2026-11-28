@@ -956,3 +956,17 @@ waivers:
     author: biztype lane
     date: '2026-11-26'
     expires: '2026-12-26'
+  - fingerprint: 02ee2bcf67cc8b52af5b00fd826eb56c8df8532625c823a5e015d6399aaf7e7d
+    reason: >-
+      Owner ruling 27/11 (verified by the orchestrator): the finding says no job clears the expired
+      kept file locations, but the job exists. It is imported at apps/api/src/background-jobs.ts:54-60
+      and registered at :236 (startKeptLocationsScheduler, hourly), is started by
+      apps/workers/combined-worker/src/background-jobs.ts:45 (startBackgroundJobs) and by
+      apps/api/src/http-server.ts:616 when the api runs its own jobs, and is proven by the real-database
+      test tests/integration/dsar-communications.test.ts:796. Reviewer blind spot: it reviews a diff
+      that does not show the registration. The anchor is the comment line just below the flagged call
+      in privacy-admin.router.ts (lines 196-200: that comment and the expireKeptLocations fallback
+      call), so it covers only that fallback call and its comments.
+    author: ifc316 lane (owner ruling)
+    date: '2026-11-28'
+    expires: '2026-12-12'
