@@ -26,6 +26,7 @@ const TENANT_B = 'tenant-b';
 
 function matches(row: Row, where: Row): boolean {
   return Object.entries(where).every(([key, cond]) => {
+    if (key === 'OR') return (cond as Row[]).some((branch) => matches(row, branch));
     const value = row[key];
     if (cond === null) return value == null;
     if (cond && typeof cond === 'object' && !(cond instanceof Date)) {
@@ -36,6 +37,9 @@ function matches(row: Row, where: Row): boolean {
     return value === cond;
   });
 }
+
+/** The time the in-memory store stamps on createdAt (Prisma's @default(now())). */
+const clock = { now: new Date('2026-11-27T10:00:00Z') };
 
 function makeDb() {
   const surveys: Row[] = [];
@@ -64,7 +68,15 @@ function makeDb() {
     { id: 't1', tenantId: TENANT_A, contactId: null, contactEmail: 'mara@example.invalid' },
   ];
   let seq = 0;
-  const db = {
+  // Stands in for pg_advisory_xact_lock: transactions run one at a time, in arrival order.
+  let lock: Promise<unknown> = Promise.resolve();
+  const db: Row = {
+    $executeRaw: vi.fn(async () => 0),
+    $transaction: vi.fn((fn: (tx: unknown) => Promise<unknown>) => {
+      const run = lock.then(() => fn(db));
+      lock = run.catch(() => undefined);
+      return run;
+    }),
     contact: {
       findFirst: vi.fn(async ({ where }: any) => contacts.find((c) => matches(c, where)) ?? null),
     },
@@ -97,7 +109,7 @@ function makeDb() {
     },
     feedbackSurvey: {
       create: vi.fn(async ({ data }: any) => {
-        const row = { id: `s${++seq}`, ...data };
+        const row = { id: `s${++seq}`, createdAt: data.createdAt ?? clock.now, ...data };
         surveys.push(row);
         return { id: row.id };
       }),
@@ -428,6 +440,50 @@ describe('automatic triggers', () => {
     expect(await queueSurveyForWonDeal(db, sender, TENANT_A, 'd1')).toBe('restricted');
     expect(surveys).toHaveLength(0);
     expect(sender.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('two triggers at the same moment send one survey, not two', async () => {
+    const { db, surveys } = makeDb();
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const slow = {
+      sendEmail: vi.fn(async () => {
+        await gate;
+        return { isFailure: false };
+      }),
+    };
+    const won = { tenantId: TENANT_A, trigger: 'DEAL_WON' as const, contactId: 'c1' };
+    const resolved = { tenantId: TENANT_A, trigger: 'TICKET_RESOLVED' as const, contactId: 'c1' };
+    const both = Promise.all([
+      queueAutoSurvey(db, slow, won, NOW),
+      queueAutoSurvey(db, slow, resolved, NOW),
+    ]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    release();
+    expect((await both).sort()).toEqual(['queued', 'throttled']);
+    expect(slow.sendEmail).toHaveBeenCalledTimes(1);
+    expect(surveys).toHaveLength(1);
+  });
+
+  it('a claim left by a crashed send frees the contact after a while', async () => {
+    const { db, surveys } = makeDb();
+    surveys.push({
+      id: 'stuck',
+      tenantId: TENANT_A,
+      contactId: 'c1',
+      status: 'PENDING',
+      sentAt: null,
+      createdAt: NOW,
+      tokenExpiresAt: new Date(NOW.getTime() + 14 * DAY),
+    });
+    const input = { tenantId: TENANT_A, trigger: 'DEAL_WON' as const, contactId: 'c1' };
+    expect(await queueAutoSurvey(db, okSender(), input, NOW)).toBe('throttled');
+    clock.now = new Date(NOW.getTime() + 20 * 60 * 1000);
+    try {
+      expect(await queueAutoSurvey(db, okSender(), input, clock.now)).toBe('queued');
+    } finally {
+      clock.now = NOW;
+    }
   });
 
   it('a failed send does not count against the throttle', async () => {

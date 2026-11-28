@@ -30,6 +30,7 @@ export type SurveyDb = Pick<
   | 'opportunity'
   | 'ticket'
   | 'processingRestriction'
+  | '$transaction'
 >;
 
 export interface SurveyEmailSender {
@@ -48,6 +49,8 @@ export type SurveyTrigger = 'MANUAL' | 'DEAL_WON' | 'TICKET_RESOLVED';
 export const SURVEY_THROTTLE_DAYS = 30;
 const MS_PER_DAY = 86_400_000;
 export const COMMENT_MAX_LENGTH = 2000;
+/** A claimed survey still being sent holds the throttle this long (a crash mid-send frees it). */
+const SURVEY_CLAIM_MS = 15 * 60 * 1000;
 
 export interface CreateSurveyInput {
   tenantId: string;
@@ -58,11 +61,13 @@ export interface CreateSurveyInput {
   replyTo?: string;
   ticketId?: string;
   dealId?: string;
+  /** Automatic surveys: at most one per contact per SURVEY_THROTTLE_DAYS, claimed atomically. */
+  throttle?: boolean;
 }
 
 export type CreateSurveyResult =
   | { ok: true; surveyId: string; delivered: boolean }
-  | { ok: false; reason: 'contact_not_found' | 'no_email' | 'restricted' };
+  | { ok: false; reason: 'contact_not_found' | 'no_email' | 'restricted' | 'throttled' };
 
 /**
  * A data subject who asked for processing to be restricted (or an erased record) gets no survey.
@@ -107,24 +112,41 @@ export async function createAndSendSurvey(
   });
 
   const token = generateSurveyToken();
-  const row = await db.feedbackSurvey.create({
-    data: {
-      tenantId: input.tenantId,
-      type: input.surveyType,
-      contactId: contact.id,
-      contactName: `${contact.firstName} ${contact.lastName}`.trim(),
-      contactEmail: contact.email,
-      accountId: contact.accountId ?? null,
-      ticketId: input.ticketId ?? null,
-      dealId: input.dealId ?? null,
-      trigger: input.trigger,
-      sentById: input.sentById ?? null,
-      status: 'PENDING',
-      tokenHash: hashSurveyToken(token),
-      tokenExpiresAt: surveyTokenExpiry(now),
-    },
-    select: { id: true },
-  });
+  const createRow = (client: Pick<PrismaClient, 'feedbackSurvey'>) =>
+    client.feedbackSurvey.create({
+      data: {
+        tenantId: input.tenantId,
+        type: input.surveyType,
+        contactId: contact.id,
+        contactName: `${contact.firstName} ${contact.lastName}`.trim(),
+        contactEmail: contact.email,
+        accountId: contact.accountId ?? null,
+        ticketId: input.ticketId ?? null,
+        dealId: input.dealId ?? null,
+        trigger: input.trigger,
+        sentById: input.sentById ?? null,
+        status: 'PENDING',
+        tokenHash: hashSurveyToken(token),
+        tokenExpiresAt: surveyTokenExpiry(now),
+      },
+      select: { id: true },
+    });
+
+  let row: { id: string };
+  if (input.throttle) {
+    // Check and claim in one transaction under a per-contact lock: two triggers at the same moment
+    // (a ticket closed while a deal is won, two bulk calls) cannot both pass the throttle.
+    const lockKey = `feedback-survey:${input.tenantId}:${contact.id}`;
+    const claimed = await db.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+      if (await hasRecentSurvey(tx, input.tenantId, contact.id, now)) return null;
+      return createRow(tx);
+    });
+    if (!claimed) return { ok: false, reason: 'throttled' };
+    row = claimed;
+  } else {
+    row = await createRow(db);
+  }
 
   const message = buildSurveyEmail({
     companyName: tenant?.name ?? 'us',
@@ -144,6 +166,11 @@ export async function createAndSendSurvey(
   if (!delivered) {
     // The row stays PENDING and unsent: nobody has the link, and it does not count against the throttle.
     console.warn('[feedback-survey] Survey email was not sent', { trigger: input.trigger });
+    // Release the throttle claim: expire the link nobody received.
+    await db.feedbackSurvey.updateMany({
+      where: { id: row.id, tenantId: input.tenantId },
+      data: { tokenExpiresAt: now },
+    });
     return { ok: true, surveyId: row.id, delivered: false };
   }
 
@@ -181,14 +208,29 @@ export async function loadSurveySettings(db: SurveyDb, tenantId: string) {
 }
 
 export async function hasRecentSurvey(
-  db: SurveyDb,
+  db: Pick<PrismaClient, 'feedbackSurvey'>,
   tenantId: string,
   contactId: string,
   now: Date = new Date()
 ): Promise<boolean> {
   const since = new Date(now.getTime() - SURVEY_THROTTLE_DAYS * MS_PER_DAY);
+  const claimedSince = new Date(now.getTime() - SURVEY_CLAIM_MS);
   const count = await db.feedbackSurvey.count({
-    where: { tenantId, contactId, sentAt: { gte: since } },
+    where: {
+      tenantId,
+      contactId,
+      OR: [
+        // Sent in the window.
+        { sentAt: { gte: since } },
+        // Claimed and still being sent (a failed send expires its link, which releases it).
+        {
+          status: 'PENDING',
+          sentAt: null,
+          createdAt: { gte: claimedSince },
+          tokenExpiresAt: { gt: now },
+        },
+      ],
+    },
   });
   return count > 0;
 }
@@ -219,8 +261,6 @@ export async function queueAutoSurvey(
     const enabled =
       input.trigger === 'DEAL_WON' ? settings.autoSendOnDealWon : settings.autoSendOnTicketResolved;
     if (!enabled) return 'disabled';
-    if (await hasRecentSurvey(db, input.tenantId, input.contactId, now)) return 'throttled';
-
     const result = await createAndSendSurvey(
       db,
       sender,
@@ -231,10 +271,14 @@ export async function queueAutoSurvey(
         trigger: input.trigger,
         ticketId: input.ticketId,
         dealId: input.dealId,
+        throttle: true,
       },
       now
     );
-    if (!result.ok) return result.reason === 'restricted' ? 'restricted' : 'no_contact';
+    if (!result.ok) {
+      if (result.reason === 'restricted' || result.reason === 'throttled') return result.reason;
+      return 'no_contact';
+    }
     return result.delivered ? 'queued' : 'not_sent';
   } catch (error) {
     console.error('[feedback-survey] Automatic survey failed', {

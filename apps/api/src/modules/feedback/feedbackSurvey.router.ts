@@ -38,6 +38,7 @@ const SEND_REFUSED_MESSAGE = {
   contact_not_found: 'Contact not found.',
   no_email: 'This contact has no email address.',
   restricted: 'This contact asked us to restrict use of their data, so no survey was sent.',
+  throttled: 'This contact had a survey recently.',
 } as const;
 
 export const feedbackSurveyRouter = createTRPCRouter({
