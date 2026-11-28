@@ -4,13 +4,13 @@
   "task_id": "IFC-317",
   "run_id": "ifc-317-2026-11-28",
   "attestor": "Claude Code (claude-sonnet-5-5), feat/ifc-317-direct-transfer",
-  "attestation_timestamp": "2026-11-28T07:44:26Z",
+  "attestation_timestamp": "2026-11-28T08:02:27Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
     "files_read": [
       {
         "path": "packages/application/src/services/DsarTransferService.ts",
-        "sha256": "8e6478ff14b952812ef9f5d239d460a1dd71fc287293769d16be45d8ac612066"
+        "sha256": "3ffd4ef0609982ffaf3214b9f2d58d19d4e5409f5c8a260ecdb3f0a0c8455cd6"
       },
       {
         "path": "packages/adapters/src/repositories/PrismaDsarTransferRepository.ts",
@@ -26,25 +26,25 @@
       },
       {
         "path": "apps/api/src/modules/privacy/privacy-admin.router.ts",
-        "sha256": "bf110ae78fa0eadf6207fc3a2c5bdf13c260bd3087562964013bc908ff20b307"
+        "sha256": "01355c33e6e719ca65d0a41359fab8a2e17ef2f1b048080734c3bf1a48a399c5"
       },
       {
         "path": "apps/web/src/app/settings/privacy-requests/components/TransferDialog.tsx",
-        "sha256": "1a60cf5b99ceda5a94470a4e86b3ff7d82e695f54b854dd3c7abc8763cdad10e"
+        "sha256": "984913cc3b735d4741433ebab422f55cead808a913c3d0e587f382986bf1159a"
       },
       {
         "path": "apps/web/src/app/(public)/dsar/transfer/DsarTransferContent.tsx",
-        "sha256": "9938c79dd41560b4da76a7234f3bc18de0f12db6a528d42d8fe281f84c95dbc4"
+        "sha256": "606304a045e66dedd2b7e11b01525b133a4b91d72356f5cba4f42236a56d8bd5"
       },
       {
         "path": "tests/integration/dsar-transfer.test.ts",
-        "sha256": "6d78cfab019aca74aa3274f4f91f088205186abc8a70edb5f719c007bda4ee84"
+        "sha256": "4320ffab2c507944fdd01ae7687d7743894b75f39dcbd0a74e74c131d3f5bef7"
       }
     ],
     "invariants_acknowledged": [
       "See context_ack.json. SCOPE: IFC-317 has two halves. The CSV portability export (Art 20(1)) was merged in #1365 (a CSV zip built in the browser from the same download as the JSON, formula-safe). This task adds the other half: Art 20(2) direct transfer to another controller."
     ],
-    "acknowledged_at": "2026-11-28T07:44:26Z"
+    "acknowledged_at": "2026-11-28T08:02:27Z"
   },
   "evidence_summary": {
     "artifacts_verified": 8,

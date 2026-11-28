@@ -167,8 +167,15 @@ function errorMessage(error: unknown): string {
 function TransferItem({
   transfer,
   busy,
+  linkOnScreen,
   onRevoke,
-}: Readonly<{ transfer: DsarTransferDto; busy: boolean; onRevoke: (t: DsarTransferDto) => void }>) {
+}: Readonly<{
+  transfer: DsarTransferDto;
+  busy: boolean;
+  /** Its link is being shown above, waiting to be sent: not yet a lost link. */
+  linkOnScreen: boolean;
+  onRevoke: (t: DsarTransferDto) => void;
+}>) {
   return (
     <li className="space-y-2 py-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -184,7 +191,7 @@ function TransferItem({
       {transfer.state === 'ACTIVE' && (
         <p className="text-xs text-muted-foreground">{`Expires ${dateTimeLabel(transfer.expiresAt)}`}</p>
       )}
-      {transfer.awaitingSend && (
+      {transfer.awaitingSend && !linkOnScreen && (
         <p className="text-sm text-amber-800 dark:text-amber-300">
           Nobody has recorded sending this link. It was shown once and is not kept, so revoke it and
           create a new transfer.
@@ -252,6 +259,7 @@ export function TransferDialog({
     try {
       const created = await create.mutateAsync(toCreateInput(request.id, draft));
       setResult(created);
+      setCopied(false);
       setDraft(EMPTY_DRAFT);
       toast({
         title: created.delivered
@@ -461,6 +469,7 @@ export function TransferDialog({
                 key={transfer.id}
                 transfer={transfer}
                 busy={revoke.isPending}
+                linkOnScreen={result?.transfer.id === transfer.id}
                 onRevoke={(t) => void revokeTransfer(t)}
               />
             ))}

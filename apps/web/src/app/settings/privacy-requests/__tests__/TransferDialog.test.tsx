@@ -363,6 +363,25 @@ describe('TransferDialog', () => {
     expect(within(dialog).getByLabelText('Transfer link')).toBeTruthy();
   });
 
+  it('does not warn that a link was lost while that link is still on screen', async () => {
+    h.list.data = [transfer({ awaitingSend: true })];
+    await createWithManualLink();
+    expect(screen.queryByText(/Nobody has recorded sending this link/)).toBeNull();
+  });
+
+  it('shows Copy, not Copied, for a second manual link', async () => {
+    Object.assign(navigator, { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
+    const dialog = await createWithManualLink();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Copy' }));
+    expect(await within(dialog).findByRole('button', { name: 'Copied' })).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close without recording' }));
+    fill(dialog);
+    fireEvent.click(within(dialog).getByRole('checkbox'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Create transfer and send link' }));
+    expect(await within(dialog).findByRole('button', { name: 'Copy' })).toBeTruthy();
+    expect(within(dialog).queryByRole('button', { name: 'Copied' })).toBeNull();
+  });
+
   it('can be closed without recording, after which the transfer shows as unsent', async () => {
     const dialog = await createWithManualLink();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close without recording' }));

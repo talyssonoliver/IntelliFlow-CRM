@@ -134,10 +134,14 @@ export class DsarTransferService {
     id: string;
     actorId: string;
     now: Date;
-  }): Promise<{ outcome: 'OK' } | NotFound | Conflict> {
+  }): Promise<{ outcome: 'OK'; requestId: string } | NotFound | Conflict> {
     const transfer = await this.deps.transfers.findForTenant(input.tenantId, input.id);
     if (!transfer) return { outcome: 'NOT_FOUND' };
     if (!dsarTransferIsLive(transfer, input.now)) return { outcome: 'CONFLICT' };
+    // A link whose request was refused afterwards is dead (download refuses it), so it cannot be
+    // recorded as sent either.
+    const request = await this.deps.requests.findForTenant(input.tenantId, transfer.requestId);
+    if (!request || !transferMayBeCreated(request)) return { outcome: 'CONFLICT' };
     const written = await this.deps.transfers.recordEvent(input.tenantId, input.id, {
       kind: 'SENT',
       actorType: 'ADMIN',
@@ -145,7 +149,7 @@ export class DsarTransferService {
       via: 'MANUAL',
       occurredAt: input.now,
     });
-    return written ? { outcome: 'OK' } : { outcome: 'CONFLICT' };
+    return written ? { outcome: 'OK', requestId: transfer.requestId } : { outcome: 'CONFLICT' };
   }
 
   async revoke(input: {
@@ -153,7 +157,7 @@ export class DsarTransferService {
     id: string;
     actorId: string;
     now: Date;
-  }): Promise<{ outcome: 'OK' } | NotFound | Conflict> {
+  }): Promise<{ outcome: 'OK'; requestId: string } | NotFound | Conflict> {
     const transfer = await this.deps.transfers.findForTenant(input.tenantId, input.id);
     if (!transfer) return { outcome: 'NOT_FOUND' };
     const revoked = await this.deps.transfers.revoke(
@@ -162,7 +166,7 @@ export class DsarTransferService {
       input.actorId,
       input.now
     );
-    return revoked ? { outcome: 'OK' } : { outcome: 'CONFLICT' };
+    return revoked ? { outcome: 'OK', requestId: transfer.requestId } : { outcome: 'CONFLICT' };
   }
 
   /** The request's transfers and every step of each. Expiries are written as they are noticed. */

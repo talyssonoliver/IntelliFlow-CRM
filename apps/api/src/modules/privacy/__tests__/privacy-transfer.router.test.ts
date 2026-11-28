@@ -87,8 +87,8 @@ beforeEach(() => {
       manualLink: null,
     }),
     list: vi.fn().mockResolvedValue({ outcome: 'OK', transfers: [view()] }),
-    markSent: vi.fn().mockResolvedValue({ outcome: 'OK' }),
-    revoke: vi.fn().mockResolvedValue({ outcome: 'OK' }),
+    markSent: vi.fn().mockResolvedValue({ outcome: 'OK', requestId: REQUEST }),
+    revoke: vi.fn().mockResolvedValue({ outcome: 'OK', requestId: REQUEST }),
     download: vi.fn(),
   };
 });
@@ -174,6 +174,20 @@ describe('createTransfer', () => {
     expect(result).toMatchObject({ delivered: false, manualLink: link });
   });
 
+  it('still returns the link when the follow-up read fails: a manual link cannot be shown again', async () => {
+    const link = `https://app.example.invalid/dsar/transfer#t=${TOKEN}`;
+    service.create.mockResolvedValue({
+      outcome: 'OK',
+      transfer: view(),
+      delivered: false,
+      manualLink: link,
+    });
+    service.list.mockRejectedValue(new Error('read replica down'));
+    const result = await adminCaller().createTransfer(CREATE_INPUT);
+    expect(result).toMatchObject({ delivered: false, manualLink: link });
+    expect(result.transfer).toMatchObject({ id: TRANSFER, state: 'ACTIVE', events: [] });
+  });
+
   it('maps a request that cannot be transferred to a plain message', async () => {
     service.create.mockResolvedValue({ outcome: 'INVALID', field: 'transferNotAllowed' });
     await expect(adminCaller().createTransfer(CREATE_INPUT)).rejects.toMatchObject({
@@ -233,6 +247,12 @@ describe('transfers, markTransferSent, revokeTransfer', () => {
       'TRANSFER_SENT_BY_ADMIN',
       'TRANSFER_REVOKED',
     ]);
+    // Filed under the request (not the transfer id), with the transfer in the metadata.
+    for (const call of auditLog.mock.calls) {
+      expect(call[1]).toBe('dsar_request');
+      expect(call[2]).toBe(REQUEST);
+      expect(call[4].metadata.transferId).toBe(TRANSFER);
+    }
     service.revoke.mockResolvedValue({ outcome: 'CONFLICT' });
     await expect(c.revokeTransfer({ id: TRANSFER })).rejects.toMatchObject({
       code: 'CONFLICT',

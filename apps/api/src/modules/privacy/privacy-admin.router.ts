@@ -448,18 +448,24 @@ export const privacyAdminRouter = createTRPCRouter({
         { change: 'TRANSFER_CREATED', transferId: result.transfer.id, delivered: result.delivered },
         true
       );
-      const listed = await service.list({
-        tenantId: ctx.tenant.tenantId,
-        requestId: input.id,
-        now,
-      });
+      // The transfer exists now, and a manual link cannot be shown again: a failed re-read must
+      // not lose it. Fall back to the record the service just made (the admin's list refetches).
+      const listed = await service
+        .list({ tenantId: ctx.tenant.tenantId, requestId: input.id, now })
+        .catch(() => null);
       const view =
-        listed.outcome === 'OK'
+        listed?.outcome === 'OK'
           ? listed.transfers.find((t) => t.id === result.transfer.id)
           : undefined;
-      if (!view) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: UNAVAILABLE });
       return {
-        transfer: toTransferDto(view),
+        transfer: toTransferDto(
+          view ?? {
+            ...result.transfer,
+            state: 'ACTIVE',
+            events: [],
+            // Not listed, so not known to be sent: the email flag is what the admin acts on.
+          }
+        ),
         delivered: result.delivered,
         manualLink: result.manualLink,
       };
@@ -475,7 +481,11 @@ export const privacyAdminRouter = createTRPCRouter({
         now: new Date(),
       });
       assertOk(result);
-      await audit(ctx, 'UPDATE', input.id, { change: 'TRANSFER_SENT_BY_ADMIN' });
+      // Filed under the request, like the creation and the download, with the transfer in the metadata.
+      await audit(ctx, 'UPDATE', result.requestId, {
+        change: 'TRANSFER_SENT_BY_ADMIN',
+        transferId: input.id,
+      });
       return { ok: true as const };
     }),
 
@@ -489,7 +499,10 @@ export const privacyAdminRouter = createTRPCRouter({
         now: new Date(),
       });
       assertOk(result);
-      await audit(ctx, 'UPDATE', input.id, { change: 'TRANSFER_REVOKED' });
+      await audit(ctx, 'UPDATE', result.requestId, {
+        change: 'TRANSFER_REVOKED',
+        transferId: input.id,
+      });
       return { ok: true as const };
     }),
 

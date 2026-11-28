@@ -593,13 +593,13 @@ describeDb('IFC-317 DSAR transfers (real DB)', () => {
 
       expect(
         await service.markSent({ tenantId: TENANT_A, id: transfer.id, actorId: ADMIN_A, now: t0 })
-      ).toEqual({ outcome: 'OK' });
+      ).toEqual({ outcome: 'OK', requestId: requestA });
       expect(
         await service.markSent({ tenantId: TENANT_A, id: transfer.id, actorId: ADMIN_A, now: t0 })
       ).toEqual({ outcome: 'CONFLICT' });
       expect(
         await service.revoke({ tenantId: TENANT_A, id: transfer.id, actorId: ADMIN_A, now: t0 })
-      ).toEqual({ outcome: 'OK' });
+      ).toEqual({ outcome: 'OK', requestId: requestA });
       expect(
         await service.revoke({ tenantId: TENANT_A, id: transfer.id, actorId: ADMIN_A, now: t0 })
       ).toEqual({ outcome: 'CONFLICT' });

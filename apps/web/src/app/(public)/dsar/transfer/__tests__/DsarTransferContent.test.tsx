@@ -110,9 +110,14 @@ describe('DsarTransferContent', () => {
     await axeClean(container);
   });
 
-  it('words failures without a cause', () => {
-    expect(transferErrorMessage(new Error('db down'))).toMatch(/not available/);
-    expect(transferErrorMessage(null)).toMatch(/not available/);
+  it('words failures without a cause: a dead link says so, a server failure says to retry', () => {
+    const notFound = Object.assign(new Error('x'), { data: { code: 'NOT_FOUND' } });
+    expect(transferErrorMessage(notFound)).toMatch(/not available/);
+    for (const transient of [new Error('db down'), null]) {
+      const message = transferErrorMessage(transient);
+      expect(message).toMatch(/press the button again/);
+      expect(message).not.toMatch(/not available|new one/);
+    }
   });
 });
 

@@ -29,7 +29,11 @@ export function transferErrorMessage(error: unknown): string {
   if (errorCode(error) === 'TOO_MANY_REQUESTS') {
     return 'Too many attempts. Wait a moment and try again.';
   }
-  return 'This link is not available. Ask the organisation that sent it to send a new one.';
+  if (errorCode(error) === 'NOT_FOUND') {
+    return 'This link is not available. Ask the organisation that sent it to send a new one.';
+  }
+  // A server or network failure does not use the link up: it may still work.
+  return 'Something went wrong on our side. Wait a moment and press the button again.';
 }
 
 export default function DsarTransferContent() {

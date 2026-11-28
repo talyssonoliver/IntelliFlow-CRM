@@ -465,7 +465,7 @@ describe('revoke and markSent', () => {
   it('revokes a live link once and records REVOKED with the admin', async () => {
     const { result } = await created();
     const input = { tenantId: TENANT, id: result.transfer.id, actorId: ADMIN, now: NOW };
-    expect(await service.revoke(input)).toEqual({ outcome: 'OK' });
+    expect(await service.revoke(input)).toEqual({ outcome: 'OK', requestId: 'req-1' });
     expect(await service.revoke(input)).toEqual({ outcome: 'CONFLICT' });
     expect(transfers.rows[0]!.events.at(-1)).toMatchObject({ kind: 'REVOKED', actorId: ADMIN });
   });
@@ -490,9 +490,19 @@ describe('revoke and markSent', () => {
     emailAccepted = false;
     const { result } = await created();
     const input = { tenantId: TENANT, id: result.transfer.id, actorId: ADMIN, now: NOW };
-    expect(await service.markSent(input)).toEqual({ outcome: 'OK' });
+    expect(await service.markSent(input)).toEqual({ outcome: 'OK', requestId: 'req-1' });
     expect(transfers.rows[0]!.events.at(-1)).toMatchObject({ kind: 'SENT', via: 'MANUAL' });
     expect(await service.markSent(input)).toEqual({ outcome: 'CONFLICT' });
+  });
+
+  it('refuses to record a send once the request was refused: the link is dead', async () => {
+    emailAccepted = false;
+    const { result } = await created();
+    requests.rows.set('req-1', request({ status: 'REJECTED' }));
+    expect(
+      await service.markSent({ tenantId: TENANT, id: result.transfer.id, actorId: ADMIN, now: NOW })
+    ).toEqual({ outcome: 'CONFLICT' });
+    expect(transfers.rows[0]!.events.map((e) => e.kind)).toEqual(['CREATED']);
   });
 
   it('refuses to record a send for an expired link', async () => {
