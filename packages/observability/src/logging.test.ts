@@ -6,15 +6,15 @@
  * same `invokeMixin` logic that lives in `createLogger`, which allows precise
  * assertion of the fields without needing a capture stream.
  *
- * Uses NodeTracerProvider (from sdk-trace-node) which registers the
+ * Uses NodeTracerProvider (test-utils/node-tracer-provider, SDK 3.x) which registers the
  * AsyncLocalStorage context manager — required for `trace.getActiveSpan()` to
  * propagate through async callbacks.
  */
 
 import { Writable } from 'node:stream';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
-import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
+import { InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace';
+import { NodeTracerProvider } from './test-utils/node-tracer-provider';
 import { trace, SpanKind, context } from '@opentelemetry/api';
 import { runWithLogContext, getCurrentLogContext } from './log-context';
 import {
@@ -54,7 +54,7 @@ describe('pino mixin — trace correlation', () => {
   beforeEach(() => {
     exporter = new InMemorySpanExporter();
     provider = new NodeTracerProvider({
-      spanProcessors: [new SimpleSpanProcessor(exporter)],
+      spanProcessors: [new SimpleSpanProcessor({ exporter })],
     });
     // register() sets both the global tracer provider AND the async context manager
     provider.register();
@@ -189,7 +189,7 @@ describe('createLogger — real records', () => {
     vi.stubEnv('CI', '1');
     vi.stubEnv('NODE_ENV', 'production');
     exporter = new InMemorySpanExporter();
-    provider = new NodeTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
+    provider = new NodeTracerProvider({ spanProcessors: [new SimpleSpanProcessor({ exporter })] });
     provider.register();
   });
 

@@ -16,7 +16,7 @@ export default defineConfig({
       ),
       '@intelliflow/platform': path.resolve(__dirname, '../../packages/platform/src/index.ts'),
       // Resolve @opentelemetry/api through the workspace symlink so ALL modules
-      // (including @opentelemetry/sdk-trace-base) share the same singleton.
+      // (including @opentelemetry/sdk-trace) share the same singleton.
       '@opentelemetry/api': path.resolve(__dirname, 'node_modules/@opentelemetry/api'),
     },
   },

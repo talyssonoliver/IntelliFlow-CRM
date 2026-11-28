@@ -115,7 +115,7 @@ vi.mock('@opentelemetry/exporter-trace-otlp-grpc', () => ({
 }));
 
 // Mock span processor
-vi.mock('@opentelemetry/sdk-trace-base', () => ({
+vi.mock('@opentelemetry/sdk-trace', () => ({
   BatchSpanProcessor: class MockBatchSpanProcessor {
     constructor(exporter: unknown) {}
   },

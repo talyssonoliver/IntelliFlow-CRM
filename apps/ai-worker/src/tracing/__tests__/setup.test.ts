@@ -10,14 +10,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // Passthrough mocks ensure we ALWAYS get the real OTel modules even when another
 // file in the same worker fork has called vi.mock('@opentelemetry/api', ...).
 vi.mock('@opentelemetry/api', async (importOriginal) => importOriginal());
-vi.mock('@opentelemetry/sdk-trace-base', async (importOriginal) => importOriginal());
+vi.mock('@opentelemetry/sdk-trace', async (importOriginal) => importOriginal());
 
+// OTel SDK 3.x (IFC-319): sdk-trace-base became @opentelemetry/sdk-trace, whose single
+// TracerProvider replaces BasicTracerProvider.
 import {
   AlwaysOnSampler,
-  BasicTracerProvider,
+  TracerProvider as BasicTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
+} from '@opentelemetry/sdk-trace';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 
 // ---------------------------------------------------------------------------
@@ -71,7 +73,7 @@ describe('wrapModelWithTracing', () => {
     provider = new BasicTracerProvider({
       // .env.test sets OTEL_TRACES_SAMPLER=always_off, which a run from the repo root loads.
       sampler: new AlwaysOnSampler(),
-      spanProcessors: [new SimpleSpanProcessor(exporter)],
+      spanProcessors: [new SimpleSpanProcessor({ exporter })],
     });
     // Disable any previous registration, then set our test provider
     trace.disable();

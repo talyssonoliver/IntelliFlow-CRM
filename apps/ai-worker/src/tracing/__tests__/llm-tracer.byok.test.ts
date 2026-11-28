@@ -6,14 +6,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('@opentelemetry/api', async (importOriginal) => importOriginal());
-vi.mock('@opentelemetry/sdk-trace-base', async (importOriginal) => importOriginal());
+vi.mock('@opentelemetry/sdk-trace', async (importOriginal) => importOriginal());
 
+// OTel SDK 3.x (IFC-319): sdk-trace-base became @opentelemetry/sdk-trace, whose single
+// TracerProvider replaces BasicTracerProvider.
 import {
   AlwaysOnSampler,
-  BasicTracerProvider,
+  TracerProvider as BasicTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
+} from '@opentelemetry/sdk-trace';
 import { trace } from '@opentelemetry/api';
 
 const KEY_FRAGMENT = 'z'.repeat(12) + 'QRST';
@@ -34,7 +36,7 @@ describe('wrapModelWithTracing - error export', () => {
     exporter = new InMemorySpanExporter();
     provider = new BasicTracerProvider({
       sampler: new AlwaysOnSampler(),
-      spanProcessors: [new SimpleSpanProcessor(exporter)],
+      spanProcessors: [new SimpleSpanProcessor({ exporter })],
     });
     trace.disable();
     trace.setGlobalTracerProvider(provider);

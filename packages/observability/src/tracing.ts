@@ -47,7 +47,7 @@ import {
   Tracer,
 } from '@opentelemetry/api';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace';
 
 /**
  * Tracing configuration options
@@ -100,12 +100,12 @@ export function initTracing(config: TracingConfig): void {
     url: config.endpoint || process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317',
   }) as any;
 
-  const spanProcessor = new BatchSpanProcessor(traceExporter) as any;
+  const spanProcessor = new BatchSpanProcessor({ exporter: traceExporter }) as any;
 
   sdk = new NodeSDK({
     resource,
-    traceExporter,
-    spanProcessor,
+    // SDK 3.x (IFC-319): traceExporter and spanProcessor are gone; the exporter rides its processor.
+    spanProcessors: [spanProcessor],
     instrumentations: [
       getNodeAutoInstrumentations({
         // Automatic instrumentation configuration

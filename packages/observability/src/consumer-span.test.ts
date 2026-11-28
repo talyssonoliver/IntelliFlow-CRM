@@ -17,8 +17,8 @@ import {
   AlwaysOnSampler,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
-import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
+} from '@opentelemetry/sdk-trace';
+import { NodeTracerProvider } from './test-utils/node-tracer-provider';
 import { carrierOf, runConsumerJob, runWorkSpan, WORKER_TRACER_NAME } from './consumer-span';
 
 let exporter: InMemorySpanExporter;
@@ -34,7 +34,7 @@ beforeEach(() => {
   // Explicit sampler: .env.test sets OTEL_TRACES_SAMPLER=always_off for the root test run.
   provider = new NodeTracerProvider({
     sampler: new AlwaysOnSampler(),
-    spanProcessors: [new SimpleSpanProcessor(exporter)],
+    spanProcessors: [new SimpleSpanProcessor({ exporter })],
   });
   provider.register();
 });
