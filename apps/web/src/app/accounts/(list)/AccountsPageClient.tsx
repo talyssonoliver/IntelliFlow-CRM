@@ -12,6 +12,7 @@ import {
   type AccountRowHandlers,
 } from '@/components/accounts/AccountCard';
 import { api } from '@/lib/api';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import type { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@intelliflow/api-client';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
@@ -96,10 +97,11 @@ function getSortParams(sortOrder: string): {
 // Stat Cards
 // =============================================================================
 
-function formatCompactValue(value: number): string {
+function formatCompactValue(value: number, currency = 'GBP'): string {
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
-    currency: 'GBP',
+    currency,
+    currencyDisplay: 'narrowSymbol',
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(value);
@@ -235,6 +237,7 @@ export default function AccountsPageClient({
   initialStats: serverStats,
 }: AccountsPageClientProps = {}) {
   const router = useRouter();
+  const currency = useTenantCurrency();
   const tierFilter = useTierFilter();
   const [searchQuery, setSearchQuery] = useState('');
   const [industryFilter, setIndustryFilter] = useState('');
@@ -309,7 +312,7 @@ export default function AccountsPageClient({
     [router, deleteMutation]
   );
 
-  const columns = useMemo(() => createAccountColumns(handlers), [handlers]);
+  const columns = useMemo(() => createAccountColumns(handlers, currency), [handlers, currency]);
 
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
@@ -362,14 +365,14 @@ export default function AccountsPageClient({
           label="Total Revenue"
           icon="payments"
           pending={statsLoading}
-          value={stats ? formatCompactValue(totalRevenue) : '—'}
+          value={stats ? formatCompactValue(totalRevenue, currency) : '—'}
         />
         <KpiCard
           framed
           label="Average Revenue"
           icon="calculate"
           pending={statsLoading}
-          value={stats ? formatCompactValue(avgRevenue) : '—'}
+          value={stats ? formatCompactValue(avgRevenue, currency) : '—'}
           footer={<p className="mt-1 text-xs text-muted-foreground">avg/account</p>}
         />
         <KpiCard

@@ -17,6 +17,7 @@
 import { useState, useCallback, useId, useMemo } from 'react';
 import { Badge, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { SearchFilterBar } from '@/components/shared/search-filter-bar';
 import { useReviewHistory } from '@/lib/ai-review/hooks';
 import { ReviewCard } from '@/components/ai-review/ReviewCard';
 import { KpiCard } from '@/components/dashboard/KpiCard';
@@ -450,119 +451,76 @@ export function ReviewHistory() {
         />
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex-1 min-w-[140px]">
-          <label
-            htmlFor="history-status-filter"
-            className="text-xs font-medium text-muted-foreground mb-1 block"
-          >
-            Status
-          </label>
-          <select
-            id="history-status-filter"
-            aria-label="Status"
-            value={statusFilter}
-            onChange={(e) => handleStatusChange(e.target.value)}
-            className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            {HISTORY_STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex-1 min-w-[140px]">
-          <label
-            htmlFor="history-type-filter"
-            className="text-xs font-medium text-muted-foreground mb-1 block"
-          >
-            Output Type
-          </label>
-          <select
-            id="history-type-filter"
-            aria-label="Output Type"
-            value={outputTypeFilter}
-            onChange={(e) => handleOutputTypeChange(e.target.value)}
-            className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            {OUTPUT_TYPE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex-1 min-w-[140px]">
-          <label
-            htmlFor="history-sort"
-            className="text-xs font-medium text-muted-foreground mb-1 block"
-          >
-            Sort By
-          </label>
-          <select
-            id="history-sort"
-            aria-label="Sort by"
-            value={sortValue}
-            onChange={(e) => handleSortChange(e.target.value)}
-            className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Date Range */}
-      <div className="flex flex-wrap items-end gap-3">
-        <div>
-          <label
-            htmlFor="history-from-date"
-            className="text-xs font-medium text-muted-foreground mb-1 block"
-          >
-            From
-          </label>
-          <input
-            id="history-from-date"
-            type="date"
-            aria-label="Filter from date"
-            value={afterDate}
-            onChange={handleFromDateChange}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="history-to-date"
-            className="text-xs font-medium text-muted-foreground mb-1 block"
-          >
-            To
-          </label>
-          <input
-            id="history-to-date"
-            type="date"
-            aria-label="Filter to date"
-            value={beforeDate}
-            onChange={handleToDateChange}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-          />
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleClearFilters}
-          aria-label="Clear all filters"
-        >
-          <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
-            filter_list_off
-          </span>{' '}
-          Reset Filters
-        </Button>
-      </div>
+      {/* Owner 21/11: the shared toolbar, like every list. Reviews carry no text to search, so the
+          bar has filters only; the dates and Reset ride in its extra slot (in the sheet on phones). */}
+      <SearchFilterBar
+        filters={[
+          {
+            id: 'status',
+            label: 'Status',
+            icon: 'filter_list',
+            options: HISTORY_STATUS_OPTIONS.filter((o) => o.value !== ''),
+            value: statusFilter,
+            onChange: handleStatusChange,
+          },
+          {
+            id: 'outputType',
+            label: 'Output Type',
+            icon: 'category',
+            options: OUTPUT_TYPE_OPTIONS.filter((o) => o.value !== ''),
+            value: outputTypeFilter,
+            onChange: handleOutputTypeChange,
+          },
+        ]}
+        sort={{ options: SORT_OPTIONS, value: sortValue, onChange: handleSortChange }}
+        extra={
+          <>
+            <div>
+              <label
+                htmlFor="history-from-date"
+                className="text-xs font-medium text-muted-foreground mb-1 block"
+              >
+                From
+              </label>
+              <input
+                id="history-from-date"
+                type="date"
+                aria-label="Filter from date"
+                value={afterDate}
+                onChange={handleFromDateChange}
+                className="min-h-11 rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="history-to-date"
+                className="text-xs font-medium text-muted-foreground mb-1 block"
+              >
+                To
+              </label>
+              <input
+                id="history-to-date"
+                type="date"
+                aria-label="Filter to date"
+                value={beforeDate}
+                onChange={handleToDateChange}
+                className="min-h-11 rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+              aria-label="Clear all filters"
+            >
+              <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
+                filter_list_off
+              </span>{' '}
+              Reset Filters
+            </Button>
+          </>
+        }
+      />
 
       {/* Results Count */}
       <p className="text-sm text-muted-foreground" aria-live="polite">

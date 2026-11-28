@@ -14,6 +14,8 @@
  * Task: PG-058 — Dashboard
  */
 
+import { formatMoney } from '@/lib/format/money';
+
 /**
  * Shared dashboard polling cadence (ms). Matches the global React Query
  * `staleTime` (`packages/api-client/src/react-client.tsx`) and the existing
@@ -107,19 +109,18 @@ export function computeBarHeightPercent(value: number, max: number, minPercent =
 }
 
 /**
- * Format an amount as an en-GB GBP currency string (no fractional digits by
+ * Format an amount as an en-GB currency string in the tenant currency (GBP by default) (no fractional digits by
  * default). Own implementation — intentionally NOT shared with
  * `lib/pricing/calculator.ts` to avoid coupling the dashboard to the billing
  * domain. Mirrors the inline `toLocaleString('en-GB', { style: 'currency',
  * currency: 'GBP', maximumFractionDigits: 0 })` the widgets used.
  */
-export function formatGBP(amount: number | string, fractionDigits = 0): string {
-  return new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  }).format(toFiniteNumber(amount));
+export function formatGBP(
+  amount: number | string,
+  fractionDigits = 0,
+  currency: string = 'GBP'
+): string {
+  return formatMoney(toFiniteNumber(amount), currency, { fractionDigits });
 }
 
 /**

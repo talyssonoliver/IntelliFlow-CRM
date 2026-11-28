@@ -101,7 +101,7 @@ describe('PrismaFeedbackSurveyRepository', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId,
-            createdAt: { lte: to },
+            createdAt: { gte: from, lte: to },
             type: 'NPS',
           }),
         })

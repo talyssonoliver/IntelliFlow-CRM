@@ -19,8 +19,9 @@ import { intelligenceRouter } from '../../intelligence/intelligence.router';
 import { agentRouter } from '../../agent/agent.router';
 import { conversationRouter } from '../../agent/conversation.router';
 
-/** Procedures the core dashboard / governance pages (CORE_CRM, every plan) call. */
-const CORE_SHARED = new Set(['getOverview', 'recentActivity']);
+/** Procedures the core dashboard / governance pages (CORE_CRM, every plan) call. `currency` is
+ *  the workspace currency (reportSettings.currency), which formats money on deals for every plan. */
+const CORE_SHARED = new Set(['getOverview', 'recentActivity', 'currency']);
 
 const GATED: Array<[string, string, unknown, Set<string>]> = [
   ['ticket', 'SUPPORT', ticketRouter, new Set()],
@@ -28,7 +29,7 @@ const GATED: Array<[string, string, unknown, Set<string>]> = [
   ['ticketConfig', 'SUPPORT', ticketConfigRouter, new Set()],
   ['ticketSettings', 'SUPPORT', ticketSettingsRouter, new Set()],
   ['analytics', 'ANALYTICS', analyticsRouter, CORE_SHARED],
-  ['reportSettings', 'ANALYTICS', reportSettingsRouter, new Set()],
+  ['reportSettings', 'ANALYTICS', reportSettingsRouter, new Set(['currency'])],
   ['intelligence', 'AI_INTELLIGENCE', intelligenceRouter, new Set()],
   ['agent', 'AI_INTELLIGENCE', agentRouter, new Set()],
   ['conversation', 'AI_INTELLIGENCE', conversationRouter, new Set()],

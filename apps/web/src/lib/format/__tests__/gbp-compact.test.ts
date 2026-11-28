@@ -21,8 +21,7 @@ describe('formatGBPCompact', () => {
     expect(formatGBPCompact(1_500, 1)).toBe('£1.5k');
   });
 
-  it('is the one formatter behind deals and leads', () => {
-    expect(formatCurrencyCompact).toBe(formatGBPCompact);
+  it('keeps the leads re-export and the deals default in pounds', () => {
     expect(fromLeads).toBe(formatGBPCompact);
     expect(formatCurrencyCompact(125_000)).toBe('£125k');
   });

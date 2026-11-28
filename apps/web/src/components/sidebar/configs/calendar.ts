@@ -1,5 +1,6 @@
 import type { SidebarConfig, SidebarItem } from '../sidebar-types';
 import { CalendarTogglesSection } from '../CalendarTogglesSection';
+import type { TenantBusinessType } from '@intelliflow/domain';
 
 /** Settings items shown when on a calendar settings page */
 export const CALENDAR_SETTINGS_ITEMS: SidebarItem[] = [
@@ -44,29 +45,42 @@ const VIEW_SECTIONS: SidebarConfig['sections'] = [
       },
     ],
   },
-  {
-    id: 'type',
-    title: 'By Type',
-    items: [
-      { id: 'hearings', label: 'Hearings', icon: 'gavel', href: '/calendar?type=HEARING' },
-      {
-        id: 'consultations',
-        label: 'Consultations',
-        icon: 'forum',
-        href: '/calendar?type=CONSULTATION',
-      },
-      {
-        id: 'depositions',
-        label: 'Depositions',
-        icon: 'description',
-        href: '/calendar?type=DEPOSITION',
-      },
-    ],
-  },
 ];
 
+/**
+ * The appointment types the calendar's "By Type" section offers, for the tenant's business type.
+ * Owner 26/11: "These types must come from the user/company vertical types, like for Leangency it
+ * make no sense at all!" - hearings and depositions are for law firms only.
+ */
+export function calendarTypeItems(businessType: TenantBusinessType | null): SidebarItem[] {
+  const general: SidebarItem[] = [
+    { id: 'meetings', label: 'Meetings', icon: 'groups', href: '/calendar?type=MEETING' },
+    { id: 'calls', label: 'Calls', icon: 'call', href: '/calendar?type=CALL' },
+    {
+      id: 'consultations',
+      label: 'Consultations',
+      icon: 'forum',
+      href: '/calendar?type=CONSULTATION',
+    },
+  ];
+  if (businessType !== 'LAW_FIRM') return general;
+  return [
+    { id: 'hearings', label: 'Hearings', icon: 'gavel', href: '/calendar?type=HEARING' },
+    {
+      id: 'depositions',
+      label: 'Depositions',
+      icon: 'description',
+      href: '/calendar?type=DEPOSITION',
+    },
+    ...general,
+  ];
+}
+
 /** Calendar grid mode — filters inline + Module Settings button + calendar toggles */
-export function createCalendarSidebarConfig(onSettingsClick: () => void): SidebarConfig {
+export function createCalendarSidebarConfig(
+  onSettingsClick: () => void,
+  businessType: TenantBusinessType | null = null
+): SidebarConfig {
   return {
     moduleId: 'calendar',
     moduleTitle: 'Calendar',
@@ -74,7 +88,10 @@ export function createCalendarSidebarConfig(onSettingsClick: () => void): Sideba
     onSettingsClick,
     showSettings: true,
     afterContent: CalendarTogglesSection,
-    sections: VIEW_SECTIONS,
+    sections: [
+      ...VIEW_SECTIONS,
+      { id: 'type', title: 'By Type', items: calendarTypeItems(businessType) },
+    ],
   };
 }
 

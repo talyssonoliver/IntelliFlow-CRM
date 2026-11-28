@@ -344,7 +344,7 @@ export default function ContactSettingsContent() {
   return (
     <ModuleSettingsShell
       breadcrumbs={[
-        { label: 'Home', href: '/' },
+        { label: 'Dashboard', href: '/dashboard' },
         { label: 'Contacts', href: '/contacts' },
         { label: 'Contact Settings' },
       ]}

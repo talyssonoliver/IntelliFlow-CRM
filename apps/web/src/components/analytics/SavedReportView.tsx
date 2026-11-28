@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import {
   BarChart,
   Bar,
@@ -24,10 +23,12 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { useAnalyticsDateRange, type PeriodKey } from '@/hooks/useAnalyticsDateRange';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { downloadCSV } from '@/lib/export/csv';
-import { formatGBPCompact } from '@/lib/format/gbp-compact';
+import { formatMoneyCompact } from '@/lib/format/money';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { exportToPDF } from '@/lib/export/pdf';
 import type { ReportSection, PDFExportOptions } from '@/lib/export/pdf';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 // ============================================
 // Types
 // ============================================
@@ -87,7 +88,9 @@ const CHART_COLORS = [
 // Helpers
 // ============================================
 
-const formatCurrency = (value: number): string => formatGBPCompact(value, 1);
+/** Compact money with one decimal for the report figures, in the tenant currency. */
+const compactMoney = (value: number, currency: string): string =>
+  formatMoneyCompact(value, currency, 1);
 
 function toMetricChange(delta: number, label = 'vs prev period'): MetricChange {
   let direction: 'up' | 'down' | 'neutral';
@@ -106,6 +109,7 @@ function toMetricChange(delta: number, label = 'vs prev period'): MetricChange {
 // ============================================
 
 export default function SavedReportView({ config }: Readonly<SavedReportViewProps>) {
+  const currency = useTenantCurrency();
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>(config.defaultPeriod);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
@@ -210,7 +214,7 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
         type: 'table',
         data: growthData.map((p: { month: string; value: number }) => ({
           Month: p.month,
-          Revenue: formatCurrency(p.value),
+          Revenue: compactMoney(p.value, currency),
         })),
       });
     }
@@ -221,7 +225,7 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
     };
 
     exportToPDF(sections, options);
-  }, [config, overview, salesMetrics, trafficSources, growthData, selectedPeriod]);
+  }, [config, overview, salesMetrics, trafficSources, growthData, selectedPeriod, currency]);
 
   // --- Metric cards per report type ---
   const metricCards = getMetricCards(config.reportType, overview, salesMetrics);
@@ -232,22 +236,14 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
   return (
     <>
       {/* Breadcrumb */}
-      <nav
-        aria-label="Breadcrumb"
-        className="flex items-center gap-2 text-sm text-muted-foreground mb-4"
-      >
-        <Link href="/dashboard" className="hover:text-primary">
-          Dashboard
-        </Link>
-        <span aria-hidden="true">/</span>
-        <Link href="/analytics" className="hover:text-primary">
-          Analytics
-        </Link>
-        <span aria-hidden="true">/</span>
-        <span className="text-foreground font-medium" aria-current="page">
-          {config.breadcrumbLabel}
-        </span>
-      </nav>
+      <Breadcrumbs
+        endsWithCurrentPage={false}
+        items={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Analytics', href: '/analytics' },
+        ]}
+        className="mb-4"
+      />
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
@@ -350,6 +346,7 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
                 title={mc.title}
                 value={mc.value}
                 format={mc.format}
+                currency={currency}
                 icon={mc.icon}
                 change={mc.change}
                 isLoading={isLoading}
@@ -583,6 +580,7 @@ function RevenueBarChart({
   loading: boolean;
   formatDate: (input: string | Date | number, options?: Record<string, unknown>) => string;
 }>) {
+  const currency = useTenantCurrency();
   if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
   if (!data || isEmptySeries(data, 'value')) {
     return (
@@ -611,10 +609,10 @@ function RevenueBarChart({
             className="fill-muted-foreground"
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v) => formatGBPCompact(v)}
+            tickFormatter={(v) => formatMoneyCompact(v, currency)}
           />
           <Tooltip
-            formatter={(value) => formatCurrency(typeof value === 'number' ? value : 0)}
+            formatter={(value) => compactMoney(typeof value === 'number' ? value : 0, currency)}
             contentStyle={{
               backgroundColor: 'hsl(var(--card))',
               border: '1px solid hsl(var(--border))',
@@ -638,6 +636,7 @@ function GrowthTrendChart({
   loading: boolean;
   formatDate: (input: string | Date | number, options?: Record<string, unknown>) => string;
 }>) {
+  const currency = useTenantCurrency();
   if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
   if (!data || isEmptySeries(data, 'value')) {
     return (
@@ -665,10 +664,10 @@ function GrowthTrendChart({
             className="fill-muted-foreground"
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v) => formatGBPCompact(v)}
+            tickFormatter={(v) => formatMoneyCompact(v, currency)}
           />
           <Tooltip
-            formatter={(value) => formatCurrency(typeof value === 'number' ? value : 0)}
+            formatter={(value) => compactMoney(typeof value === 'number' ? value : 0, currency)}
             contentStyle={{
               backgroundColor: 'hsl(var(--card))',
               border: '1px solid hsl(var(--border))',

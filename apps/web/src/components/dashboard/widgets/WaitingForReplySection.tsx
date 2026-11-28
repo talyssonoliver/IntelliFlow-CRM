@@ -1,4 +1,4 @@
-import { CardList, CardListMore, CardListRow, CardListSection } from './CardListSection';
+import { CardList, CardListMore, CardListSection, TodoRow } from './CardListSection';
 import { isSameName } from '@/lib/leads/lead-format';
 import { waitingLabel, waitingTone } from '@/lib/leads/waiting-for-reply';
 
@@ -17,6 +17,15 @@ const toneClass = {
   red: 'text-red-600 dark:text-red-400',
 } as const;
 
+/** "waiting 4 days · Re: unsubscribe": the meta line of a reply row. */
+export function waitingDetail(p: WaitingPerson, now: Date): string {
+  const label = waitingLabel(p.since, now);
+  const subject = p.subject.trim();
+  if (!subject) return label;
+  const reLine = /^re:/i.test(subject) ? subject : 'Re: ' + subject;
+  return `${label} · ${reLine}`;
+}
+
 /**
  * "Waiting for reply" on the dashboard's Upcoming Tasks card (MVP-014): people whose last email to
  * us has had no reply, oldest first, each linking to their page. Replying removes them. The link
@@ -28,7 +37,17 @@ export function WaitingForReplySection({
   total,
   leadTotal,
   now = new Date(),
-}: Readonly<{ people: readonly WaitingPerson[]; total: number; leadTotal: number; now?: Date }>) {
+  onDone,
+  pendingKey,
+}: Readonly<{
+  people: readonly WaitingPerson[];
+  total: number;
+  leadTotal: number;
+  now?: Date;
+  /** The row's checkbox: handled without a reply (hidden until a newer email arrives). */
+  onDone: (person: WaitingPerson) => void;
+  pendingKey?: string | undefined;
+}>) {
   if (people.length === 0) return null;
   // The list link opens the Leads list, so it only shows when leads beyond those listed wait.
   const moreLeads = leadTotal - people.filter((p) => p.kind === 'lead').length;
@@ -45,18 +64,21 @@ export function WaitingForReplySection({
     >
       <CardList>
         {people.map((p) => (
-          <CardListRow
+          <TodoRow
             key={`${p.kind}:${p.id}`}
             href={p.kind === 'lead' ? `/leads/${p.id}` : `/contacts/${p.id}`}
-            primary={
+            title={
               <>
                 {p.name}
                 {p.company && !isSameName(p.company, p.name) ? ` · ${p.company}` : ''}
               </>
             }
-            secondary={p.subject}
-            status={waitingLabel(p.since, now)}
-            statusClassName={toneClass[waitingTone(p.since, now)]}
+            kind="Reply"
+            detail={waitingDetail(p, now)}
+            detailClassName={toneClass[waitingTone(p.since, now)]}
+            doneLabel={`Mark done, handled without a reply: ${p.name}`}
+            onDone={() => onDone(p)}
+            pending={pendingKey === `${p.kind}:${p.id}`}
           />
         ))}
       </CardList>

@@ -31,6 +31,7 @@ import { swatchClass } from './case-type-colors';
 import type { CaseDetailData, CaseAssigneeOption, PartyData, TimelineEntry } from './types';
 import type { AddCaseTaskInput } from '@intelliflow/validators/case';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type TabId = 'overview' | 'activities' | 'evidence' | 'records';
@@ -215,17 +216,13 @@ export function CaseDetail({
       {/* ── Breadcrumb & Actions ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-            <Link href="/" className="hover:text-primary">
-              Main Dashboard
-            </Link>
-            <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-            <Link href="/cases" className="hover:text-primary">
-              Cases
-            </Link>
-            <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-            <span className="text-primary font-medium">{caseNumber}</span>
-          </div>
+          <Breadcrumbs
+            endsWithCurrentPage={false}
+            items={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Cases', href: '/cases' },
+            ]}
+          />
           <h1 className="text-2xl font-black text-foreground tracking-tight">{caseData.title}</h1>
         </div>
         <div className="flex items-center gap-3">

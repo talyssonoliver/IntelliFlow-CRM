@@ -9,6 +9,8 @@
  */
 import { Card } from '@intelliflow/ui';
 import { type OpportunityStage } from '@intelliflow/domain';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
+import { formatMoney } from '@/lib/format/money';
 
 export const STAGE_LABELS: Record<OpportunityStage, string> = {
   PROSPECTING: 'Prospecting',
@@ -28,13 +30,8 @@ const ACTIVE_STAGES: OpportunityStage[] = [
   'NEGOTIATION',
 ];
 
-export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
+export function formatCurrency(value: number, currency = 'GBP'): string {
+  return formatMoney(value, currency);
 }
 
 function barColorFor(stage: OpportunityStage): string {
@@ -67,6 +64,7 @@ export function DealStageProgress({
   /** A move is in flight: no stage can be started until it settles. */
   moving?: boolean;
 }>) {
+  const currency = useTenantCurrency();
   const isClosed = stage === 'CLOSED_WON' || stage === 'CLOSED_LOST';
   const stageIndex = isClosed ? ACTIVE_STAGES.length - 1 : ACTIVE_STAGES.indexOf(stage);
   const progressWidth = isClosed ? 100 : ((stageIndex + 1) / ACTIVE_STAGES.length) * 100;
@@ -78,7 +76,7 @@ export function DealStageProgress({
           <p className="text-sm font-medium text-slate-500">Total Value</p>
           {value > 0 || !onAddValue ? (
             <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">
-              {formatCurrency(value)}
+              {formatCurrency(value, currency)}
             </p>
           ) : (
             <button

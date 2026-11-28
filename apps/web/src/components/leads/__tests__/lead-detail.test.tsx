@@ -329,3 +329,5 @@ describe('Lead badges', () => {
     expect(screen.getByText('Warm')).toBeInTheDocument();
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

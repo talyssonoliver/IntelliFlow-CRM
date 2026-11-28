@@ -161,6 +161,8 @@ vi.mock('@/lib/trpc', () => ({
 // Mock @intelliflow/ui
 const mockToast = vi.fn();
 vi.mock('@intelliflow/ui', () => ({
+  // Charts' empty state is the shared EmptyState (owner 23/11).
+  EmptyState: ({ title }: { title?: string }) => <div data-testid="empty-state">{title}</div>,
   Card: ({
     children,
     className,
@@ -844,3 +846,5 @@ describe('DealsPage', { timeout: 10000 }, () => {
     });
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

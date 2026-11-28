@@ -9,6 +9,7 @@ import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { SYSTEM_DOCUMENT_TYPE_LABELS } from '@/components/documents/document-type-utils';
 import { contactIdFromSearch } from '@/lib/documents/upload-prefill';
+import { Breadcrumbs } from '@/components/shared/page-header';
 type DocumentClassification = 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'PRIVILEGED';
 type DocumentTypeField = DocumentType | `custom:${string}` | '';
 
@@ -452,13 +453,13 @@ export default function UploadDocumentPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-        <Link href="/documents" className="hover:text-[#2a78f6]">
-          Documents
-        </Link>
-        <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-        <span className="text-slate-900 dark:text-white font-medium">Upload Document</span>
-      </nav>
+      <Breadcrumbs
+        endsWithCurrentPage={false}
+        items={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Documents', href: '/documents' },
+        ]}
+      />
 
       {/* Header */}
       <div className="flex flex-col gap-1">

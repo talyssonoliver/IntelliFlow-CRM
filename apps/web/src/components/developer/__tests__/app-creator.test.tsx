@@ -58,11 +58,11 @@ describe('AppCreator', () => {
     expect(link.closest('a')).toHaveAttribute('href', '/developers/apps');
   });
 
-  it('breadcrumb shows "Create New App" with aria-current="page" (AC-010)', () => {
+  it('breadcrumb ends at Developer Apps; the title names the page (AC-010, owner 27/11: the trail holds ancestors; the title names the page)', () => {
     render(<AppCreator />);
-    const currentItems = document.querySelectorAll('[aria-current="page"]');
-    expect(currentItems.length).toBe(1);
-    expect(currentItems[0]).toHaveTextContent('Create New App');
+    const nav = screen.getByLabelText('Breadcrumb');
+    expect(nav).not.toHaveTextContent('Create New App');
+    expect(nav.querySelector('[aria-current="page"]')).toBeNull();
   });
 
   it('renders Create App submit button (AC-001)', () => {

@@ -9,6 +9,7 @@ import {
   createDocumentsSidebarConfig,
   createDocumentsSettingsSidebarConfig,
   isDocumentSettingsPage,
+  SectionMobileBar,
 } from '@/components/sidebar';
 import { DocumentSettingsPanel } from '@/components/documents/DocumentSettingsPanel';
 import { DocumentSettingsSidebarNav } from '@/components/documents/DocumentSettingsSidebarNav';
@@ -45,6 +46,7 @@ export default function DocumentsListLayout({
             className="flex flex-1 flex-col h-full min-w-0 overflow-hidden bg-background relative"
             id="main-content"
           >
+            <SectionMobileBar title="Documents" />
             {/* Mobile header with sidebar trigger */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 md:p-4">
               <div className="mx-auto flex flex-col gap-6">{children}</div>

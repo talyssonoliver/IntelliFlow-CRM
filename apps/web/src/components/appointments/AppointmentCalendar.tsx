@@ -101,13 +101,15 @@ export function AppointmentCalendar({
 
   return (
     <div data-testid="appointment-calendar">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 px-4 py-3 bg-white dark:bg-slate-800 rounded-t-xl border border-slate-200 dark:border-slate-700">
-        <div className="flex items-center gap-3">
+      {/* Header. Owner 21/11: on phones this split over two lines. Date navigation and Today stay
+          on one line with 44px targets; the view switch shows from sm, where it has three views
+          (below sm only Month was offered, and the grid shows a day there). */}
+      <div className="flex items-center justify-between gap-2 mb-4 px-2 py-2 sm:px-4 sm:py-3 bg-white dark:bg-slate-800 rounded-t-xl border border-slate-200 dark:border-slate-700">
+        <div className="flex min-w-0 items-center gap-1 sm:gap-3">
           <button
             type="button"
             onClick={navigatePrev}
-            className="p-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-md hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
             aria-label="Previous"
           >
             <span
@@ -123,7 +125,7 @@ export function AppointmentCalendar({
           <button
             type="button"
             onClick={navigateNext}
-            className="p-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-md hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
             aria-label="Next"
           >
             <span
@@ -136,15 +138,16 @@ export function AppointmentCalendar({
           <button
             type="button"
             onClick={goToday}
-            className="px-3 py-1 text-sm rounded-md border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            className="min-h-11 shrink-0 px-3 text-sm rounded-md border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
           >
             Today
           </button>
         </div>
 
-        {/* View Switcher — week/day hidden on mobile */}
+        {/* View Switcher — week/day hidden on mobile. A phone left on week or day view still gets
+            Month to go back (codex 27/11), and the current view stays shown. */}
         <fieldset
-          className="flex rounded-md border border-slate-200 dark:border-slate-600 overflow-hidden m-0 p-0 self-start sm:self-auto"
+          className={`${view === 'month' ? 'hidden sm:flex' : 'flex'} rounded-md border border-slate-200 dark:border-slate-600 overflow-hidden m-0 p-0`}
           aria-label="Calendar view"
         >
           <legend className="sr-only">Calendar view</legend>
@@ -153,8 +156,8 @@ export function AppointmentCalendar({
               key={v}
               type="button"
               onClick={() => onViewChange(v)}
-              className={`px-3 py-1.5 text-sm capitalize transition-colors ${
-                v === 'month' ? '' : 'hidden sm:block'
+              className={`min-h-11 px-3 text-sm capitalize transition-colors ${
+                v === 'month' || v === view ? '' : 'hidden sm:inline-flex sm:items-center'
               } ${
                 view === v
                   ? 'bg-primary/10 text-primary font-medium'
@@ -168,10 +171,14 @@ export function AppointmentCalendar({
         </fieldset>
       </div>
 
-      {/* Schedule-X Calendar — fixed-height container prevents layout shift on view toggle */}
+      {/* Schedule-X Calendar — fixed-height container prevents layout shift on view toggle.
+          `isolate` (owner 26/11, calendar on a phone): the Schedule-X theme gives its sticky
+          week/day header z-index 100 and its popups 101-102, above our menus and dialogs (z-50),
+          so the "SAT 26" header drew over the open side menu. Isolating the container keeps
+          those layers inside the calendar: still above its own grid, never above the page. */}
       <div
         data-testid={`${view}-view`}
-        className="sx-calendar-container bg-white dark:bg-slate-800 border border-t-0 border-slate-200 dark:border-slate-700 rounded-b-xl overflow-hidden"
+        className="sx-calendar-container isolate bg-white dark:bg-slate-800 border border-t-0 border-slate-200 dark:border-slate-700 rounded-b-xl overflow-hidden"
       >
         <AppointmentCalendarInner
           appointments={appointments}

@@ -176,7 +176,7 @@ export function DocumentTypeManager() {
     <div className="space-y-6">
       <PageHeader
         breadcrumbs={[
-          { label: 'Home', href: '/' },
+          { label: 'Dashboard', href: '/dashboard' },
           { label: 'Documents', href: '/documents' },
           { label: 'Document Types' },
         ]}

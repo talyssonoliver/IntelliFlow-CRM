@@ -18,7 +18,8 @@ import {
   AlertDialogTitle,
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
-import { formatCurrency } from '@/lib/pricing/calculator';
+import { currencySymbol, formatMoney } from '@/lib/format/money';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { useAccountTiers } from '@/hooks/useAccountTiers';
 import { countryLabel } from '@/components/shared/country-select';
 import { AccountContactsList } from './AccountContactsList';
@@ -42,6 +43,7 @@ import { SuggestedTagsRow } from '@/components/shared/SuggestedTagsRow';
 import { isRecordId } from '@/lib/shared/record-id';
 import { websiteDisplay } from '@/lib/shared/website-display';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 interface AccountDetailProps {
   accountId: string;
   isAuthenticated: boolean;
@@ -93,24 +95,26 @@ const REVENUE_UNITS: ReadonlyArray<readonly [number, string]> = [
 ];
 
 /**
- * Revenue in pounds, compact for the small metric tile: "£1.3M", "£850K". Built by hand
+ * Revenue in the tenant currency (pounds by default), compact for the small metric tile:
+ * "£1.3M", "£850K". Built by hand
  * rather than with Intl's compact notation, whose output differs between Node/ICU
  * versions (CI and local disagreed).
  */
-export function formatRevenueCompact(revenue: unknown): string {
+export function formatRevenueCompact(revenue: unknown, currency = 'GBP'): string {
   const amount = Number(revenue);
   if (revenue === null || revenue === undefined || !Number.isFinite(amount) || amount <= 0) {
     return '—';
   }
   // Units smallest first. Move up a unit only while the current one would read 1000
   // or more once rounded, so 999_950 reads "£1M" rather than "£1000K".
+  const symbol = currencySymbol(currency);
   let shown = Math.round(amount);
-  let text = `£${shown}`;
+  let text = `${symbol}${shown}`;
   for (const [size, unit] of REVENUE_UNITS) {
     if (shown < 1000) break;
     // One decimal, dropped when it is zero: 5_000_000 -> "5", 1_250_000 -> "1.3".
     shown = Math.round((amount / size) * 10) / 10;
-    text = `£${Number.isInteger(shown) ? shown : shown.toFixed(1)}${unit}`;
+    text = `${symbol}${Number.isInteger(shown) ? shown : shown.toFixed(1)}${unit}`;
   }
   return text;
 }
@@ -305,6 +309,7 @@ function formatDate(date: string | Date, timezone: string = 'Europe/London'): st
 }
 
 export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDetailProps>) {
+  const currency = useTenantCurrency();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
@@ -452,13 +457,13 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
       {/* Breadcrumb + Title Row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-            <Link href="/accounts" className="hover:text-[#2a78f6] transition-colors">
-              Accounts
-            </Link>
-            <span className="material-symbols-outlined !text-sm">chevron_right</span>
-            <span className="font-medium text-slate-900 dark:text-white">{account.name}</span>
-          </div>
+          <Breadcrumbs
+            endsWithCurrentPage={false}
+            items={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Accounts', href: '/accounts' },
+            ]}
+          />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{account.name}</h1>
         </div>
         <div className="flex gap-3">
@@ -628,7 +633,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Revenue</span>
                     <span className="text-sm text-slate-700 dark:text-slate-300">
-                      {account.revenue ? formatCurrency(Number(account.revenue)) : '—'}
+                      {account.revenue ? formatMoney(Number(account.revenue), currency) : '—'}
                     </span>
                   </div>
                 </div>
@@ -648,7 +653,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
               <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
                   <p className="text-lg font-bold text-slate-900 dark:text-white">
-                    {formatRevenueCompact(account.revenue)}
+                    {formatRevenueCompact(account.revenue, currency)}
                   </p>
                   <p className="text-xs text-slate-500">Revenue</p>
                 </div>
@@ -792,7 +797,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                 <div>
                   <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Revenue</p>
                   <p className="text-sm text-slate-900 dark:text-white">
-                    {account.revenue ? formatCurrency(Number(account.revenue)) : '—'}
+                    {account.revenue ? formatMoney(Number(account.revenue), currency) : '—'}
                   </p>
                 </div>
                 <div>
@@ -1000,7 +1005,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                     Revenue
                   </span>
                   <span className="text-sm font-bold text-slate-900 dark:text-white">
-                    {account.revenue ? formatCurrency(Number(account.revenue)) : '—'}
+                    {account.revenue ? formatMoney(Number(account.revenue), currency) : '—'}
                   </span>
                 </div>
               </div>

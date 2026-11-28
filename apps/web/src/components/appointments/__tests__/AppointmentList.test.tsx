@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 import { AppointmentList } from '../AppointmentList';
 import { getCurrentMonthRange } from '@/hooks/useAppointmentFilters';
 import { mockListItem1, mockListItem2, mockStats } from '@/test/fixtures/appointment-data';
@@ -180,22 +180,21 @@ describe('AppointmentList', () => {
 
   it('renders status filter dropdown', () => {
     render(<AppointmentList {...defaultProps} />);
-    expect(screen.getByLabelText('Status filter')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Status')[0]).toBeInTheDocument();
   });
 
   it('renders type filter dropdown', () => {
     render(<AppointmentList {...defaultProps} />);
-    expect(screen.getByLabelText('Type filter')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Type')[0]).toBeInTheDocument();
   });
 
   it('renders table headers', () => {
     render(<AppointmentList {...defaultProps} />);
-    expect(screen.getByText('Title')).toBeInTheDocument();
-    expect(screen.getByText('Type')).toBeInTheDocument();
-    expect(screen.getByText('Time')).toBeInTheDocument();
-    expect(screen.getByText('Duration')).toBeInTheDocument();
-    expect(screen.getByText('Attendees')).toBeInTheDocument();
-    expect(screen.getByText('Status')).toBeInTheDocument();
+    // Within the table: the shared toolbar's filters are also named Type and Status.
+    const table = within(screen.getByRole('table'));
+    for (const name of ['Title', 'Type', 'Time', 'Duration', 'Attendees', 'Status']) {
+      expect(table.getByText(name)).toBeInTheDocument();
+    }
   });
 
   it('renders pagination when multiple pages', () => {

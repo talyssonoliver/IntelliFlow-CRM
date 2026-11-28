@@ -20,7 +20,7 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 187
+This statement covers the IntelliFlow CRM web application across all 189
 user-facing routes. Dynamic segment routes (e.g., `/contacts/[id]`,
 `/settings/help-center/articles/[id]/edit`) inherit conformance status from
 their parent static route and are not listed separately.
@@ -64,10 +64,11 @@ their parent static route and are not listed separately.
   `/agent-approvals/lead-scoring`, `/agent-approvals/logs`,
   `/agent-approvals/model-config`, `/agent-approvals/preview`,
   `/agent-approvals/sentiment`, `/agent-approvals/tools`
-- **Analytics & Insights (9):** `/analytics`, `/analytics/feedback`,
-  `/analytics/report-settings`, `/analytics/report-templates`,
-  `/analytics/saved/monthly`, `/analytics/saved/quarterly`,
-  `/analytics/saved/weekly`, `/analytics/scheduled-reports`, `/insights`
+- **Analytics & Insights (11):** `/analytics`, `/analytics/feedback`,
+  `/analytics/pipeline`, `/analytics/report-settings`,
+  `/analytics/report-templates`, `/analytics/sales`, `/analytics/saved/monthly`,
+  `/analytics/saved/quarterly`, `/analytics/saved/weekly`,
+  `/analytics/scheduled-reports`, `/insights`
 - **Governance (9):** `/governance`, `/governance/adr`,
   `/governance/compliance`, `/governance/policies`,
   `/governance/quality-reports`, `/governance/quality-reports/coverage`,
@@ -285,3 +286,4 @@ Users who encounter accessibility barriers can report issues via:
 | 1.13.0  | 2026-10-24 | Engineering (PG-203)                   | Added `/settings/privacy-requests` (the ADMIN data subject request queue) — scope now 185 routes; listed the three public `/dsar/[handle]` request, verify and export pages, which have no static parent to inherit from. Axe checks run in their component tests; the a11y-expert WCAG 2.1 AA review is part of the PG-203 close                                                                                                                                                                                                                                                                                                                   |
 | 1.14.0  | 2026-10-29 | Engineering (PG-203)                   | Listed the public booking page `/book/[handle]/[slug]` (PG-203 PR 1, #1003), which has no static parent and was missed when it shipped; route count unchanged (185). Lighthouse on 2026-10-29 with real content: `/book` accessibility 96 (after a layout-shift fix), `/calendar/event-types` 93, `/settings/privacy-requests` 96, `/dsar` pages 96-100 (artifacts/lighthouse/PG-203/local-run-note.md)                                                                                                                                                                                                                                             |
 | 1.15.0  | 2026-11-23 | Engineering (modules by business type) | Added `/settings/workspace` (the admin's business-type setting; a labelled radio group in a fieldset with a legend, a status banner on the dashboard) — scope now 187 routes; the onboarding welcome step gains the same required radio group; a11y-expert review pending                                                                                                                                                                                                                                                                                                                                                                           |
+| 1.16.0  | 2026-11-26 | Engineering (MVP-012, UI partner)      | Added `/analytics/sales` and `/analytics/pipeline` (owner 22/11: the Sales Reports and Pipeline Analysis nav links had only reopened the Overview) — scope now 189 routes; both use the shared page hero (one `h1`), the shared KPI card (cards that open data are links with the label and figure as their name), the shared period/export menus (buttons with `aria-label`, menu items with `menuitem`/`menuitemradio` roles) and labelled share bars; a11y-expert review pending                                                                                                                                                                 |

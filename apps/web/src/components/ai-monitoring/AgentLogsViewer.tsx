@@ -25,7 +25,11 @@ import { WorkflowProgressPanel } from './WorkflowProgressPanel';
 // Constants
 // ---------------------------------------------------------------------------
 
-const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Agent Logs' }];
+const BREADCRUMBS = [
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'AI & Agents', href: '/agent-approvals' },
+  { label: 'Agent Logs' },
+];
 
 const LOGS_SKELETON_KEYS = ['log-0', 'log-1', 'log-2'] as const;
 

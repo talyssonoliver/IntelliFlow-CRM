@@ -28,7 +28,11 @@ const ExperimentResultsPanel = lazy(() => import('./ExperimentResultsPanel'));
 // Breadcrumb config
 // ============================================
 
-const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Experiments' }];
+const BREADCRUMBS = [
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'AI & Agents', href: '/agent-approvals' },
+  { label: 'Experiments' },
+];
 
 const EXP_GRID_SKELETON_KEYS = [
   'exp-grid-0',

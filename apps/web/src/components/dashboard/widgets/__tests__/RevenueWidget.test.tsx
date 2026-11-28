@@ -91,3 +91,5 @@ describe('RevenueWidget', () => {
     expect(screen.queryByText('...')).not.toBeInTheDocument();
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

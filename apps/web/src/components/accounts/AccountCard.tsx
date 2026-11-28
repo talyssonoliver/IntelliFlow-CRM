@@ -43,10 +43,11 @@ function formatDate(date: Date | string, timezone: string = 'Europe/London'): st
   });
 }
 
-function formatCompactCurrency(value: number): string {
+function formatCompactCurrency(value: number, currency = 'GBP'): string {
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
-    currency: 'GBP',
+    currency,
+    currencyDisplay: 'narrowSymbol',
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(value);
@@ -66,7 +67,8 @@ function getInitials(name: string): string {
 }
 
 export function createAccountColumns(
-  handlers: Readonly<AccountRowHandlers>
+  handlers: Readonly<AccountRowHandlers>,
+  currency = 'GBP'
 ): ColumnDef<AccountRow>[] {
   return [
     {
@@ -118,7 +120,7 @@ export function createAccountColumns(
           <div className="flex items-center gap-2">
             <TierDot revenue={rawRevenue} />
             <span className="text-sm text-foreground">
-              {revenue == null ? '—' : formatCompactCurrency(revenue)}
+              {revenue == null ? '—' : formatCompactCurrency(revenue, currency)}
             </span>
           </div>
         );

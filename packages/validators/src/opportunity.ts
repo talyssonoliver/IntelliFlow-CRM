@@ -60,6 +60,8 @@ export const opportunityQuerySchema = paginationSchema.extend({
   maxProbability: z.number().int().min(0).max(100).optional(),
   dateFrom: z.coerce.date().optional(),
   dateTo: z.coerce.date().optional(),
+  /** Only deals not updated since this moment (the Deals sidebar's "Stalled" segment). */
+  updatedBefore: z.coerce.date().optional(),
 });
 
 export type OpportunityQueryInput = z.infer<typeof opportunityQuerySchema>;

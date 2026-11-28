@@ -362,7 +362,7 @@ describe('ReviewHistory', () => {
   describe('Sort and additional filters', () => {
     it('calls setFilters when sort option changed', () => {
       render(<ReviewHistory />);
-      const sortSelect = screen.getByLabelText(/sort by/i);
+      const sortSelect = screen.getAllByLabelText(/sort order/i)[0];
       fireEvent.change(sortSelect, { target: { value: 'confidence_asc' } });
       expect(mockSetFilters).toHaveBeenCalled();
       const call = mockSetFilters.mock.calls[0];
@@ -521,7 +521,7 @@ describe('ReviewHistory', () => {
       const toggles = screen.getAllByRole('button', { name: /audit trail/i });
       toggles.forEach((btn) => fireEvent.click(btn));
       // Should show days format (e.g., "3d 0h")
-      const timeCells = screen.getAllByText(/\d{1,3}d \d{1,2}h/);
+      const timeCells = screen.getAllByText(/^\d{1,4}d \d{1,2}h/);
       expect(timeCells.length).toBeGreaterThan(0);
     });
 

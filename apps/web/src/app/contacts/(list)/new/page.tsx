@@ -2,7 +2,6 @@
 
 import { isValidEmailAddress } from '@/lib/shared/email-address';
 import React, { useCallback, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -19,6 +18,7 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { ContactTypeSelect } from '@/components/contacts/ContactTypeSelect';
 import { EntitySearchField } from '@/components/tasks/EntitySearchField';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 // Step configuration
 type StepId = 'personal' | 'company' | 'additional';
 
@@ -327,37 +327,13 @@ export default function CreateNewContactPage() {
       <div className="flex flex-col gap-8">
         {/* Breadcrumb */}
         <div className="flex flex-col gap-4">
-          <nav aria-label="Breadcrumb" className="flex">
-            <ol className="flex items-center space-x-2">
-              <li>
-                <Link
-                  href="/dashboard"
-                  className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] text-sm font-medium transition-colors"
-                >
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-              </li>
-              <li>
-                <Link
-                  href="/contacts"
-                  className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] text-sm font-medium transition-colors"
-                >
-                  Contacts
-                </Link>
-              </li>
-              <li>
-                <span className="text-slate-300 dark:text-slate-600">/</span>
-              </li>
-              <li>
-                <span className="text-slate-900 dark:text-white text-sm font-medium">
-                  New Contact
-                </span>
-              </li>
-            </ol>
-          </nav>
+          <Breadcrumbs
+            endsWithCurrentPage={false}
+            items={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Contacts', href: '/contacts' },
+            ]}
+          />
 
           {/* Page Title */}
           <div className="flex flex-col gap-1">

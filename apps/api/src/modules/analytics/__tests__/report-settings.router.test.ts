@@ -39,6 +39,27 @@ describe('Report Settings Router (PG-187)', () => {
     caller = reportSettingsRouter.createCaller(ctx);
   });
 
+  // ─── currency (core: every plan, codex 27/11) ─────────────────────────────
+
+  describe('currency', () => {
+    it("returns the tenant's saved currency without writing a row", async () => {
+      (prismaMock.reportSettings.findUnique as any).mockResolvedValueOnce({ currency: 'USD' });
+
+      await expect(caller.currency()).resolves.toEqual({ currency: 'USD' });
+      expect(prismaMock.reportSettings.findUnique).toHaveBeenCalledWith({
+        where: { tenantId },
+        select: { currency: true },
+      });
+      expect(prismaMock.reportSettings.upsert).not.toHaveBeenCalled();
+    });
+
+    it('falls back to the default currency when the tenant has no settings row', async () => {
+      (prismaMock.reportSettings.findUnique as any).mockResolvedValueOnce(null);
+
+      await expect(caller.currency()).resolves.toEqual({ currency: 'GBP' });
+    });
+  });
+
   // ─── get ──────────────────────────────────────────────────────────────────
 
   describe('get', () => {
@@ -53,7 +74,7 @@ describe('Report Settings Router (PG-187)', () => {
           create: expect.objectContaining({
             tenantId,
             defaultRange: '30d',
-            currency: 'USD',
+            currency: 'GBP',
           }),
           update: {},
         })
@@ -221,7 +242,7 @@ describe('Report Settings Router (PG-187)', () => {
 
       expect(prismaMock.reportSettings.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          update: expect.objectContaining({ defaultRange: '30d', currency: 'USD' }),
+          update: expect.objectContaining({ defaultRange: '30d', currency: 'GBP' }),
         })
       );
       expect(result).toEqual(mockExistingSettings);

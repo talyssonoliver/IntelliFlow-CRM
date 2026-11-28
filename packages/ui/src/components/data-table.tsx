@@ -17,7 +17,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table';
 import { Button } from './button';
 import { EmptyState } from './empty-state';
-import type { EmptyStateEntity } from './entity-empty-state-config';
+import type { EmptyStateEntity, EmptyStateVariant } from './entity-empty-state-config';
 import { Checkbox } from './checkbox';
 import {
   DropdownMenu,
@@ -51,12 +51,22 @@ export interface DataTableProps<TData, TValue> {
   pageSize?: number;
   emptyMessage?: string;
   emptyIcon?: string;
+  /**
+   * `filtered` when the list is empty because of a search, filter or segment: the empty state says
+   * nothing matched instead of "No deals yet" (owner 27/11 review).
+   */
+  emptyVariant?: EmptyStateVariant;
   /** CRM entity type — renders rich illustrated empty state automatically */
   entity?: EmptyStateEntity;
   onRowClick?: (row: TData) => void;
   enableRowSelection?: boolean;
   /** With row selection on: which rows get a checkbox (all when omitted). */
   canSelectRow?: (row: TData) => boolean;
+  /**
+   * A stable id per row. Without it a selection is kept by row index, so a row that leaves the
+   * list (completed, deleted) hands its selection to the row that moves into its place.
+   */
+  getRowId?: (row: TData) => string;
   bulkActions?: BulkAction<TData>[];
   hidePagination?: boolean;
   columnSizing?: Record<string, number>;
@@ -220,9 +230,12 @@ function BulkActionsBar<T>({
               onClick={() => {
                 const handler = action.onClick || action.onExecute;
                 if (handler) {
-                  Promise.resolve(handler(selectedRows)).catch((error: unknown) => {
-                    console.error('[DataTable] Bulk action failed:', error);
-                  });
+                  // A done action clears the selection, so nothing stays selected for the next one.
+                  Promise.resolve(handler(selectedRows))
+                    .then(onClearSelection)
+                    .catch((error: unknown) => {
+                      console.error('[DataTable] Bulk action failed:', error);
+                    });
                 }
               }}
             >
@@ -353,10 +366,12 @@ export function DataTable<TData, TValue>({
   pageSize = 10,
   emptyMessage = 'No results found.',
   emptyIcon = 'search_off',
+  emptyVariant,
   entity,
   onRowClick,
   enableRowSelection,
   canSelectRow,
+  getRowId,
   bulkActions,
   hidePagination,
   columnSizing,
@@ -394,6 +409,7 @@ export function DataTable<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     enableRowSelection: rowSelectionRule(enableRowSelection, canSelectRow),
+    ...(getRowId ? { getRowId: (row: TData) => getRowId(row) } : {}),
     state: {
       sorting,
       columnFilters,
@@ -529,6 +545,7 @@ export function DataTable<TData, TValue>({
                   {entity ? (
                     <EmptyState
                       entity={entity}
+                      variant={emptyVariant}
                       showCta={false}
                       description={emptyMessage !== 'No results found.' ? emptyMessage : undefined}
                     />

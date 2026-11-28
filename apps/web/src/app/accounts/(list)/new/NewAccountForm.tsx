@@ -61,7 +61,7 @@ export default function NewAccountForm() {
     <div className="w-full">
       <PageHeader
         breadcrumbs={[
-          { label: 'Home', href: '/' },
+          { label: 'Dashboard', href: '/dashboard' },
           { label: 'Accounts', href: '/accounts' },
           { label: 'New Account' },
         ]}

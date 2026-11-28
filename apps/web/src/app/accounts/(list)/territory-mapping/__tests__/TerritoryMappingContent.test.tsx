@@ -179,7 +179,7 @@ describe('TerritoryMappingContent', () => {
     const { container } = render(<TerritoryMappingContent />);
     expect(screen.getByRole('heading', { level: 1, name: 'Territory Mapping' })).toBeDefined();
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' }).textContent).toBe(
-      'Home / Accounts / Territory Mapping'
+      'Dashboard / Accounts / Territory Mapping'
     );
     expect(
       container.querySelector('.grid.grid-cols-1.lg\\:grid-cols-12.gap-4.sm\\:gap-5')

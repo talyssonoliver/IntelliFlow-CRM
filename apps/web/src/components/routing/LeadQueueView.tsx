@@ -25,6 +25,8 @@ import {
   Skeleton,
 } from '@intelliflow/ui';
 import { useLeadQueue, useRouting } from '@/app/settings/routing/hooks/useRouting';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
+import { formatMoney } from '@/lib/format/money';
 
 interface AgentWorkloadEntry {
   userId: string;
@@ -32,6 +34,7 @@ interface AgentWorkloadEntry {
 }
 
 export function LeadQueueView() {
+  const currency = useTenantCurrency();
   const [scoreMin, setScoreMin] = useState<number | undefined>();
   const [source, setSource] = useState<string | undefined>();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -193,9 +196,9 @@ export function LeadQueueView() {
                       </span>
                     </td>
                     <td className="py-2 text-muted-foreground">
-                      {lead.estimatedValue
-                        ? `£${lead.estimatedValue.toLocaleString('en-GB')}`
-                        : '—'}
+                      {/* Stored in pence/cents, like the lead editor and the convert dialog read it
+                          (codex review 26/11: it showed 100 times too large). */}
+                      {lead.estimatedValue ? formatMoney(lead.estimatedValue / 100, currency) : '—'}
                     </td>
                   </tr>
                 ))}

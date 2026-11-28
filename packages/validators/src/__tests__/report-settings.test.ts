@@ -146,7 +146,7 @@ describe('updateReportSettingsSchema', () => {
 describe('DEFAULT_REPORT_SETTINGS', () => {
   it('uses 30d / USD / disabled scheduledDelivery', () => {
     expect(DEFAULT_REPORT_SETTINGS.defaultRange).toBe('30d');
-    expect(DEFAULT_REPORT_SETTINGS.currency).toBe('USD');
+    expect(DEFAULT_REPORT_SETTINGS.currency).toBe('GBP');
     expect(DEFAULT_REPORT_SETTINGS.scheduledDelivery.enabled).toBe(false);
     expect(DEFAULT_REPORT_SETTINGS.scheduledDelivery.recipients).toEqual([]);
   });

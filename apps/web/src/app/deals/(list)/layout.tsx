@@ -9,6 +9,7 @@ import {
   createDealsSidebarConfig,
   createDealsSettingsSidebarConfig,
   isDealSettingsPage,
+  SectionMobileBar,
 } from '@/components/sidebar';
 import { DealSettingsPanel } from '@/components/deals/DealSettingsPanel';
 import { DealSettingsSidebarNav } from '@/components/deals/DealSettingsSidebarNav';
@@ -46,6 +47,7 @@ export default function DealsListLayout({
             className="flex flex-1 flex-col h-full min-w-0 overflow-hidden bg-background relative"
             id="main-content"
           >
+            <SectionMobileBar title="Deals" />
             {/* Mobile header with sidebar trigger */}
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 md:p-4">

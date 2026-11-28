@@ -26,6 +26,7 @@ export function ActiveDealsWidget(_props: Readonly<WidgetProps>) {
 
   return (
     <KpiCard
+      href="/deals"
       label="Active Deals"
       icon="handshake"
       iconClassName="bg-primary/10 text-primary"

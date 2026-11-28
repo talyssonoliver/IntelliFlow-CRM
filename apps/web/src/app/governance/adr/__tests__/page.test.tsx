@@ -46,6 +46,56 @@ describe('ADRRegistryPage', () => {
     });
   });
 
+  // Codex review 26/11: search-as-you-type overlaps requests; a slow earlier response must not
+  // overwrite the newer one.
+  it('keeps the newest search results when an older request answers last', async () => {
+    let releaseFirst: (v: unknown) => void = () => {};
+    const slowFirst = new Promise((resolve) => {
+      releaseFirst = resolve;
+    });
+    mockFetch.mockImplementation(async (url: string) => {
+      if (url.includes('action=stats')) return ok(null);
+      if (url.includes('action=list')) {
+        await slowFirst;
+        return ok([{ ...adr, id: 'ADR-OLD', title: 'Stale result' }]);
+      }
+      return ok([{ ...adr, id: 'ADR-NEW', title: 'Fresh result' }]);
+    });
+    render(<ADRRegistryPage />);
+
+    fireEvent.change(screen.getByLabelText('Search ADRs'), { target: { value: 'fresh' } });
+    await waitFor(() => expect(screen.getByText(/Fresh result/)).toBeInTheDocument(), {
+      timeout: 2000,
+    });
+    releaseFirst(undefined);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.queryByText(/Stale result/)).toBeNull();
+    expect(screen.getByText(/Fresh result/)).toBeInTheDocument();
+  });
+
+  it('does not show an error when only a superseded search request fails', async () => {
+    let failFirst: (e: Error) => void = () => {};
+    const slowFirst = new Promise((_, reject) => {
+      failFirst = reject;
+    });
+    mockFetch.mockImplementation(async (url: string) => {
+      if (url.includes('action=stats')) return ok(null);
+      if (url.includes('action=list')) {
+        await slowFirst;
+        return ok([]);
+      }
+      return ok([{ ...adr, id: 'ADR-NEW', title: 'Fresh result' }]);
+    });
+    render(<ADRRegistryPage />);
+    fireEvent.change(screen.getByLabelText('Search ADRs'), { target: { value: 'fresh' } });
+    await waitFor(() => expect(screen.getByText(/Fresh result/)).toBeInTheDocument(), {
+      timeout: 2000,
+    });
+    failFirst(new Error('slow and failed'));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.queryByText(/Failed to fetch ADRs/)).toBeNull();
+  });
+
   it('logs stats failures without breaking the list', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockFetch.mockImplementation(async (url: string) => {
@@ -85,22 +135,23 @@ describe('ADRRegistryPage', () => {
     errorSpy.mockRestore();
   });
 
-  it('refetches the list from Search and from Clear', async () => {
+  it('searches as you type, once you stop for 300ms, and clearing lists all again', async () => {
     mockFetch.mockImplementation(async (url: string) =>
       ok(url.includes('action=stats') ? null : [adr])
     );
     render(<ADRRegistryPage />);
     await screen.findByText(/Use tRPC/);
 
-    fireEvent.change(screen.getByPlaceholderText(/Search ADRs/), { target: { value: 'trpc' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    const search = screen.getByPlaceholderText(/Search ADRs/);
+    fireEvent.change(search, { target: { value: 'trpc' } });
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith('/api/adr?action=search&q=trpc');
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    mockFetch.mockClear();
+    fireEvent.change(search, { target: { value: '' } });
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/Search ADRs/)).toHaveValue('');
+      expect(mockFetch).toHaveBeenCalledWith('/api/adr?action=list');
     });
   });
 

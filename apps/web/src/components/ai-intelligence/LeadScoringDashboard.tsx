@@ -39,7 +39,11 @@ const LeadScoringTrendChart = lazy(() => import('./LeadScoringTrendChart'));
 // Breadcrumb config
 // ============================================
 
-const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Lead Scoring' }];
+const BREADCRUMBS = [
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'AI & Agents', href: '/agent-approvals' },
+  { label: 'Lead Scoring' },
+];
 
 const LEAD_SCORING_SKELETON_KEYS = ['lead-score-0', 'lead-score-1', 'lead-score-2'] as const;
 

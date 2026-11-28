@@ -52,9 +52,16 @@ vi.mock('@intelliflow/db', () => {
         ? [{ email: addressOf(values[0]) }]
         : [{ locked: 1 }];
     },
+    // The per-record insight lock (codex 27/11).
+    $executeRaw: counted(1),
     processingRestriction: { findFirst: counted(null), findMany: counted([]) },
     dsarRequest: { findFirst: counted(null), findMany: counted([]) },
-    aIInsight: { findFirst: counted(null), create: counted({ id: 'insight-row' }) },
+    aIInsight: {
+      findFirst: counted(null),
+      create: counted({ id: 'insight-row' }),
+      // The newest insight about a record supersedes the older open ones (one updateMany).
+      updateMany: counted({ count: 0 }),
+    },
     notification: { findFirst: counted(null), create: counted({ id: 'n' }) },
     task: { create: counted({ id: 't' }) },
     leadActivity: { findFirst: counted(null), create: counted({ id: 'a' }) },

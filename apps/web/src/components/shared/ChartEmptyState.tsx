@@ -1,35 +1,43 @@
 /**
- * ChartEmptyState — the message a chart shows in its plot area when
- * `isEmptySeries` says there is nothing to draw (#1225 UI-013).
+ * ChartEmptyState — what a chart shows in its plot area when `isEmptySeries` says there is
+ * nothing to draw (#1225 UI-013).
  *
- * It fills the space the chart would take, so the card keeps its size.
+ * Owner 23/11 on Deal Forecast: "This empty state aren't following our shared ones". It used to
+ * draw its own dashed box; it is now the shared illustrated EmptyState (the one the Dashboard's
+ * Deals Won, Pipeline and Tasks cards use), so every chart's zero state matches every list's.
+ * It still fills the space the chart would take, so the card keeps its size.
  */
 
-import { cn } from '@intelliflow/ui';
+import { cn, EmptyState } from '@intelliflow/ui';
 import { EMPTY_CHART_MESSAGE } from '@/lib/charts/empty-series';
 
 export interface ChartEmptyStateProps {
+  /** The title, e.g. "No revenue in this period yet". */
   message?: string;
+  /** One line under the title saying what will show here. */
+  description?: string;
   /** Height when the parent gives none, e.g. `h-48`. */
   className?: string;
 }
 
 export function ChartEmptyState({
   message = EMPTY_CHART_MESSAGE,
+  description = 'This fills in as deals and activity come in.',
   className,
 }: Readonly<ChartEmptyStateProps>) {
   return (
     <output
       data-testid="chart-empty"
-      className={cn(
-        'flex h-full min-h-[8rem] w-full flex-1 flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border text-center text-sm text-muted-foreground',
-        className
-      )}
+      className={cn('flex h-full min-h-[8rem] w-full flex-1 flex-col justify-center', className)}
     >
-      <span className="material-symbols-outlined text-2xl" aria-hidden="true">
-        bar_chart
-      </span>
-      <span>{message}</span>
+      <EmptyState
+        entity="reports"
+        showCta={false}
+        size="sm"
+        title={message}
+        description={description}
+        className="py-2"
+      />
     </output>
   );
 }

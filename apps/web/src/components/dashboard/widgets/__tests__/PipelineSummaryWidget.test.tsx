@@ -345,3 +345,5 @@ describe('Pipeline footer on phones (owner 21/11)', () => {
     expect(screen.getByRole('link', { name: 'Open the board' })).toHaveClass('min-h-11');
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

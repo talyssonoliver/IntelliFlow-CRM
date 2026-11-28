@@ -18,6 +18,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { Deal } from './types';
 import { formatDealValue } from './types';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 
 interface DealCardProps {
   readonly deal: Deal;
@@ -40,6 +41,7 @@ export const DealCard = React.memo(function DealCard({
   isPending,
 }: Readonly<DealCardProps>) {
   const { timezone } = useTimezoneContext();
+  const currency = useTenantCurrency();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: deal.id,
     data: { type: 'deal', deal },
@@ -107,7 +109,7 @@ export const DealCard = React.memo(function DealCard({
             payments
           </span>
           <span className="font-semibold text-foreground text-xs sm:text-sm">
-            {formatDealValue(deal.value)}
+            {formatDealValue(deal.value, currency)}
           </span>
         </div>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">

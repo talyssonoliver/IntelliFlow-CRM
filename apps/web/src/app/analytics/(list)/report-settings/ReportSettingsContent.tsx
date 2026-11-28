@@ -44,10 +44,18 @@ export default function ReportSettingsContent() {
     enabled: isAuthenticated,
   });
   const updateMutation = trpc.analytics.reportSettings.update.useMutation({
-    onSuccess: () => utils.analytics.reportSettings.get.invalidate(),
+    onSuccess: () =>
+      Promise.all([
+        utils.analytics.reportSettings.get.invalidate(),
+        utils.analytics.reportSettings.currency.invalidate(),
+      ]),
   });
   const resetMutation = trpc.analytics.reportSettings.resetToDefaults.useMutation({
-    onSuccess: () => utils.analytics.reportSettings.get.invalidate(),
+    onSuccess: () =>
+      Promise.all([
+        utils.analytics.reportSettings.get.invalidate(),
+        utils.analytics.reportSettings.currency.invalidate(),
+      ]),
   });
 
   // ─── Local state ───────────────────────────────────────────────────────────
@@ -117,7 +125,7 @@ export default function ReportSettingsContent() {
   return (
     <ModuleSettingsShell
       breadcrumbs={[
-        { label: 'Home', href: '/' },
+        { label: 'Dashboard', href: '/dashboard' },
         { label: 'Analytics', href: '/analytics' },
         { label: 'Report Settings' },
       ]}

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { FollowUpsDueSection, followUpSummary, type FollowUpLead } from '../FollowUpsDueSection';
 
 const NOW = new Date('2026-11-17T10:00:00.000Z');
@@ -16,13 +16,16 @@ const lead = (over: Partial<FollowUpLead>): FollowUpLead => ({
 
 describe('FollowUpsDueSection', () => {
   it('renders nothing when no follow-up is due', () => {
-    const { container } = render(<FollowUpsDueSection leads={[]} total={0} now={NOW} />);
+    const { container } = render(
+      <FollowUpsDueSection onDone={() => undefined} leads={[]} total={0} now={NOW} />
+    );
     expect(container.firstChild).toBeNull();
   });
 
   it('names each lead, says when it is due, and links to the lead to act', () => {
     render(
       <FollowUpsDueSection
+        onDone={() => undefined}
         now={NOW}
         total={2}
         leads={[
@@ -54,18 +57,20 @@ describe('FollowUpsDueSection', () => {
   it('colours overdue red and due today amber', () => {
     render(
       <FollowUpsDueSection
+        onDone={() => undefined}
         now={NOW}
         total={2}
         leads={[lead({}), lead({ id: 'lead-2', lastContactedAt: null })]}
       />
     );
-    expect(screen.getByText('Due today').className).toContain('text-amber-600');
+    expect(screen.getByText(/^Due today/).className).toContain('text-amber-600');
     expect(screen.getByText('Never contacted').className).toContain('text-red-600');
   });
 
   it('counts all due leads in its heading and links to the Needs Follow-up view for the rest', () => {
     render(
       <FollowUpsDueSection
+        onDone={() => undefined}
         now={NOW}
         total={121}
         leads={[lead({}), lead({ id: 'l2' }), lead({ id: 'l3' })]}
@@ -81,13 +86,14 @@ describe('FollowUpsDueSection', () => {
   });
 
   it('shows no see-all link when every due lead is already listed', () => {
-    render(<FollowUpsDueSection now={NOW} total={1} leads={[lead({})]} />);
+    render(<FollowUpsDueSection onDone={() => undefined} now={NOW} total={1} leads={[lead({})]} />);
     expect(screen.queryByRole('link', { name: /See all leads/ })).toBeNull();
   });
 
   it('splits the list into Today and Overdue when it holds both (#46)', () => {
     render(
       <FollowUpsDueSection
+        onDone={() => undefined}
         now={NOW}
         total={2}
         dueToday={1}
@@ -102,13 +108,58 @@ describe('FollowUpsDueSection', () => {
   });
 
   it('shows no group headings when every listed lead is the same kind', () => {
-    render(<FollowUpsDueSection now={NOW} total={1} dueToday={1} leads={[lead({})]} />);
+    render(
+      <FollowUpsDueSection
+        onDone={() => undefined}
+        now={NOW}
+        total={1}
+        dueToday={1}
+        leads={[lead({})]}
+      />
+    );
     expect(screen.queryByRole('list', { name: 'Today' })).toBeNull();
   });
 
   it('shows no summary line when no today count is given', () => {
-    render(<FollowUpsDueSection now={NOW} total={1} leads={[lead({})]} />);
+    render(<FollowUpsDueSection onDone={() => undefined} now={NOW} total={1} leads={[lead({})]} />);
     expect(screen.queryByTestId('follow-ups-summary')).toBeNull();
+  });
+});
+
+describe('FollowUpsDueSection done checkbox', () => {
+  it('says "Follow-up · Due today · last contacted 10 Nov" on one meta line', () => {
+    render(<FollowUpsDueSection onDone={() => undefined} now={NOW} total={1} leads={[lead({})]} />);
+    expect(screen.getByTestId('todo-meta')).toHaveTextContent(
+      'Follow-up · Due today · last contacted 10 Nov'
+    );
+  });
+
+  it('checking a row marks that lead done and nothing else', () => {
+    const onDone = vi.fn();
+    render(
+      <FollowUpsDueSection
+        onDone={onDone}
+        now={NOW}
+        total={2}
+        leads={[lead({}), lead({ id: 'lead-2', firstName: 'Bob', lastName: 'Stone' })]}
+      />
+    );
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Mark done: Follow up with Bob Stone' }));
+    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(onDone).toHaveBeenCalledWith('lead-2');
+  });
+
+  it('disables the checkbox of the row being saved', () => {
+    render(
+      <FollowUpsDueSection
+        onDone={() => undefined}
+        pendingLeadId="lead-1"
+        now={NOW}
+        total={1}
+        leads={[lead({})]}
+      />
+    );
+    expect(screen.getByRole('checkbox')).toBeDisabled();
   });
 });
 

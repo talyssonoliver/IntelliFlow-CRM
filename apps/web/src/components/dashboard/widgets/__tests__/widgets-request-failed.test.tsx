@@ -195,3 +195,5 @@ describe('dashboard widgets when a background refresh fails after a good load', 
     expectNoFailure();
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

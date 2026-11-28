@@ -14,7 +14,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { isEmptySeries } from '@/lib/charts/empty-series';
-import { formatGBPCompact } from '@/lib/format/gbp-compact';
+import { formatMoneyCompact } from '@/lib/format/money';
 import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 
 export interface TimeSeriesEntry {
@@ -25,9 +25,15 @@ export interface TimeSeriesEntry {
 interface RevenueTrendChartProps {
   readonly timeSeries: readonly TimeSeriesEntry[];
   readonly formatCurrency: (value: number) => string;
+  /** The tenant currency for the axis ticks (default GBP). */
+  readonly currency?: string;
 }
 
-export function RevenueTrendChart({ timeSeries, formatCurrency }: RevenueTrendChartProps) {
+export function RevenueTrendChart({
+  timeSeries,
+  formatCurrency,
+  currency = 'GBP',
+}: RevenueTrendChartProps) {
   return (
     <div className="h-64">
       {isEmptySeries(timeSeries, 'value') ? (
@@ -48,7 +54,7 @@ export function RevenueTrendChart({ timeSeries, formatCurrency }: RevenueTrendCh
               className="fill-muted-foreground"
               tickLine={false}
               axisLine={false}
-              tickFormatter={(v) => formatGBPCompact(v)}
+              tickFormatter={(v) => formatMoneyCompact(v, currency)}
             />
             <Tooltip
               formatter={(value) => {

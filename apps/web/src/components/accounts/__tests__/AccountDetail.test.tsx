@@ -231,6 +231,7 @@ vi.mock('@/components/shared/SuggestedTagsRow', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
+  cn: (...a: unknown[]) => a.filter(Boolean).join(' '),
   Card: ({
     children,
     className,
