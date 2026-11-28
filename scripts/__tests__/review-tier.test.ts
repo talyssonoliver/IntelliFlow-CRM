@@ -3,13 +3,18 @@
  * No model is called anywhere here.
  */
 import { describe, it, expect, vi } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 import {
   DEFAULT_MODELS,
+  PREFERRED_MODELS,
   LIGHT_MAX_LINES,
   RISKY_LINES,
+  catalogFallbackFor,
   classifyDiff,
   classifyFile,
   isCommentOnlyDiff,
+  isReviewGateFile,
   modelForTier,
   parseModelCache,
   parseModelCatalog,
@@ -31,7 +36,8 @@ describe('classifyFile', () => {
     ['pnpm-lock.yaml', 'generated'],
     ['apps/project-tracker/docs/metrics/_global/Sprint_plan.csv', 'generated'],
     ['artifacts/x/y.json', 'generated'],
-    ['scripts/pre-ship.mjs', 'tooling'],
+    ['scripts/lib/coverage-floor.mjs', 'tooling'],
+    ['scripts/pre-ship.mjs', 'code'],
     ['.github/workflows/ci.yml', 'tooling'],
     ['apps/web/src/app/page.tsx', 'code'],
     ['packages/db/prisma/schema.prisma', 'code'],
@@ -320,5 +326,107 @@ describe('parseModelCatalog and effort validation', () => {
       effort: 'high',
       note: '',
     });
+  });
+});
+
+describe('catalog fallback models', () => {
+  it('lists the strong and light preferences next to the tier models', () => {
+    expect(PREFERRED_MODELS.strong).toEqual(['gpt-6.1-sol', 'gpt-6-sol', 'gpt-5.6-sol']);
+    expect(PREFERRED_MODELS.light).toEqual(['gpt-6-luna', 'gpt-5.6-luna']);
+  });
+
+  it('takes the first preference the catalog lists, in preference order', () => {
+    const catalog = [
+      { slug: 'gpt-5.6-sol', efforts: null },
+      { slug: 'gpt-6-sol', efforts: null },
+    ];
+    expect(catalogFallbackFor('strong', catalog, {})).toEqual({
+      model: 'gpt-6-sol',
+      effort: 'high',
+    });
+    expect(catalogFallbackFor('light', [{ slug: 'gpt-5.6-luna', efforts: null }], {})).toEqual({
+      model: 'gpt-5.6-luna',
+      effort: 'medium',
+    });
+  });
+
+  it('picks an explicit supported effort, never null, and returns null when none is listed', () => {
+    const lowOnly = [{ slug: 'gpt-6.1-sol', efforts: ['low'] }];
+    expect(catalogFallbackFor('strong', lowOnly, {})).toEqual({
+      model: 'gpt-6.1-sol',
+      effort: 'low',
+    });
+    const mid = [{ slug: 'gpt-6.1-sol', efforts: ['low', 'medium'] }];
+    expect(catalogFallbackFor('strong', mid, {})?.effort).toBe('medium');
+    expect(catalogFallbackFor('strong', [{ slug: 'other', efforts: null }], {})).toBeNull();
+    expect(catalogFallbackFor('strong', null, {})).toBeNull();
+    expect(catalogFallbackFor('skip', [{ slug: 'gpt-6.1-sol', efforts: null }], {})).toBeNull();
+  });
+
+  it('reads the preference list from an env override', () => {
+    const env = { CODEX_REVIEW_STRONG_FALLBACKS: 'x-1, x-2' };
+    expect(catalogFallbackFor('strong', ['x-2', 'gpt-6.1-sol'], env)?.model).toBe('x-2');
+  });
+});
+
+describe('the review gate files are always risky', () => {
+  const gateFiles = [
+    'scripts/codex-review.mjs',
+    'scripts/codex-review-metrics.mjs',
+    'scripts/lib/review-tier.mjs',
+    'scripts/lib/review-policy.mjs',
+    'scripts/lib/codex-review-run.mjs',
+    'scripts/lib/codex-chunk-review.mjs',
+    'scripts/lib/codex-diff.mjs',
+    'scripts/lib/codex-fingerprint.mjs',
+    'scripts/lib/review-commands.mjs',
+    'scripts/lib/review-rounds.mjs',
+    'scripts/pre-ship.mjs',
+    'scripts/lib/preship-gate.mjs',
+    'tools/audit/codex-review-waivers.yaml',
+  ];
+
+  it.each(gateFiles)('%s is reviewable code in the review-gate risk area', (file) => {
+    expect(isReviewGateFile(file)).toBe(true);
+    expect(classifyFile(file)).toBe('code');
+    expect(riskArea(file)).toBe('review-gate');
+  });
+
+  it.each(gateFiles)('a one-line diff of %s is the strong tier, never skip or light', (file) => {
+    const r = classifyDiff([stat(file, 1, 0)], [], { scoped: [file] });
+    expect(r).toMatchObject({ tier: 'strong', risky: true, riskyAreas: ['review-gate'] });
+  });
+
+  it('a comment-only change to a gate file is still reviewed', () => {
+    const file = 'scripts/lib/review-tier.mjs';
+    const text = `diff --git a/${file} b/${file}\n--- a/${file}\n+++ b/${file}\n@@ -1 +1 @@\n-// a\n+// b\n`;
+    expect(classifyDiff([stat(file, 1, 1)], [{ file, text }], { scoped: [file] }).tier).toBe(
+      'strong'
+    );
+  });
+
+  it('their tests and unrelated scripts keep their kinds', () => {
+    expect(riskArea('scripts/__tests__/review-tier.test.ts')).toBeNull();
+    expect(classifyFile('scripts/__tests__/review-tier.test.ts')).toBe('test');
+    expect(isReviewGateFile('scripts/lib/coverage-floor.mjs')).toBe(false);
+    expect(classifyFile('scripts/lib/coverage-floor.mjs')).toBe('tooling');
+    expect(isReviewGateFile('docs/codex-review.md')).toBe(false);
+    expect(classifyDiff([stat('scripts/lib/coverage-floor.mjs')]).tier).toBe('skip');
+  });
+});
+
+describe('every module the review gate imports is a gate file', () => {
+  it('covers each relative .mjs import of the gate, run and chunk modules', () => {
+    const root = path.resolve(__dirname, '..');
+    const files = ['codex-review.mjs', 'lib/codex-review-run.mjs', 'lib/codex-chunk-review.mjs'];
+    const imported = new Set<string>();
+    for (const f of files) {
+      const src = fs.readFileSync(path.join(root, f), 'utf8');
+      for (const m of src.matchAll(/from '(\.{1,2}\/(?:lib\/)?[\w.-]+\.mjs)'/g)) {
+        imported.add(path.posix.join(path.posix.dirname(`scripts/${f}`), m[1]));
+      }
+    }
+    expect(imported.size).toBeGreaterThan(8);
+    for (const rel of imported) expect(isReviewGateFile(rel), rel).toBe(true);
   });
 });

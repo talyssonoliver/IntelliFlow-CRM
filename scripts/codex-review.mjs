@@ -22,6 +22,8 @@
  *   - docs / tests / generated / comment-only diffs: NO model. Recorded as "skipped: <reason>".
  *   - small diffs: Codex on a light model and effort; large or risky ones: the strong Codex.
  *     Models are passed as flags per run; ~/.codex/config.toml is never edited.
+ *     A model missing from the plan falls back to the codex config model, then (when codex rejects
+ *     that too) to the tier's first preference listed in ~/.codex/models_cache.json.
  *
  * Reviewer selection (lib/review-policy.mjs):
  *   - Codex (OAuth) reviews. Claude (`claude -p`, lean flags) reviews ONLY when Codex is
@@ -56,6 +58,7 @@
  *   CODEX_REVIEW_VERBOSE=1         — print full reviewer stdout to stderr
  *   CODEX_REVIEW_FORCE_FALLBACK=1  — treat codex as unavailable (the policy above then decides)
  *   CODEX_REVIEW_ALLOW_CLAUDE=1    — owner/orchestrator: let Claude review a non-risky diff too
+ *   CODEX_REVIEW_MODELS_CACHE       — path of models_cache.json (read-only)
  *   CODEX_REVIEW_MAX_WAIT_MIN=20   — longest wait for Codex's reset before deferring
  *   CODEX_REVIEW_MAX_ROUNDS=4      — failed model rounds per branch before the human route
  *   CODEX_REVIEW_{LIGHT,STRONG}_{MODEL,EFFORT} — override the tier models
@@ -74,6 +77,7 @@ import os from 'node:os';
 import { claudeReviewText, runClaudeReviewer, runCodexReviewer } from './lib/review-commands.mjs';
 import { createGate } from './lib/codex-review-run.mjs';
 import { parseClaudeUsage } from './lib/review-metrics.mjs';
+import { isReviewGateFile } from './lib/review-tier.mjs';
 import {
   activeWaivers,
   checkWaivers,
@@ -254,6 +258,8 @@ const EXCLUDE_PATTERNS = [
 ];
 
 function isInScope(file) {
+  // The gate's own files are always reviewed, whatever the exclusions below say.
+  if (isReviewGateFile(file)) return true;
   if (EXCLUDE_PATTERNS.some((p) => p.test(file))) return false;
   return SONAR_SOURCES.some((src) => file.startsWith(src + '/') || file.startsWith(src));
 }

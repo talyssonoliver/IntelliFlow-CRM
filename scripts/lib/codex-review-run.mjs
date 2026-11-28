@@ -18,7 +18,12 @@ import {
 } from './codex-chunk-review.mjs';
 import { collectScopedDiff } from './codex-diff.mjs';
 import { makeReviewIo } from './codex-review-cache.mjs';
-import { classifyDiff, modelForTier, parseModelCatalog } from './review-tier.mjs';
+import {
+  catalogFallbackFor,
+  classifyDiff,
+  modelForTier,
+  parseModelCatalog,
+} from './review-tier.mjs';
 import { deferredMessage, makeReviewer } from './review-policy.mjs';
 import {
   deltaAgainst,
@@ -124,9 +129,9 @@ export function createGate(d) {
   /** The model slugs the ChatGPT plan lists (codex's own cache), or null when unreadable. */
   function planModels() {
     try {
-      return parseModelCatalog(
-        fs.readFileSync(path.join(d.homedir(), '.codex', 'models_cache.json'), 'utf8')
-      );
+      const file =
+        env.CODEX_REVIEW_MODELS_CACHE || path.join(d.homedir(), '.codex', 'models_cache.json');
+      return parseModelCatalog(fs.readFileSync(file, 'utf8'));
     } catch {
       return null;
     }
@@ -448,6 +453,13 @@ export function createGate(d) {
       now,
       models: { strong },
       env,
+      // Asked only after the retry on the codex config model was rejected as "not on the plan" too.
+      // Reads the plan catalog (plain JSON) only; the codex config is never read.
+      catalogFallback: () => {
+        const available = planModels();
+        const alt = available ? catalogFallbackFor(plan.tier, available, env) : null;
+        return alt ? { ...alt, reason: 'codex rejected its config model too' } : null;
+      },
     });
     out('[codex-review] Preparing diff + review prompt ...\n');
     const result = runChunkedReview({

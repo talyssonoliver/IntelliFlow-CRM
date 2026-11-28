@@ -27,6 +27,17 @@ export const DEFAULT_MODELS = Object.freeze({
   strong: Object.freeze({ model: 'gpt-6.2-sol', effort: 'high' }),
 });
 
+/**
+ * Models to fall back to, best first, when neither the tier's model nor the user's codex config
+ * model is on the ChatGPT plan (28/11/2026: the config named a model missing from models_cache.json,
+ * so every review deferred). The first one the plan's catalog lists is used; none listed = defer.
+ * CODEX_REVIEW_{LIGHT,STRONG}_FALLBACKS (comma separated) override them.
+ */
+export const PREFERRED_MODELS = Object.freeze({
+  light: Object.freeze(['gpt-6-luna', 'gpt-5.6-luna']),
+  strong: Object.freeze(['gpt-6.1-sol', 'gpt-6-sol', 'gpt-5.6-sol']),
+});
+
 const normalize = (file) => file.replace(/\\/g, '/');
 
 const DOC_RE = /(^docs\/|\.(md|mdx|txt|rst)$|(^|\/)(LICENSE|CHANGELOG)[^/]*$)/i;
@@ -36,12 +47,26 @@ const GENERATED_RE =
   /(pnpm-lock\.yaml$|package-lock\.json$|\.lock$|\.snap$|\.generated\.|__generated__|\.min\.(js|css)$|^artifacts\/|(^|\/)(dist|coverage|\.next)\/|^apps\/project-tracker\/docs\/metrics\/|(^|\/)Sprint_plan[^/]*\.(csv|json)$|^\.specify\/)/;
 const TOOLING_RE = /^(scripts|tools|infra|\.github|\.husky|\.claude)\//;
 
+/**
+ * The review gate's own files, the pre-ship gate and the waivers file. A change to them can switch
+ * a review off, so they are never "tooling": they are reviewable code and always risky (strong tier,
+ * never skip or light). Tests under __tests__ stay tests.
+ */
+const GATE_FILE_RE =
+  /^(scripts\/(codex-review[^/]*\.mjs|pre-ship\.mjs|lib\/(review-[^/]*|codex-[^/]*|preship-[^/]*)\.mjs)|tools\/audit\/codex-review-waivers\.yaml)$/;
+
+/** True for a file of the review gate, the pre-ship gate or the codex review waivers. */
+export function isReviewGateFile(file) {
+  return GATE_FILE_RE.test(normalize(file));
+}
+
 /** 'docs' | 'test' | 'generated' | 'tooling' | 'code' for one changed path. */
 export function classifyFile(file) {
   const f = normalize(file);
   if (GENERATED_RE.test(f)) return 'generated';
   if (DOC_RE.test(f)) return 'docs';
   if (TEST_RE.test(f)) return 'test';
+  if (GATE_FILE_RE.test(f)) return 'code';
   if (TOOLING_RE.test(f)) return 'tooling';
   return 'code';
 }
@@ -70,6 +95,7 @@ export function riskArea(file) {
   const f = normalize(file);
   const kind = classifyFile(f);
   if (kind === 'docs' || kind === 'test' || kind === 'generated') return null;
+  if (GATE_FILE_RE.test(f)) return 'review-gate';
   // Migrations and the prisma schema are risky wherever they live; tooling paths are not reviewed.
   for (const [area, re] of RISK_RULES) {
     if ((area === 'migration' || area === 'prisma-schema') && re.test(f)) return area;
@@ -232,6 +258,36 @@ export function modelForTier(tier, env = process.env, available = null) {
     }
   }
   return { model, effort, note: '' };
+}
+
+/**
+ * The first model of the tier's preference list that the plan's catalog lists, with the tier's
+ * effort (or, when that model's cached efforts lack it, the best one it lists), or null when none
+ * is available.
+ * `available` is parseModelCatalog output (or slugs).
+ */
+const EFFORT_ORDER = ['high', 'medium', 'low', 'minimal'];
+
+export function catalogFallbackFor(tier, available, env = process.env) {
+  if (tier === 'skip' || !available || available.length === 0) return null;
+  const key = tier === 'light' ? 'LIGHT' : 'STRONG';
+  const override = (env[`CODEX_REVIEW_${key}_FALLBACKS`] || '')
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const wanted = override.length > 0 ? override : PREFERRED_MODELS[tier];
+  const effort = env[`CODEX_REVIEW_${key}_EFFORT`] || DEFAULT_MODELS[tier].effort;
+  for (const slug of wanted) {
+    const entry = available.find((m) => (typeof m === 'string' ? m : m.slug) === slug);
+    if (!entry) continue;
+    const efforts = typeof entry === 'string' ? null : entry.efforts;
+    if (!efforts || efforts.length === 0 || efforts.includes(effort))
+      return { model: slug, effort };
+    // An explicit supported effort: null would inherit the config effort, which may be unsupported.
+    const best = EFFORT_ORDER.find((e) => efforts.includes(e)) ?? efforts[0];
+    return { model: slug, effort: best };
+  }
+  return null;
 }
 
 /** Model slugs from the text of ~/.codex/models_cache.json, or null when unreadable. */

@@ -285,3 +285,69 @@ describe('deferredMessage', () => {
     ).toMatch(/Claude fallback was tried/);
   });
 });
+
+describe('makeReviewer: the codex config model is missing from the plan too', () => {
+  const NOT_ON_PLAN = { raw: '', status: 1, stderr: 'model_not_found', stdout: '' };
+  const ok = { raw: GOOD, status: 0, stderr: '', stdout: '' };
+  const alt = {
+    model: 'gpt-6.1-sol',
+    effort: 'high',
+    reason: 'codex rejected its config model too',
+  };
+
+  it('retries on the catalog preference after the config retry fails, and says so', () => {
+    const runCodex = vi
+      .fn()
+      .mockReturnValueOnce(NOT_ON_PLAN)
+      .mockReturnValueOnce(NOT_ON_PLAN)
+      .mockReturnValue(ok);
+    const { review } = setup({ runCodex, catalogFallback: () => alt });
+    const r = review('P');
+    expect(runCodex).toHaveBeenNthCalledWith(3, 'P', { model: 'gpt-6.1-sol', effort: 'high' });
+    expect(r).toMatchObject({ reviewer: 'codex', model: 'gpt-6.1-sol' });
+    expect(r.modelFallback.reason).toMatch(
+      /codex rejected its config model too, retried with the catalog preference gpt-6\.1-sol/
+    );
+    review('Q');
+    expect(runCodex).toHaveBeenNthCalledWith(4, 'Q', { model: 'gpt-6.1-sol', effort: 'high' });
+  });
+
+  it('keeps the catalog model for the next chunk when its first try was capped and the reset retry worked', () => {
+    const capped = {
+      raw: '',
+      status: 1,
+      stderr: "You've hit your usage limit. Try again at 10:10 PM.",
+      stdout: '',
+    };
+    const runCodex = vi
+      .fn()
+      .mockReturnValueOnce(NOT_ON_PLAN) // the tier model
+      .mockReturnValueOnce(NOT_ON_PLAN) // the codex config model
+      .mockReturnValueOnce(capped) // the catalog model, capped
+      .mockReturnValue(ok); // the reset retry, then every later chunk
+    const { review, sleep } = setup({ runCodex, catalogFallback: () => alt });
+    const first = review('P');
+    expect(sleep).toHaveBeenCalledTimes(1);
+    expect(runCodex).toHaveBeenNthCalledWith(4, 'P', { model: 'gpt-6.1-sol', effort: 'high' });
+    expect(first).toMatchObject({ reviewer: 'codex', model: 'gpt-6.1-sol' });
+    expect(first.modelFallback.reason).toMatch(/retried with the catalog preference/);
+    const second = review('Q');
+    expect(runCodex).toHaveBeenNthCalledWith(5, 'Q', { model: 'gpt-6.1-sol', effort: 'high' });
+    expect(second).toMatchObject({ reviewer: 'codex', model: 'gpt-6.1-sol' });
+    expect(runCodex).toHaveBeenCalledTimes(5);
+  });
+
+  it('defers as before when no catalog model is available', () => {
+    const runCodex = vi.fn(() => NOT_ON_PLAN);
+    const { review, runClaude } = setup({
+      runCodex,
+      catalogFallback: () => null,
+      claudeUsable: false,
+    });
+    const r = review('P');
+    expect(runCodex).toHaveBeenCalledTimes(2);
+    expect(r.parsed).toBeNull();
+    expect(r.deferred).toBeTruthy();
+    expect(runClaude).not.toHaveBeenCalled();
+  });
+});

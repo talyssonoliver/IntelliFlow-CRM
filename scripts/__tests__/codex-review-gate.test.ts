@@ -53,6 +53,8 @@ function gate(dir: string, env: Record<string, string> = {}) {
     // A PATH with no codex or claude on it: nothing could review even if the script tried.
     env: {
       ...gitEnv(process.env),
+      // pinned: a push run with a raised round cap must not change what these tests assert
+      CODEX_REVIEW_MAX_ROUNDS: '4',
       PATH: path.dirname(process.execPath) + path.delimiter + gitDir(),
       ...env,
     },
