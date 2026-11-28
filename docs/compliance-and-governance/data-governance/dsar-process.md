@@ -42,7 +42,7 @@ firm's data.
 | Request Type      | UK GDPR Article | What happens                                                                                         |
 | ----------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
 | **Access**        | Article 15      | Export link emailed after confirmation. The firm then finishes the request (see Access below).       |
-| **Portability**   | Article 20      | Same export as Access, in JSON.                                                                      |
+| **Portability**   | Article 20      | Same export as Access, as JSON or CSV. An admin can also send it to another controller (20(2)).      |
 | **Erasure**       | Article 17      | An admin reviews, then runs one erasure. See Erasure below.                                          |
 | **Rectification** | Article 16      | An admin records the decision and corrects the record in the CRM by hand.                            |
 | **Restriction**   | Article 18      | A restriction starts when the request is confirmed. It stays until an admin lifts it.                |
@@ -189,8 +189,63 @@ The page also saves the same data as CSV (IFC-317): one spreadsheet file per
 category, plus the processing information and what was withheld, in one zip,
 built in the browser from the same download. A text cell that a spreadsheet
 would run as a formula, or that would lose leading zeros or digits, gets a
-leading apostrophe; the JSON keeps the exact text. Not built yet: sending the
-data directly to another controller (Article 20(2)). See Known gaps.
+leading apostrophe; the JSON keeps the exact text.
+
+### Sending the data to another controller (Article 20(2), IFC-317)
+
+A person who asks for portability can ask the firm to send their data straight
+to another controller, "where technically feasible". The firm does this through
+an admin-approved transfer, in `/settings/privacy-requests`, with **Send to
+another controller** on a confirmed portability request (open or completed).
+Only the firm's ADMIN users can do it, and only for their own firm's requests.
+
+1. **Approve.** The admin names the recipient (organisation and contact email),
+   records in a few words how the person asked for the transfer, and confirms
+   that the person did ask. All of that is required. A request that is not a
+   portability request, is not confirmed yet, or was refused cannot be sent on.
+2. **The link.** The system makes a random 32-byte token. The recipient's link
+   is `/dsar/transfer#t=<token>`: the token sits in the URL fragment, which
+   browsers never send to a server, so the path names no firm, request or
+   person. Only a keyed hash of the token is stored (HMAC-SHA256 under a key
+   derived from the booking salt, as for the person's own links). The link
+   **works once and expires after 7 days**. The expiry is checked on the server
+   against the stored time. Rotating the booking salt kills every outstanding
+   link.
+3. **Delivery.** The link is emailed to the recipient through the same DSAR
+   email path as the person's own notices (no new provider). The email names the
+   firm and the expiry, never the person. If the email is not accepted, the
+   admin is shown the link **once**, in the dialog, to send it by another
+   channel they trust, and then records that they did ("I have sent it"). It
+   cannot be shown again, because only the hash is kept: an unsent link is
+   revoked and replaced.
+4. **Download.** The recipient opens the page and presses a button (the page
+   never fetches on load, so a mail scanner cannot use the link up). The file is
+   the same export the person would download, built live for the request's own
+   firm and address, and saved as JSON or CSV. The first successful download
+   uses the link up in one conditional database write: five simultaneous
+   downloads give one export. The export is built before the link is spent, so a
+   failure does not burn it. The page keeps the data in memory only.
+5. **One answer for a dead link.** An unknown token, a used link, an expired
+   link, a revoked link, and a link whose request was refused afterwards all get
+   the same `404` and the same message, never saying which. The public route is
+   rate limited per client (one attempt every two seconds).
+6. **Revoke.** An admin can revoke a link that has not been used yet.
+
+**Record on the request.** Every step is a row (`dsar_transfer_events`), at most
+one of each kind per transfer, with who and when: `CREATED` and `SENT` by the
+approving admin (and how: email or by hand), `DOWNLOADED` by the recipient,
+`EXPIRED` by the system (stamped with the expiry time, written when it is first
+noticed: when the admin opens the dialog or someone tries the link), `REVOKED`
+by an admin. The dialog shows them in order. The events hold ids and times only:
+no address, name or token. The audit log also gets a row for the creation, a
+manual send, a revocation and the recipient's download (system actor, no
+address, token or IP).
+
+**What the transfer is not.** The file holds the same data as the person's own
+export, including the free text the firm still withholds and counts (see above):
+a transfer sent before the request is completed carries that same note. Once the
+recipient has the file, they are a controller for it. The firm's responsibility
+is the approval and the record.
 
 ### Erasure (Article 17, owner Q19)
 
@@ -357,7 +412,8 @@ Admins also get an email, with no personal data, when a request is confirmed.
 `/settings/privacy-requests` is for ADMIN users only. It shows open requests
 (overdue first), closed requests and the active restrictions. Actions: log a
 request, extend, complete, refuse, cancel an erasure, revoke an export link,
-export for a staff-handled request, and lift a restriction.
+export for a staff-handled request, send a portability export to another
+controller (and revoke that link), and lift a restriction.
 
 Every change is tenant scoped and audit logged. The audit rows hold the request
 id and the action, never the person's data. A staff export and a completed
@@ -399,7 +455,7 @@ track training. The previous training record was fabricated and was removed (see
 | AI search can return too few results when many matches are restricted (filtered after the row limit; fail-safe).                                                                                        | #1021               |
 | Email suppressions and bounce receipts are not in the export (bounce receipts of the person are anonymised by the erasure; suppressions are kept so a bounced address is never mailed again).           | #956                |
 | Erasure of communications (emails, tickets, chats, feedback, notifications, drafts) and stored files is manual.                                                                                         | IFC-316 (Sprint 19) |
-| No direct transfer to another controller (Article 20(2)). CSV export is built.                                                                                                                          | IFC-317 (Sprint 19) |
+| A transfer link that fails after the recipient's page received the data (for example the browser is closed before saving) is spent: the admin makes a new one.                                          | By design           |
 | No Article 19 notice to recipients of erased, corrected or restricted data.                                                                                                                             | IFC-318 (Sprint 19) |
 | The firm's retention period and transfer safeguards are not stated by Aurora. The export links to the firm's privacy notice, or says the firm has not published one and the person may ask it directly. | By design           |
 
@@ -411,8 +467,9 @@ track training. The previous training record was fabricated and was removed (see
 - [GDPR Compliance Assessment](../compliance/gdpr-compliance.md)
 - [GDPR Compliance Checklist](../compliance/gdpr-compliance-checklist.csv)
 - [ADR-007 Data Governance](../../architecture/adr/ADR-007-data-governance.md)
-- Migration:
-  `packages/db/prisma/migrations/20261022120000_dsar_requests/migration.sql`
+- Migrations:
+  `packages/db/prisma/migrations/20261022120000_dsar_requests/migration.sql` and
+  `packages/db/prisma/migrations/20261128100000_dsar_transfers/migration.sql`
 
 ## Tests
 
@@ -425,6 +482,8 @@ track training. The previous training record was fabricated and was removed (see
   `apps/api/src/modules/privacy/__tests__/`
 - Real database (RLS, caps, erasure, locks, deadline job):
   `tests/integration/dsar.test.ts`
+- Real database (Article 20(2) transfer: single use, expiry, other firm, hashed
+  token, audit trail): `tests/integration/dsar-transfer.test.ts`
 - AI worker guards:
   `apps/ai-worker/src/lib/__tests__/data-request-guard.test.ts`
 - Web pages: tests beside the pages under `apps/web/src/app/(public)/dsar/` and

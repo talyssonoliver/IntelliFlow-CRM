@@ -35,6 +35,23 @@ export function takeDsarFragment(win: Window = window): DsarLink | null {
   return link;
 }
 
+const TRANSFER_FRAGMENT = /^#t=([A-Za-z0-9_-]{43})$/;
+
+/** Parse `#t=<token>` (an IFC-317 transfer link); anything else is not one. */
+export function parseTransferFragment(hash: string): string | null {
+  const match = TRANSFER_FRAGMENT.exec(hash);
+  return match ? match[1]! : null;
+}
+
+/** Read the transfer token from the current URL once, then strip the fragment from it. */
+export function takeTransferFragment(win: Window = window): string | null {
+  const token = parseTransferFragment(win.location.hash);
+  if (win.location.hash) {
+    win.history.replaceState(win.history.state, '', win.location.pathname + win.location.search);
+  }
+  return token;
+}
+
 /** What each request type asks for, in the person's words. */
 export const DSAR_TYPE_COPY: Record<DsarRequestType, { label: string; detail: string }> = {
   ACCESS: {

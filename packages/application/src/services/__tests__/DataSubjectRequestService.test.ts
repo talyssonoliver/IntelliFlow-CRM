@@ -240,6 +240,7 @@ const tokens: DsarTokenPort = {
     issued += 1;
     return { token: `token-${issued}`, hash: `hash-${issued}` };
   },
+  hash: (token) => token.replace('token-', 'hash-'),
   matches: (token, stored) => stored !== null && stored === token.replace('token-', 'hash-'),
   capEmailHash: (email) => `cap:${email.replace(/\+[^@]*/, '')}`,
 };

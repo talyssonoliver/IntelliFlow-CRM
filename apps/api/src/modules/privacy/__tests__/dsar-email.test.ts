@@ -237,3 +237,33 @@ describe('createDsarEmailNotifier', () => {
     warns.mockRestore();
   });
 });
+
+describe('TRANSFER_LINK (IFC-317, Art 20(2))', () => {
+  const TRANSFER_LINK = 'https://app.example.invalid/dsar/transfer#t=' + 'B'.repeat(43);
+  const notice: PersonNotice = {
+    kind: 'TRANSFER_LINK',
+    to: 'privacy@jones.example.invalid',
+    firmName,
+    link: TRANSFER_LINK,
+    expiresAt: DATE,
+  };
+
+  it('goes to the recipient, with the link and the expiry, and says it works once', () => {
+    const email = buildDsarEmail(notice);
+    expect(email.to).toEqual(['privacy@jones.example.invalid']);
+    expect(email.textBody).toContain(TRANSFER_LINK);
+    expect(email.htmlBody).toContain(`href="${TRANSFER_LINK}"`);
+    expect(email.textBody).toContain('works once');
+    expect(email.textBody).toContain('22 November 2026');
+    expect(email.textBody).toContain('Article 20(2)');
+  });
+
+  it('names no person, address or request, and keeps the firm name out of header injection', () => {
+    const email = buildDsarEmail(notice);
+    const everything = `${email.subject}\n${email.textBody}\n${email.htmlBody}`;
+    expect(everything).not.toContain('ada@example.invalid');
+    expect(email.subject).not.toMatch(/[\r\n]/);
+    expect(email.htmlBody).not.toContain('<Law>');
+    expect(email.subject).not.toContain('B'.repeat(43));
+  });
+});

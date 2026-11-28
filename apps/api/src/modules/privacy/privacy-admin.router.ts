@@ -10,22 +10,26 @@
  * record id, so staff cannot probe arbitrary addresses, and returns booleans and a date.
  */
 import { TRPCError } from '@trpc/server';
-import type { DsarRecord } from '@intelliflow/application';
+import type { DsarRecord, DsarTransferView } from '@intelliflow/application';
 import { effectiveDeadline, isTerminalDsarStatus } from '@intelliflow/domain';
 import {
   dsarCancelErasureSchema,
   dsarCompleteAccessSchema,
   dsarCompleteSchema,
+  dsarCreateTransferSchema,
   dsarExtendSchema,
   dsarIdInputSchema,
   dsarLiftRestrictionSchema,
   dsarListSchema,
   dsarLogRequestSchema,
   dsarRejectSchema,
+  dsarTransferIdSchema,
   restrictionForSchema,
+  type DsarCreateTransferResultDto,
   type DsarErasureResultDto,
   type DsarExportDto,
   type DsarRequestDto,
+  type DsarTransferDto,
   type ProcessingRestrictionStatusDto,
 } from '@intelliflow/validators';
 import { adminTenantProcedure, createTRPCRouter, tenantProcedure } from '../../trpc';
@@ -49,6 +53,8 @@ const INVALID_MESSAGES: Record<string, string> = {
   resolutionNoteLength:
     'The note and the withholding reasons together are too long (2000 characters). Shorten them.',
   type: 'This action does not apply to this type of request.',
+  transferNotAllowed:
+    'Only a confirmed portability request can be sent to another controller (Article 20(2)).',
 };
 
 const REFUSED_MESSAGES: Record<string, string> = {
@@ -94,6 +100,36 @@ function assertOk<T extends { outcome: string }>(
         message: REFUSED_MESSAGES[r.reason] ?? 'This action is not allowed now.',
       });
   }
+}
+
+function transferService(ctx: Pick<Context, 'services'>) {
+  const service = ctx.services?.dsarTransfer;
+  if (!service) {
+    console.error('[privacy] DsarTransferService is not wired');
+    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: UNAVAILABLE });
+  }
+  return service;
+}
+
+/** Names, times and states only: the token and its hash never leave the server. */
+export function toTransferDto(view: DsarTransferView): DsarTransferDto {
+  return {
+    id: view.id,
+    recipientName: view.recipientName,
+    recipientEmail: view.recipientEmail,
+    basis: view.basis,
+    state: view.state,
+    expiresAt: view.expiresAt.toISOString(),
+    createdAt: view.createdAt.toISOString(),
+    events: view.events.map((e) => ({
+      kind: e.kind,
+      actorType: e.actorType,
+      actorLabel: e.actorLabel,
+      via: e.via,
+      occurredAt: e.occurredAt.toISOString(),
+    })),
+    awaitingSend: view.state === 'ACTIVE' && !view.events.some((e) => e.kind === 'SENT'),
+  };
 }
 
 function dsarService(ctx: Pick<Context, 'services'>) {
@@ -375,6 +411,111 @@ export const privacyAdminRouter = createTRPCRouter({
     await audit(ctx, 'UPDATE', input.id, { change: 'EXPORT_REVOKED' });
     return { ok: true as const };
   }),
+
+  // IFC-317 (Art 20(2)): a portability export sent to another controller, admin-approved.
+  transfers: adminTenantProcedure
+    .input(dsarIdInputSchema)
+    .query(async ({ ctx, input }): Promise<DsarTransferDto[]> => {
+      const result = await transferService(ctx).list({
+        tenantId: ctx.tenant.tenantId,
+        requestId: input.id,
+        now: new Date(),
+      });
+      assertOk(result);
+      return result.transfers.map(toTransferDto);
+    }),
+
+  createTransfer: adminTenantProcedure
+    .input(dsarCreateTransferSchema)
+    .mutation(async ({ ctx, input }): Promise<DsarCreateTransferResultDto> => {
+      const now = new Date();
+      const service = transferService(ctx);
+      const result = await service.create({
+        tenantId: ctx.tenant.tenantId,
+        requestId: input.id,
+        actorId: ctx.tenant.userId,
+        recipientName: input.recipientName,
+        recipientEmail: input.recipientEmail,
+        basis: input.basis,
+        now,
+      });
+      assertOk(result);
+      // The recipient's name and address stay on the transfer row, not in the audit metadata.
+      // The transfer is stored and maybe emailed already, and a manual link cannot be shown again:
+      // a failed audit write must not turn this into an error. Retried once, then logged (ids and
+      // the error class only), as the staff export does.
+      const metadata = {
+        change: 'TRANSFER_CREATED',
+        transferId: result.transfer.id,
+        delivered: result.delivered,
+      };
+      await audit(ctx, 'CREATE', input.id, metadata, true)
+        .catch(() => audit(ctx, 'CREATE', input.id, metadata, true))
+        .catch((error: unknown) => {
+          console.error('[privacy] Transfer audit row not written', {
+            requestId: input.id,
+            tenantId: ctx.tenant.tenantId,
+            transferId: result.transfer.id,
+            error: error instanceof Error ? error.name : 'unknown',
+          });
+        });
+      // The transfer exists now, and a manual link cannot be shown again: a failed re-read must
+      // not lose it. Fall back to the record the service just made (the admin's list refetches).
+      const listed = await service
+        .list({ tenantId: ctx.tenant.tenantId, requestId: input.id, now })
+        .catch(() => null);
+      const view =
+        listed?.outcome === 'OK'
+          ? listed.transfers.find((t) => t.id === result.transfer.id)
+          : undefined;
+      return {
+        transfer: toTransferDto(
+          view ?? {
+            ...result.transfer,
+            state: 'ACTIVE',
+            events: [],
+            // Not listed, so not known to be sent: the email flag is what the admin acts on.
+          }
+        ),
+        delivered: result.delivered,
+        manualLink: result.manualLink,
+      };
+    }),
+
+  markTransferSent: adminTenantProcedure
+    .input(dsarTransferIdSchema)
+    .mutation(async ({ ctx, input }) => {
+      const result = await transferService(ctx).markSent({
+        tenantId: ctx.tenant.tenantId,
+        id: input.id,
+        actorId: ctx.tenant.userId,
+        now: new Date(),
+      });
+      assertOk(result);
+      // Filed under the request, like the creation and the download, with the transfer in the metadata.
+      await audit(ctx, 'UPDATE', result.requestId, {
+        change: 'TRANSFER_SENT_BY_ADMIN',
+        transferId: input.id,
+      });
+      return { ok: true as const };
+    }),
+
+  revokeTransfer: adminTenantProcedure
+    .input(dsarTransferIdSchema)
+    .mutation(async ({ ctx, input }) => {
+      const result = await transferService(ctx).revoke({
+        tenantId: ctx.tenant.tenantId,
+        id: input.id,
+        actorId: ctx.tenant.userId,
+        now: new Date(),
+      });
+      assertOk(result);
+      await audit(ctx, 'UPDATE', result.requestId, {
+        change: 'TRANSFER_REVOKED',
+        transferId: input.id,
+      });
+      return { ok: true as const };
+    }),
 
   exportData: adminTenantProcedure
     .input(dsarIdInputSchema)

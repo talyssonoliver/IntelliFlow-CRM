@@ -69,7 +69,7 @@ export function saveExport(data: DsarExportDto, doc: Document = document): void 
   URL.revokeObjectURL(url);
 }
 
-function Summary({ data }: Readonly<{ data: DsarExportDto }>) {
+export function Summary({ data }: Readonly<{ data: DsarExportDto }>) {
   const info = data.processingInformation;
   const sections = Object.entries(data.data);
   return (

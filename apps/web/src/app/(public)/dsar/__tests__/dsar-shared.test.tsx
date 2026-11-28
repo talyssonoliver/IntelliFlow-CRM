@@ -2,7 +2,14 @@
  * PG-203 DSAR — the emailed link's fragment is read once and stripped (spec S4).
  */
 import { describe, it, expect, vi } from 'vitest';
-import { dueDateLabel, errorCode, parseDsarFragment, takeDsarFragment } from '../dsar-shared';
+import {
+  dueDateLabel,
+  errorCode,
+  parseDsarFragment,
+  parseTransferFragment,
+  takeDsarFragment,
+  takeTransferFragment,
+} from '../dsar-shared';
 
 const TOKEN = 'A'.repeat(43);
 
@@ -59,5 +66,30 @@ describe('helpers', () => {
     expect(errorCode({ data: { code: 'NOT_FOUND' } })).toBe('NOT_FOUND');
     expect(errorCode(new Error('x'))).toBeUndefined();
     expect(errorCode(null)).toBeUndefined();
+  });
+});
+
+describe('IFC-317 transfer fragment', () => {
+  it('reads only a bare 43-character token, with no id in it', () => {
+    expect(parseTransferFragment(`#t=${TOKEN}`)).toBe(TOKEN);
+    for (const hash of ['', '#t=', '#t=short', `#t=${TOKEN}x`, `#r=clhrequest000000000.${TOKEN}`]) {
+      expect(parseTransferFragment(hash)).toBeNull();
+    }
+  });
+
+  it('returns the token and strips the fragment, even a malformed one', () => {
+    const win = fakeWindow(`#t=${TOKEN}`);
+    expect(takeTransferFragment(win)).toBe(TOKEN);
+    expect(win.history.replaceState).toHaveBeenCalledWith(
+      { from: 'test' },
+      '',
+      '/dsar/smith-law/verify'
+    );
+    const bad = fakeWindow('#t=nonsense');
+    expect(takeTransferFragment(bad)).toBeNull();
+    expect(bad.history.replaceState).toHaveBeenCalled();
+    const clean = fakeWindow('');
+    expect(takeTransferFragment(clean)).toBeNull();
+    expect(clean.history.replaceState).not.toHaveBeenCalled();
   });
 });

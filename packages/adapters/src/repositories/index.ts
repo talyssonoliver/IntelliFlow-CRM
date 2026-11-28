@@ -69,6 +69,7 @@ export * from './PrismaStripeSubscriptionRepository';
 
 // Data subject requests and processing restrictions (PG-203)
 export * from './PrismaDsarRepository';
+export * from './PrismaDsarTransferRepository'; // IFC-317 Art 20(2)
 export * from './PrismaProcessingRestrictionRepository';
 export * from './PrismaSubjectDataRepository';
 

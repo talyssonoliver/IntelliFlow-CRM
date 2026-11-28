@@ -69,7 +69,8 @@ describe('Sitemap Reconciliation', () => {
     // MVP-007: +1, the signed-in home (app/(public)/signed-in-home) → 221.
     // Workspace business type: +1, /settings/workspace → 222.
     // MVP-012: +2, Analytics Sales Reports and Pipeline Analysis (analytics/(list)/sales, /pipeline) → 224.
-    expect(pageFiles.length).toBe(224);
+    // IFC-317: +1, the public Art 20(2) transfer download (public)/dsar/transfer → 225.
+    expect(pageFiles.length).toBe(225);
   });
 
   // TC-26

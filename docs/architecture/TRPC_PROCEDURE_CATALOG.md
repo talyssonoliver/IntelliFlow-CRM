@@ -614,25 +614,30 @@
 
 ## privacy (17)
 
-| Procedure                       | Type | Auth   | Input schema                | Summary                                            |
-| ------------------------------- | ---- | ------ | --------------------------- | -------------------------------------------------- |
-| `privacy.getFirm`               | Q    | pub    | `dsarFirmLookupSchema`      | Public firm lookup by handle for the request form  |
-| `privacy.submit`                | M    | pub    | `dsarSubmitSchema`          | Submit a data subject request (email-verified)     |
-| `privacy.verify`                | M    | pub    | `dsarTokenInputSchema`      | Verify a request by emailed token                  |
-| `privacy.downloadExport`        | M    | pub    | `dsarTokenInputSchema`      | Download the access export (token-gated)           |
-| `privacy.restrictionFor`        | Q    | tenant | `restrictionForSchema`      | Processing-restriction banner status for a record  |
-| `privacy.admin.list`            | Q    | adminT | `dsarListSchema`            | List data requests (optional status filter)        |
-| `privacy.admin.restrictions`    | Q    | adminT | —                           | List active processing restrictions                |
-| `privacy.admin.logRequest`      | M    | adminT | `dsarLogRequestSchema`      | Log a request received outside the form            |
-| `privacy.admin.extend`          | M    | adminT | `dsarExtendSchema`          | Extend the response deadline                       |
-| `privacy.admin.previewErasure`  | Q    | adminT | `dsarIdInputSchema`         | Preview what an erasure would remove               |
-| `privacy.admin.complete`        | M    | adminT | `dsarCompleteSchema`        | Complete a request (runs erasure where applicable) |
-| `privacy.admin.completeAccess`  | M    | adminT | `dsarCompleteAccessSchema`  | Complete an access or portability request          |
-| `privacy.admin.reject`          | M    | adminT | `dsarRejectSchema`          | Reject a request with a reason                     |
-| `privacy.admin.cancelErasure`   | M    | adminT | `dsarCancelErasureSchema`   | Cancel a pending erasure                           |
-| `privacy.admin.liftRestriction` | M    | adminT | `dsarLiftRestrictionSchema` | Lift a processing restriction                      |
-| `privacy.admin.revokeExport`    | M    | adminT | `dsarIdInputSchema`         | Revoke a generated export link                     |
-| `privacy.admin.exportData`      | M    | adminT | `dsarIdInputSchema`         | Generate the data export for a request             |
+| Procedure                        | Type | Auth   | Input schema                 | Summary                                            |
+| -------------------------------- | ---- | ------ | ---------------------------- | -------------------------------------------------- |
+| `privacy.getFirm`                | Q    | pub    | `dsarFirmLookupSchema`       | Public firm lookup by handle for the request form  |
+| `privacy.submit`                 | M    | pub    | `dsarSubmitSchema`           | Submit a data subject request (email-verified)     |
+| `privacy.verify`                 | M    | pub    | `dsarTokenInputSchema`       | Verify a request by emailed token                  |
+| `privacy.downloadExport`         | M    | pub    | `dsarTokenInputSchema`       | Download the access export (token-gated)           |
+| `privacy.downloadTransfer`       | M    | pub    | `dsarTransferDownloadSchema` | Art 20(2): download a transfer once (token only)   |
+| `privacy.restrictionFor`         | Q    | tenant | `restrictionForSchema`       | Processing-restriction banner status for a record  |
+| `privacy.admin.list`             | Q    | adminT | `dsarListSchema`             | List data requests (optional status filter)        |
+| `privacy.admin.restrictions`     | Q    | adminT | —                            | List active processing restrictions                |
+| `privacy.admin.logRequest`       | M    | adminT | `dsarLogRequestSchema`       | Log a request received outside the form            |
+| `privacy.admin.extend`           | M    | adminT | `dsarExtendSchema`           | Extend the response deadline                       |
+| `privacy.admin.previewErasure`   | Q    | adminT | `dsarIdInputSchema`          | Preview what an erasure would remove               |
+| `privacy.admin.complete`         | M    | adminT | `dsarCompleteSchema`         | Complete a request (runs erasure where applicable) |
+| `privacy.admin.completeAccess`   | M    | adminT | `dsarCompleteAccessSchema`   | Complete an access or portability request          |
+| `privacy.admin.reject`           | M    | adminT | `dsarRejectSchema`           | Reject a request with a reason                     |
+| `privacy.admin.cancelErasure`    | M    | adminT | `dsarCancelErasureSchema`    | Cancel a pending erasure                           |
+| `privacy.admin.liftRestriction`  | M    | adminT | `dsarLiftRestrictionSchema`  | Lift a processing restriction                      |
+| `privacy.admin.revokeExport`     | M    | adminT | `dsarIdInputSchema`          | Revoke a generated export link                     |
+| `privacy.admin.exportData`       | M    | adminT | `dsarIdInputSchema`          | Generate the data export for a request             |
+| `privacy.admin.transfers`        | Q    | adminT | `dsarIdInputSchema`          | List a request's Art 20(2) transfers and steps     |
+| `privacy.admin.createTransfer`   | M    | adminT | `dsarCreateTransferSchema`   | Send a portability export to another controller    |
+| `privacy.admin.markTransferSent` | M    | adminT | `dsarTransferIdSchema`       | Record that the admin sent a transfer link         |
+| `privacy.admin.revokeTransfer`   | M    | adminT | `dsarTransferIdSchema`       | Revoke an unused transfer link                     |
 
 ---
 

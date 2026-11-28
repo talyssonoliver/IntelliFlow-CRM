@@ -23,6 +23,7 @@ export * from './ModuleAccessPort';
 export * from './QuotaRepositoryPort';
 export * from './PurposeSpendPort'; // PG-199
 export * from './DsarRepositoryPort'; // PG-203 DSAR
+export * from './DsarTransferRepositoryPort'; // IFC-317 Art 20(2)
 export * from './SubjectDataPort'; // PG-203 DSAR
 export * from './ProcessingRestrictionPort'; // PG-203 DSAR
 

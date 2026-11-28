@@ -694,25 +694,30 @@ compatibility.
 
 #### `privacy` Router (17 procedures)
 
-| Procedure               | Type | Description                                        |
-| ----------------------- | ---- | -------------------------------------------------- |
-| `getFirm`               | Q    | Public firm lookup by handle for the request form  |
-| `submit`                | M    | Submit a data subject request (email-verified)     |
-| `verify`                | M    | Verify a request by emailed token                  |
-| `downloadExport`        | M    | Download the access export (token-gated)           |
-| `restrictionFor`        | Q    | Processing-restriction banner status for a record  |
-| `admin.list`            | Q    | List data requests (optional status filter)        |
-| `admin.restrictions`    | Q    | List active processing restrictions                |
-| `admin.logRequest`      | M    | Log a request received outside the form            |
-| `admin.extend`          | M    | Extend the response deadline                       |
-| `admin.previewErasure`  | Q    | Preview what an erasure would remove               |
-| `admin.complete`        | M    | Complete a request (runs erasure where applicable) |
-| `admin.completeAccess`  | M    | Complete an access or portability request          |
-| `admin.reject`          | M    | Reject a request with a reason                     |
-| `admin.cancelErasure`   | M    | Cancel a pending erasure                           |
-| `admin.liftRestriction` | M    | Lift a processing restriction                      |
-| `admin.revokeExport`    | M    | Revoke a generated export link                     |
-| `admin.exportData`      | M    | Generate the data export for a request             |
+| Procedure                | Type | Description                                        |
+| ------------------------ | ---- | -------------------------------------------------- |
+| `getFirm`                | Q    | Public firm lookup by handle for the request form  |
+| `submit`                 | M    | Submit a data subject request (email-verified)     |
+| `verify`                 | M    | Verify a request by emailed token                  |
+| `downloadExport`         | M    | Download the access export (token-gated)           |
+| `downloadTransfer`       | M    | Art 20(2): download a transfer once (token only)   |
+| `restrictionFor`         | Q    | Processing-restriction banner status for a record  |
+| `admin.list`             | Q    | List data requests (optional status filter)        |
+| `admin.restrictions`     | Q    | List active processing restrictions                |
+| `admin.logRequest`       | M    | Log a request received outside the form            |
+| `admin.extend`           | M    | Extend the response deadline                       |
+| `admin.previewErasure`   | Q    | Preview what an erasure would remove               |
+| `admin.complete`         | M    | Complete a request (runs erasure where applicable) |
+| `admin.completeAccess`   | M    | Complete an access or portability request          |
+| `admin.reject`           | M    | Reject a request with a reason                     |
+| `admin.cancelErasure`    | M    | Cancel a pending erasure                           |
+| `admin.liftRestriction`  | M    | Lift a processing restriction                      |
+| `admin.revokeExport`     | M    | Revoke a generated export link                     |
+| `admin.exportData`       | M    | Generate the data export for a request             |
+| `admin.transfers`        | Q    | List a request's Art 20(2) transfers and steps     |
+| `admin.createTransfer`   | M    | Send a portability export to another controller    |
+| `admin.markTransferSent` | M    | Record that the admin sent a transfer link         |
+| `admin.revokeTransfer`   | M    | Revoke an unused transfer link                     |
 
 ---
 

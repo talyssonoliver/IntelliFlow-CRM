@@ -33,6 +33,7 @@ import {
   PrismaAppointmentRepository,
   PrismaConversationSearchRepository,
   PrismaDsarRepository,
+  PrismaDsarTransferRepository,
   PrismaProcessingRestrictionRepository,
   PrismaSubjectDataRepository,
   InMemoryEventBus,
@@ -91,6 +92,7 @@ import {
   NotificationService,
   ConversationSearchService,
   DataSubjectRequestService,
+  DsarTransferService,
 } from '@intelliflow/application';
 import {
   getAuditLogger,
@@ -354,6 +356,7 @@ const createAdapters = async (prismaClient: PrismaClient) => {
   const appointmentRepository = new PrismaAppointmentRepository(prismaClient);
   // PG-203 DSAR: requests, processing restrictions, and one person's CRM data.
   const dsarRepository = new PrismaDsarRepository(prismaClient);
+  const dsarTransferRepository = new PrismaDsarTransferRepository(prismaClient);
   const processingRestrictionRepository = new PrismaProcessingRestrictionRepository(prismaClient);
   const subjectDataRepository = new PrismaSubjectDataRepository(prismaClient);
 
@@ -511,6 +514,7 @@ const createAdapters = async (prismaClient: PrismaClient) => {
     experimentRepository,
     appointmentRepository,
     dsarRepository,
+    dsarTransferRepository,
     processingRestrictionRepository,
     subjectDataRepository,
     eventBus,
@@ -578,16 +582,28 @@ const createServices = async (prismaClient: PrismaClient) => {
   );
 
   // PG-203 DSAR: the firm is the controller; links carry the token in the URL fragment only.
+  const dsarNotifications = createDsarEmailNotifier({
+    sender: adapters.notificationService,
+    adminEmails: (tenantId) => adapters.dsarRepository.adminEmails(tenantId),
+  });
+  const dsarTokens = createDsarTokenPort();
+  const dsarAppUrl = () => requiredProdEnv('APP_URL', process.env.APP_URL, 'http://localhost:3000');
   const dataSubjectRequestService = new DataSubjectRequestService({
     repo: adapters.dsarRepository,
     subjectData: adapters.subjectDataRepository,
     restrictions: adapters.processingRestrictionRepository,
-    notifications: createDsarEmailNotifier({
-      sender: adapters.notificationService,
-      adminEmails: (tenantId) => adapters.dsarRepository.adminEmails(tenantId),
-    }),
-    tokens: createDsarTokenPort(),
-    appUrl: () => requiredProdEnv('APP_URL', process.env.APP_URL, 'http://localhost:3000'),
+    notifications: dsarNotifications,
+    tokens: dsarTokens,
+    appUrl: dsarAppUrl,
+  });
+  // IFC-317 (Art 20(2)): admin-approved transfer of a portability export to another controller.
+  const dsarTransferService = new DsarTransferService({
+    requests: adapters.dsarRepository,
+    transfers: adapters.dsarTransferRepository,
+    exports: dataSubjectRequestService,
+    notifications: dsarNotifications,
+    tokens: dsarTokens,
+    appUrl: dsarAppUrl,
   });
 
   const contactService = new ContactService(
@@ -832,6 +848,7 @@ const createServices = async (prismaClient: PrismaClient) => {
     leadService,
     // PG-203: data subject requests
     dataSubjectRequestService,
+    dsarTransferService,
     contactService,
     accountService,
     opportunityService,

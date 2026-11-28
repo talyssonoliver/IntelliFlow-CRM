@@ -25,6 +25,17 @@ export type DsarNotice =
       withheld: boolean;
     }
   | {
+      /**
+       * IFC-317 (Art 20(2)): to the OTHER controller, not the person. Fixed text: it names the
+       * firm and the expiry, never the person, their address or anything they typed.
+       */
+      kind: 'TRANSFER_LINK';
+      to: string;
+      firmName: string;
+      link: string;
+      expiresAt: Date;
+    }
+  | {
       kind: 'EXTENDED';
       to: string;
       firmName: string;
@@ -77,6 +88,8 @@ export interface DsarNotificationPort {
 export interface DsarTokenPort {
   /** 32 random bytes as base64url (43 characters) and its HMAC. */
   issue(): { token: string; hash: string };
+  /** The HMAC of a presented token, to find its row (IFC-317 transfer links are looked up by hash). */
+  hash(token: string): string;
   /** Constant-time comparison; a null stored hash compares against a dummy. */
   matches(token: string, storedHash: string | null): boolean;
   /** HMAC of the +tag-folded email, for the cross-tenant cap. */

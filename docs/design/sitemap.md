@@ -1,6 +1,6 @@
 # IntelliFlow CRM - Sitemap
 
-**Total Pages**: 224 | **Flows**: 42 | **Layouts**: 37 | **API Routers**: 60
+**Total Pages**: 225 | **Flows**: 42 | **Layouts**: 37 | **API Routers**: 60
 
 _Location_: `docs/design/sitemap.md` · _Last Updated_: 2026-07-21 · _Procs_: 232
 
@@ -80,6 +80,7 @@ intelliflow.com
 │   ├── /dsar/[handle]                    [PG-203] Public data subject request form (external entry, noindex, not in sitemap.xml, no sidebar) → FLOW-040 (DSAR)
 │   │   ├── /dsar/[handle]/verify         [PG-203] Confirm request from emailed link (external entry, noindex, token in URL fragment)
 │   │   └── /dsar/[handle]/export         [PG-203] Download data export from emailed link (external entry, noindex, token in URL fragment)
+│   ├── /dsar/transfer                    [IFC-317] Art 20(2): another controller downloads a transferred export once (external entry, noindex, token in URL fragment)
 │   │
 │   ├── /login                            → FLOW-001
 │   ├── /signup                           → FLOW-001
@@ -632,6 +633,7 @@ apps/web/src/app/
 │   │   └── [id]/page.tsx         # /careers/[id]
 │   ├── lp/[slug]/page.tsx        # /lp/[slug]
 │   ├── book/[handle]/[slug]/page.tsx  # /book/[handle]/[slug] (PG-203, noindex)
+│   ├── dsar/transfer/page.tsx    # /dsar/transfer (IFC-317, noindex)
 │   └── dsar/[handle]/
 │       ├── page.tsx              # /dsar/[handle] (PG-203, noindex)
 │       ├── verify/page.tsx       # /dsar/[handle]/verify (PG-203, noindex)

@@ -36,6 +36,7 @@ import {
 } from './components/RequestActionDialog';
 import { LogRequestDialog, TYPE_LABELS } from './components/LogRequestDialog';
 import { WorkspaceExportCard } from './components/WorkspaceExportCard';
+import { TransferDialog, canTransfer } from './components/TransferDialog';
 
 const OPEN_TITLE_ID = 'open-requests-title';
 // The server requires a reason of at least 10 characters to lift a restriction.
@@ -114,10 +115,12 @@ function RequestRow({
   request,
   onAction,
   onExport,
+  onTransfer,
 }: Readonly<{
   request: DsarRequestDto;
   onAction: (action: RequestAction, request: DsarRequestDto) => void;
   onExport: (request: DsarRequestDto) => void;
+  onTransfer: (request: DsarRequestDto) => void;
 }>) {
   const isExport = request.type === 'ACCESS' || request.type === 'PORTABILITY';
   return (
@@ -158,6 +161,17 @@ function RequestRow({
             Download data
           </Button>
         )}
+        {canTransfer(request) && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onTransfer(request)}
+            aria-label={`Send to another controller: ${TYPE_LABELS[request.type]} for ${request.subjectEmail}`}
+          >
+            Send to another controller
+          </Button>
+        )}
         {actionsFor(request).map((action) => (
           <Button
             key={action}
@@ -190,6 +204,7 @@ export default function PrivacyRequestsContent() {
     null
   );
   const [actionError, setActionError] = useState<string | null>(null);
+  const [transferFor, setTransferFor] = useState<DsarRequestDto | null>(null);
   const [logOpen, setLogOpen] = useState(false);
   const [logError, setLogError] = useState<string | null>(null);
   const [lifting, setLifting] = useState<{ id: string; email: string } | null>(null);
@@ -370,6 +385,7 @@ export default function PrivacyRequestsContent() {
               onExport={(row) => {
                 runExport(row).catch(() => undefined);
               }}
+              onTransfer={setTransferFor}
             />
           ))}
         </ul>
@@ -446,6 +462,7 @@ export default function PrivacyRequestsContent() {
                   setActive({ action, request: row });
                 }}
                 onExport={() => undefined}
+                onTransfer={setTransferFor}
               />
             ))}
           </ul>
@@ -464,6 +481,14 @@ export default function PrivacyRequestsContent() {
         onClose={() => setActive(null)}
         onCloseAutoFocus={onDialogCloseAutoFocus}
       />
+
+      {transferFor && (
+        <TransferDialog
+          request={transferFor}
+          onClose={() => setTransferFor(null)}
+          onCloseAutoFocus={onDialogCloseAutoFocus}
+        />
+      )}
 
       <LogRequestDialog
         open={logOpen}

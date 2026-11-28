@@ -24,6 +24,14 @@ describe('createDsarTokenPort', () => {
     expect(hash).toBe(createHmac('sha256', key).update(token).digest('hex'));
   });
 
+  it('hashes a presented token to exactly the hash issue() stored, for a lookup by hash', () => {
+    const port = createDsarTokenPort(salt);
+    const { token, hash } = port.issue();
+    expect(port.hash(token)).toBe(hash);
+    expect(port.hash(`${token}x`)).not.toBe(hash);
+    expect(createDsarTokenPort(() => 'rotated-salt').hash(token)).not.toBe(hash);
+  });
+
   it('matches the right token only', () => {
     const port = createDsarTokenPort(salt);
     const { token, hash } = port.issue();

@@ -115,6 +115,8 @@ export const TENANT_MODELS: Readonly<Record<string, TenantModelInfo>> = {
   DocumentTypeDefinition: { nullable: false, defaulted: false, relation: 'tenant' },
   DomainEvent: { nullable: false, defaulted: false, relation: 'tenant' },
   DsarRequest: { nullable: false, defaulted: false, relation: 'tenant' },
+  DsarTransfer: { nullable: false, defaulted: false, relation: 'tenant' },
+  DsarTransferEvent: { nullable: false, defaulted: false, relation: null },
   EmailAttachment: { nullable: false, defaulted: false, relation: 'tenant' },
   EmailBounceReceipt: { nullable: false, defaulted: false, relation: null },
   EmailMailbox: { nullable: false, defaulted: false, relation: 'tenant' },

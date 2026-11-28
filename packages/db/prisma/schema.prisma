@@ -215,6 +215,7 @@ model Tenant {
   eventTypes                EventType[]               @ignore // PG-203
   bookingAttempts           BookingAttempt[]          @ignore // PG-203
   dsarRequests              DsarRequest[]             @ignore // PG-203 DSAR
+  dsarTransfers             DsarTransfer[]            @ignore // IFC-317 Art 20(2)
   processingRestrictions    ProcessingRestriction[]   @ignore // PG-203 DSAR
   reportSettings            ReportSettings[]          @ignore
   waitingDismissals         WaitingDismissal[]
@@ -713,6 +714,8 @@ model User {
   hostedEventTypes            EventType[]      @relation("EventTypeHost")
   dsarRequestsCreated         DsarRequest[]    @relation("DsarCreatedBy")
   dsarRequestsResolved        DsarRequest[]    @relation("DsarResolvedBy")
+  dsarTransfersCreated        DsarTransfer[]   @relation("DsarTransferCreatedBy")
+  dsarTransferEventsActed     DsarTransferEvent[] @relation("DsarTransferEventActor")
   restrictionsCreated         ProcessingRestriction[] @relation("RestrictionCreatedBy")
   restrictionsLifted          ProcessingRestriction[] @relation("RestrictionLiftedBy")
 
@@ -2838,6 +2841,7 @@ model DsarRequest {
   completedAt           DateTime?
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
+  transfers             DsarTransfer[]
 
   @@unique([tenantId, id])
   @@index([tenantId, status, slaDeadline])
@@ -2845,6 +2849,62 @@ model DsarRequest {
   @@index([tenantId, ipHash, createdAt])
   @@index([capEmailHash, createdAt])
   @@map("dsar_requests")
+}
+
+/// IFC-317 (UK GDPR Art 20(2)): an admin-approved transfer of a portability export to another
+/// controller. Only the HMAC of the link token is stored (never the token). The link is single-use
+/// (usedAt, set by one conditional write) and expires server-side (expiresAt). The composite FK
+/// keeps a transfer in the same firm as its request.
+model DsarTransfer {
+  id             String              @id @default(cuid())
+  tenantId       String
+  tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  requestId      String
+  request        DsarRequest         @relation(fields: [tenantId, requestId], references: [tenantId, id], onDelete: Cascade)
+  recipientName  String              @db.VarChar(200)
+  /// Trimmed, lowercased (CHECK).
+  recipientEmail String              @db.VarChar(320)
+  /// How the person asked for the transfer, as the admin recorded it (Art 20(2) accountability).
+  basis          String              @db.VarChar(500)
+  /// HMAC-SHA256 hex of the link token (CHECK), unique so a download finds its row by hash.
+  tokenHash      String              @unique @db.Char(64)
+  expiresAt      DateTime
+  usedAt         DateTime?
+  revokedAt      DateTime?
+  createdById    String?
+  createdBy      User?               @relation("DsarTransferCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  events         DsarTransferEvent[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, requestId, createdAt])
+  @@index([expiresAt])
+  @@map("dsar_transfers")
+}
+
+/// One row per step of a transfer: CREATED, SENT, DOWNLOADED, EXPIRED, REVOKED (CHECK), at most
+/// one of each per transfer. Holds ids and times only: no address, token or IP.
+model DsarTransferEvent {
+  id         String       @id @default(cuid())
+  tenantId   String
+  requestId  String
+  transferId String
+  transfer   DsarTransfer @relation(fields: [tenantId, transferId], references: [tenantId, id], onDelete: Cascade)
+  kind       String       @db.VarChar(20)
+  /// ADMIN | RECIPIENT | SYSTEM (CHECK)
+  actorType  String       @db.VarChar(20)
+  actorId    String?
+  actor      User?        @relation("DsarTransferEventActor", fields: [actorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  /// SENT only: EMAIL | MANUAL (CHECK)
+  via        String?      @db.VarChar(10)
+  /// When the step happened (an EXPIRED event carries the expiry time, not when it was noticed).
+  occurredAt DateTime
+  createdAt  DateTime     @default(now())
+
+  @@unique([transferId, kind])
+  @@index([tenantId, requestId, occurredAt])
+  @@map("dsar_transfer_events")
 }
 
 /// One ACTIVE row per (tenantId, subjectEmail) (partial unique index WHERE "liftedAt" IS NULL, SQL-only).
