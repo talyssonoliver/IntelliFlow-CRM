@@ -45,9 +45,12 @@ interface FixtureEvent {
 }
 
 /**
- * Build a Prisma stub that handles BOTH the distinct-tenants probe (returns
- * `[{ tenantId }, ...]`) and the per-tenant fetch (returns events filtered
- * by where.tenantId).
+ * Build a Prisma stub that handles the distinct-tenants probe (returns
+ * `[{ tenantId }, ...]`), the per-tenant row fetch (returns events filtered
+ * by where.tenantId) and the latency/ROI aggregate query (`$queryRaw`, which
+ * Postgres answers in production; here the same rules run over the fixture).
+ * The real SQL is held equal to the old Node computation by
+ * tests/integration/ai-monitoring-publisher-sql.test.ts.
  */
 function makePrismaWithEvents(events: FixtureEvent[]) {
   const findMany = vi.fn(async (args: any) => {
@@ -75,7 +78,43 @@ function makePrismaWithEvents(events: FixtureEvent[]) {
       recordedAt: events.length ? new Date(Math.max(...events.map((e) => +e.recordedAt))) : null,
     },
   }));
-  return { aIMonitoringEvent: { findMany, aggregate } } as any;
+  // $queryRaw(strings, since, tenantId, tenantId, cap, cap): one row of latency/ROI aggregates.
+  const queryRaw = vi.fn(async (_strings: unknown, ...values: unknown[]) => {
+    const tenant = values[1] as string | null;
+    const cap = values[values.length - 1] as number;
+    const win = events
+      .filter((e) => e.tenantId === tenant)
+      .sort((x, y) => +y.recordedAt - +x.recordedAt)
+      .slice(0, cap);
+    const lat = win.filter((e) => e.eventType === 'latency');
+    const v = lat.map((e) => e.value ?? 0).sort((a, b) => a - b);
+    const at = (p: number) => v[Math.ceil((v.length * p) / 100) - 1] ?? null;
+    const sum = (t: string) =>
+      win.filter((e) => e.eventType === t).reduce((s, e) => s + (e.value ?? 0), 0);
+    const count = (t: string) => win.filter((e) => e.eventType === t).length;
+    return [
+      {
+        n: lat.length || null,
+        ok: lat.length ? lat.filter((e) => !e.flagged).length : null,
+        mean: lat.length ? v.reduce((a, b) => a + b, 0) / v.length : null,
+        min: lat.length ? v[0] : null,
+        max: lat.length ? v[v.length - 1] : null,
+        p50: at(50),
+        p75: at(75),
+        p90: at(90),
+        p95: at(95),
+        p99: at(99),
+        oldest: lat.length ? new Date(Math.min(...lat.map((e) => +e.recordedAt))) : null,
+        newest: lat.length ? new Date(Math.max(...lat.map((e) => +e.recordedAt))) : null,
+        cost_n: count('roi_cost'),
+        cost_sum: sum('roi_cost'),
+        value_n: count('roi_value'),
+        value_sum: sum('roi_value'),
+        cutoff: null,
+      },
+    ];
+  });
+  return { aIMonitoringEvent: { findMany, aggregate }, $queryRaw: queryRaw } as any;
 }
 
 const baseEvent = (over: Record<string, unknown>) => ({
@@ -554,19 +593,62 @@ describe('RedisMonitoringPublisher (IFC-214)', () => {
       expect((await pub.tick()).written).toBe(5);
     });
 
-    it('fetches only needed columns: payload only for drift/hallucination, no unused types', async () => {
+    it('reads rows only for drift/hallucination; latency and ROI come back as one aggregate row', async () => {
       const redis = makeRedis();
       const prisma = makePrismaWithEvents([baseEvent({ eventType: 'latency', value: 100 })]);
       await new RedisMonitoringPublisher(redis, prisma).tick();
       const perTenant = prisma.aIMonitoringEvent.findMany.mock.calls
         .map((c: any[]) => c[0])
         .filter((a: any) => !a.distinct);
-      const withPayload = perTenant.filter((a: any) => a.select.payload);
-      const slim = perTenant.filter((a: any) => !a.select.payload);
-      expect(withPayload).toHaveLength(1);
-      expect(withPayload[0].where.eventType.in).toEqual(['drift', 'hallucination']);
-      expect(slim).toHaveLength(1);
-      expect(slim[0].where.eventType.in).toEqual(['latency', 'roi_cost', 'roi_value']);
+      // One row read per tenant, with payload, and no latency / roi type is ever read as rows.
+      expect(perTenant).toHaveLength(1);
+      expect(perTenant[0].select.payload).toBe(true);
+      expect(perTenant[0].where.eventType.in).toEqual(['drift', 'hallucination']);
+      // The aggregate query ran once for that tenant.
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+      expect(prisma.$queryRaw.mock.calls[0][2]).toBe(TENANT_A);
+    });
+
+    it('the global namespace reads drift rows only (it publishes no other kind)', async () => {
+      const redis = makeRedis();
+      const prisma = makePrismaWithEvents([
+        baseEvent({ tenantId: null, eventType: 'drift', flagged: true }),
+        baseEvent({ tenantId: null, eventType: 'hallucination' }),
+      ]);
+      await new RedisMonitoringPublisher(redis, prisma).tick();
+      const perTenant = prisma.aIMonitoringEvent.findMany.mock.calls
+        .map((c: any[]) => c[0])
+        .filter((a: any) => !a.distinct);
+      expect(perTenant).toHaveLength(1);
+      expect(perTenant[0].where.tenantId).toBeNull();
+      expect(perTenant[0].where.eventType.in).toEqual(['drift']);
+    });
+
+    it('latency and ROI snapshots are built from the aggregate row', async () => {
+      const redis = makeRedis();
+      const prisma = makePrismaWithEvents([
+        baseEvent({ eventType: 'latency', value: 100, flagged: false }),
+        baseEvent({ eventType: 'latency', value: 300, flagged: true }),
+        baseEvent({ eventType: 'latency', value: 5000, flagged: false }),
+        baseEvent({ eventType: 'roi_cost', value: 10 }),
+        baseEvent({ eventType: 'roi_value', value: 25 }),
+      ]);
+      await new RedisMonitoringPublisher(redis, prisma).tick();
+      const get = (k: string) =>
+        JSON.parse(redis.set.mock.calls.find((c) => (c[0] as string).endsWith(k))![1] as string);
+      const lat = get(':latency').stats;
+      expect(lat.sampleCount).toBe(3);
+      expect(lat.successRate).toBeCloseTo(2 / 3, 12);
+      expect(lat.percentiles).toMatchObject({
+        p50: 300,
+        p95: 5000,
+        p99: 5000,
+        min: 100,
+        max: 5000,
+      });
+      expect(lat.sloCompliance.overallCompliant).toBe(false);
+      expect(get(':status').latency).toMatchObject({ sloCompliant: false, p95: 5000 });
+      expect(get(':roi').roi).toMatchObject({ totalCost: 10, totalValue: 25, roi: 150 });
     });
 
     it('snapshot payloads keep drift/hallucination payload fields', async () => {

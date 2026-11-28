@@ -27,6 +27,11 @@
 
 import pino from 'pino';
 import type { PrismaClient } from '@intelliflow/db';
+import {
+  fetchWindowAggregates,
+  type WindowAggregates,
+  type WindowCutoff,
+} from './monitoring-aggregates-sql';
 
 const logger = pino({
   name: 'redis-monitoring-publisher',
@@ -53,6 +58,8 @@ export interface RedisMonitoringPublisherOptions {
    * Defaults to 24 h. Tests use small windows to control fixture data.
    */
   lookbackMs?: number;
+  /** Newest events per tenant that a snapshot is built from. Defaults to 10,000; tests shrink it. */
+  eventsPerTenantCap?: number;
 }
 
 export type SnapshotKind = 'status' | 'drift' | 'latency' | 'hallucination' | 'roi';
@@ -73,8 +80,13 @@ export const DEFAULT_PUBLISH_INTERVAL_MS = 300_000;
 /** R-016 control 3: TTL ≥ 6× the publish cadence. */
 const TTL_TO_INTERVAL_RATIO = 6;
 
+/**
+ * Only drift and hallucination snapshots list rows (history, recentResults), so only those rows
+ * are read, with their payload. Everything else a snapshot shows (latency percentiles, success
+ * rate, ROI sums and counts) is computed by Postgres (monitoring-aggregates-sql.ts), so the
+ * latency and ROI rows never leave the database.
+ */
 const PAYLOAD_EVENT_TYPES = ['drift', 'hallucination'];
-const SLIM_EVENT_TYPES = ['latency', 'roi_cost', 'roi_value'];
 const EVENTS_PER_TENANT_CAP = 10000;
 
 const SCHEMA_VERSION = 'v1';
@@ -117,6 +129,7 @@ export class RedisMonitoringPublisher {
   private readonly ttlSeconds: number;
   private readonly disabled: boolean;
   private readonly lookbackMs: number;
+  private readonly cap: number;
   private timer: ReturnType<typeof setInterval> | null = null;
   /** Cheap change marker (count|max recordedAt) of the last full publish. */
   private lastMarker: string | null = null;
@@ -148,6 +161,7 @@ export class RedisMonitoringPublisher {
     this.disabled =
       opts.disabled ?? (process.env.AI_MONITORING_REDIS_DISABLED === '1' || redis === null);
     this.lookbackMs = opts.lookbackMs ?? 24 * 60 * 60 * 1000;
+    this.cap = opts.eventsPerTenantCap ?? EVENTS_PER_TENANT_CAP;
   }
 
   start(): void {
@@ -221,7 +235,8 @@ export class RedisMonitoringPublisher {
     const payloads = new Map<string, string>();
     for (const tenantId of tenantIds) {
       const namespace = tenantId ?? GLOBAL_NAMESPACE;
-      const ns_events = await this.fetchEventsForTenant(since, tenantId);
+      const agg = await fetchWindowAggregates(this.prisma, since, tenantId, this.cap);
+      const ns_events = await this.fetchEventsForTenant(since, tenantId, agg.cutoff);
       // Global namespace ONLY publishes the drift snapshot — the other 4 kinds
       // are tenant-scoped by definition (see AIMonitoringService.tenantFilter).
       const kindsForNs: readonly SnapshotKind[] =
@@ -229,7 +244,7 @@ export class RedisMonitoringPublisher {
       for (const kind of kindsForNs) {
         payloads.set(
           redisKey(namespace, kind),
-          JSON.stringify(this.buildSnapshot(kind, ns_events))
+          JSON.stringify(this.buildSnapshot(kind, ns_events, agg))
         );
       }
     }
@@ -317,49 +332,53 @@ export class RedisMonitoringPublisher {
   }
 
   /**
-   * Fetch events for a single tenant (or global, when tenantId === null).
-   * `take: 10000` is now a PER-TENANT cap, not a global one.
+   * Fetch the drift and hallucination events of a single tenant (or global, when tenantId ===
+   * null), with their payload, newest first. These are the only rows a snapshot lists.
+   * `cutoff` is the start of the tenant's capped window (see fetchWindowAggregates), so the rows
+   * and the aggregates describe the same newest-`cap` events. The global namespace only
+   * publishes the drift snapshot, so it reads no hallucination rows.
    */
   private async fetchEventsForTenant(
     since: Date,
-    tenantId: string | null
+    tenantId: string | null,
+    cutoff: WindowCutoff | null
   ): Promise<AIMonitoringEventRow[]> {
     const db = this.prisma as unknown as {
       aIMonitoringEvent: {
         findMany: (args: unknown) => Promise<AIMonitoringEventRow[]>;
       };
     };
-    const base = { recordedAt: { gte: since }, tenantId };
-    const cols = {
-      tenantId: true,
-      eventType: true,
-      recordedAt: true,
-      value: true,
-      flagged: true,
-      severity: true,
-      metric: true,
-      model: true,
-    };
-    // Only drift and hallucination snapshots read `payload` (the heavy JSON
-    // column); the other kinds never do, so those rows are fetched without it.
-    // Event types no snapshot uses are not fetched at all.
-    const [withPayload, withoutPayload] = await Promise.all([
-      db.aIMonitoringEvent.findMany({
-        where: { ...base, eventType: { in: PAYLOAD_EVENT_TYPES } },
-        select: { ...cols, payload: true },
-        orderBy: { recordedAt: 'desc' },
-        take: EVENTS_PER_TENANT_CAP,
-      }),
-      db.aIMonitoringEvent.findMany({
-        where: { ...base, eventType: { in: SLIM_EVENT_TYPES } },
-        select: cols,
-        orderBy: { recordedAt: 'desc' },
-        take: EVENTS_PER_TENANT_CAP,
-      }),
-    ]);
-    return [...withPayload, ...withoutPayload.map((e) => ({ ...e, payload: null }))]
-      .sort((x, y) => y.recordedAt.getTime() - x.recordedAt.getTime())
-      .slice(0, EVENTS_PER_TENANT_CAP);
+    // Same window as the aggregates: events at or after the cap-th newest one, ordered by
+    // (recordedAt, id), so events that share the boundary timestamp are cut exactly like SQL did.
+    const inWindow = cutoff
+      ? {
+          OR: [
+            { recordedAt: { gt: cutoff.recordedAt } },
+            { recordedAt: cutoff.recordedAt, id: { gte: cutoff.id } },
+          ],
+        }
+      : {};
+    return db.aIMonitoringEvent.findMany({
+      where: {
+        recordedAt: { gte: since },
+        ...inWindow,
+        tenantId,
+        eventType: { in: tenantId === null ? ['drift'] : PAYLOAD_EVENT_TYPES },
+      },
+      select: {
+        tenantId: true,
+        eventType: true,
+        recordedAt: true,
+        value: true,
+        flagged: true,
+        severity: true,
+        metric: true,
+        model: true,
+        payload: true,
+      },
+      orderBy: [{ recordedAt: 'desc' }, { id: 'desc' }],
+      take: this.cap,
+    });
   }
 
   /**
@@ -369,27 +388,28 @@ export class RedisMonitoringPublisher {
    * `RedisAIMonitoringStore` can return them directly — see
    * `apps/api/src/services/AIMonitoringService.ts`.
    */
-  private buildSnapshot(kind: SnapshotKind, events: AIMonitoringEventRow[]): unknown {
+  private buildSnapshot(
+    kind: SnapshotKind,
+    events: AIMonitoringEventRow[],
+    agg: WindowAggregates
+  ): unknown {
     switch (kind) {
       case 'status':
-        return this.buildStatusSnapshot(events);
+        return this.buildStatusSnapshot(events, agg);
       case 'drift':
         return this.buildDriftSnapshot(events);
       case 'latency':
-        return this.buildLatencySnapshot(events);
+        return this.buildLatencySnapshot(agg);
       case 'hallucination':
         return this.buildHallucinationSnapshot(events);
       case 'roi':
-        return this.buildROISnapshot(events);
+        return this.buildROISnapshot(agg);
     }
   }
 
-  private buildStatusSnapshot(events: AIMonitoringEventRow[]): unknown {
+  private buildStatusSnapshot(events: AIMonitoringEventRow[], agg: WindowAggregates): unknown {
     const drift = events.filter((e) => e.eventType === 'drift');
-    const latency = events.filter((e) => e.eventType === 'latency');
     const hallucination = events.filter((e) => e.eventType === 'hallucination');
-    const roiCost = events.filter((e) => e.eventType === 'roi_cost');
-    const roiValue = events.filter((e) => e.eventType === 'roi_value');
 
     const driftFlagged = drift.filter((e) => e.flagged).length;
     const hallucinationFlagged = hallucination.filter((e) => e.flagged).length;
@@ -402,14 +422,11 @@ export class RedisMonitoringPublisher {
         `Hallucination rate ${(hallucinationRate * 100).toFixed(1)}% exceeds 5% threshold`
       );
 
-    const latencyValues = latency.map((e) => e.value ?? 0).sort((a, b) => a - b);
-    const pct = (arr: number[], p: number): number =>
-      arr.length > 0 ? (arr[Math.ceil((arr.length * p) / 100) - 1] ?? 0) : 0;
-    const p95 = pct(latencyValues, 95);
-    const p99 = pct(latencyValues, 99);
+    const p95 = agg.latency?.p95 ?? 0;
+    const p99 = agg.latency?.p99 ?? 0;
 
-    const totalCost = roiCost.reduce((s, e) => s + (e.value ?? 0), 0);
-    const totalValue = roiValue.reduce((s, e) => s + (e.value ?? 0), 0);
+    const totalCost = agg.roi.costSum;
+    const totalValue = agg.roi.valueSum;
     const currentROI = totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0;
 
     return {
@@ -462,37 +479,32 @@ export class RedisMonitoringPublisher {
     };
   }
 
-  private buildLatencySnapshot(events: AIMonitoringEventRow[]): unknown {
-    const latency = events.filter((e) => e.eventType === 'latency');
-    if (latency.length === 0) {
+  private buildLatencySnapshot(agg: WindowAggregates): unknown {
+    const latency = agg.latency;
+    if (!latency) {
       return {
         available: true,
         stats: emptyLatencyStats(),
         alerts: [],
       };
     }
-    const durations = latency.map((e) => e.value ?? 0).sort((a, b) => a - b);
-    const successCount = latency.filter((e) => !e.flagged).length;
-    const percentile = (arr: number[], p: number): number =>
-      arr[Math.ceil((arr.length * p) / 100) - 1] ?? 0;
-    const p95 = percentile(durations, 95);
-    const p99 = percentile(durations, 99);
+    const { p95, p99 } = latency;
     return {
       available: true,
       stats: {
-        periodStart: latency[latency.length - 1]?.recordedAt ?? new Date(),
-        periodEnd: latency[0]?.recordedAt ?? new Date(),
-        sampleCount: latency.length,
-        successRate: successCount / latency.length,
+        periodStart: latency.oldest,
+        periodEnd: latency.newest,
+        sampleCount: latency.count,
+        successRate: latency.ok / latency.count,
         percentiles: {
-          p50: percentile(durations, 50),
-          p75: percentile(durations, 75),
-          p90: percentile(durations, 90),
+          p50: latency.p50,
+          p75: latency.p75,
+          p90: latency.p90,
           p95,
           p99,
-          max: durations[durations.length - 1] ?? 0,
-          min: durations[0] ?? 0,
-          mean: durations.reduce((a, b) => a + b, 0) / durations.length,
+          max: latency.max,
+          min: latency.min,
+          mean: latency.mean,
           stdDev: 0,
         },
         byModel: {},
@@ -506,7 +518,7 @@ export class RedisMonitoringPublisher {
           p95Compliant: p95 <= 2000,
           p99Compliant: p99 <= 5000,
           overallCompliant: p95 <= 2000 && p99 <= 5000,
-          complianceRate: successCount / latency.length,
+          complianceRate: latency.ok / latency.count,
         },
       },
       alerts: [],
@@ -544,11 +556,10 @@ export class RedisMonitoringPublisher {
     };
   }
 
-  private buildROISnapshot(events: AIMonitoringEventRow[]): unknown {
-    const costs = events.filter((e) => e.eventType === 'roi_cost');
-    const values = events.filter((e) => e.eventType === 'roi_value');
-    const totalCost = costs.reduce((s, e) => s + (e.value ?? 0), 0);
-    const totalValue = values.reduce((s, e) => s + (e.value ?? 0), 0);
+  private buildROISnapshot(agg: WindowAggregates): unknown {
+    const { costCount, valueCount } = agg.roi;
+    const totalCost = agg.roi.costSum;
+    const totalValue = agg.roi.valueSum;
     const netValue = totalValue - totalCost;
     const roi = totalCost > 0 ? (netValue / totalCost) * 100 : 0;
     const now = new Date();
@@ -568,11 +579,11 @@ export class RedisMonitoringPublisher {
         recommendations: [],
       },
       stats: {
-        totalCostsTracked: costs.length,
-        totalValuesTracked: values.length,
+        totalCostsTracked: costCount,
+        totalValuesTracked: valueCount,
         currentROI: roi,
-        averageCostPerOperation: costs.length > 0 ? totalCost / costs.length : 0,
-        averageValuePerOperation: values.length > 0 ? totalValue / values.length : 0,
+        averageCostPerOperation: costCount > 0 ? totalCost / costCount : 0,
+        averageValuePerOperation: valueCount > 0 ? totalValue / valueCount : 0,
         roiTrend: 'stable' as const,
         topPerformingOperations: [],
         underperformingOperations: [],
