@@ -19,6 +19,7 @@ import { findAppById, type DeveloperApp, type ApiKey } from '@/lib/developer/dem
 import { AppMetrics } from '@/components/developer/app-metrics';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 interface RequestLogEntry {
   id: string;
   timestamp: string;
@@ -234,23 +235,13 @@ export function AppDashboard({ appId }: Readonly<AppDashboardProps>) {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm">
-        <Link
-          href="/developers/apps"
-          className="text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
-        >
-          Developer Apps
-        </Link>
-        <span
-          className="material-symbols-outlined text-sm text-muted-foreground"
-          aria-hidden="true"
-        >
-          chevron_right
-        </span>
-        <span aria-current="page" className="font-medium">
-          {app.name}
-        </span>
-      </nav>
+      <Breadcrumbs
+        endsWithCurrentPage={false}
+        items={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Developer Apps', href: '/developers/apps' },
+        ]}
+      />
 
       {/* Header */}
       <div className="flex items-center gap-3">

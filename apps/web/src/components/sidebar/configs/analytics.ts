@@ -42,19 +42,19 @@ const VIEW_SECTIONS: SidebarConfig['sections'] = [
         id: 'sales',
         label: 'Sales Reports',
         icon: FEATURE_ICONS.chart,
-        href: '/analytics?view=sales',
+        href: '/analytics/sales',
       },
       {
         id: 'pipeline',
         label: 'Pipeline Analysis',
         icon: FEATURE_ICONS.pipeline,
-        href: '/analytics?view=pipeline',
+        href: '/analytics/pipeline',
       },
       {
         id: 'forecasts',
         label: 'Forecasts',
         icon: FEATURE_ICONS.forecast,
-        href: '/analytics?view=forecasts',
+        href: '/deals/forecast',
       },
       {
         id: 'feedback',

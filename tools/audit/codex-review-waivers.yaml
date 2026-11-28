@@ -956,3 +956,125 @@ waivers:
     author: biztype lane
     date: '2026-11-26'
     expires: '2026-12-26'
+  - fingerprint: 112a35ce3118239d87428726b59ab2958edf88840cfcb89d99a1330bfd6660ee
+    reason: >-
+      DealForm edit label. A deal has no stored currency: the opportunities table has no
+      currency column and PrismaOpportunityRepository rebuilds every value with
+      Money.create(value), which defaults to GBP. The 'deal's own currency' the finding points
+      at is that default, not data. The owner chose one real tenant currency for every money
+      figure (MVP-012, 22/11), so showing the tenant currency is correct; using the deal's
+      currency would show a fake GBP for a tenant on another currency.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-26'
+    expires: '2026-12-26'
+  - fingerprint: cdbb0ad2c8238088a06ac7d31010ea5f392049e37fd14197ced38edd2c626ca4
+    reason: >-
+      DealCard amount. A deal has no stored currency: the opportunities table has no currency
+      column and PrismaOpportunityRepository rebuilds every value with Money.create(value),
+      which defaults to GBP. The 'deal's own currency' the finding points at is that default,
+      not data. The owner chose one real tenant currency for every money figure (MVP-012,
+      22/11), so showing the tenant currency is correct; using the deal's currency would show a
+      fake GBP for a tenant on another currency.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-26'
+    expires: '2026-12-26'
+  - fingerprint: 187979b3870008bcbdb8ff0d56df5ef623d84814b0aebaa92d42fdf99c958e26
+    reason: >-
+      StageColumn total: every deal is in the tenant currency, so the sum is in one currency. A
+      deal has no stored currency: the opportunities table has no currency column and
+      PrismaOpportunityRepository rebuilds every value with Money.create(value), which defaults
+      to GBP. The 'deal's own currency' the finding points at is that default, not data. The
+      owner chose one real tenant currency for every money figure (MVP-012, 22/11), so showing
+      the tenant currency is correct; using the deal's currency would show a fake GBP for a
+      tenant on another currency.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-26'
+    expires: '2026-12-26'
+  - fingerprint: 157835439ac2ed51719bf2f0fe8acaee2b0c1208ad94277cfd7f886f6daf5394
+    reason: >-
+      DealStageProgress Total Value. A deal has no stored currency: the opportunities table has
+      no currency column and PrismaOpportunityRepository rebuilds every value with
+      Money.create(value), which defaults to GBP. The 'deal's own currency' the finding points
+      at is that default, not data. The owner chose one real tenant currency for every money
+      figure (MVP-012, 22/11), so showing the tenant currency is correct; using the deal's
+      currency would show a fake GBP for a tenant on another currency.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-26'
+    expires: '2026-12-26'
+  - fingerprint: 08a54d85a16037ba3bf00b8aa638c8d2734fca9c6ecdb537504f02b0a084bff2
+    reason: >-
+      DealForm currency readiness. Fixed in 718f6dccf, not at the flagged line:
+      useTenantCurrencyForSave now reads analytics.reportSettings.currency, a plain
+      tenantProcedure (every plan, read-only, no row written), so PARTNER_FREE tenants get
+      the currency and the form enables. Report-settings get/update keep the ANALYTICS
+      entitlement. Tests: report-settings.router.test.ts (currency), useTenantCurrency.test.tsx.
+      The finding is carried forward only because its hunk in DealForm did not change.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-27'
+    expires: '2026-12-27'
+  - fingerprint: 023d40c8988e0c43572273b09bfa36a3938bf6185199f8bd3df3eb49fb44e7f6
+    reason: >-
+      OpportunityCreateSheet currency readiness: same root cause and fix as the DealForm
+      waiver above (718f6dccf, core reportSettings.currency query for every plan). The sheet
+      uses the same useTenantCurrencyForSave hook; its flagged hunk did not change.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-27'
+    expires: '2026-12-27'
+  - fingerprint: 559b57271fe5d5f01376ca7651d1008799e4239b0c68872ad63a8f023ec85f30
+    reason: >-
+      SavedReportView money cards. Fixed in 718f6dccf at the MetricCard call, below the
+      flagged line: every MetricCard gets currency={currency}. Test 'labels the money cards in
+      the tenant currency, like the charts' renders a USD tenant and asserts no GBP figure.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-27'
+    expires: '2026-12-27'
+  - fingerprint: 13848275f70975a0bf09d88fb06efbb074caac461e78d793ed9ba82ce53ce96d
+    reason: >-
+      Approvals preview draft failures. Fixed in c94bf034a (PR #1576, merged into this branch)
+      below the flagged line: isLoading includes draftsQuery.isLoading, and a failed draft load
+      shows a 'drafts-error' alert with Retry saying drafts are missing from the list and the
+      pending count. Test: preview page.test.tsx 'says the AI drafts could not load instead of
+      showing an empty queue'. #1576's own review passed with this fix.
+  - fingerprint: 5ac3b06a2b680a46cd8a36a919a45c357ffc7f73d96b1f2b30cadb0ce014f076
+    reason: >-
+      Home dedupe vs heuristic fallback. Fixed at the source in 6ce19214c (and the TTL follow-up
+      in the next commit), not at the flagged dedupe: the worker no longer writes a heuristic
+      insight when the user has an open, unexpired insight about the record, checked under the
+      per-record advisory lock, so Home never has a newer fallback to prefer. Test:
+      insight-generation.job.fallback.test.ts 'writes no heuristic insight over an open one'.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-27'
+    expires: '2026-12-27'
+  - fingerprint: 37f0059250005dcb570d650d05f3e45b3e39479e37cd4751b851ce910a04a586
+    reason: >-
+      Lead Metrics CSV export. Fixed in 3461f9b3b in the serializer, not at the flagged menu:
+      AnalyticsAggregationService.serializeToCSV quotes every field per RFC 4180 (csvField), so
+      the JSON arrays no longer split rows. Test: csv-field.test.ts.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-27'
+    expires: '2026-12-27'
+  - fingerprint: 01d0ac260c16ffe9ac70f3e6274729193d995553744acae0afb7028651589a0c
+    reason: >-
+      "vs previous period" footers. Fixed in 0d3e845fa on the server, as the finding asked:
+      getOverview compares a requested range with previousPeriod(range), the same length ending
+      just before it (also used for countOpenOpportunitiesAsOf). Test: previous-period.test.ts.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-27'
+    expires: '2026-12-27'
+  - fingerprint: b31aa799f10c519e251c7d4f268ffe86951b03fef28db351992bdec9302c4ca7
+    reason: >-
+      Lead timeline folding. Fixed in 832566b2d in repeatKey (fold-repeats.ts), which the
+      flagged call uses: AI entries fold by metadata.insightType, and without a kind only by the
+      same title. Tests: fold-repeats.test.ts 'never folds AI insights of different kinds'.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-27'
+    expires: '2026-12-27'
+  - fingerprint: d76a62c7bffaf5d7e9597f377add9913d4140544751fb2ed09e7e3504a8187b3
+    reason: >-
+      DealForm currency vs Money. Fixed in 08a3f9c6b in the domain, as the finding's first
+      option: Money.SUPPORTED_CURRENCIES holds all 40 Report settings currencies (it had GBP
+      twice and no USD), zero-decimal JPY/KRW/CLP/VND. Guard test money-currencies.guard.test.ts
+      fails if the settings list and Money drift apart.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-27'
+    expires: '2026-12-27'

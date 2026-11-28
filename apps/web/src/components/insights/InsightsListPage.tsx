@@ -10,9 +10,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Card, EmptyState } from '@intelliflow/ui';
+import { PageHeader } from '@/components/shared/page-header';
+import { SearchFilterBar } from '@/components/shared/search-filter-bar';
 import { trpc } from '@/lib/trpc';
 import { InsightCard, type SerializedAIInsight } from './InsightCard';
 import { InsightTypeBadge } from './InsightTypeBadge';
@@ -137,80 +138,31 @@ export function InsightsListPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
-        <Link href="/dashboard" className="hover:text-[#2a78f6]">
-          Dashboard
-        </Link>
-        <span>/</span>
-        <Link href="/agent-approvals" className="hover:text-[#2a78f6]">
-          AI &amp; Agents
-        </Link>
-        <span>/</span>
-        <span className="text-slate-900 dark:text-white font-medium">All Insights</span>
-      </nav>
+      {/* Owner 21/11: the shared hero and the shared toolbar, like every list page. */}
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'AI & Agents', href: '/agent-approvals' },
+        ]}
+        title="AI Insights"
+        description="AI-generated insights about your deals, leads, tasks, and contacts"
+      >
+        <p className="text-sm text-white/75">
+          {allInsights.length} insight{allInsights.length === 1 ? '' : 's'}
+        </p>
+      </PageHeader>
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-            AI Insights
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-base">
-            AI-generated insights about your deals, leads, tasks, and contacts
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-500 dark:text-slate-400">
-            {allInsights.length} insight{allInsights.length === 1 ? '' : 's'}
-          </span>
-        </div>
-      </div>
-
-      {/* Filter & Search */}
-      <Card className="p-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Icon name="filter_list" className="text-base text-slate-400" />
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Filter:
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-2" data-testid="filter-buttons">
-              {TYPE_FILTERS.map(({ key, label }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleTypeFilter(key)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    (key === 'all' && !selectedType) || selectedType === key
-                      ? 'bg-[#2a78f6] text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="relative sm:ml-auto w-full sm:w-64">
-            <Icon
-              name="search"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"
-            />
-            <input
-              type="text"
-              placeholder="Search insights..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6]/40"
-            />
-          </div>
-        </div>
-      </Card>
+      <SearchFilterBar
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search insights..."
+        searchAriaLabel="Search insights"
+        filterChips={{
+          options: TYPE_FILTERS.map(({ key, label }) => ({ id: key, label })),
+          value: selectedType ?? 'all',
+          onChange: (id) => handleTypeFilter(id as AIInsightType | 'all'),
+        }}
+      />
 
       {/* Content */}
       {error && <InsightsErrorState />}

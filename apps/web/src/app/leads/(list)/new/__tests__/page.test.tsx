@@ -214,6 +214,7 @@ vi.mock('@/lib/api', () => ({
 vi.mock('@intelliflow/ui', async () => {
   const R = await import('react');
   return {
+    cn: (...a: unknown[]) => a.filter(Boolean).join(' '),
     Card: ({ children, className }: { children: React.ReactNode; className?: string }) =>
       R.createElement('div', { 'data-testid': 'card', className }, children),
     Skeleton: ({ className }: { className?: string }) =>

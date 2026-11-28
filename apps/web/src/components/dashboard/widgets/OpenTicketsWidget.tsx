@@ -45,6 +45,7 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
 
   return (
     <KpiCard
+      href="/tickets"
       label="Open Tickets"
       icon="confirmation_number"
       iconClassName="bg-primary/10 text-primary"

@@ -29,6 +29,19 @@ describe('PageHeader hero (default)', () => {
     expect(root).toHaveClass('page-hero', 'text-white');
   });
 
+  it('starts every trail with the same home icon, not only on the Dashboard (owner 21/11)', () => {
+    render(
+      <PageHeader
+        variant="plain"
+        title="Lead List"
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }]}
+      />
+    );
+    const first = screen.getByRole('link', { name: 'Dashboard' });
+    expect(within(first).getByText('home')).toHaveAttribute('aria-hidden', 'true');
+    expect(first).toHaveClass('no-underline');
+  });
+
   it('keeps the heading, the subtitle and the breadcrumb, with a home icon on Home', () => {
     renderHero();
     expect(screen.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeInTheDocument();
@@ -95,5 +108,18 @@ describe('PageHeader plain', () => {
     expect(root).toHaveAttribute('data-variant', 'plain');
     expect(root).not.toHaveClass('page-hero');
     expect(screen.getByRole('heading', { level: 1 })).toHaveClass('text-foreground');
+  });
+
+  it('shows page controls with the actions in the hero (owner 21/11: period and Export)', () => {
+    render(
+      <PageHeader
+        title="Analytics"
+        controls={<select aria-label="Period" />}
+        actions={[{ label: 'Refresh', icon: 'refresh', onClick: () => {} }]}
+      />
+    );
+    const period = screen.getByRole('combobox', { name: 'Period' });
+    const refresh = screen.getByRole('button', { name: /Refresh/ });
+    expect(period.parentElement).toBe(refresh.parentElement);
   });
 });

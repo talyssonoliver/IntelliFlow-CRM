@@ -7,6 +7,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { type Deal, formatDealValue } from './types';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { DealAvatar, ProbabilityBar, StageBadge, formatDate } from './DealBadges';
 
 const PHONE_QUERY = '(max-width: 767px)';
@@ -35,6 +36,7 @@ export function DealPhoneCards({
   /** The row actions (view, edit, move stage, delete) the table has; beside the card, not inside its link. */
   renderActions?: (deal: Deal) => React.ReactNode;
 }>) {
+  const currency = useTenantCurrency();
   return (
     <ul className="flex flex-col gap-3" aria-label="Deals">
       {deals.map((deal) => (
@@ -57,7 +59,7 @@ export function DealPhoneCards({
                 </div>
               </div>
               <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
-                {formatDealValue(deal.value)}
+                {formatDealValue(deal.value, currency)}
               </span>
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">

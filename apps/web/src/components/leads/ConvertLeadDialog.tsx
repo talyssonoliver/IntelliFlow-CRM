@@ -16,6 +16,8 @@ import {
 } from '@intelliflow/ui';
 import { contactNameFromLead } from '@intelliflow/domain';
 import { api } from '@/lib/api';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
+import { currencySymbol, formatMoney } from '@/lib/format/money';
 import { UNDONE_TOAST, undoConversion } from '@/components/deals/UndoConversion';
 import { revalidateLeadConversionCaches } from '@/app/leads/actions';
 import { leadDisplayName } from '@/lib/leads/lead-format';
@@ -161,11 +163,13 @@ function DealFields({
   placeholder: string;
   onChange: (patch: Partial<DealFormState>) => void;
 }>) {
+  const currency = useTenantCurrency();
   return (
     <>
       <div>
         <label htmlFor="convert-deal-value" className={LABEL_CLASS}>
-          Deal value (£) <span className="text-xs font-normal text-slate-400">(optional)</span>
+          Deal value ({currencySymbol(currency).trim()}){' '}
+          <span className="text-xs font-normal text-slate-400">(optional)</span>
         </label>
         <input
           id="convert-deal-value"
@@ -178,9 +182,10 @@ function DealFields({
           className={INPUT_CLASS}
         />
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          Whole pounds, for example 5000 for £5,000. Without a value the deal shows &quot;No value
-          set&quot; and counts as £0 in revenue totals. Leave it empty only if you don&apos;t know
-          it yet; you can add it on the deal later.
+          Whole {currency} amounts, for example 5000 for {formatMoney(5000, currency)}. Without a
+          value the deal shows &quot;No value set&quot; and counts as {formatMoney(0, currency)} in
+          revenue totals. Leave it empty only if you don&apos;t know it yet; you can add it on the
+          deal later.
         </p>
         {valueError && (
           <p role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">

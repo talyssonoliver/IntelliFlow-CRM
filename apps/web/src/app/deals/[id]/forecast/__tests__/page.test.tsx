@@ -207,3 +207,5 @@ describe('DealForecastDetailPage', () => {
     expect(mockReplace).toHaveBeenCalledWith('/login');
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

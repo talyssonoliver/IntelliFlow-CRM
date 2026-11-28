@@ -161,7 +161,7 @@ describe('AI Settings Content', () => {
       renderWithProviders(<AISettingsContent />);
 
       expect(screen.getByText('AI & Agents')).toBeInTheDocument();
-      expect(screen.getByText('AI Chains')).toBeInTheDocument();
+      expect(screen.getByLabelText('Breadcrumb')).not.toHaveTextContent('AI Chains'); // (owner 27/11: the trail holds ancestors; the title names the page)
     });
 
     it('renders refresh button', () => {

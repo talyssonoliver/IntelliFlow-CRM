@@ -32,6 +32,7 @@ vi.mock('recharts', () => ({
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children }: any) => <div>{children}</div>,
   cn: (...classes: unknown[]) => classes.filter(Boolean).join(' '),
+  EmptyState: ({ title }: { title?: string }) => <div data-testid="empty-state">{title}</div>,
 }));
 
 import DealsCharts from '../DealsCharts';

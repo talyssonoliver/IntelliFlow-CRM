@@ -14,7 +14,9 @@ import React from 'react';
 // ---------------------------------------------------------------------------
 // Module mocks
 // ---------------------------------------------------------------------------
-vi.mock('@intelliflow/ui', () => ({
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  // The real Sheet parts (the phone filters sheet); cn stays the simple join these tests expect.
+  ...((await importOriginal()) as Record<string, unknown>),
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
 }));
 

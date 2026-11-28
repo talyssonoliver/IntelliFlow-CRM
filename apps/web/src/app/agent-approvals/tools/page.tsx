@@ -14,6 +14,7 @@ import { Card, CardContent, Button, Skeleton, cn, EmptyState } from '@intelliflo
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -484,22 +485,13 @@ interface HeaderProps {
 function Header({ pendingCount, onRefresh }: Readonly<HeaderProps>) {
   return (
     <div>
-      <nav
-        aria-label="Breadcrumb"
-        className="flex items-center gap-2 text-sm text-muted-foreground mb-1"
-      >
-        <Link href="/dashboard" className="hover:text-foreground transition-colors">
-          Dashboard
-        </Link>
-        <span className="material-symbols-outlined text-xs">chevron_right</span>
-        <Link href="/agent-approvals" className="hover:text-foreground transition-colors">
-          Agent Approvals
-        </Link>
-        <span className="material-symbols-outlined text-xs">chevron_right</span>
-        <span className="text-foreground font-medium" aria-current="page">
-          Agent Tools
-        </span>
-      </nav>
+      <Breadcrumbs
+        endsWithCurrentPage={false}
+        items={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Agent Approvals', href: '/agent-approvals' },
+        ]}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Agent Tools</h1>

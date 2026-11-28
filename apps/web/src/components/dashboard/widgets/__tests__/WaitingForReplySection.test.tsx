@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { WaitingForReplySection, type WaitingPerson } from '../WaitingForReplySection';
 import { waitingLabel, waitingTone } from '@/lib/leads/waiting-for-reply';
 
@@ -38,7 +38,13 @@ describe('waitingLabel', () => {
 describe('WaitingForReplySection', () => {
   it('renders nothing when nobody is waiting', () => {
     const { container } = render(
-      <WaitingForReplySection people={[]} total={0} leadTotal={0} now={NOW} />
+      <WaitingForReplySection
+        onDone={() => undefined}
+        people={[]}
+        total={0}
+        leadTotal={0}
+        now={NOW}
+      />
     );
     expect(container.firstChild).toBeNull();
   });
@@ -46,6 +52,7 @@ describe('WaitingForReplySection', () => {
   it('shows the count, the wait and a link to each person', () => {
     render(
       <WaitingForReplySection
+        onDone={() => undefined}
         now={NOW}
         total={2}
         leadTotal={1}
@@ -56,7 +63,7 @@ describe('WaitingForReplySection', () => {
     expect(
       within(screen.getByTestId('waiting-for-reply')).getByText('2 waiting for a reply')
     ).toBeTruthy();
-    expect(section.getAllByText('waiting 2 days')).toHaveLength(2);
+    expect(section.getAllByText(/^waiting 2 days/)).toHaveLength(2);
     expect(section.getByText('Jane Example · Example Ltd').closest('a')?.getAttribute('href')).toBe(
       '/leads/lead-1'
     );
@@ -67,6 +74,7 @@ describe('WaitingForReplySection', () => {
   it('does not repeat the company when the person is named after it (#45)', () => {
     render(
       <WaitingForReplySection
+        onDone={() => undefined}
         now={NOW}
         total={1}
         leadTotal={1}
@@ -78,7 +86,15 @@ describe('WaitingForReplySection', () => {
   });
 
   it('links to the Waiting for reply list when more are waiting than the card lists', () => {
-    render(<WaitingForReplySection now={NOW} total={7} leadTotal={5} people={[person({})]} />);
+    render(
+      <WaitingForReplySection
+        onDone={() => undefined}
+        now={NOW}
+        total={7}
+        leadTotal={5}
+        people={[person({})]}
+      />
+    );
     expect(
       within(screen.getByTestId('waiting-for-reply')).getByText('7 waiting for a reply')
     ).toBeTruthy();
@@ -88,13 +104,22 @@ describe('WaitingForReplySection', () => {
   });
 
   it('does not link to the Leads list when the people not shown are all contacts', () => {
-    render(<WaitingForReplySection now={NOW} total={7} leadTotal={1} people={[person({})]} />);
+    render(
+      <WaitingForReplySection
+        onDone={() => undefined}
+        now={NOW}
+        total={7}
+        leadTotal={1}
+        people={[person({})]}
+      />
+    );
     expect(screen.queryByText(/See leads waiting/)).toBeNull();
   });
 
   it('keeps long names and subjects on one line each so a 390px card does not overflow', () => {
     render(
       <WaitingForReplySection
+        onDone={() => undefined}
         now={NOW}
         total={1}
         leadTotal={1}
@@ -103,6 +128,43 @@ describe('WaitingForReplySection', () => {
     );
     const name = screen.getByText(/^N{120}/);
     expect(name.className).toContain('truncate');
-    expect(screen.getByText('Quote for the shop').className).toContain('truncate');
+    expect(screen.getByTestId('todo-meta').className).toContain('truncate');
+  });
+});
+
+describe('WaitingForReplySection done checkbox', () => {
+  it('says "Reply · waiting 2 days · Re: <subject>" on one meta line, without doubling "Re:"', () => {
+    render(
+      <WaitingForReplySection
+        onDone={() => undefined}
+        now={NOW}
+        total={2}
+        leadTotal={2}
+        people={[
+          person({ subject: 'unsubscribe' }),
+          person({ id: 'lead-2', subject: 'Re: quote' }),
+        ]}
+      />
+    );
+    const metas = screen.getAllByTestId('todo-meta').map((m) => m.textContent);
+    expect(metas).toEqual([
+      'Reply · waiting 2 days · Re: unsubscribe',
+      'Reply · waiting 2 days · Re: quote',
+    ]);
+  });
+
+  it('checking a row hands that person to onDone (handled without a reply)', () => {
+    const onDone = vi.fn();
+    render(
+      <WaitingForReplySection
+        onDone={onDone}
+        now={NOW}
+        total={1}
+        leadTotal={0}
+        people={[person({ kind: 'contact', id: 'c-1', name: 'Omar', company: null })]}
+      />
+    );
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(onDone).toHaveBeenCalledWith(expect.objectContaining({ kind: 'contact', id: 'c-1' }));
   });
 });

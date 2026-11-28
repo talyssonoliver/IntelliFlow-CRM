@@ -14,11 +14,19 @@ const useQueryMock = vi.fn<
   isLoading: false,
 }));
 
+// The tenant currency (Analytics -> Report settings); undefined while it loads.
+const currencyMock = vi.fn<() => string | undefined>(() => undefined);
+
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     analytics: {
       getOverview: {
         useQuery: (...args: unknown[]) => useQueryMock(...args),
+      },
+      reportSettings: {
+        currency: {
+          useQuery: () => ({ data: currencyMock() ? { currency: currencyMock() } : undefined }),
+        },
       },
     },
   },
@@ -26,6 +34,31 @@ vi.mock('@/lib/trpc', () => ({
 
 import { SalesRevenueWidget } from '../SalesRevenueWidget';
 import { DASHBOARD_REFETCH_INTERVAL_MS } from '@/lib/dashboard/kpi-calculator';
+
+describe('SalesRevenueWidget tenant currency', () => {
+  it('shows dollars when the tenant currency is USD', () => {
+    currencyMock.mockReturnValue('USD');
+    render(<SalesRevenueWidget />);
+
+    expect(screen.getByText('$45,200')).toBeInTheDocument();
+    expect(screen.queryByText('£45,200')).not.toBeInTheDocument();
+    currencyMock.mockReturnValue(undefined);
+  });
+
+  it('shows euros when the tenant currency is EUR', () => {
+    currencyMock.mockReturnValue('EUR');
+    render(<SalesRevenueWidget />);
+
+    expect(screen.getByText('€45,200')).toBeInTheDocument();
+    currencyMock.mockReturnValue(undefined);
+  });
+
+  it('stays in pounds while the setting loads', () => {
+    render(<SalesRevenueWidget />);
+
+    expect(screen.getByText('£45,200')).toBeInTheDocument();
+  });
+});
 
 describe('SalesRevenueWidget', () => {
   it('displays sales revenue metric', () => {

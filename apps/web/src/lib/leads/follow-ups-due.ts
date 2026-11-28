@@ -58,3 +58,18 @@ export function followUpStatus(
     tone: 'overdue',
   };
 }
+
+/**
+ * What a due follow-up asks you to do, worded once for the Dashboard card and the Tasks table
+ * (owner 21/11: "It isn't showing what is the action").
+ */
+export function followUpActionText(name: string): string {
+  return `Follow up with ${name}`;
+}
+
+/** "Last contacted 13 Nov", or "Never contacted". */
+export function followUpLastContactText(lastContactedAt: Date | string | null | undefined): string {
+  const contacted = lastContactedAt ? new Date(lastContactedAt) : null;
+  if (!contacted || Number.isNaN(contacted.getTime())) return 'Never contacted';
+  return `Last contacted ${contacted.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`;
+}

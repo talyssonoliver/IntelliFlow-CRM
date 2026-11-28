@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-28T03:43:37.706Z",
+  "generated_at": "2026-11-28T04:24:50.961Z",
   "tool_version": "1.2.0",
   "routes": [
     {
@@ -2088,8 +2088,10 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "none",
-        "patterns_found": [],
+        "classification": "static-by-design-dated",
+        "patterns_found": [
+          "percentage"
+        ],
         "data_sources": []
       },
       "ghost_links": [],
@@ -2099,6 +2101,69 @@
     {
       "route": "/analytics/feedback",
       "file_path": "apps/web/src/app/analytics/(list)/feedback/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Analytics",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
+          "source": "root-layout",
+          "length": 131
+        },
+        "og_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelli-flow-crm-web.vercel.app",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "Aurora",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/analytics/pipeline",
+      "file_path": "apps/web/src/app/analytics/(list)/pipeline/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -2235,6 +2300,69 @@
           "value": "Create and manage saveable report layouts: filter set, columns, chart type, and default period.",
           "source": "page",
           "length": 95
+        },
+        "og_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelli-flow-crm-web.vercel.app",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "Aurora",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/analytics/sales",
+      "file_path": "apps/web/src/app/analytics/(list)/sales/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Analytics",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
+          "source": "root-layout",
+          "length": 131
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -3860,8 +3988,10 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "none",
-        "patterns_found": [],
+        "classification": "stale",
+        "patterns_found": [
+          "placeholder"
+        ],
         "data_sources": []
       },
       "ghost_links": [],
@@ -5634,8 +5764,10 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "none",
-        "patterns_found": [],
+        "classification": "stale",
+        "patterns_found": [
+          "placeholder"
+        ],
         "data_sources": []
       },
       "ghost_links": [],
@@ -6012,8 +6144,10 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "none",
-        "patterns_found": [],
+        "classification": "static-by-design-dated",
+        "patterns_found": [
+          "percentage"
+        ],
         "data_sources": []
       },
       "ghost_links": [],
@@ -14096,12 +14230,12 @@
     }
   ],
   "summary": {
-    "total_routes": 222,
+    "total_routes": 224,
     "public_routes": 36,
-    "auth_gated_routes": 172,
+    "auth_gated_routes": 174,
     "developer_routes": 14,
     "routes_with_seo_score": 36,
-    "routes_pending_runtime_measurement": 222,
+    "routes_pending_runtime_measurement": 224,
     "average_seo_score_public": 85,
     "legal_pages_missing": [],
     "ghost_link_count": 0

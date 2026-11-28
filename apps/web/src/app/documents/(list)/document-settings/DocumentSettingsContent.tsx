@@ -450,7 +450,7 @@ export default function DocumentSettingsContent() {
   return (
     <ModuleSettingsShell
       breadcrumbs={[
-        { label: 'Home', href: '/' },
+        { label: 'Dashboard', href: '/dashboard' },
         { label: 'Documents', href: '/documents' },
         { label: 'Document Settings' },
       ]}

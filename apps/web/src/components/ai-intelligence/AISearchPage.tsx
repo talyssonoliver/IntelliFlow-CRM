@@ -35,7 +35,11 @@ import { KpiCard } from '@/components/dashboard/KpiCard';
 // Breadcrumbs
 // ============================================
 
-const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'AI Search' }];
+const BREADCRUMBS = [
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'AI & Agents', href: '/agent-approvals' },
+  { label: 'AI Search' },
+];
 
 const SEARCH_SKELETON_KEYS = ['search-skel-0', 'search-skel-1', 'search-skel-2'] as const;
 

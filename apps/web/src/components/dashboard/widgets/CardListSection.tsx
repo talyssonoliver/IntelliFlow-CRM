@@ -105,3 +105,68 @@ export function CardListMore({ href, children }: Readonly<{ href: string; childr
     </Link>
   );
 }
+
+/**
+ * One to-do row for every kind on the Upcoming Tasks card (owner 26/11 and 27/11: "each kind of
+ * task has different settings, which may confuse the user"). A task, a follow-up and a reply all
+ * read the same: a 44px "done" checkbox, a title line, and one meta line "Kind · when". The
+ * checkbox means "done" for every kind; the row itself opens the task, the lead or the person.
+ */
+export function TodoRow({
+  href,
+  title,
+  kind,
+  detail,
+  detailClassName,
+  doneLabel,
+  onDone,
+  pending = false,
+}: Readonly<{
+  href: string;
+  title: ReactNode;
+  /** What this is: "Task", "Follow-up" or "Reply". */
+  kind: string;
+  /** The rest of the meta line: priority, when, last contact, subject. */
+  detail: ReactNode;
+  /** Colour of the detail: red when overdue, amber today, muted otherwise. */
+  detailClassName: string;
+  /** Screen-reader name of the checkbox, e.g. "Mark done: Follow up with Jane Example". */
+  doneLabel: string;
+  onDone: () => void;
+  pending?: boolean;
+}>) {
+  return (
+    <li className="-mx-2 flex min-h-11 items-center rounded-md px-2 transition-colors hover:bg-muted">
+      <label className="flex size-11 shrink-0 cursor-pointer items-center justify-center">
+        <input
+          type="checkbox"
+          className="size-4 cursor-pointer rounded border-slate-300 dark:border-slate-600"
+          checked={false}
+          disabled={pending}
+          title="Mark as done"
+          aria-label={doneLabel}
+          onChange={onDone}
+        />
+      </label>
+      <Link
+        href={href}
+        className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-md py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-medium text-foreground">{title}</span>
+          <span className="block truncate text-xs" data-testid="todo-meta">
+            <span className="text-muted-foreground">{kind}</span>
+            <span className="text-muted-foreground"> · </span>
+            <span className={detailClassName}>{detail}</span>
+          </span>
+        </span>
+        <span
+          className="material-symbols-outlined shrink-0 text-lg text-muted-foreground"
+          aria-hidden="true"
+        >
+          chevron_right
+        </span>
+      </Link>
+    </li>
+  );
+}

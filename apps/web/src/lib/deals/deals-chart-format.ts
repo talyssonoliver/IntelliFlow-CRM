@@ -3,14 +3,14 @@
  * untyped values, so they coerce first).
  */
 import { formatGBP } from '@/lib/dashboard/kpi-calculator';
-import { formatGBPCompact } from '@/lib/format/gbp-compact';
+import { formatMoneyCompact } from '@/lib/format/money';
 
-/** Y-axis tick: a compact pound label, e.g. 4500 -> "£5k". */
-export function revenueAxisTick(value: unknown): string {
-  return formatGBPCompact(Number(value));
+/** Y-axis tick: a compact money label, e.g. 4500 -> "£5k". */
+export function revenueAxisTick(value: unknown, currency = 'GBP'): string {
+  return formatMoneyCompact(Number(value), currency);
 }
 
-/** Tooltip row: the full pound amount, labelled Revenue. Non-numbers read as £0. */
-export function revenueTooltip(value: unknown): [string, string] {
-  return [formatGBP(typeof value === 'number' ? value : 0), 'Revenue'];
+/** Tooltip row: the full amount in the tenant currency, labelled Revenue. Non-numbers read as £0. */
+export function revenueTooltip(value: unknown, currency = 'GBP'): [string, string] {
+  return [formatGBP(typeof value === 'number' ? value : 0, 0, currency), 'Revenue'];
 }

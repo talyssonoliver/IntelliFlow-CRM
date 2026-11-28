@@ -20,6 +20,7 @@ import {
   LOW_CONFIDENCE_TITLE,
   leadScoreDisplay,
 } from '@/lib/leads/score-display';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 
 /** #1218: the profile card's score, or "Not scored" when no real AI score exists. */
 function ProfileScoreValue({
@@ -292,6 +293,7 @@ export function LeadProfileCard({
   lead: LeadProfileData;
   leadMetrics: LeadMetrics;
 }) {
+  const currency = useTenantCurrency();
   return (
     <Card className="overflow-hidden">
       <div className="h-24 bg-gradient-to-r from-blue-100 to-indigo-50 dark:from-slate-800 dark:to-slate-800" />
@@ -400,7 +402,7 @@ export function LeadProfileCard({
                 (MVP-003). The link opens the edit form focused on the value field. */}
             {leadMetrics.estimatedValue > 0 ? (
               <p className="text-lg font-bold text-slate-900 dark:text-white">
-                {formatEstimatedValue(leadMetrics.estimatedValue)}
+                {formatEstimatedValue(leadMetrics.estimatedValue, currency)}
               </p>
             ) : (
               <Link

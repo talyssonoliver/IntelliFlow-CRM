@@ -844,6 +844,80 @@ async function persistEntityActivity(
   }
 }
 
+/** The task field that links a task to the record an insight is about. */
+export function taskLinkFor(insight: Pick<GeneratedInsight, 'entityType' | 'entityId'>): {
+  leadId?: string;
+  contactId?: string;
+  opportunityId?: string;
+} {
+  if (!insight.entityId) return {};
+  switch (insight.entityType) {
+    case 'lead':
+      return { leadId: insight.entityId };
+    case 'contact':
+      return { contactId: insight.entityId };
+    case 'deal':
+    case 'opportunity':
+      return { opportunityId: insight.entityId };
+    default:
+      return {};
+  }
+}
+
+/** The advisory-lock key for one user's insights about one record (deal and opportunity agree). */
+export function insightLockKey(
+  tenantId: string,
+  userId: string,
+  insight: Pick<GeneratedInsight, 'entityType' | 'entityId'>
+): string {
+  const type = insight.entityType === 'deal' ? 'opportunity' : insight.entityType;
+  return `insight:${tenantId}:${userId}:${type}:${insight.entityId}`;
+}
+
+/**
+ * Takes the per-user, per-record insight lock (held to the end of the caller's transaction) and
+ * says whether the insight should still be written: a heuristic fallback is not, when the user
+ * already has an open insight about the record.
+ */
+async function lockRecordForInsight(
+  prisma: any,
+  insight: GeneratedInsight,
+  tenantId: string,
+  userId: string,
+  fromFallback: boolean
+): Promise<boolean> {
+  if (!insight.entityId || !insight.entityType) return true;
+  // One writer at a time per user and record (codex 27/11): this runs inside the subject's
+  // transaction, so the lock is held through the insert and the supersession that follow. Two jobs
+  // writing about one deal at once otherwise could not see each other's uncommitted insight and
+  // both would stay open. Lead and contact insights also hold the person's row lock.
+  await prisma.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${insightLockKey(
+    tenantId,
+    userId,
+    insight
+  )}, 0))`;
+
+  // A generic fallback (model down) adds nothing when the user already has an open insight about
+  // this record, and the Home lists show one per record, newest first: the fallback would hide
+  // the model-written one (codex 27/11). Checked under the record lock above.
+  if (fromFallback) {
+    const open = await prisma.aIInsight.findFirst({
+      where: {
+        tenantId,
+        entityType: insight.entityType === 'deal' ? 'opportunity' : insight.entityType,
+        entityId: insight.entityId,
+        status: { in: ['NEW', 'VIEWED'] },
+        // Still shown on Home: a past-TTL insight is no longer open (codex 27/11).
+        expiresAt: { gt: new Date() },
+        metadata: { path: ['userId'], equals: userId },
+      },
+      select: { id: true },
+    });
+    if (open) return false;
+  }
+  return true;
+}
+
 /** Writes the insight; returns its id, or null when it was a duplicate or its entity is gone. */
 async function persistInsightRecord(
   prisma: any,
@@ -852,9 +926,15 @@ async function persistInsightRecord(
   userId: string,
   validatedData: InsightJobData,
   now: Date,
-  job: Job<InsightJobData>
+  job: Job<InsightJobData>,
+  /** True when the model was unavailable and this insight is the generic heuristic template. */
+  fromFallback = false
 ): Promise<string | null> {
   const expiresAt = new Date(now.getTime() + getInsightTTL(insight.priority));
+
+  if (!(await lockRecordForInsight(prisma, insight, tenantId, userId, fromFallback))) {
+    return null;
+  }
 
   const existingInsight = await prisma.aIInsight.findFirst({
     where: {
@@ -901,6 +981,31 @@ async function persistInsightRecord(
       tenantId,
     },
   });
+
+  // Owner 21/11: one lead showed three open "Opportunity" insights, each worded differently by
+  // the model, because the check above matches the exact title only. The newest insight about an
+  // entity replaces this user's older open ones of the same type: they are marked EXPIRED (kept,
+  // not deleted), so the lists show one insight per entity and purpose.
+  // Only open insights are superseded: one the user ACTED_ON keeps that record. A heuristic
+  // template (written while the model is down) never replaces a model-written insight.
+  if (created.id && insight.entityId && insight.entityType && !fromFallback) {
+    await prisma.aIInsight.updateMany({
+      where: {
+        tenantId,
+        entityType: insight.entityType === 'deal' ? 'opportunity' : insight.entityType,
+        entityId: insight.entityId,
+        // Any type: one open insight per record (owner 27/11).
+        // Every other open one, whatever its timestamp (codex 27/11): this runs under the
+        // per-user, per-record advisory lock taken before the insert, so writes for one record
+        // are serial and the last one written is the one left open. No timestamp ordering is
+        // needed, and none can be wrong when two inserts share a millisecond.
+        id: { not: created.id },
+        status: { in: ['NEW', 'VIEWED'] },
+        metadata: { path: ['userId'], equals: userId },
+      },
+      data: { status: 'EXPIRED' },
+    });
+  }
 
   return created.id as string;
 }
@@ -1052,6 +1157,9 @@ async function persistHighPriorityInsightSideEffects(
           tenantId,
           ownerId: userId,
           dueDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+          // Owner 27/11: the task is about the insight's record; without the link the Tasks
+          // table showed "—" under Linked entity for every AI task.
+          ...taskLinkFor(insight),
         },
       });
     } catch (taskError) {
@@ -1252,7 +1360,8 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
               userId,
               validatedData,
               now,
-              job
+              job,
+              usedFallback
             );
             return record.id !== null;
           }

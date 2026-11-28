@@ -146,7 +146,7 @@ export default function TaskSettingsContent() {
   return (
     <ModuleSettingsShell
       breadcrumbs={[
-        { label: 'Home', href: '/' },
+        { label: 'Dashboard', href: '/dashboard' },
         { label: 'Tasks', href: '/tasks' },
         { label: 'Task Settings' },
       ]}

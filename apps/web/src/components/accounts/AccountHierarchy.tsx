@@ -4,7 +4,8 @@ import { useState, useRef, useCallback, useMemo, type KeyboardEvent } from 'reac
 import { useRouter } from 'next/navigation';
 import { Button, Skeleton, Badge, Card } from '@intelliflow/ui';
 import { api } from '@/lib/api';
-import { formatCurrency } from '@/lib/pricing/calculator';
+import { formatMoney } from '@/lib/format/money';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { useAccountTiers } from '@/hooks/useAccountTiers';
 
 const HIERARCHY_SKELETON_KEYS = ['hier-0', 'hier-1', 'hier-2', 'hier-3'] as const;
@@ -56,6 +57,7 @@ function TreeNode({
   onNavigate,
   nodeRefs,
 }: Readonly<TreeNodeProps>) {
+  const currency = useTenantCurrency();
   const isExpanded = expandedNodes.has(node.id);
   const isCurrent = node.id === currentId;
   const isFocused = node.id === focusedNodeId;
@@ -125,7 +127,7 @@ function TreeNode({
 
         {node.revenue == null ? null : (
           <span className="text-xs text-muted-foreground shrink-0 ml-auto">
-            {formatCurrency(node.revenue)}
+            {formatMoney(node.revenue, currency)}
           </span>
         )}
 

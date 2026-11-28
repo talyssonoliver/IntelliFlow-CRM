@@ -11,7 +11,8 @@ import { api } from '@/lib/api';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { TaskList, type TaskListItem } from '@/components/tasks/TaskList';
-import { followUpTaskRows } from '@/components/tasks/follow-up-rows';
+import { FOLLOW_UP_ROW_PREFIX, followUpTaskRows } from '@/components/tasks/follow-up-rows';
+import { useFollowUpDone } from '@/components/dashboard/widgets/useTodoDone';
 import { FOLLOW_UP_SCAN_LIMIT } from '@/lib/leads/follow-ups-due';
 import { useFollowUpsDue } from '@/components/dashboard/widgets/useFollowUpsDue';
 import {
@@ -200,11 +201,17 @@ export default function TasksPage() {
     [router]
   );
 
+  const { markDone: markFollowUpDone } = useFollowUpDone();
   const handleComplete = useCallback(
     (id: string) => {
+      // A follow-up row is derived from a lead, not a stored task: done means "Followed up".
+      if (id.startsWith(FOLLOW_UP_ROW_PREFIX)) {
+        markFollowUpDone(id.slice(FOLLOW_UP_ROW_PREFIX.length));
+        return;
+      }
       completeMutation.mutate({ taskId: id });
     },
-    [completeMutation]
+    [completeMutation, markFollowUpDone]
   );
 
   const handleEdit = useCallback((task: TaskListItem) => {
@@ -241,10 +248,13 @@ export default function TasksPage() {
 
   const handleBulkComplete = useCallback(
     async (ids: string[]) => {
-      await Promise.allSettled(ids.map((id) => completeMutation.mutateAsync({ taskId: id })));
+      const followUps = ids.filter((id) => id.startsWith(FOLLOW_UP_ROW_PREFIX));
+      followUps.forEach((id) => markFollowUpDone(id.slice(FOLLOW_UP_ROW_PREFIX.length)));
+      const taskIds = ids.filter((id) => !id.startsWith(FOLLOW_UP_ROW_PREFIX));
+      await Promise.allSettled(taskIds.map((id) => completeMutation.mutateAsync({ taskId: id })));
       await refreshTaskLists();
     },
-    [completeMutation, refreshTaskLists]
+    [completeMutation, markFollowUpDone, refreshTaskLists]
   );
 
   const handleBulkDelete = useCallback(

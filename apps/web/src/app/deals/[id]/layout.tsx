@@ -5,6 +5,7 @@ import {
   SidebarInset,
   SidebarWithSuspense,
   dealsSidebarConfig,
+  SectionMobileBar,
 } from '@/components/sidebar';
 
 export default function DealDetailLayout({
@@ -21,6 +22,7 @@ export default function DealDetailLayout({
             className="flex flex-1 flex-col h-full min-w-0 overflow-hidden bg-background relative"
             id="main-content"
           >
+            <SectionMobileBar title="Deals" />
             {/* Mobile header with sidebar trigger */}
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden">{children}</div>

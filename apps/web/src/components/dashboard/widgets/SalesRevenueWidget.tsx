@@ -2,6 +2,7 @@
 
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import {
   DASHBOARD_REFETCH_INTERVAL_MS,
   formatGBP,
@@ -12,6 +13,7 @@ import type { WidgetProps } from './index';
 
 export function SalesRevenueWidget(_props: Readonly<WidgetProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const currency = useTenantCurrency();
   const { data, isLoading, isError } = trpc.analytics.getOverview.useQuery(
     {},
     { enabled: isAuthenticated && !authLoading, refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
@@ -35,9 +37,10 @@ export function SalesRevenueWidget(_props: Readonly<WidgetProps>) {
 
   return (
     <KpiCard
+      href="/analytics"
       label="Sales Revenue"
       icon="payments"
-      value={formatGBP(revenue)}
+      value={formatGBP(revenue, 0, currency)}
       // No revenue is neither on track nor behind: show no verdict at £0.
       badge={
         revenue === 0 ? undefined : (
