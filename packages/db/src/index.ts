@@ -3,6 +3,9 @@
 
 export * from './client';
 
+// Hosted-database boot guard: shared by every DB client creation site (ENG-OPS-002 row 65).
+export * from './hosted-db-guard';
+
 // ADR-071: inherited-membership predicates shared by the API and the quota adapter.
 export * from './membership';
 

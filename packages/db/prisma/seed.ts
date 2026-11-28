@@ -62,12 +62,15 @@ import {
   AppointmentStatus,
   AppointmentType,
 } from '../generated/prisma/client';
+import { assertHostedDbAllowed } from '../src/hosted-db-guard';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 // Import SEED_IDS from the single source of truth
 import { SEED_IDS, LEGACY_STRING_IDS } from '../src/seed-ids';
 import { createClient } from '@supabase/supabase-js';
 
+// Refuse a hosted Supabase DATABASE_URL outside a deployed runtime (incident 2026-11-27).
+assertHostedDbAllowed(process.env.DATABASE_URL, { variableName: 'DATABASE_URL' });
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
