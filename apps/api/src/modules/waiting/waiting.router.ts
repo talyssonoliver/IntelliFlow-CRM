@@ -5,9 +5,9 @@
 
 import { z } from 'zod';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
-import { createTenantWhereClause, getTenantContext } from '../../security/tenant-context';
+import { getTenantContext } from '../../security/tenant-context';
 import { mailViewerOf } from '@intelliflow/db';
-import { loadWaiting } from './waiting-load';
+import { loadWaitingPage } from './waiting-sql';
 
 export const waitingRouter = createTRPCRouter({
   /** Oldest first. `total` counts everyone waiting, `items` is the first `limit`. */
@@ -15,17 +15,10 @@ export const waitingRouter = createTRPCRouter({
     .input(z.object({ limit: z.number().int().min(1).max(100).default(5) }).optional())
     .query(async ({ ctx, input }) => {
       const typed = getTenantContext(ctx);
-      const all = await loadWaiting(
-        typed.prismaWithTenant,
-        mailViewerOf(typed.tenant),
-        createTenantWhereClause(typed.tenant),
-        createTenantWhereClause(typed.tenant)
-      );
-      return {
-        items: all.slice(0, input?.limit ?? 5),
-        total: all.length,
-        leadTotal: all.filter((i) => i.kind === 'lead').length,
-        contactTotal: all.filter((i) => i.kind === 'contact').length,
-      };
+      // Decided in SQL (waiting-sql.ts): only the `limit` people to show and the counts come back,
+      // not the tenant's mail. The tenant and the viewer's owner scope are in the statement.
+      return loadWaitingPage(typed.prismaWithTenant, mailViewerOf(typed.tenant), {
+        limit: input?.limit ?? 5,
+      });
     }),
 });
