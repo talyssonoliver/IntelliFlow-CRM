@@ -39,6 +39,7 @@ import { KpiCard } from '@/components/dashboard/KpiCard';
 // ---------------------------------------------------------------------------
 
 const BREADCRUMBS = [
+  { label: 'Dashboard', href: '/dashboard' },
   { label: 'AI & Agents', href: '/agent-approvals' },
   { label: 'Active Agents' },
 ];

@@ -273,6 +273,21 @@ describe('Task Router', () => {
       expect(result.hasMore).toBe(false);
     });
 
+    it("selects the lead's company, so a company-only lead is named on the Tasks page (owner 27/11)", async () => {
+      prismaMock.task.findMany.mockResolvedValue([mockTaskWithRelations]);
+      prismaMock.task.count.mockResolvedValue(1);
+
+      await caller.list({});
+
+      expect(prismaMock.task.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: expect.objectContaining({
+            lead: { select: expect.objectContaining({ company: true }) },
+          }),
+        })
+      );
+    });
+
     it('should filter by search term', async () => {
       prismaMock.task.findMany.mockResolvedValue([mockTaskWithRelations]);
       prismaMock.task.count.mockResolvedValue(1);

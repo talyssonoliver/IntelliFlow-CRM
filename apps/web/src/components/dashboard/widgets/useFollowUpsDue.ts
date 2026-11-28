@@ -81,6 +81,7 @@ export function useFollowUpsDue(limit: number = FOLLOW_UP_CARD_LIMIT): {
     company: lead.company,
     email: lead.email,
     lastContactedAt: lead.lastContactedAt,
+    owner: lead.owner ?? null,
   }));
   const total = data?.total ?? 0;
   const dueToday = read.filter(

@@ -237,6 +237,7 @@ vi.mock('@/lib/api', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
+  cn: (...a: unknown[]) => a.filter(Boolean).join(' '),
   Button: ({
     children,
     onClick,
@@ -2129,3 +2130,5 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     delete withLocation.location;
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

@@ -4,6 +4,7 @@ import { useId, useState } from 'react';
 import Link from 'next/link';
 import { EmptyState } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import {
   DASHBOARD_REFETCH_INTERVAL_MS,
   computePipelineStagePercent,
@@ -34,20 +35,24 @@ const STAGE_COLORS: Record<string, string> = {
  * #48: a stage holding deals with no value says so, as the deal cards do ("No value set"),
  * instead of a real-looking £0. An empty stage keeps "£0 (0 Deals)".
  */
-export function stageValueLabel(totalValue: number | string, count: number): string {
+export function stageValueLabel(
+  totalValue: number | string,
+  count: number,
+  currency = 'GBP'
+): string {
   const deals = `${count} ${count === 1 ? 'Deal' : 'Deals'}`;
   const value = Number(totalValue);
   return count > 0 && !value
     ? `${NO_DEAL_VALUE_LABEL} (${deals})`
-    : `${formatGBP(value)} (${deals})`;
+    : `${formatGBP(value, 0, currency)} (${deals})`;
 }
 
 /** The Deals heading total; "1 open deal · no value set" when the open deals carry no value. */
-export function dealsTotalLabel(total: number, dealCount: number): string {
+export function dealsTotalLabel(total: number, dealCount: number, currency = 'GBP'): string {
   const deals = `${dealCount} ${dealCount === 1 ? 'deal' : 'deals'}`;
   return dealCount > 0 && !total
     ? `${dealCount} open ${dealCount === 1 ? 'deal' : 'deals'} · no value set`
-    : `${formatGBP(total)} open across ${deals}`;
+    : `${formatGBP(total, 0, currency)} open across ${deals}`;
 }
 
 interface PipelineStage {
@@ -229,6 +234,7 @@ function LeadsSection({
 
 /** The workspace's open deals by stage, as they are created. */
 function DealsSection({ stages, state }: Readonly<{ stages: PipelineStage[]; state: PartState }>) {
+  const currency = useTenantCurrency();
   if (state.failed) {
     return (
       <Section title="Deals">
@@ -264,13 +270,13 @@ function DealsSection({ stages, state }: Readonly<{ stages: PipelineStage[]; sta
   const displayedTotal = stages.reduce((sum, st) => sum + Number(st.totalValue), 0);
   const dealCount = stages.reduce((sum, st) => sum + st.count, 0);
   return (
-    <Section title="Deals" detail={dealsTotalLabel(displayedTotal, dealCount)} foldable>
+    <Section title="Deals" detail={dealsTotalLabel(displayedTotal, dealCount, currency)} foldable>
       <SectionRows>
         {stages.map((stage) => (
           <Row
             key={stage.stageKey}
             label={stage.displayName}
-            detail={stageValueLabel(stage.totalValue, stage.count)}
+            detail={stageValueLabel(stage.totalValue, stage.count, currency)}
             percent={computePipelineStagePercent(stage.totalValue, displayedTotal)}
             color={STAGE_COLORS[stage.stageKey] || 'bg-primary'}
           />

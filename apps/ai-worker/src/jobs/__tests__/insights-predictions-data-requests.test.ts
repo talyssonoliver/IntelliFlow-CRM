@@ -160,7 +160,13 @@ vi.mock('@intelliflow/db', () => {
     $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
     leadAIInsight: { upsert: mockLeadAIInsightUpsert },
     contactAIInsight: { upsert: mockContactAIInsightUpsert },
-    aIInsight: { findFirst: vi.fn().mockResolvedValue(null), create: mockAIInsightCreate },
+    // The per-record insight lock (codex 27/11).
+    $executeRaw: vi.fn(async () => 1),
+    aIInsight: {
+      updateMany: () => Promise.resolve({ count: 0 }),
+      findFirst: vi.fn().mockResolvedValue(null),
+      create: mockAIInsightCreate,
+    },
     notification: { create: mockNotificationCreate, findFirst: vi.fn().mockResolvedValue(null) },
     leadActivity: { findFirst: vi.fn().mockResolvedValue(null), create: vi.fn() },
     contactActivity: { findFirst: vi.fn().mockResolvedValue(null), create: vi.fn() },

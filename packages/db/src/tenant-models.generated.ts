@@ -208,10 +208,12 @@ export const TENANT_MODELS: Readonly<Record<string, TenantModelInfo>> = {
   UserMfaSettings: { nullable: false, defaulted: false, relation: null },
   UserPermission: { nullable: false, defaulted: false, relation: 'tenant' },
   UserRoleAssignment: { nullable: false, defaulted: false, relation: 'tenant' },
+  WaitingDismissal: { nullable: false, defaulted: false, relation: 'tenant' },
   WebhookDelivery: { nullable: false, defaulted: false, relation: 'tenant' },
   WebhookEndpoint: { nullable: false, defaulted: false, relation: 'tenant' },
   WorkflowDefinition: { nullable: false, defaulted: false, relation: 'tenant' },
   WorkflowExecution: { nullable: false, defaulted: false, relation: 'tenant' },
+  WorkspaceExportRequest: { nullable: false, defaulted: false, relation: 'tenant' },
   ZepEpisodeAudit: { nullable: false, defaulted: true, relation: null },
   ZepEpisodeUsage: { nullable: false, defaulted: true, relation: null },
 };

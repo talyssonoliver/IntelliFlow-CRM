@@ -203,6 +203,20 @@ describe('opportunityRouter additional coverage', () => {
     });
   });
 
+  describe('list - stalled filter (Deals sidebar "Stalled" segment)', () => {
+    it('keeps only deals not updated since updatedBefore', async () => {
+      prismaMock.opportunity.findMany.mockResolvedValue([]);
+      prismaMock.opportunity.count.mockResolvedValue(0);
+      const caller = opportunityRouter.createCaller(ctx);
+      const cutoff = new Date('2026-10-28T00:00:00.000Z');
+
+      await caller.list({ updatedBefore: cutoff });
+
+      const where = prismaMock.opportunity.findMany.mock.calls.at(-1)?.[0]?.where;
+      expect(JSON.stringify(where)).toContain('"updatedAt":{"lt":"2026-10-28T00:00:00.000Z"}');
+    });
+  });
+
   describe('list - date filters', () => {
     it('should apply dateFrom and dateTo filters', async () => {
       prismaMock.opportunity.findMany.mockResolvedValue([]);

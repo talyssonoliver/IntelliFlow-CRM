@@ -55,11 +55,10 @@ vi.mock('@/components/shared/activity-feed', () => ({
     </div>
   ),
   ActivityFeedStatsBar: () => null,
-  ActivityFeedTypeFilter: ({ onChange }: Readonly<{ onChange: (value: string) => void }>) => (
-    <button type="button" onClick={() => onChange('CALL')}>
-      choose calls
-    </button>
-  ),
+  ACTIVITY_FEED_TYPE_FILTER_OPTIONS: [
+    { value: 'all', label: 'All Activity', icon: 'list' },
+    { value: 'CALL', label: 'Calls', icon: 'call_received' },
+  ],
 }));
 
 import ActivityPage from '../page';
@@ -184,7 +183,8 @@ describe('ActivityPage', () => {
     mockFeed([item('p1', 'Call with Acme', 'CALL', me), item('p2', 'Call with Bob', 'CALL', bob)]);
 
     render(<ActivityPage />);
-    fireEvent.click(screen.getByRole('button', { name: 'choose calls' }));
+    // The type is a filter of the shared toolbar now (owner 21/11).
+    fireEvent.change(screen.getByLabelText('Activity type'), { target: { value: 'CALL' } });
 
     expect(screen.queryByRole('button', { name: /System updates/ })).not.toBeInTheDocument();
     expect(mockUseActivityFeed.mock.calls.some(([o]) => o.types?.join() === 'CALL')).toBe(true);

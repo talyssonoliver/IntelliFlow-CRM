@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { UpcomingTasksWidget } from '../UpcomingTasksWidget';
 
@@ -21,6 +21,14 @@ const waitingQuery = vi.hoisted(() => ({
   lastInput: undefined as Record<string, unknown> | undefined,
 }));
 
+// The three "done" mutations; each test checks which one a checkbox calls.
+const done = vi.hoisted(() => ({
+  completeTask: vi.fn(),
+  logActivity: vi.fn(),
+  dismiss: vi.fn(),
+  tasks: [] as unknown[],
+}));
+
 // Mock TaskCreateSheet to avoid deep tRPC dependency chain
 vi.mock('@/components/tasks/TaskCreateSheet', () => ({
   TaskCreateSheet: () => null,
@@ -36,13 +44,13 @@ vi.mock('@/lib/api', () => ({
     task: {
       list: {
         useQuery: vi.fn(() => ({
-          data: { tasks: [] },
+          data: { tasks: done.tasks },
           isLoading: false,
         })),
       },
       complete: {
         useMutation: vi.fn(() => ({
-          mutate: vi.fn(),
+          mutate: done.completeTask,
         })),
       },
       create: {
@@ -54,6 +62,9 @@ vi.mock('@/lib/api', () => ({
       },
     },
     lead: {
+      logActivity: {
+        useMutation: vi.fn(() => ({ mutate: done.logActivity, isPending: false })),
+      },
       list: {
         useQuery: vi.fn((input: Record<string, unknown>) => {
           followUpQuery.lastInput = input;
@@ -62,6 +73,9 @@ vi.mock('@/lib/api', () => ({
       },
     },
     waiting: {
+      dismiss: {
+        useMutation: vi.fn(() => ({ mutate: done.dismiss, isPending: false })),
+      },
       list: {
         useQuery: vi.fn((input: Record<string, unknown>) => {
           waitingQuery.lastInput = input;
@@ -78,6 +92,8 @@ vi.mock('@/lib/api', () => ({
           invalidate: vi.fn(),
         },
       },
+      lead: { list: { invalidate: vi.fn() } },
+      waiting: { list: { invalidate: vi.fn() } },
     })),
   },
 }));
@@ -98,6 +114,84 @@ describe('UpcomingTasksWidget', () => {
     followUpQuery.lastInput = undefined;
     waitingQuery.state = { data: { items: [], total: 0 }, isLoading: false };
     waitingQuery.lastInput = undefined;
+    done.tasks = [];
+    done.completeTask.mockReset();
+    done.logActivity.mockReset();
+    done.dismiss.mockReset();
+  });
+
+  const allThreeKinds = () => {
+    done.tasks = [
+      {
+        id: 'task-1',
+        title: 'Send the proposal',
+        priority: 'HIGH',
+        dueDate: '2020-01-01T00:00:00.000Z',
+      },
+    ];
+    followUpQuery.state = {
+      data: { data: [lead({ lastContactedAt: '2020-01-01T10:00:00.000Z' })], total: 1 },
+      isLoading: false,
+    };
+    waitingQuery.state = {
+      data: {
+        items: [
+          {
+            kind: 'contact',
+            id: 'c-1',
+            name: 'Omar Example',
+            company: null,
+            since: new Date(Date.now() - 4 * 86_400_000 - 3_600_000).toISOString(),
+            subject: 'unsubscribe',
+          },
+        ],
+        total: 1,
+        leadTotal: 0,
+      },
+      isLoading: false,
+    };
+  };
+
+  it('shows tasks, follow-ups and replies in one row shape: checkbox, title, "Kind · when"', () => {
+    allThreeKinds();
+    render(<UpcomingTasksWidget />);
+
+    expect(screen.getAllByRole('checkbox')).toHaveLength(3);
+    const metas = screen.getAllByTestId('todo-meta').map((m) => m.textContent);
+    expect(metas[0]).toBe('Task · High · Overdue');
+    expect(metas[1]).toMatch(/^Follow-up · Overdue by \d+ days · last contacted 1 Jan$/);
+    expect(metas[2]).toBe('Reply · waiting 4 days · Re: unsubscribe');
+    // Each row opens its task, lead or person.
+    expect(screen.getByRole('link', { name: /Send the proposal/ })).toHaveAttribute(
+      'href',
+      '/tasks/task-1'
+    );
+    expect(screen.getByRole('link', { name: /Omar Example/ })).toHaveAttribute(
+      'href',
+      '/contacts/c-1'
+    );
+  });
+
+  it('the checkbox means done for every kind, each through its own mutation', () => {
+    allThreeKinds();
+    render(<UpcomingTasksWidget />);
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Complete task: Send the proposal' }));
+    expect(done.completeTask).toHaveBeenCalledWith({ taskId: 'task-1' });
+
+    fireEvent.click(screen.getByRole('checkbox', { name: /Mark done: Follow up with Jane/ }));
+    expect(done.logActivity).toHaveBeenCalledWith({
+      leadId: 'lead-1',
+      type: 'NOTE',
+      title: 'Followed up',
+    });
+
+    fireEvent.click(screen.getByRole('checkbox', { name: /handled without a reply: Omar/ }));
+    expect(done.dismiss).toHaveBeenCalledWith({ kind: 'contact', id: 'c-1' });
+
+    expect(done.completeTask).toHaveBeenCalledTimes(1);
+    expect(done.logActivity).toHaveBeenCalledTimes(1);
+    expect(done.dismiss).toHaveBeenCalledTimes(1);
   });
 
   it('lists who is waiting for a reply, oldest first, instead of the empty state', () => {
@@ -119,7 +213,7 @@ describe('UpcomingTasksWidget', () => {
     expect(
       within(screen.getByTestId('waiting-for-reply')).getByText('4 waiting for a reply')
     ).toBeInTheDocument();
-    expect(section.getByText('waiting 2 days')).toBeInTheDocument();
+    expect(section.getByText(/^waiting 2 days/)).toBeInTheDocument();
     expect(screen.queryByText('No tasks yet')).toBeNull();
   });
 
@@ -178,8 +272,8 @@ describe('UpcomingTasksWidget', () => {
 
     const section = within(screen.getByTestId('follow-ups-due'));
     expect(within(screen.getByTestId('follow-ups-due')).getByText(/5 overdue/)).toBeInTheDocument();
-    // The row names the lead; the block heading already says these are follow-ups (owner 21/11).
-    expect(section.getByRole('link', { name: /^Jane Example/ })).toBeInTheDocument();
+    // The row says the action and names the lead (owner 21/11: "It isn't showing what is the action").
+    expect(section.getByRole('link', { name: /^Follow up with Jane Example/ })).toBeInTheDocument();
     expect(section.getByRole('link', { name: /Bob Stone/ })).toHaveAttribute(
       'href',
       '/leads/lead-2'

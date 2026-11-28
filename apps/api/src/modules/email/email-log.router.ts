@@ -32,8 +32,11 @@ import {
   type EmailRouterCtx,
 } from './email-access';
 import { leadEmailEngagement } from './lead-email-engagement';
+import { mapEmailRecord, type ParsedEmailResponse } from './inbound.router';
 
 const emailIdInput = z.object({ emailId: recordIdSchema });
+const LEAD_EMAILS_LIMIT = 200;
+const LEAD_EMAILS_MAX_PAGES = 5;
 
 export interface EmailLinkDto {
   logged: boolean;
@@ -185,6 +188,29 @@ async function findCounterparty(ctx: EmailRouterCtx, email: StoredEmail) {
   return null;
 }
 
+/** One ordered stream of a lead's non-draft mail, read in pages until the limit of mails is reached. */
+async function readThreadStream(
+  db: any,
+  where: Record<string, unknown>,
+  orderBy: unknown[]
+): Promise<any[]> {
+  const kept: any[] = [];
+  for (let page = 0; page < LEAD_EMAILS_MAX_PAGES && kept.length < LEAD_EMAILS_LIMIT; page++) {
+    const rows: any[] = await db.emailRecord.findMany({
+      where,
+      include: { attachments: true },
+      orderBy,
+      take: LEAD_EMAILS_LIMIT,
+      skip: page * LEAD_EMAILS_LIMIT,
+    });
+    for (const row of rows) {
+      if ((row.metadata as { isDraft?: unknown } | null)?.isDraft !== true) kept.push(row);
+    }
+    if (rows.length < LEAD_EMAILS_LIMIT) break;
+  }
+  return kept;
+}
+
 export const emailLogRouter = createTRPCRouter({
   /** Whether the email is already linked to a lead or contact. */
   status: tenantProcedure.input(emailIdInput).query(async ({ ctx, input }) => {
@@ -208,6 +234,82 @@ export const emailLogRouter = createTRPCRouter({
       });
       if (!lead?.email) return { sent: 0, opened: 0 };
       return leadEmailEngagement(c.prismaWithTenant as never, emailViewerOf(c), lead.email);
+    }),
+
+  /**
+   * The mail logged on a lead, oldest first by the provider's own date (sentAt, else createdAt),
+   * with each mail's sanitised HTML and attachment metadata (the files are fetched on demand).
+   * Only a lead of the caller's tenant; drafts are never part of it.
+   */
+  leadEmails: tenantProcedure
+    .input(z.object({ leadId: recordIdSchema }))
+    .query(async ({ ctx, input }): Promise<{ emails: ParsedEmailResponse[] }> => {
+      assertTenantContext(ctx);
+      const c = ctx as unknown as EmailRouterCtx;
+      const { tenantId } = c.tenant;
+      const lead = await c.prismaWithTenant.lead.findFirst({
+        where: createTenantWhereClause(c.tenant as never, { id: input.leadId }),
+        select: { id: true },
+      });
+      if (!lead) throw new TRPCError({ code: 'NOT_FOUND', message: 'Lead not found.' });
+      const where = {
+        tenantId,
+        metadata: { path: ['leadId'], equals: input.leadId },
+        // The lead lookup above proves the caller can see this lead, and mail logged to a lead
+        // is visible to whoever can see it (register #64, email-read-access.ts): the whole
+        // conversation, both directions, whatever mailbox it went through. Drafts are left out below.
+      };
+      // The thread is ordered by sentAt ?? createdAt, so the newest 200 are cut by that same date:
+      // mail with a sentAt and mail without one (not yet backfilled: createdAt is its date) are read
+      // as two streams, each newest first, then merged. Drafts are not part of the thread.
+      const read = (extra: Record<string, unknown>, orderBy: unknown[]) =>
+        readThreadStream(c.prismaWithTenant, { ...where, ...extra }, orderBy);
+      const [dated, undated] = await Promise.all([
+        read({ sentAt: { not: null } }, [
+          { sentAt: 'desc' },
+          { createdAt: 'desc' },
+          { id: 'desc' },
+        ]),
+        read({ sentAt: null }, [{ createdAt: 'desc' }, { id: 'desc' }]),
+      ]);
+      const at = (row: any): number => (row.sentAt ?? row.createdAt).getTime();
+      const byId = new Map<string, any>();
+      for (const row of [...dated, ...undated]) byId.set(row.id, row);
+      const visible = [...byId.values()]
+        .sort((x, y) => at(y) - at(x) || String(y.id).localeCompare(String(x.id)))
+        .slice(0, LEAD_EMAILS_LIMIT)
+        .sort((x, y) => at(x) - at(y) || String(x.id).localeCompare(String(y.id)));
+      return { emails: visible.map(mapEmailRecord) };
+    }),
+
+  /**
+   * One mail of a lead's thread by id (the Emails tab opens a row in place; the thread list is
+   * bounded, so an older row is read on its own). Same visibility as leadEmails.
+   */
+  leadEmail: tenantProcedure
+    .input(z.object({ leadId: recordIdSchema, emailRecordId: recordIdSchema }))
+    .query(async ({ ctx, input }): Promise<ParsedEmailResponse> => {
+      assertTenantContext(ctx);
+      const c = ctx as unknown as EmailRouterCtx;
+      const { tenantId } = c.tenant;
+      const lead = await c.prismaWithTenant.lead.findFirst({
+        where: createTenantWhereClause(c.tenant as never, { id: input.leadId }),
+        select: { id: true },
+      });
+      const row: any = lead
+        ? await c.prismaWithTenant.emailRecord.findFirst({
+            where: {
+              id: input.emailRecordId,
+              tenantId,
+              metadata: { path: ['leadId'], equals: input.leadId },
+              // Visible to whoever can see the lead (checked above); drafts are refused below.
+            },
+            include: { attachments: true },
+          })
+        : null;
+      const isDraft = (row?.metadata as { isDraft?: unknown } | null)?.isDraft === true;
+      if (!row || isDraft) throw new TRPCError({ code: 'NOT_FOUND', message: 'Email not found.' });
+      return mapEmailRecord(row);
     }),
 
   /** Links the email to the lead or contact it is with. */

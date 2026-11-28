@@ -4,10 +4,11 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'rea
 import { useSearchParams } from 'next/navigation';
 import { Card } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
+import { SearchFilterBar } from '@/components/shared/search-filter-bar';
 import {
   ActivityFeed,
-  ActivityFeedTypeFilter,
   ActivityFeedStatsBar,
+  ACTIVITY_FEED_TYPE_FILTER_OPTIONS,
   type ActivityFeedTypeFilterValue,
 } from '@/components/shared/activity-feed';
 import { SystemUpdatesGroup } from '@/components/leads/SystemUpdatesGroup';
@@ -161,40 +162,39 @@ export default function ActivityPage() {
           ]}
         />
 
+        {/* Owner 21/11: the shared toolbar (search, type filter, mine/all chips), like every list. */}
+        <SearchFilterBar
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search activity..."
+          searchAriaLabel="Search activity feed"
+          filters={[
+            {
+              id: 'type',
+              label: 'Activity type',
+              icon: 'filter_list',
+              options: ACTIVITY_FEED_TYPE_FILTER_OPTIONS.filter((o) => o.value !== 'all').map(
+                (o) => ({ value: o.value, label: o.label })
+              ),
+              value: feedFilter === 'all' ? '' : feedFilter,
+              onChange: (v) => setFeedFilter((v || 'all') as ActivityFeedTypeFilterValue),
+            },
+          ]}
+          filterChips={{
+            options: [
+              { id: 'all', label: 'All activity' },
+              { id: 'mine', label: 'My activity' },
+            ],
+            value: mineOnly ? 'mine' : 'all',
+            onChange: (id) => setMineOnly(id === 'mine'),
+          }}
+        />
+
         <Card className="p-0 overflow-hidden">
-          <div className="p-5 border-b border-[#e2e8f0] dark:border-[#334155] flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+          <div className="px-5 py-4 border-b border-[#e2e8f0] dark:border-[#334155]">
             <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
               All Activity
             </h2>
-            <div className="flex items-center gap-3">
-              {/* IFC-203: Full-text search input wired to activityFeed.search */}
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-                  search
-                </span>
-                <input
-                  type="text"
-                  placeholder="Search activity..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="w-48 sm:w-56 pl-8 pr-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6]/30 focus:border-[#2a78f6]"
-                  aria-label="Search activity feed"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => setMineOnly((v) => !v)}
-                aria-pressed={mineOnly}
-                className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                  mineOnly
-                    ? 'border-[#2a78f6] bg-[#2a78f6]/10 text-[#2a78f6]'
-                    : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
-              >
-                My activity
-              </button>
-              <ActivityFeedTypeFilter value={feedFilter} onChange={setFeedFilter} />
-            </div>
           </div>
           {/* IFC-202: Activity stats summary */}
           <div className="px-5 py-2.5 border-b border-[#e2e8f0] dark:border-[#334155] bg-slate-50/50 dark:bg-slate-800/20">

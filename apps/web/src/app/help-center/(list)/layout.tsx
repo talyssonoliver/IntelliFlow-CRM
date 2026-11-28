@@ -7,6 +7,7 @@ import {
   helpCenterSidebarConfig,
   SidebarPortalProvider,
   SidebarPortalTarget,
+  SectionMobileBar,
 } from '@/components/sidebar';
 import { ModuleGate } from '@/components/ModuleGate';
 
@@ -29,6 +30,7 @@ export default function HelpCenterListLayout({
                 className="flex flex-1 flex-col h-full min-w-0 overflow-hidden bg-background relative"
                 id="main-content"
               >
+                <SectionMobileBar title="Help Center" />
                 {/* Mobile header with sidebar trigger */}
 
                 <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 md:p-4">

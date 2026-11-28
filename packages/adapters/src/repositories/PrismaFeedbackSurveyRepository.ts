@@ -39,7 +39,7 @@ export class PrismaFeedbackSurveyRepository implements FeedbackSurveyRepositoryP
         tenantId,
         status: { in: RESPONDED_STATUSES },
         score: { not: null },
-        // One createdAt filter: two spreads would let dateTo replace dateFrom.
+        // One createdAt object: two spreads let dateTo overwrite dateFrom (lower bound lost).
         ...((filters.dateFrom || filters.dateTo) && {
           createdAt: {
             ...(filters.dateFrom && { gte: filters.dateFrom }),
@@ -208,8 +208,7 @@ export class PrismaFeedbackSurveyRepository implements FeedbackSurveyRepositoryP
 
     for (const row of result) {
       const count = Number(row.count);
-      // The column is the Sentiment enum (POSITIVE/NEUTRAL/NEGATIVE); older rows may be lower case.
-      switch (row.sentiment?.toLowerCase()) {
+      switch (row.sentiment) {
         case 'positive':
           positive = count;
           break;

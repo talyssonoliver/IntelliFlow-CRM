@@ -465,3 +465,5 @@ describe('IFC-225: Convert Lead UX Fix', () => {
     }
   );
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

@@ -117,7 +117,10 @@ vi.mock('../../utils/conversation-record-logger', async (importOriginal) => {
 
 vi.mock('@intelliflow/db', () => ({
   prisma: {
+    // The per-record insight lock (codex 27/11).
+    $executeRaw: vi.fn(async () => 1),
     aIInsight: {
+      updateMany: () => Promise.resolve({ count: 0 }),
       create: (...args: any[]) => mockCreate(...args),
       findFirst: () => Promise.resolve(null),
     },

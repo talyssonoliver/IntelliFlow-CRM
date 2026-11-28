@@ -2,9 +2,12 @@
 
 import { EmptyState } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
+import { formatMoney } from '@/lib/format/money';
 import type { WidgetProps } from './index';
 
 export function TopPerformersWidget(_props: Readonly<WidgetProps>) {
+  const currency = useTenantCurrency();
   const { data: performers, isLoading } = trpc.analytics.topPerformers.useQuery();
 
   return (
@@ -53,11 +56,7 @@ export function TopPerformersWidget(_props: Readonly<WidgetProps>) {
                     <p className="text-xs text-slate-500">{performer.dealCount} deals</p>
                   </div>
                   <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                    {revenue.toLocaleString('en-GB', {
-                      style: 'currency',
-                      currency: 'GBP',
-                      maximumFractionDigits: 0,
-                    })}
+                    {formatMoney(revenue, currency)}
                   </span>
                 </div>
               );

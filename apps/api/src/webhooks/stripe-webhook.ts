@@ -86,6 +86,12 @@ export interface StripeWebhookDeps {
   moduleAccess?: ModuleAccessLike | null;
   /** Optional: mark setup-fee instalments paid on `invoice.paid` (IFC-314 step 8). */
   setupInstalments?: SetupInstalmentPaidWriter | null;
+  /**
+   * Optional: called once a subscription is persisted as canceled/ended, to queue the
+   * whole-workspace data export (agreement clause 5). Throwing makes the webhook 5xx so Stripe
+   * redelivers.
+   */
+  onSubscriptionEnded?: (info: { tenantId: string; subscriptionId: string }) => Promise<void>;
   /** Stripe webhook signing secret (whsec_…). */
   webhookSecret: string;
   logger?: {
@@ -127,6 +133,7 @@ export function buildStripeWebhookHandler(deps: StripeWebhookDeps): WebhookHandl
   const syncSubscription = createSubscriptionSyncHandler({
     repo: deps.subscriptionRepository,
     portalSync: deps.portalSync ?? undefined,
+    onSubscriptionEnded: deps.onSubscriptionEnded,
     logger,
   });
 

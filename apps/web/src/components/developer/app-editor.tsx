@@ -25,6 +25,7 @@ import { SCOPE_OPTIONS } from '@/components/developer/app-creator';
 import { WebhookConfig } from '@/components/developer/webhook-config';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 export interface AppEditorProps {
   appId: string;
 }
@@ -174,28 +175,15 @@ export function AppEditor({ appId }: Readonly<AppEditorProps>) {
   return (
     <div data-testid="app-editor">
       {/* Breadcrumb */}
-      <nav
-        aria-label="Breadcrumb"
-        className="flex items-center gap-2 text-sm text-muted-foreground mb-6"
-      >
-        <Link
-          href="/developers/apps"
-          className="hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring rounded"
-        >
-          Developer Apps
-        </Link>
-        <span aria-hidden="true">/</span>
-        <Link
-          href={`/developers/apps/${appId}`}
-          className="hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring rounded"
-        >
-          {app.name}
-        </Link>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page" className="text-foreground font-medium">
-          Edit App
-        </span>
-      </nav>
+      <Breadcrumbs
+        endsWithCurrentPage={false}
+        items={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Developer Apps', href: '/developers/apps' },
+          { label: app.name, href: `/developers/apps/${appId}` },
+        ]}
+        className="mb-6"
+      />
 
       {/* Inactive app warning */}
       {app.status === 'inactive' && (

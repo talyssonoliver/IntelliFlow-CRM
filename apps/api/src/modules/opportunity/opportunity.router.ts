@@ -425,6 +425,7 @@ function buildOpportunityWhereClause(input: {
   maxProbability?: number;
   dateFrom?: Date;
   dateTo?: Date;
+  updatedBefore?: Date;
 }): any {
   const where: any = { deletedAt: null };
 
@@ -447,6 +448,8 @@ function buildOpportunityWhereClause(input: {
 
   const dateFilter = buildDateRangeFilter(input.dateFrom, input.dateTo);
   if (dateFilter) where.expectedCloseDate = dateFilter;
+
+  if (input.updatedBefore) where.updatedAt = { lt: input.updatedBefore };
 
   return where;
 }
@@ -555,20 +558,32 @@ function buildOwnerAvatar(name: string | null | undefined): string {
   );
 }
 
-function buildWinRateTrend(
+/**
+ * Win rate per calendar month for the last six months, oldest first, ending with this month (UTC).
+ * A month with no closed deals has `rate: null`: it was filled with the overall win rate before,
+ * which drew history that never happened, and the month names were fixed to May-Oct (owner 23/11).
+ */
+export function buildWinRateTrend(
   closedDeals: { closedAt: Date | null; stage: string }[],
-  overallWinRate: number
-): { month: string; rate: number; isProjected: boolean }[] {
-  const months = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
-  return months.map((month) => {
+  now: Date = new Date()
+): { month: string; rate: number | null; closed: number }[] {
+  const trend: { month: string; rate: number | null; closed: number }[] = [];
+  for (let back = 5; back >= 0; back--) {
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - back, 1));
+    const year = start.getUTCFullYear();
+    const month = start.getUTCMonth();
     const monthDeals = closedDeals.filter(
       (d) =>
-        new Date(d.closedAt!).toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' }) === month
+        d.closedAt && d.closedAt.getUTCFullYear() === year && d.closedAt.getUTCMonth() === month
     );
-    const monthWon = monthDeals.filter((d) => d.stage === 'CLOSED_WON').length;
-    const rate = monthDeals.length > 0 ? Math.round((monthWon / monthDeals.length) * 100) : 0;
-    return { month, rate: rate || overallWinRate, isProjected: monthDeals.length === 0 };
-  });
+    const won = monthDeals.filter((d) => d.stage === 'CLOSED_WON').length;
+    trend.push({
+      month: start.toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' }),
+      rate: monthDeals.length > 0 ? Math.round((won / monthDeals.length) * 100) : null,
+      closed: monthDeals.length,
+    });
+  }
+  return trend;
 }
 
 /** dealForecast input: the opportunity's record id (a cuid). */
@@ -1337,8 +1352,10 @@ export const opportunityRouter = createTRPCRouter({
     });
 
     // Get closed deals for win rate calculation (last 6 months)
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    // From the first day (UTC) of the oldest month buildWinRateTrend reports, so that month is
+    // whole (codex review 26/11: setMonth(-6) could start partway through it).
+    const now = new Date();
+    const sixMonthsAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5, 1));
 
     const closedDeals = await typedCtx.prismaWithTenant.opportunity.findMany({
       where: {
@@ -1371,7 +1388,7 @@ export const opportunityRouter = createTRPCRouter({
     const avgSalesCycle = computeAvgSalesCycle(wonDeals);
 
     const monthlyRevenue = buildMonthlyRevenue(wonDeals);
-    const winRateTrend = buildWinRateTrend(closed, winRate);
+    const winRateTrend = buildWinRateTrend(closed);
 
     // Map opportunities to forecast deals format
     const forecastDeals = activeOpps.map((opp) => ({

@@ -3,6 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { fieldEncryptionExtension, deriveKey } from './field-encryption.js';
 import { instrumentOperation } from './query-budget/extension.js';
 import { egressMeterEnabled, meterOperation, startEgressLogging } from './egress-meter.js';
+import { assertHostedDbAllowed } from './hosted-db-guard.js';
 
 // ---------------------------------------------------------------------------
 // M4 prompt encryption — ACTIVE via bespoke $extends (AES-256-GCM)
@@ -121,6 +122,9 @@ const createPrismaClient = () => {
   } else {
     poolMax = isServerless ? 1 : 10;
   }
+
+  // Refuse a hosted Supabase DATABASE_URL outside a deployed runtime (incident 2026-11-27).
+  assertHostedDbAllowed(process.env.DATABASE_URL, { variableName: 'DATABASE_URL' });
 
   const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL!,

@@ -250,4 +250,18 @@ describe('KpiCard framed (owner 21/11: one KPI card on every page)', () => {
     );
     expect(screen.getByTestId('c')).toHaveAttribute('aria-label', 'Open: 3');
   });
+
+  it('shows a label hint, like a definition (i), beside the label, not under the figure (owner 27/11)', () => {
+    render(
+      <KpiCard
+        label="Win rate"
+        icon="emoji_events"
+        value="0%"
+        labelHint={<button type="button">about</button>}
+      />
+    );
+    const hint = screen.getByRole('button', { name: 'about' });
+    expect(hint.parentElement?.parentElement).toContainElement(screen.getByText('Win rate'));
+    expect(hint.parentElement?.parentElement).not.toContainElement(screen.getByText('0%'));
+  });
 });

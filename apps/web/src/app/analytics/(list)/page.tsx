@@ -1,584 +1,330 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+/**
+ * Analytics: Performance (owner 26/11, Analytics redesign and mockup). The Dashboard is the
+ * operational workspace ("what needs attention today?"); Analytics is the business-intelligence
+ * workspace ("how is the business performing, and why?"). It never repeats the Dashboard's
+ * widgets (owner comment #10).
+ *
+ * Layout follows the mockup: hero with export, the views' tabs, the period and comparison, then
+ * "Business performance": four KPIs with their definitions, booked revenue over time against the
+ * previous period, and what changed with its evidence. Missing data says so; a failed request
+ * says so; nothing shows a real-looking zero.
+ */
+
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
-
-// Lazy-load the recharts-based RevenueTrendChart so its ~100KB minified
-// dependency stays out of this page's main bundle chunk. Loads after first
-// paint (the chart is below-the-fold in most viewports). Addresses
-// Lighthouse #84 script-bundle audit.
-const RevenueTrendChart = dynamic(
-  () => import('./RevenueTrendChart').then((m) => ({ default: m.RevenueTrendChart })),
-  {
-    ssr: false,
-    loading: () => <div className="h-64 animate-pulse rounded-lg bg-muted" />,
-  }
-);
-import { Card, EmptyState } from '@intelliflow/ui';
-import { trpc } from '@/lib/trpc';
-import { useAuth } from '@/lib/auth/AuthContext';
-import { downloadCSV } from '@/lib/export/csv';
-import { useAnalyticsDateRange, type PeriodKey } from '@/hooks/useAnalyticsDateRange';
-import { refreshAnalyticsCache } from '@/app/analytics/actions';
-import { formatGBPCompact } from '@/lib/format/gbp-compact';
+import { Card } from '@intelliflow/ui';
+import { PageHeader } from '@/components/shared/page-header';
+import { HeroMenu, type HeroMenuItem } from '@/components/shared/hero-menu';
 import { KpiCard } from '@/components/dashboard/KpiCard';
+import { ChartEmptyState, ChartUnavailable } from '@/components/shared/ChartEmptyState';
+import { MetricDefinition } from '@/components/shared/MetricDefinition';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { useAnalyticsDateRange, type PeriodKey } from '@/hooks/useAnalyticsDateRange';
+import type { Comparison, MaterialChange } from '@/lib/analytics/period-comparison';
+import {
+  PERIOD_ITEMS,
+  useCompactMoney,
+  useReportExport,
+  type ReportExportType,
+} from './analytics-shared';
+import { AnalyticsViewTabs, PeriodComparisonNote } from './AnalyticsWorkspace';
+import { performanceChanges, usePerformanceMetrics, winRateOf } from './usePerformanceMetrics';
 
-export default function AnalyticsPage() {
-  const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>('30d');
-  const [exportMenuOpen, setExportMenuOpen] = useState(false);
-  const exportMenuRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
-  const dateRange = useAnalyticsDateRange(selectedPeriod);
-  const enabled = isAuthenticated && !authLoading;
+const PeriodComparisonChart = dynamic(
+  () => import('./PeriodComparisonChart').then((m) => ({ default: m.PeriodComparisonChart })),
+  { ssr: false, loading: () => <div className="h-[220px] animate-pulse rounded-lg bg-muted" /> }
+);
 
-  // --- tRPC queries ---
-  const { data: overview, isLoading: overviewLoading } = trpc.analytics.getOverview.useQuery(
-    { startDate: dateRange.startDate, endDate: dateRange.endDate },
-    { enabled }
-  );
+const EXPORT_ITEMS: HeroMenuItem[] = [
+  { value: 'sales', label: 'Sales Metrics', icon: 'download' },
+  { value: 'overview', label: 'Overview Metrics', icon: 'table_chart' },
+  { value: 'leads', label: 'Lead Metrics', icon: 'group' },
+];
 
-  const { data: funnel, isLoading: funnelLoading } = trpc.analytics.getConversionFunnel.useQuery(
-    { startDate: dateRange.startDate, endDate: dateRange.endDate, includeLeads: true },
-    { enabled }
-  );
+const DEFINITIONS = {
+  revenue:
+    'Sum of the value of deals won, by the date they were won. Not cash collected or accounting revenue.',
+  winRate: 'Deals won as a share of deals closed (won or lost) in the period.',
+  cycle:
+    'Average days from a deal being created to being won, for deals won in the period. A median will replace it once the stage history supports it.',
+  pipeline:
+    'Value of opportunities created in the period that are still open. Opportunities already won or lost are not included.',
+};
 
-  const { data: timeSeries, isLoading: timeSeriesLoading } =
-    trpc.analytics.getTimeSeriesData.useQuery(
-      {
-        metric: 'revenue',
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-        granularity: selectedPeriod === '7d' ? 'day' : 'month',
-      },
-      { enabled }
-    );
-
-  const { data: leadStats } = trpc.analytics.leadStats.useQuery(undefined, { enabled });
-
-  // Close export menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: Readonly<MouseEvent>) {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
-        setExportMenuOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const utils = trpc.useUtils();
-
-  const handleServerExport = useCallback(
-    async (reportType: 'overview' | 'funnel' | 'sales') => {
-      setExportMenuOpen(false);
-      try {
-        const result = await utils.analytics.exportReport.fetch({
-          format: 'csv',
-          reportType,
-          startDate: dateRange.startDate,
-          endDate: dateRange.endDate,
-        });
-        if (result && typeof result.data === 'string') {
-          downloadCSV(result.data, result.filename);
-        }
-      } catch {
-        // Fallback: if server export not available, silently fail
-      }
-    },
-    [dateRange, utils]
-  );
-
-  const handleRefreshAnalytics = useCallback(() => {
-    if (user?.id) refreshAnalyticsCache(user.id).catch(() => {});
-  }, [user]);
-
-  const isLoading = overviewLoading || authLoading;
+export default function AnalyticsPerformancePage() {
+  const money = useCompactMoney();
+  const [period, setPeriod] = useState<PeriodKey>('30d');
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const range = useAnalyticsDateRange(period);
+  const handleExport = useReportExport(range);
+  const m = usePerformanceMetrics(range, period, isAuthenticated && !authLoading);
+  const pending = authLoading || m.pending;
 
   return (
     <>
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-        <Link href="/dashboard" className="hover:text-primary">
-          Dashboard
-        </Link>
-        <span>/</span>
-        <span className="text-foreground font-medium">Analytics</span>
-      </nav>
+      <PageHeader
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }]}
+        title="Analytics"
+        description="Understand performance. Identify opportunities. Measure impact."
+        controls={
+          <>
+            <HeroMenu
+              ariaLabel="Period"
+              label="Period"
+              icon="calendar_month"
+              items={PERIOD_ITEMS}
+              value={period}
+              onSelect={(v) => setPeriod(v as PeriodKey)}
+            />
+            <HeroMenu
+              label="Export"
+              icon="download"
+              variant="primary"
+              heading="CSV export"
+              items={EXPORT_ITEMS}
+              onSelect={(v) => handleExport(v as ReportExportType)}
+            />
+          </>
+        }
+      >
+        <PeriodComparisonNote range={range} />
+      </PageHeader>
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight">
-            Analytics
-          </h1>
-          <p className="text-muted-foreground text-base">
-            AI-powered insights and sales pipeline analytics
+      <AnalyticsViewTabs active="performance" />
+
+      <section aria-labelledby="business-performance" className="flex flex-col gap-4">
+        <div>
+          <h2 id="business-performance" className="text-lg font-semibold text-foreground">
+            Business performance
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Business outcomes and material changes across the selected period.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value as PeriodKey)}
-            className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
-            <option value="ytd">Year to date</option>
-          </select>
 
-          {/* Analytics cache refresh */}
-          <button
-            onClick={handleRefreshAnalytics}
-            className="inline-flex items-center gap-2 border border-border hover:bg-muted text-foreground font-medium py-2.5 px-4 rounded-lg transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            aria-label="Refresh analytics data"
-          >
-            <span className="material-symbols-outlined text-lg">refresh</span> Refresh
-          </button>
-
-          {/* Export Dropdown */}
-          <div className="relative" ref={exportMenuRef}>
-            <button
-              onClick={() => setExportMenuOpen(!exportMenuOpen)}
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2.5 px-5 rounded-lg shadow-sm shadow-primary/30 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 group"
-            >
-              <span className="material-symbols-outlined text-lg transition-transform group-hover:scale-110">
-                download
-              </span>{' '}
-              Export
-              <span
-                className={`material-symbols-outlined text-sm transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`}
-              >
-                expand_more
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <KpiCard
+            framed
+            label="Booked revenue"
+            icon="payments"
+            value={money(m.now?.totalRevenue ?? 0)}
+            pending={pending}
+            failed={m.failed}
+            labelHint={<MetricDefinition label="Booked revenue" definition={DEFINITIONS.revenue} />}
+            footer={<VsPrevious comparison={m.kpis.revenue} format={money} />}
+          />
+          <KpiCard
+            framed
+            label="Win rate"
+            icon="emoji_events"
+            value={
+              winRateOf(m.now) == null
+                ? 'No data'
+                : `${Math.round((m.now?.winRate ?? 0) * 10) / 10}%`
+            }
+            pending={pending}
+            failed={m.failed}
+            labelHint={<MetricDefinition label="Win rate" definition={winRateDefinition(m.now)} />}
+            footer={
+              winRateOf(m.now) == null ? (
+                <p className="text-xs text-muted-foreground">no deals closed in this period</p>
+              ) : (
+                <VsPrevious comparison={m.kpis.winRate} points />
+              )
+            }
+          />
+          <KpiCard
+            framed
+            label="Sales cycle"
+            icon="timer"
+            value={
+              m.now?.avgSalesCycleDays == null
+                ? 'No data'
+                : `${Math.round(m.now.avgSalesCycleDays)} days`
+            }
+            pending={pending}
+            failed={m.failed}
+            labelHint={<MetricDefinition label="Sales cycle" definition={DEFINITIONS.cycle} />}
+            footer={
+              m.now?.avgSalesCycleDays == null ? (
+                <p className="text-xs text-muted-foreground">no deals won in this period</p>
+              ) : (
+                <VsPrevious comparison={m.kpis.cycle} format={(v) => `${Math.round(v)} days`} />
+              )
+            }
+          />
+          <KpiCard
+            framed
+            label="Pipeline created"
+            icon="add_chart"
+            value={money(m.now?.pipelineValue ?? 0)}
+            pending={pending}
+            failed={m.failed}
+            labelHint={
+              <MetricDefinition label="Pipeline created" definition={DEFINITIONS.pipeline} />
+            }
+            footer={
+              <span className="text-xs text-muted-foreground">
+                Still open today. Not compared: older deals have had longer to close.
               </span>
-            </button>
-
-            {exportMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border z-50 overflow-hidden">
-                <div className="py-1">
-                  <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">
-                    CSV Export
-                  </div>
-                  <button
-                    onClick={() => handleServerExport('overview')}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-lg text-muted-foreground">
-                      table_chart
-                    </span>{' '}
-                    Overview Metrics
-                  </button>
-                  <button
-                    onClick={() => handleServerExport('funnel')}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-lg text-muted-foreground">
-                      waterfall_chart
-                    </span>{' '}
-                    Pipeline Funnel
-                  </button>
-                  <button
-                    onClick={() => handleServerExport('sales')}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-lg text-muted-foreground">
-                      download
-                    </span>{' '}
-                    Sales Metrics
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+            }
+          />
         </div>
-      </div>
 
-      {/* Metrics Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        {isLoading ? (
-          <>
-            <KpiCard framed loading label="Total Leads" icon="people" value={null} />
-            <KpiCard framed loading label="Revenue" icon="attach_money" value={null} />
-            <KpiCard framed loading label="Open Opportunities" icon="handshake" value={null} />
-            <KpiCard framed loading label="Win Rate" icon="emoji_events" value={null} />
-          </>
-        ) : (
-          <>
-            <KpiCard
-              framed
-              label="Total Leads"
-              icon="people"
-              value={String(overview?.totalLeads ?? 0)}
-              footer={
-                <DeltaFooter
-                  delta={overview?.leadDelta ?? 0}
-                  badge={leadStats ? `${leadStats.newThisMonth} new this month` : undefined}
-                />
-              }
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
+          <Card className="border-border bg-card p-5">
+            <PanelHeader title="Booked revenue over time" subtitle="Period comparison" />
+            <RevenueComparison trend={m.trend} money={money} />
+          </Card>
+          <Card className="border-border bg-card p-5">
+            <PanelHeader
+              title="What changed"
+              subtitle="Material changes, with the figures behind them"
             />
-            <KpiCard
-              framed
-              label="Revenue"
-              icon="attach_money"
-              value={formatCurrency(overview?.totalRevenue ?? 0)}
-              footer={<DeltaFooter delta={overview?.revenueDelta ?? 0} />}
+            <ChangesList
+              pending={pending}
+              failed={m.failed}
+              changes={performanceChanges(m.kpis, money)}
             />
-            <KpiCard
-              framed
-              label="Open Opportunities"
-              icon="handshake"
-              value={String(overview?.openOpportunities ?? 0)}
-              footer={<DeltaFooter delta={overview?.openOpportunitiesDelta ?? 0} />}
-            />
-            <KpiCard
-              framed
-              label="Win Rate"
-              icon="emoji_events"
-              value={`${overview?.winRate ?? 0}%`}
-              footer={<DeltaFooter delta={overview?.winRateDelta ?? 0} suffix="pp" />}
-            />
-          </>
-        )}
-      </div>
-
-      {/* Charts Grid */}
-      <div className="grid gap-6 lg:grid-cols-3 mb-6">
-        {/* Pipeline Funnel */}
-        <Card className="lg:col-span-2 p-6 bg-card border-border">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">Pipeline Funnel</h2>
-            {funnel && (
-              <span className="text-sm text-muted-foreground">
-                {funnel.overallConversionRate}% overall conversion
-              </span>
-            )}
-          </div>
-
-          <PipelineFunnelContent loading={funnelLoading} funnel={funnel} />
-        </Card>
-
-        {/* Lead Stats + Quick Info */}
-        <Card className="p-6 bg-card border-border">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">Lead Overview</h2>
-          </div>
-          {overview ? (
-            <div className="space-y-4">
-              <QuickStat
-                label="New Contacts"
-                value={overview.newContacts}
-                delta={overview.newContactsDelta}
-              />
-              <QuickStat
-                label="Win Rate"
-                value={`${overview.winRate}%`}
-                delta={overview.winRateDelta}
-                suffix="pp"
-              />
-              {leadStats && (
-                <>
-                  <QuickStat label="Total Leads (all time)" value={leadStats.total} />
-                  <QuickStat label="New This Month" value={leadStats.newThisMonth} />
-                </>
-              )}
-              {funnel && <QuickStat label="Total Leads (period)" value={funnel.totalLeads} />}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse h-10 bg-muted rounded" />
-              ))}
-            </div>
-          )}
-        </Card>
-      </div>
-
-      {/* Bottom Row */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Revenue Trend Chart */}
-        <Card className="p-6 bg-card border-border">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">Revenue Trend</h2>
-          </div>
-          <RevenueTrendContent loading={timeSeriesLoading} timeSeries={timeSeries} />
-        </Card>
-
-        {/* Recent Activity */}
-        <Card className="p-6 bg-card border-border">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">Recent Activity</h2>
-          </div>
-
-          <RecentActivityContent loading={overviewLoading} overview={overview} />
-        </Card>
-      </div>
+          </Card>
+        </div>
+      </section>
     </>
   );
 }
 
-// --- Constants ---
-
-const STAGE_COLORS: Record<string, string> = {
-  PROSPECTING: 'bg-blue-400',
-  QUALIFICATION: 'bg-primary',
-  NEEDS_ANALYSIS: 'bg-indigo-500',
-  PROPOSAL: 'bg-violet-500',
-  NEGOTIATION: 'bg-warning',
-  CLOSED_WON: 'bg-success',
-};
-
-// --- Helpers ---
-
-const formatCurrency = (value: number): string => formatGBPCompact(value, 1);
-
-function formatRelativeTime(date: Date | string, timezone: string = 'Europe/London'): string {
-  const now = new Date();
-  const d = typeof date === 'string' ? new Date(date) : date;
-  const diffMs = now.getTime() - d.getTime();
-  const diffMins = Math.floor(diffMs / 60_000);
-
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: timezone });
+function winRateDefinition(now: { closedWonCount: number; closedLostCount: number } | undefined) {
+  if (!now) return DEFINITIONS.winRate;
+  const closed = now.closedWonCount + now.closedLostCount;
+  return `${DEFINITIONS.winRate} This period: ${now.closedWonCount} won of ${closed} closed.`;
 }
 
-// --- Sub-components ---
-
-/** "vs prev period" line under a KPI figure: trend icon, signed change, optional note. */
-function DeltaFooter({
-  delta,
-  suffix,
-  badge,
-}: Readonly<{ delta: number; suffix?: string; badge?: string }>) {
-  const isPositive = delta >= 0;
-
+function PanelHeader({ title, subtitle }: Readonly<{ title: string; subtitle: string }>) {
   return (
-    <div className="mt-2">
-      <div className="flex flex-wrap items-center gap-x-1">
-        <span
-          className={`inline-flex items-center text-sm font-medium ${
-            isPositive ? 'text-success' : 'text-destructive'
-          }`}
-        >
-          <span className="material-symbols-outlined text-sm">
-            {isPositive ? 'trending_up' : 'trending_down'}
-          </span>{' '}
-          {isPositive ? '+' : ''}
-          {delta}
-          {suffix ? ` ${suffix}` : ''}
-        </span>
-        <span className="text-sm text-muted-foreground">vs prev period</span>
-      </div>
-      {badge && <p className="text-xs text-muted-foreground mt-1">{badge}</p>}
+    <div className="mb-3">
+      <h3 className="text-base font-semibold text-foreground">{title}</h3>
+      <p className="text-xs text-muted-foreground">{subtitle}</p>
     </div>
   );
 }
 
-function PipelineStageBar({
-  name,
-  value,
-  deals,
-  percentage,
-  color,
+function RevenueComparison({
+  trend,
+  money,
 }: Readonly<{
-  name: string;
-  value: string;
-  deals: number;
-  percentage: number;
-  color: string;
+  trend: ReturnType<typeof usePerformanceMetrics>['trend'];
+  money: (v: number) => string;
 }>) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-foreground">{name}</span>
-        <span className="text-sm text-muted-foreground">
-          {value} ({deals} {deals === 1 ? 'Deal' : 'Deals'})
-        </span>
-      </div>
-      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-        <div className={`h-full ${color} rounded-full`} style={{ width: `${percentage}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function ActivityItem({
-  icon,
-  actorName,
-  description,
-  createdAt,
-}: Readonly<{
-  icon: string;
-  actorName: string | null;
-  description: string;
-  createdAt: Date | string;
-}>) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <span className="material-symbols-outlined text-sm text-primary">{icon}</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-foreground">
-          {actorName && <span className="font-medium">{actorName} — </span>}
-          {description}
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5">{formatRelativeTime(createdAt)}</p>
-      </div>
-    </div>
-  );
-}
-
-function QuickStat({
-  label,
-  value,
-  delta,
-  suffix,
-}: Readonly<{
-  label: string;
-  value: string | number;
-  delta?: number;
-  suffix?: string;
-}>) {
-  return (
-    <div className="flex items-center justify-between py-2 border-b border-border last:border-0">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold text-foreground">{value}</span>
-        {delta !== undefined && (
-          <span
-            className={`text-xs font-medium ${delta >= 0 ? 'text-success' : 'text-destructive'}`}
-          >
-            {delta >= 0 ? '+' : ''}
-            {delta}
-            {suffix ? ` ${suffix}` : ''}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-interface FunnelStage {
-  stage: string;
-  label: string;
-  value: number;
-  count: number;
-}
-
-interface FunnelData {
-  overallConversionRate: number;
-  totalLeads: number;
-  stages: FunnelStage[];
-}
-
-function PipelineFunnelContent({
-  loading,
-  funnel,
-}: Readonly<{ loading: boolean; funnel: FunnelData | undefined | null }>) {
-  if (loading)
+  if (trend.failed) {
+    return <ChartUnavailable message="Couldn't load booked revenue." onRetry={trend.retry} />;
+  }
+  if (trend.pending) return <div className="h-[220px] animate-pulse rounded-lg bg-muted" />;
+  if (trend.points.every((p) => !p.current && !p.previous)) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="animate-pulse">
-            <div className="h-4 w-32 bg-muted rounded mb-2" />
-            <div className="h-2 bg-muted rounded-full" />
-          </div>
-        ))}
-      </div>
-    );
-  if (funnel && funnel.stages.length > 0) {
-    const totalValue = funnel.stages.reduce((sum, s) => sum + s.value, 0);
-    return (
-      <div className="space-y-4">
-        {funnel.stages
-          .filter((s) => s.stage !== 'CLOSED_LOST')
-          .map((stage) => {
-            const percentage = totalValue > 0 ? Math.round((stage.value / totalValue) * 100) : 0;
-            return (
-              <PipelineStageBar
-                key={stage.stage}
-                name={stage.label}
-                value={formatCurrency(stage.value)}
-                deals={stage.count}
-                percentage={percentage}
-                color={STAGE_COLORS[stage.stage] || 'bg-primary/60'}
-              />
-            );
-          })}
-      </div>
+      <ChartEmptyState
+        message="No revenue booked in this period yet"
+        description="Won deals show here by the date they were won."
+      />
     );
   }
   return (
-    <EmptyState entity="activity" showCta={false} description="No pipeline data for this period" />
+    <>
+      <div className="mb-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-0.5 w-3 rounded bg-[#2a78f6]" aria-hidden="true" />
+          <span>This period · {money(trend.totalNow ?? 0)}</span>
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-0.5 w-3 rounded bg-[#a8b6cc]" aria-hidden="true" />
+          <span>Previous period · {money(trend.totalBefore ?? 0)}</span>
+        </span>
+      </div>
+      <PeriodComparisonChart data={trend.points} formatMoney={money} />
+    </>
   );
 }
 
-interface TimeSeriesEntry {
-  periodLabel: string;
-  value: number;
-}
-
-function RevenueTrendContent({
-  loading,
-  timeSeries,
-}: Readonly<{ loading: boolean; timeSeries: TimeSeriesEntry[] | undefined | null }>) {
-  if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
-  if (timeSeries && timeSeries.length > 0)
-    return <RevenueTrendChart timeSeries={timeSeries} formatCurrency={formatCurrency} />;
+/**
+ * "+12% vs previous period" (or "+3 pp" for rates), coloured by whether the change is good for
+ * the business; the previous figure when there is nothing to compare a percentage with.
+ */
+function VsPrevious({
+  comparison,
+  format = String,
+  points = false,
+}: Readonly<{ comparison: Comparison | null; format?: (v: number) => string; points?: boolean }>) {
+  if (!comparison) return null;
+  if (comparison.direction === 'flat') {
+    return <p className="text-xs text-muted-foreground">same as the previous period</p>;
+  }
+  if (!points && comparison.percent === null) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        <span>{format(comparison.previous)}</span>
+        <span> in the previous period</span>
+      </p>
+    );
+  }
+  const sign = comparison.delta > 0 ? '+' : '−';
+  const amount = points
+    ? `${Math.abs(Math.round(comparison.delta * 10) / 10)} pp`
+    : `${Math.abs(Math.round(comparison.percent ?? 0))}%`;
+  const toneClass = comparison.tone === 'good' ? 'text-success' : 'text-destructive';
   return (
-    <EmptyState entity="activity" showCta={false} description="No revenue data for this period" />
+    <p className="text-xs text-muted-foreground">
+      <span className={`font-medium ${toneClass}`}>
+        {sign}
+        {amount}
+      </span>
+      <span> vs previous period</span>
+    </p>
   );
 }
 
-interface RecentActivityItem {
-  id: string;
-  icon: string;
-  actorName: string | null;
-  description: string;
-  createdAt: string;
-}
-
-interface OverviewForActivity {
-  recentActivity: RecentActivityItem[];
-}
-
-function RecentActivityContent({
-  loading,
-  overview,
-}: Readonly<{ loading: boolean; overview: OverviewForActivity | undefined | null }>) {
-  if (loading)
+function ChangesList({
+  pending,
+  failed,
+  changes,
+}: Readonly<{ pending: boolean; failed: boolean; changes: MaterialChange[] }>) {
+  if (failed) {
+    return <p className="text-sm text-muted-foreground">Couldn&apos;t compare the periods.</p>;
+  }
+  if (pending) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="animate-pulse flex gap-3">
-            <div className="w-2 h-2 rounded-full bg-muted mt-2" />
-            <div className="flex-1">
-              <div className="h-4 w-3/4 bg-muted rounded mb-1" />
-              <div className="h-3 w-1/3 bg-muted rounded" />
-            </div>
-          </div>
+          <div key={i} className="h-12 animate-pulse rounded bg-muted" />
         ))}
       </div>
     );
-  if (overview && overview.recentActivity.length > 0)
+  }
+  if (changes.length === 0) {
     return (
-      <div className="space-y-4">
-        {overview.recentActivity.map((activity) => (
-          <ActivityItem
-            key={activity.id}
-            icon={activity.icon}
-            actorName={activity.actorName}
-            description={activity.description}
-            createdAt={activity.createdAt}
-          />
-        ))}
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Nothing moved by 10% (or 5 points) or more against the previous period.
+      </p>
     );
-  return <EmptyState entity="activity" showCta={false} description="No recent activity" />;
+  }
+  return (
+    <ul className="divide-y divide-border">
+      {changes.map((c) => (
+        <li key={c.label} className="flex gap-3 py-3 first:pt-0">
+          <span
+            className={`material-symbols-outlined flex size-8 shrink-0 items-center justify-center rounded-lg text-[18px] ${
+              c.tone === 'good' ? 'bg-success/10 text-success' : 'bg-warning/15 text-warning'
+            }`}
+            aria-hidden="true"
+          >
+            {c.tone === 'good' ? 'trending_up' : 'priority_high'}
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">{c.summary}</p>
+            <p className="text-xs text-muted-foreground">{c.evidence}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
 }

@@ -50,6 +50,7 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
 
   return (
     <KpiCard
+      href="/leads"
       label="Total Leads"
       icon="group"
       value={total.toLocaleString('en-GB')}

@@ -44,6 +44,11 @@ export interface PageHeaderProps {
   actions?: PageAction[];
   /** Additional content below description */
   children?: React.ReactNode;
+  /**
+   * Page controls that are not plain buttons (a period select, a menu), shown with the actions.
+   * Style them with heroFieldClassName / heroActionClassName so they match the hero.
+   */
+  controls?: React.ReactNode;
   /** Additional CSS classes */
   className?: string;
   /**
@@ -114,18 +119,20 @@ export function Breadcrumbs({
               <Link
                 href={item.href}
                 className={cn(
-                  'inline-flex min-h-11 -my-3 items-center gap-1 transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+                  'inline-flex min-h-11 -my-3 items-center gap-1 no-underline transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                   inverse
                     ? 'hover:text-white focus-visible:ring-white focus-visible:ring-offset-[#0b1730]'
                     : 'hover:text-foreground focus-visible:ring-ring'
                 )}
               >
-                {inverse && item.href === '/' && (
+                {/* Owner 21/11: every trail starts with the same home icon (it was only on the
+                    Dashboard's "Home"; other pages started with a plain "Dashboard"). */}
+                {index === 0 && (
                   <span className="material-symbols-outlined text-base" aria-hidden="true">
                     home
                   </span>
                 )}
-                {item.label}
+                <span>{item.label}</span>
               </Link>
             )}
           </React.Fragment>
@@ -202,6 +209,16 @@ function actionClasses(
     tone
   );
 }
+
+/** The classes of a header action button, for a page control that must look like one (a menu
+ *  trigger in the hero). */
+export function heroActionClassName(variant: 'primary' | 'secondary' = 'secondary'): string {
+  return actionClasses(variant, false, true);
+}
+
+/** A select or input on the hero's dark card: 44px, translucent, white text. */
+export const heroFieldClassName =
+  'min-h-11 rounded-xl border border-white/25 bg-white/10 px-3 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white [&>option]:text-foreground';
 
 /** The action's icon, or a spinner while it is loading. */
 function ActionIcon({ icon, loading }: Readonly<{ icon?: string; loading: boolean }>) {
@@ -300,7 +317,7 @@ export function ActionButton({ action, tone = 'plain' }: Readonly<ActionButtonPr
  * ```tsx
  * <PageHeader
  *   breadcrumbs={[
- *     { label: 'Home', href: '/' },
+ *     { label: 'Dashboard', href: '/dashboard' },
  *     { label: 'Leads', href: '/leads' },
  *     { label: 'All Leads' },
  *   ]}
@@ -329,6 +346,7 @@ export function PageHeader({
   description,
   actions,
   children,
+  controls,
   className,
   variant = 'hero',
 }: Readonly<PageHeaderProps>) {
@@ -387,13 +405,14 @@ export function PageHeader({
       </div>
 
       {/* Actions: in the hero, the primary first, and the row wraps on narrow screens. */}
-      {ordered.length > 0 && (
+      {(ordered.length > 0 || controls) && (
         <div
           className={cn(
             'flex items-center gap-2 sm:gap-3',
             hero ? 'relative z-10 flex-wrap' : 'flex-wrap sm:flex-nowrap flex-shrink-0'
           )}
         >
+          {controls}
           {ordered.map((action, index) => (
             <ActionButton
               key={action.label + index}

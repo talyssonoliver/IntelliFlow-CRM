@@ -14,7 +14,7 @@ import '@intelliflow/validators/enforce-license';
 import { Job } from 'bullmq';
 import pino from 'pino';
 import { BaseWorker, type ComponentHealth } from '@intelliflow/worker-shared';
-import { PrismaClient, disconnectPrisma } from '@intelliflow/db';
+import { PrismaClient, disconnectPrisma, assertHostedDbAllowed } from '@intelliflow/db';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { QUEUE_NAMES, STORED_LEAD_FOR_AI_SELECT, claimStoreFromRedis } from '@intelliflow/platform';
 import { queueLeadAiForCreatedLead } from './handlers/lead-ai-backstop';
@@ -931,6 +931,8 @@ const poolMax = Number.parseInt(
   process.env.DATABASE_POOL_MAX || process.env.DB_POOL_MAX || '5',
   10
 );
+// Refuse a hosted Supabase DATABASE_URL outside a deployed runtime (incident 2026-11-27).
+if (useDatabase) assertHostedDbAllowed(process.env.DATABASE_URL, { variableName: 'DATABASE_URL' });
 const prismaClient = useDatabase
   ? new PrismaClient({
       adapter: new PrismaPg({

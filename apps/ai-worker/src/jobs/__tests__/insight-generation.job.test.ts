@@ -14,6 +14,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockGenerateInsightsWithMeta = vi.hoisted(() => vi.fn());
 const mockGenerateFallbackInsights = vi.hoisted(() => vi.fn());
 const mockCreate = vi.hoisted(() => vi.fn());
+const mockInsightUpdateMany = vi.hoisted(() => vi.fn());
+const mockExecuteRaw = vi.hoisted(() => vi.fn(async () => 1));
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockTaskCreate = vi.hoisted(() => vi.fn());
 const mockLeadAIInsightUpsert = vi.hoisted(() => vi.fn());
@@ -57,9 +59,11 @@ vi.mock('bullmq', () => {
 
 vi.mock('@intelliflow/db', () => ({
   prisma: {
+    $executeRaw: (...args: any[]) => mockExecuteRaw(...args),
     aIInsight: {
       create: (...args: any[]) => mockCreate(...args),
       findFirst: () => Promise.resolve(null),
+      updateMany: (...args: any[]) => mockInsightUpdateMany(...args),
     },
     notification: {
       create: (...args: any[]) => mockNotificationCreate(...args),
@@ -185,7 +189,8 @@ describe('processInsightJob', () => {
       ];
     });
 
-    mockCreate.mockResolvedValue({ id: 'insight-1' });
+    mockCreate.mockResolvedValue({ id: 'insight-1', createdAt: new Date('2026-11-26T12:00:00Z') });
+    mockInsightUpdateMany.mockResolvedValue({ count: 0 });
     mockNotificationCreate.mockResolvedValue({ id: 'notification-1' });
     mockTaskCreate.mockResolvedValue({ id: 'task-1' });
     mockLeadAIInsightUpsert.mockResolvedValue({ id: 'lead-insight-1' });
@@ -211,6 +216,72 @@ describe('processInsightJob', () => {
     expect(firstCall.data.status).toBe('NEW');
     expect(firstCall.data.expiresAt).toBeInstanceOf(Date);
     expect(firstCall.data.metadata).toHaveProperty('userId', 'user-001');
+  });
+
+  it('supersedes older open insights of the same user for the same entity, any type', async () => {
+    // Owner 21/11: three "Opportunity" insights for one lead, each worded differently by the
+    // model, so the old exact-title check never matched.
+    const job = createMockJob({
+      dealsAtRisk: [{ id: 'deal-1', name: 'Enterprise Deal', daysSinceUpdate: 20 }],
+    });
+    await processInsightJob(job);
+
+    expect(mockInsightUpdateMany).toHaveBeenCalledTimes(1);
+    const { where, data } = mockInsightUpdateMany.mock.calls[0][0];
+    expect(where).toMatchObject({
+      tenantId: '00000000-0000-4000-a000-000000000001',
+      entityType: 'opportunity',
+      entityId: 'deal-1',
+      // Every other open insight about the record: the per-record lock makes writes serial,
+      // so the last one written stays open (codex 27/11).
+      id: { not: 'insight-1' },
+      // An insight the user ACTED_ON keeps that record (codex review 26/11).
+      status: { in: ['NEW', 'VIEWED'] },
+      metadata: { path: ['userId'], equals: 'user-001' },
+    });
+    expect(where).not.toHaveProperty('type');
+    expect(where).not.toHaveProperty('createdAt');
+    expect(where).not.toHaveProperty('OR');
+    expect(data).toEqual({ status: 'EXPIRED' });
+  });
+
+  it('writes an insight about a record under that user and record lock (codex 27/11)', async () => {
+    mockExecuteRaw.mockClear();
+    const job = createMockJob({
+      dealsAtRisk: [{ id: 'deal-1', name: 'Enterprise Deal', daysSinceUpdate: 20 }],
+    });
+    await processInsightJob(job);
+
+    const lockCall = mockExecuteRaw.mock.calls.find((c: unknown[]) =>
+      String((c[0] as string[]).join('?')).includes('pg_advisory_xact_lock')
+    );
+    expect(lockCall).toBeDefined();
+    expect(lockCall?.[1]).toBe(
+      'insight:00000000-0000-4000-a000-000000000001:user-001:opportunity:deal-1'
+    );
+    // The lock comes before the duplicate check and the insert.
+    expect(mockExecuteRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mockCreate.mock.invocationCallOrder[mockCreate.mock.invocationCallOrder.length - 1]
+    );
+  });
+
+  it('supersedes nothing for an insight that is not about one entity', async () => {
+    mockGenerateInsightsWithMeta.mockResolvedValue({
+      insights: [createInsight({ entityId: null, entityType: null, type: 'achievement' })],
+      source: 'llm',
+      executionTimeMs: 5,
+    });
+    await processInsightJob(createMockJob({ overdueTasksCount: 0 }));
+    expect(mockInsightUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('a heuristic fallback insight never supersedes a model-written one', async () => {
+    mockGenerateInsightsWithMeta.mockRejectedValue(new Error('LLM down'));
+    await processInsightJob(
+      createMockJob({ dealsAtRisk: [{ id: 'deal-1', name: 'Test Deal', daysSinceUpdate: 15 }] })
+    );
+    expect(mockCreate).toHaveBeenCalled();
+    expect(mockInsightUpdateMany).not.toHaveBeenCalled();
   });
 
   it('should create rows with confidence 40 when chain falls back to heuristics', async () => {

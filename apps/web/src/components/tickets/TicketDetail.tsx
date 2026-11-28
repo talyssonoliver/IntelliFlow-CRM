@@ -50,6 +50,7 @@ import type {
   TicketAssigneeOption,
 } from './types';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type TabId = 'overview' | 'activity' | 'resolution' | 'attachments' | 'ai-insights';
@@ -249,24 +250,23 @@ export function TicketDetail({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-sm text-slate-500">
-              <Link
-                href={listHref}
-                className="hover:text-[#2a78f6] transition-colors flex items-center gap-1"
-              >
-                <span className="material-symbols-outlined text-[16px]">arrow_back</span> Tickets
-              </Link>
-              <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-              <span className="text-slate-900 dark:text-slate-200 font-medium">
-                #{ticket.ticketNumber}
-              </span>
-            </nav>
+            <Breadcrumbs
+              endsWithCurrentPage={false}
+              items={[
+                { label: 'Dashboard', href: '/dashboard' },
+                { label: 'Tickets', href: listHref },
+              ]}
+            />
 
             {/* Title */}
-            <div className="flex items-center gap-3 mt-1">
+            <div className="flex flex-wrap items-center gap-3 mt-1">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                 {ticket.subject}
               </h1>
+              {/* The number used to show only in the breadcrumb; the trail now holds ancestors. */}
+              <span className="text-sm font-medium text-muted-foreground">
+                #{ticket.ticketNumber}
+              </span>
               <span
                 className={`px-2.5 py-0.5 rounded text-xs font-bold ${statusConfig?.bg} ${statusConfig?.text}`}
               >

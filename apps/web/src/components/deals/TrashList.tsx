@@ -10,6 +10,7 @@
 import * as React from 'react';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { ColumnDef } from '@tanstack/react-table';
 import {
   DataTable,
@@ -116,7 +117,8 @@ interface TrashRowActionHandlers {
 
 function createColumns(
   handlers: Readonly<TrashRowActionHandlers>,
-  timezone: string = 'Europe/London'
+  timezone: string = 'Europe/London',
+  currency: string = 'GBP'
 ): ColumnDef<TrashedDeal>[] {
   return [
     {
@@ -145,7 +147,7 @@ function createColumns(
       size: 120,
       cell: ({ row }) => (
         <span className="text-sm font-semibold text-foreground tabular-nums">
-          {formatDealValue(row.original.value)}
+          {formatDealValue(row.original.value, currency)}
         </span>
       ),
     },
@@ -207,6 +209,7 @@ function createColumns(
 
 export const TrashList = React.memo(function TrashList() {
   const { timezone } = useTimezoneContext();
+  const currency = useTenantCurrency();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<string>('deleted-newest');
@@ -339,8 +342,8 @@ export const TrashList = React.memo(function TrashList() {
   );
 
   const columns = useMemo(
-    () => createColumns(rowActionHandlers, timezone),
-    [rowActionHandlers, timezone]
+    () => createColumns(rowActionHandlers, timezone, currency),
+    [rowActionHandlers, timezone, currency]
   );
 
   // Single deal actions

@@ -47,7 +47,11 @@ const ChurnTrendChart = lazy(() => import('./ChurnTrendChart'));
 // Breadcrumb config
 // ============================================
 
-const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Churn Risk' }];
+const BREADCRUMBS = [
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'AI & Agents', href: '/agent-approvals' },
+  { label: 'Churn Risk' },
+];
 
 const CHURN_SKELETON_KEYS = ['churn-0', 'churn-1', 'churn-2'] as const;
 

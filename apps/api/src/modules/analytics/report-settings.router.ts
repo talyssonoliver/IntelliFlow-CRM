@@ -9,7 +9,11 @@
  */
 
 import type { Prisma, ReportSettings } from '@intelliflow/db';
-import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
+import {
+  createTRPCRouter,
+  moduleTenantProcedure,
+  tenantProcedure as coreTenantProcedure,
+} from '../../trpc';
 import {
   updateReportSettingsSchema,
   scheduledDeliverySchema,
@@ -37,6 +41,19 @@ function normalizeRow(row: ReportSettings): ReportSettings & {
 }
 
 export const reportSettingsRouter = createTRPCRouter({
+  /**
+   * The tenant's money currency only, for every tenant (codex review 27/11): deals and accounts
+   * are core CRM, so a plan without Analytics must still read the currency it saves deals in.
+   * Read-only: no default row is written; a tenant with no row uses the default.
+   */
+  currency: coreTenantProcedure.query(async ({ ctx }) => {
+    const row = await ctx.prismaWithTenant.reportSettings.findUnique({
+      where: { tenantId: ctx.tenant.tenantId },
+      select: { currency: true },
+    });
+    return { currency: row?.currency || DEFAULT_REPORT_SETTINGS.currency };
+  }),
+
   /**
    * Get report settings for current tenant.
    * Upserts default row on first access (so this procedure never returns null).

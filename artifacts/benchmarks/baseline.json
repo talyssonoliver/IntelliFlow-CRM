@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-27T15:06:14.972Z",
+  "timestamp": "2026-11-28T05:44:22.795Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 85,
-    "total_endpoints": 629,
-    "total_queries": 269,
-    "total_mutations": 360,
+    "total_routers": 86,
+    "total_endpoints": 633,
+    "total_queries": 271,
+    "total_mutations": 362,
     "routers": [
       {
         "name": "contact",
@@ -1327,6 +1327,12 @@
         "mutations": 3
       },
       {
+        "name": "emailLog",
+        "endpoints": 5,
+        "queries": 4,
+        "mutations": 1
+      },
+      {
         "name": "health",
         "endpoints": 5,
         "queries": 5,
@@ -1405,12 +1411,6 @@
         "mutations": 3
       },
       {
-        "name": "emailLog",
-        "endpoints": 3,
-        "queries": 2,
-        "mutations": 1
-      },
-      {
         "name": "emailMailbox",
         "endpoints": 3,
         "queries": 2,
@@ -1465,6 +1465,12 @@
         "mutations": 1
       },
       {
+        "name": "waiting",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
         "name": "zepBudget",
         "endpoints": 2,
         "queries": 1,
@@ -1495,6 +1501,12 @@
         "mutations": 1
       },
       {
+        "name": "emailAttachments",
+        "endpoints": 1,
+        "queries": 0,
+        "mutations": 1
+      },
+      {
         "name": "emailProviderHint",
         "endpoints": 1,
         "queries": 1,
@@ -1519,12 +1531,6 @@
         "mutations": 0
       },
       {
-        "name": "waiting",
-        "endpoints": 1,
-        "queries": 1,
-        "mutations": 0
-      },
-      {
         "name": "webhooks",
         "endpoints": 1,
         "queries": 0,
@@ -1533,16 +1539,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 221,
-    "total_fields": 3301,
-    "total_indexes": 977,
-    "total_relations": 326,
+    "total_tables": 223,
+    "total_fields": 3334,
+    "total_indexes": 981,
+    "total_relations": 327,
     "tables_with_embeddings": 4,
-    "enums": 84,
+    "enums": 86,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 198,
+        "fields": 200,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -1633,7 +1639,7 @@
       },
       {
         "name": "EmailRecord",
-        "fields": 31,
+        "fields": 32,
         "indexes": 10,
         "relations": 2,
         "hasEmbedding": false
@@ -1811,6 +1817,13 @@
         "fields": 19,
         "indexes": 7,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "WorkspaceExportRequest",
+        "fields": 18,
+        "indexes": 1,
+        "relations": 0,
         "hasEmbedding": false
       },
       {
@@ -2160,6 +2173,13 @@
         "name": "AuditLog",
         "fields": 13,
         "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailAttachment",
+        "fields": 13,
+        "indexes": 3,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -2591,13 +2611,6 @@
         "hasEmbedding": false
       },
       {
-        "name": "EmailAttachment",
-        "fields": 10,
-        "indexes": 3,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
         "name": "PerformanceMetric",
         "fields": 10,
         "indexes": 6,
@@ -2760,6 +2773,13 @@
       },
       {
         "name": "DocumentRetentionPolicy",
+        "fields": 9,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "WaitingDismissal",
         "fields": 9,
         "indexes": 3,
         "relations": 1,
@@ -5242,6 +5262,13 @@
         "description": "Get upload status"
       }
     ],
+    "emailAttachments": [
+      {
+        "name": "emailAttachments.fetch",
+        "method": "POST",
+        "description": "Fetch"
+      }
+    ],
     "emailLog": [
       {
         "name": "emailLog.status",
@@ -5252,6 +5279,16 @@
         "name": "emailLog.engagementForLead",
         "method": "GET",
         "description": "Engagement for lead"
+      },
+      {
+        "name": "emailLog.leadEmails",
+        "method": "GET",
+        "description": "Lead emails"
+      },
+      {
+        "name": "emailLog.leadEmail",
+        "method": "GET",
+        "description": "Lead email"
       },
       {
         "name": "emailLog.logToContact",
@@ -7267,6 +7304,11 @@
         "name": "waiting.list",
         "method": "GET",
         "description": "List waitings with pagination"
+      },
+      {
+        "name": "waiting.dismiss",
+        "method": "POST",
+        "description": "Dismiss"
       }
     ],
     "webhooks": [

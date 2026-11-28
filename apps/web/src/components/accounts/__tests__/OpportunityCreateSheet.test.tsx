@@ -69,6 +69,17 @@ let isPendingValue = false;
 const mockInvalidateOpportunities = vi.fn();
 const mockInvalidateById = vi.fn();
 
+// The deal is saved in the tenant's currency; the form waits until it is known.
+const currencyState = vi.hoisted(() => ({
+  currency: 'GBP',
+  ready: true,
+  failed: false,
+  retry: () => {},
+}));
+vi.mock('@/lib/format/useTenantCurrency', () => ({
+  useTenantCurrencyForSave: () => currencyState,
+}));
+
 vi.mock('@/lib/api', () => ({
   api: {
     opportunity: {
@@ -103,6 +114,8 @@ const defaultProps = {
 
 describe('OpportunityCreateSheet', () => {
   beforeEach(() => {
+    currencyState.ready = true;
+    currencyState.currency = 'GBP';
     mutateFn = vi.fn();
     isPendingValue = false;
     mockToast.mockReset();
@@ -340,5 +353,21 @@ describe('OpportunityCreateSheet', () => {
         })
       );
     });
+  });
+
+  it('waits for the tenant currency before it can save, and saves in it', async () => {
+    currencyState.ready = false;
+    const { rerender } = render(
+      <OpportunityCreateSheet open onOpenChange={() => {}} accountId="acc-1" accountName="Acme" />
+    );
+    expect(screen.getByRole('button', { name: 'Create Deal' })).toBeDisabled();
+
+    currencyState.ready = true;
+    currencyState.currency = 'EUR';
+    rerender(
+      <OpportunityCreateSheet open onOpenChange={() => {}} accountId="acc-1" accountName="Acme" />
+    );
+    expect(screen.getByRole('button', { name: 'Create Deal' })).toBeEnabled();
+    expect(screen.getByText(/Value \(EUR\)/)).toBeInTheDocument();
   });
 });

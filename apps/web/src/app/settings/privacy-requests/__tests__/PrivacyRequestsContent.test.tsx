@@ -21,6 +21,9 @@ const h = vi.hoisted(() => ({
   toast: vi.fn(),
 }));
 
+// The workspace export card has its own test (WorkspaceExportCard.test.tsx).
+vi.mock('../components/WorkspaceExportCard', () => ({ WorkspaceExportCard: () => null }));
+
 vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => ({ isAuthenticated: true, isLoading: false }),
 }));

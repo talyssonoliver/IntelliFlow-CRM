@@ -167,7 +167,7 @@ export default function ScheduledReportsContent() {
     <div className="w-full">
       <PageHeader
         breadcrumbs={[
-          { label: 'Home', href: '/' },
+          { label: 'Dashboard', href: '/dashboard' },
           { label: 'Analytics', href: '/analytics' },
           { label: 'Scheduled Reports' },
         ]}
