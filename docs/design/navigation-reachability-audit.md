@@ -6,7 +6,7 @@
 > typing the URL directly.
 
 > **Canonical counts**: All "page.tsx" file-count references in this document
-> reflect the filesystem total (Total Pages: 224) emitted by
+> reflect the filesystem total (Total Pages: 225) emitted by
 > `tools/scripts/content-audit.ts` — each `page.tsx` under `apps/web/src/app/**`
 > counts once; route groups stripped; `[id]` collapses; `app/api/` excluded. See
 > `docs/design/content-audit.md` for the full counting rule. Verified:
@@ -526,7 +526,8 @@ updated at ship time):
 - AUP: `/aup` public page
 - Calendar: `availability`, `event-types`, `calendar-settings`
 - DSAR: public `/dsar/[handle]`, `/dsar/[handle]/verify`,
-  `/dsar/[handle]/export` and `/settings/privacy-requests` (PG-203)
+  `/dsar/[handle]/export`, `/dsar/transfer` (IFC-317) and
+  `/settings/privacy-requests` (PG-203)
 - Cases: `case-types`, `case-settings`, `case-workflows/[id]`,
   `case-workflows/new`
 - Contacts: `contact-types`, `contact-settings`, `import-export`

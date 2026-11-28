@@ -2,7 +2,7 @@
 
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
-> Guide Components **Total Pages**: 224 implemented **Total Flows**: 42 **API
+> Guide Components **Total Pages**: 225 implemented **Total Flows**: 42 **API
 > Routers**: 85 (472 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
@@ -150,6 +150,7 @@ in `/admin/users` and `/admin/roles`.
 | `/dsar/[handle]`        | PG-203  | 18     | ✅     | FLOW-040 (DSAR) | request-form, card, btn-primary (external entry, noindex, chrome-free)              | `privacy.getFirm`, `privacy.submit` |
 | `/dsar/[handle]/verify` | PG-203  | 18     | ✅     | FLOW-040 (DSAR) | card, status-message (external entry from email, noindex, chrome-free)              | `privacy.verify`                    |
 | `/dsar/[handle]/export` | PG-203  | 18     | ✅     | FLOW-040 (DSAR) | card, btn-primary (external entry from email, noindex, chrome-free)                 | `privacy.downloadExport`            |
+| `/dsar/transfer`        | IFC-317 | 18     | ✅     | FLOW-040 (DSAR) | card, btn-primary (external entry from the transfer email, noindex, chrome-free)    | `privacy.downloadTransfer`          |
 
 **Note**: All public marketing pages are static content. No tRPC backend
 required. The exceptions are `/book/[handle]/[slug]` (PG-203), the

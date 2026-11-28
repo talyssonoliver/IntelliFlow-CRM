@@ -1,7 +1,7 @@
 # IntelliFlow CRM - Information Architecture
 
 > **Location**: `docs/design/information-architecture.md` **Last Updated**:
-> 2026-05-02 **Total Pages**: 224 | **Total Flows**: 48 | **API Routers**: 85
+> 2026-05-02 **Total Pages**: 225 | **Total Flows**: 48 | **API Routers**: 85
 > (381 procedures) | **Ghost Links**: 0
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
@@ -239,6 +239,7 @@ verification or export link, never from in-app navigation).
 | `/dsar/[handle]`           | `(public)/dsar/[handle]/page.tsx`           | PG-203  | FLOW-040 | `privacy.*`       | EXT        | Implemented | --     |
 | `/dsar/[handle]/verify`    | `(public)/dsar/[handle]/verify/page.tsx`    | PG-203  | FLOW-040 | `privacy.*`       | EXT        | Implemented | --     |
 | `/dsar/[handle]/export`    | `(public)/dsar/[handle]/export/page.tsx`    | PG-203  | FLOW-040 | `privacy.*`       | EXT        | Implemented | --     |
+| `/dsar/transfer`           | `(public)/dsar/transfer/page.tsx`           | IFC-317 | FLOW-040 | `privacy.*`       | EXT        | Implemented | --     |
 
 ### 3.2 Developer Portal (14 routes)
 
@@ -541,8 +542,8 @@ Four distinct layout patterns used across modules.
 
 | Category        | Count |
 | --------------- | ----- |
-| **Total Pages** | 224   |
-| Public Pages    | 37    |
+| **Total Pages** | 225   |
+| Public Pages    | 38    |
 | Developer Pages | 14    |
 | Protected Pages | 173   |
 

@@ -35,8 +35,8 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category                                        | Count |
 | ----------------------------------------------- | ----- |
-| Total Pages                                     | 224   |
-| Public Pages                                    | 37    |
+| Total Pages                                     | 225   |
+| Public Pages                                    | 38    |
 | Developer Pages                                 | 14    |
 | Protected Pages                                 | 173   |
 | Next.js API handlers (excluded from page total) | 19    |
@@ -469,6 +469,7 @@ emailed link (token in the URL fragment). The DSAR flow is FLOW-040 (DSAR).
 | `/dsar/[handle]`        | DSAR Request     | Public data subject request form (GDPR rights request) for one firm, found by its booking handle, served by `privacy.getFirm` and `privacy.submit` (PG-203)     |
 | `/dsar/[handle]/verify` | DSAR Verify      | Confirms a data subject request from the emailed link; the token is read once from the URL fragment (`#r=<id>.<token>`) and stripped, `privacy.verify` (PG-203) |
 | `/dsar/[handle]/export` | DSAR Data Export | Download of the person's data export (JSON) from the emailed link, token in the URL fragment, `privacy.downloadExport` (PG-203)                                 |
+| `/dsar/transfer`        | DSAR Transfer    | Another controller downloads a transferred export once (Art 20(2)); token alone in the URL fragment, `privacy.downloadTransfer` (IFC-317)                       |
 
 ---
 

@@ -20,7 +20,7 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 189
+This statement covers the IntelliFlow CRM web application across all 190
 user-facing routes. Dynamic segment routes (e.g., `/contacts/[id]`,
 `/settings/help-center/articles/[id]/edit`) inherit conformance status from
 their parent static route and are not listed separately.
@@ -98,10 +98,11 @@ their parent static route and are not listed separately.
   `/docs/changelog`, `/docs/cli`, `/docs/guides`, `/docs/integrations`,
   `/docs/sdk`, `/docs/webhooks`
 - **System pages (3):** `/404`, `/500`, `/maintenance`
-- **Data subject request pages (dynamic, no static parent):** `/dsar/[handle]`,
-  `/dsar/[handle]/verify` and `/dsar/[handle]/export` — public, no app chrome
-  and `noindex`; covered by this statement on their own, since they have no
-  parent route to inherit from.
+- **Data subject request pages (no static parent):** `/dsar/[handle]`,
+  `/dsar/[handle]/verify`, `/dsar/[handle]/export` and `/dsar/transfer` (the
+  Article 20(2) transfer download, IFC-317) — public, no app chrome and
+  `noindex`; covered by this statement on their own, since they have no parent
+  route to inherit from.
 - **Public booking page (dynamic, no static parent):** `/book/[handle]/[slug]` —
   public, no app chrome and `noindex`; covered on its own for the same reason.
 - **Signed-in home (1):** `/signed-in-home` — the signed-in rendering of `/`.
@@ -287,3 +288,4 @@ Users who encounter accessibility barriers can report issues via:
 | 1.14.0  | 2026-10-29 | Engineering (PG-203)                   | Listed the public booking page `/book/[handle]/[slug]` (PG-203 PR 1, #1003), which has no static parent and was missed when it shipped; route count unchanged (185). Lighthouse on 2026-10-29 with real content: `/book` accessibility 96 (after a layout-shift fix), `/calendar/event-types` 93, `/settings/privacy-requests` 96, `/dsar` pages 96-100 (artifacts/lighthouse/PG-203/local-run-note.md)                                                                                                                                                                                                                                             |
 | 1.15.0  | 2026-11-23 | Engineering (modules by business type) | Added `/settings/workspace` (the admin's business-type setting; a labelled radio group in a fieldset with a legend, a status banner on the dashboard) — scope now 187 routes; the onboarding welcome step gains the same required radio group; a11y-expert review pending                                                                                                                                                                                                                                                                                                                                                                           |
 | 1.16.0  | 2026-11-26 | Engineering (MVP-012, UI partner)      | Added `/analytics/sales` and `/analytics/pipeline` (owner 22/11: the Sales Reports and Pipeline Analysis nav links had only reopened the Overview) — scope now 189 routes; both use the shared page hero (one `h1`), the shared KPI card (cards that open data are links with the label and figure as their name), the shared period/export menus (buttons with `aria-label`, menu items with `menuitem`/`menuitemradio` roles) and labelled share bars; a11y-expert review pending                                                                                                                                                                 |
+| 1.17.0  | 2026-11-28 | Engineering (IFC-317)                  | Added `/dsar/transfer` (the page where another controller downloads personal data a firm sent at the person's request, UK GDPR Art 20(2)) — scope now 190 routes; one `h1` that takes focus once the data is shown, a labelled button, a live error region, text only for data (no injected HTML); a11y-expert review pending                                                                                                                                                                                                                                                                                                                       |
