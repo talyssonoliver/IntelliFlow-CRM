@@ -150,28 +150,38 @@ export function makeReviewer({
     return { r, raw, parsed };
   }
 
+  /** The result of a Codex run that produced parseable findings. */
+  function codexSuccess(a, opts, attempts, modelFallback) {
+    return {
+      parsed: a.parsed,
+      reviewer: 'codex',
+      raw: a.raw,
+      ...opts,
+      tokens: a.r.tokens ?? null,
+      attempts,
+      ...(modelFallback ? { modelFallback } : {}),
+    };
+  }
+
+  /** Records a failed Codex run in `attempts` and returns its combined output text. */
+  function recordFailure(a, opts, attempts) {
+    const failText = `${a.r.stderr || ''}\n${a.r.stdout || ''}\n${a.raw}`;
+    attempts.push({
+      reviewer: 'codex',
+      ...opts,
+      status: a.r.status ?? -1,
+      capped: isCapped(failText),
+    });
+    return failText;
+  }
+
   return function review(prompt) {
     const attempts = [];
     if (!state.codexDown) {
       let opts = state.fallbackOpts ?? { model: plan.model, effort: plan.effort };
       let a = tryCodex(prompt, opts, plan.why);
-      if (a.parsed) {
-        return {
-          parsed: a.parsed,
-          reviewer: 'codex',
-          raw: a.raw,
-          ...opts,
-          tokens: a.r.tokens ?? null,
-          attempts,
-        };
-      }
-      let failText = `${a.r.stderr || ''}\n${a.r.stdout || ''}\n${a.raw}`;
-      attempts.push({
-        reviewer: 'codex',
-        ...opts,
-        status: a.r.status ?? -1,
-        capped: isCapped(failText),
-      });
+      if (a.parsed) return codexSuccess(a, opts, attempts);
+      let failText = recordFailure(a, opts, attempts);
       // The chosen model or effort is not on the plan (a stale models_cache.json, or a plan
       // change): retry ONCE with no -m and no effort flag, so codex uses the user's configured
       // ones, and record why. Only a failed retry (a cap or anything else) makes Codex unavailable.
@@ -186,24 +196,8 @@ export function makeReviewer({
         opts = { model: null, effort: null };
         state.fallbackOpts = opts;
         a = tryCodex(prompt, opts, 'retry without -m after a model-not-on-plan error');
-        if (a.parsed) {
-          return {
-            parsed: a.parsed,
-            reviewer: 'codex',
-            raw: a.raw,
-            ...opts,
-            tokens: a.r.tokens ?? null,
-            attempts,
-            modelFallback: state.modelFallback,
-          };
-        }
-        failText = `${a.r.stderr || ''}\n${a.r.stdout || ''}\n${a.raw}`;
-        attempts.push({
-          reviewer: 'codex',
-          ...opts,
-          status: a.r.status ?? -1,
-          capped: isCapped(failText),
-        });
+        if (a.parsed) return codexSuccess(a, opts, attempts, state.modelFallback);
+        failText = recordFailure(a, opts, attempts);
         // The retry on the codex config model was rejected as not on the plan too: the first model of the tier's
         // preference list that the plan's catalog lists, or the usual deferral when none is.
         const alt = isModelUnavailable(failText) ? catalogFallback() : null;
@@ -219,24 +213,8 @@ export function makeReviewer({
           // still be the model the next chunks start on.
           state.fallbackOpts = opts;
           a = tryCodex(prompt, opts, 'retry on the first catalog-listed preferred model');
-          if (a.parsed) {
-            return {
-              parsed: a.parsed,
-              reviewer: 'codex',
-              raw: a.raw,
-              ...opts,
-              tokens: a.r.tokens ?? null,
-              attempts,
-              modelFallback: state.modelFallback,
-            };
-          }
-          failText = `${a.r.stderr || ''}\n${a.r.stdout || ''}\n${a.raw}`;
-          attempts.push({
-            reviewer: 'codex',
-            ...opts,
-            status: a.r.status ?? -1,
-            capped: isCapped(failText),
-          });
+          if (a.parsed) return codexSuccess(a, opts, attempts, state.modelFallback);
+          failText = recordFailure(a, opts, attempts);
         }
       }
       if (!fellBack && !isCapped(failText) && plan.tier === 'light') {
@@ -246,16 +224,7 @@ export function makeReviewer({
           '[codex-review] WARN: light Codex model gave no findings; trying the strong model once.\n'
         );
         a = tryCodex(prompt, opts, 'escalated after a light-model failure');
-        if (a.parsed) {
-          return {
-            parsed: a.parsed,
-            reviewer: 'codex',
-            raw: a.raw,
-            ...opts,
-            tokens: a.r.tokens ?? null,
-            attempts,
-          };
-        }
+        if (a.parsed) return codexSuccess(a, opts, attempts);
         attempts.push({ reviewer: 'codex', ...opts, status: a.r.status ?? -1, capped: false });
       }
       const text = `${a.r.stderr || ''}\n${a.r.stdout || ''}\n${a.raw}`;
@@ -272,17 +241,7 @@ export function makeReviewer({
           );
           sleep(Math.max(wait, 0));
           const b = tryCodex(prompt, opts, 'retry at the reset');
-          if (b.parsed) {
-            return {
-              parsed: b.parsed,
-              reviewer: 'codex',
-              raw: b.raw,
-              ...opts,
-              tokens: b.r.tokens ?? null,
-              attempts,
-              modelFallback: state.modelFallback,
-            };
-          }
+          if (b.parsed) return codexSuccess(b, opts, attempts, state.modelFallback);
           attempts.push({
             reviewer: 'codex',
             ...opts,
