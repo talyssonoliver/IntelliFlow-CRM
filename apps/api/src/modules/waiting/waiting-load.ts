@@ -3,10 +3,11 @@
  * leads and contacts also carry the caller's owner scope, so a rep sees only their own people,
  * the same as the leads list.
  *
- * The `waiting.list` card now decides this in SQL (waiting-sql.ts); this loader stays as the reference
- * the SQL is proven equal to (tests/integration/waiting-sql.test.ts) and still serves the leads-list
- * filter (waiting-lead-filter.ts). Mail rows are read through the visibility policy (register #64): a
- * colleague's personal-mailbox mail does not make a lead "waiting" on someone else's card.
+ * The `waiting.list` card and the leads-list filter now decide this in SQL (waiting-sql.ts); this
+ * loader stays as the reference the SQL is proven equal to (tests/integration/waiting-sql.test.ts and
+ * waiting-lead-filter.test.ts) and has no production caller. Mail rows are read through the
+ * visibility policy (register #64): a colleague's personal-mailbox mail does not make a lead
+ * "waiting" on someone else's card.
  */
 
 import { visibleEmailWhere, type MailViewer, type PrismaClient } from '@intelliflow/db';

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import type { MailViewer } from '@intelliflow/db';
+import { mailViewerOf, type MailViewer } from '@intelliflow/db';
+import { createTenantWhereClause, type TenantAwareContext } from '../../../security/tenant-context';
 import {
   activityRowDirection,
   personKey,
@@ -12,7 +13,27 @@ import {
   type WaitingPerson,
 } from '../waiting-for-reply';
 import { coverageFloor, loadWaiting } from '../waiting-load';
-import { narrowToWaiting } from '../waiting-lead-filter';
+
+/**
+ * The leads-list filter as it was before it moved to SQL (waiting-lead-filter.ts now asks the
+ * database): loadWaiting filtered to leads. Kept here as the reference the SQL filter is proven
+ * equal to in tests/integration/waiting-sql.test.ts, and so these loader tests keep their cases.
+ */
+async function narrowToWaiting(
+  ctx: TenantAwareContext,
+  filters: { ids?: string[] | undefined; waitingForReply?: boolean | undefined }
+): Promise<string[] | undefined> {
+  if (!filters.waitingForReply) return filters.ids;
+  const waiting = await loadWaiting(
+    ctx.prismaWithTenant,
+    mailViewerOf(ctx.tenant),
+    createTenantWhereClause(ctx.tenant),
+    createTenantWhereClause(ctx.tenant)
+  );
+  const ids = waiting.filter((w) => w.kind === 'lead').map((w) => w.id);
+  const allowed = filters.ids ? new Set(filters.ids) : undefined;
+  return allowed ? ids.filter((id) => allowed.has(id)) : ids;
+}
 
 const day = (d: number, h = 9) => new Date(Date.UTC(2026, 10, d, h));
 
@@ -938,7 +959,7 @@ describe('activities that mirror records, tenants and owners', () => {
   });
 });
 
-describe('narrowToWaiting (the leads-list filter)', () => {
+describe('narrowToWaiting reference (the leads-list filter before SQL)', () => {
   const ctx = (db: unknown) =>
     ({
       tenant: {

@@ -87,10 +87,12 @@ const truthy = (v: string): string =>
 
 /**
  * The statement. `limit` cuts the page; the totals are counted over the full result before it.
+ * `leadIdsOnly` is the leads-list filter's mode: one column, the id of each waiting lead in the
+ * same order, with no totals and no person columns, so a row is a few dozen bytes.
  */
 export function waitingSql(
   viewer: MailViewer,
-  opts: { limit?: number | undefined } = {}
+  opts: { limit?: number | undefined; leadIdsOnly?: boolean | undefined } = {}
 ): Prisma.Sql {
   const t = viewer.tenantId;
   const limit = opts.limit === undefined ? Prisma.empty : Prisma.sql`LIMIT ${opts.limit}`;
@@ -223,13 +225,17 @@ listed AS (
     SELECT 1 FROM waiting_dismissals d
     WHERE d."tenantId" = ${t} AND d."personKey" = p.kind || ':' || p.id AND w.latest <= d."latestAt")
 )
-SELECT kind, id, "firstName", "lastName", email, company, since, subject, latest,
+${
+  opts.leadIdsOnly
+    ? Prisma.sql`SELECT id FROM listed WHERE kind = 'lead' ORDER BY since, id COLLATE "C"`
+    : Prisma.sql`SELECT kind, id, "firstName", "lastName", email, company, since, subject, latest,
        unanswered::int AS unanswered,
        count(*) OVER ()::int AS total,
        (count(*) FILTER (WHERE kind = 'lead') OVER ())::int AS "leadTotal",
        (count(*) FILTER (WHERE kind = 'contact') OVER ())::int AS "contactTotal"
 FROM listed
-ORDER BY since, id COLLATE "C"
+ORDER BY since, id COLLATE "C"`
+}
 ${limit}`;
 }
 
@@ -259,6 +265,35 @@ function asDate(v: Date | string): Date {
 }
 
 /**
+ * Runs one statement with the tenant bound. A raw query skips the tenant client's per-operation
+ * `SET app.current_tenant_id` (it only hooks model operations), so with row level security on, a
+ * session with no tenant, or another one's, would see none of the tenant's rows. Bind the tenant for
+ * this transaction only (set_config with is_local) and run the statement on the same connection, so
+ * the answer never depends on what an earlier request left on a pooled connection.
+ */
+async function runBound<T>(db: RawDb, viewer: MailViewer, statement: Prisma.Sql): Promise<T> {
+  return db.$transaction(async (tx) => {
+    await tx.$executeRaw(
+      Prisma.sql`SELECT set_config('app.current_tenant_id', ${viewer.tenantId}, true)`
+    );
+    return tx.$queryRaw<T>(statement);
+  });
+}
+
+/**
+ * The ids of the leads waiting for our reply, oldest wait first: what the leads-list "Waiting for
+ * reply" filter needs. The same leads, in the same order, as `loadWaiting` filtered to leads.
+ */
+export async function loadWaitingLeadIds(db: RawDb, viewer: MailViewer): Promise<string[]> {
+  const rows = await runBound<{ id: string }[]>(
+    db,
+    viewer,
+    waitingSql(viewer, { leadIdsOnly: true })
+  );
+  return rows.map((r) => r.id);
+}
+
+/**
  * Who is waiting for our reply, oldest first: the first `limit` of them and the counts of all.
  * The same answer as `loadWaiting` for the same viewer, computed in the database.
  */
@@ -267,18 +302,7 @@ export async function loadWaitingPage(
   viewer: MailViewer,
   opts: { limit?: number | undefined } = {}
 ): Promise<WaitingPage> {
-  const statement = waitingSql(viewer, opts);
-  // A raw query skips the tenant client's per-operation `SET app.current_tenant_id` (it only hooks
-  // model operations), so with row level security on, a session with no tenant, or another one's,
-  // would see none of the tenant's rows. Bind the tenant for this transaction only (set_config
-  // with is_local) and run the statement on the same connection, so the answer never depends on
-  // what an earlier request left on a pooled connection.
-  const rows = await db.$transaction(async (tx) => {
-    await tx.$executeRaw(
-      Prisma.sql`SELECT set_config('app.current_tenant_id', ${viewer.tenantId}, true)`
-    );
-    return tx.$queryRaw<Row[]>(statement);
-  });
+  const rows = await runBound<Row[]>(db, viewer, waitingSql(viewer, opts));
   const first = rows[0];
   if (!first) {
     // A limit past the end of an empty result: nothing waits (rows carry the totals).
