@@ -105,6 +105,25 @@ afterEach(() => {
 });
 
 // ===========================================================================
+// Prerendered public pages: the chrome is marked while the session is unknown,
+// so CSS can hide it from a visitor who has an access-token cookie.
+// ===========================================================================
+describe('data-auth-pending marks the public chrome until auth resolves', () => {
+  it('is set while auth is loading', () => {
+    mockAuthLoading = true;
+    const { container } = renderShell({ pathname: '/pricing' });
+
+    expect(container.querySelector('.aurora-site')?.hasAttribute('data-auth-pending')).toBe(true);
+  });
+
+  it('is gone once a signed-out session is confirmed', () => {
+    const { container } = renderShell({ pathname: '/pricing' });
+
+    expect(container.querySelector('.aurora-site')?.hasAttribute('data-auth-pending')).toBe(false);
+  });
+});
+
+// ===========================================================================
 // 1. authLoading=true → overlays NOT mounted
 // ===========================================================================
 describe('authLoading=true → overlays suppressed', () => {
@@ -415,5 +434,34 @@ describe('signed in, a public page keeps the .aurora-site scope', () => {
 
     expect(screen.queryByTestId('public-header')).toBeNull();
     expect(container.querySelector('.aurora-site')).toBeNull();
+  });
+});
+
+// ===========================================================================
+// A prerendered page starts signed-out; resolving the session must not remount
+// it, or whatever the visitor has typed is lost.
+// ===========================================================================
+describe('page content survives the session resolving', () => {
+  it.each([
+    ['a signed-in session', true],
+    ['a signed-out session', false],
+  ])('keeps typed input when auth resolves to %s', (_label, signedIn) => {
+    currentPathname = '/contact';
+    mockAuthLoading = true;
+    const tree = () => (
+      <PublicLayoutShell isAuthenticated={false} footer={<footer>Footer</footer>}>
+        <input data-testid="draft" defaultValue="" />
+      </PublicLayoutShell>
+    );
+    const { rerender } = render(tree());
+    const draft = screen.getByTestId<HTMLInputElement>('draft');
+    draft.value = 'typed before auth';
+
+    mockAuthLoading = false;
+    mockClientAuthenticated = signedIn;
+    rerender(tree());
+
+    expect(screen.getByTestId('draft')).toBe(draft);
+    expect(draft.value).toBe('typed before auth');
   });
 });

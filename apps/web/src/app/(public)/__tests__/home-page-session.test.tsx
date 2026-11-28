@@ -23,7 +23,7 @@ vi.mock('@/components/home/AuthenticatedHomePage', () => ({ AuthenticatedHomePag
 
 import { HomePagePublicWithAuthFallback } from '@/components/home/HomePagePublicWithAuthFallback';
 import { AuthenticatedHomePage } from '@/components/home/AuthenticatedHomePage';
-import HomePage from '../signed-in-home/page';
+import HomePage from '../../(signed-in)/signed-in-home/page';
 
 const render = () => HomePage() as Promise<ReactElement<{ initialWelcomeData?: unknown }>>;
 

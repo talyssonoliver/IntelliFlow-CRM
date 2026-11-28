@@ -3,8 +3,8 @@ import { QuickActionsCardSkeleton } from '@/components/home/QuickActionsCardSkel
 
 /**
  * Home page loading skeleton — scoped to the signed-in home, which the proxy
- * serves at `/` (lib/auth/home-paths). Other routes in `(public)/` (login, pricing, etc.) continue
- * to use the dark marketing skeleton at `(public)/loading.tsx`.
+ * serves at `/` (lib/auth/home-paths). Routes in `(public)/` (login, pricing, etc.) keep
+ * the dark marketing skeleton at `(public)/loading.tsx`.
  *
  * This skeleton mirrors the layout of `<AuthenticatedHomePage />` — welcome
  * banner, AI insights card, quick actions, activity feed, today's focus, and

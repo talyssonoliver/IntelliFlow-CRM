@@ -496,3 +496,14 @@
     bottom: -130px;
   }
 }
+
+/* Signed-in visitor on a prerendered public page, session still resolving: keep the public
+   chrome out of sight so it does not flash (lib/auth/session-hint). */
+html[data-session-hint] .aurora-site[data-auth-pending] > .as-nav,
+html[data-session-hint] .aurora-site[data-auth-pending] > .as-footer {
+  display: none;
+}
+
+html[data-session-hint] .aurora-site[data-auth-pending] > .as-main {
+  padding-top: 0;
+}

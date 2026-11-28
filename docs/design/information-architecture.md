@@ -542,9 +542,9 @@ Four distinct layout patterns used across modules.
 | Category        | Count |
 | --------------- | ----- |
 | **Total Pages** | 224   |
-| Public Pages    | 37    |
+| Public Pages    | 36    |
 | Developer Pages | 14    |
-| Protected Pages | 173   |
+| Protected Pages | 174   |
 
 ### Flow Coverage
 

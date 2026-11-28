@@ -258,9 +258,8 @@ export default function LoginPage() {
           description: 'Signing you in...',
         });
 
-        // Hard navigation (not router.push) so the server re-runs the
-        // (public)/layout.tsx cookie check and renders the authenticated
-        // home variant. router.push serves the cached RSC payload from
+        // Hard navigation (not router.push) so the proxy and the server see the
+        // new cookie and render the signed-in home variant. router.push serves the cached RSC payload from
         // before login, producing a public-header/authed-nav mix.
         setTimeout(() => {
           globalThis.location.href = postLoginTarget();

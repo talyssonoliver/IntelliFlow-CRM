@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { LoadingForSession } from '../loading-for-session';
-import HomeLoading from '@/app/(public)/signed-in-home/loading';
+import HomeLoading from '@/app/(signed-in)/signed-in-home/loading';
 import RootLoading from '@/app/loading';
 
 const tokenExpiringIn = (seconds: number) => {
