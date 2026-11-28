@@ -12,8 +12,10 @@ import {
 } from '../src/services/agent-status';
 import type { InsightJobData } from '../src/jobs';
 import pg from 'pg';
+import { assertHostedDbAllowed } from '@intelliflow/db/hosted-db-guard';
 
 loadAIConfig();
+assertHostedDbAllowed(process.env.DATABASE_URL, { variableName: 'DATABASE_URL' });
 
 const TENANT_ID = '00000000-0000-4000-8000-000000000001';
 const USER_ID = '00000000-0000-4000-8000-000000000101';
