@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-26T10:55:13.639Z",
+  "generated_at": "2026-11-28T03:43:37.706Z",
   "tool_version": "1.2.0",
   "routes": [
     {
@@ -8423,10 +8423,8 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "static-by-design-dated",
-        "patterns_found": [
-          "year-reference"
-        ],
+        "classification": "none",
+        "patterns_found": [],
         "data_sources": []
       },
       "ghost_links": [],
@@ -12633,8 +12631,8 @@
     },
     {
       "route": "/signed-in-home",
-      "file_path": "apps/web/src/app/(public)/signed-in-home/page.tsx",
-      "access_tier": "public",
+      "file_path": "apps/web/src/app/(signed-in)/signed-in-home/page.tsx",
+      "access_tier": "auth-gated",
       "metadata": {
         "title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -12679,7 +12677,7 @@
         },
         "robots_noindex": false
       },
-      "seo_score": 80,
+      "seo_score": null,
       "in_sitemap": false,
       "sitemap_last_modified_method": null,
       "http_status": null,
@@ -12896,9 +12894,9 @@
           "source": "page"
         },
         "description": {
-          "value": "A live check of Aurora's web app, run from your browser when you open the page.",
+          "value": "The web app is checked from your browser; the API, AI agents and sign-in by our server at most every 5 minutes.",
           "source": "page",
-          "length": 79
+          "length": 111
         },
         "og_title": {
           "value": "Aurora system status",
@@ -14099,10 +14097,10 @@
   ],
   "summary": {
     "total_routes": 222,
-    "public_routes": 37,
-    "auth_gated_routes": 171,
+    "public_routes": 36,
+    "auth_gated_routes": 172,
     "developer_routes": 14,
-    "routes_with_seo_score": 37,
+    "routes_with_seo_score": 36,
     "routes_pending_runtime_measurement": 222,
     "average_seo_score_public": 85,
     "legal_pages_missing": [],
