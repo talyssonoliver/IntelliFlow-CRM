@@ -137,24 +137,11 @@ describe('Money — RACE-PURE-01: currency validation and round-trip', () => {
   });
 
   // Property 7 (SKIP — real bug): USD is absent from SUPPORTED_CURRENCIES.
-  // RACE-PURE-01 notes: "Money.create(10,'USD').isFailure === true (USD silently unsupported)".
-  // The correct domain intent would be to support USD; this skip marks the gap.
-  // ADR-054: QUAL-008 (RACE-PURE-01) — confirmed SUPPORTED_CURRENCIES gap (USD missing,
-  // GBP duplicated) in the Money value object; tracked in
-  // artifacts/reports/sprint-19/baseline/quality-findings.json. Kept as an expected failure pending a
-  // dedicated fix task (out of scope for ENG-OPS-002.R13).
-  // Runs as .fails: it goes red the day the bug is fixed; then make it a plain test.
-  it.fails(
-    // BUG(RACE-PURE-01): SUPPORTED_CURRENCIES omits USD. Money.create(10,"USD") returns
-    // failure. The SUPPORTED_CURRENCIES array also contains "GBP" twice (duplicate entry)
-    // wasting a slot.  Both issues should be fixed in packages/domain/src/shared/Money.ts
-    // by replacing the array with: ['USD','GBP','EUR','CAD','AUD','JPY'].
-    'USD is a supported ISO-4217 currency and should be accepted by Money.create (BUG RACE-PURE-01)',
-    () => {
-      const r = Money.create(10, 'USD');
-      expect(r.isSuccess).toBe(true);
-    }
-  );
+  // RACE-PURE-01 is fixed: SUPPORTED_CURRENCIES now lists USD once and GBP once (Money.ts).
+  it('USD is a supported ISO-4217 currency and is accepted by Money.create (RACE-PURE-01)', () => {
+    const r = Money.create(10, 'USD');
+    expect(r.isSuccess).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
