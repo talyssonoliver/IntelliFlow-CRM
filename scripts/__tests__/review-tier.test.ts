@@ -380,6 +380,17 @@ describe('parseCodexConfigModel', () => {
     expect(parseCodexConfigModel('approval = "never"\n')).toBeNull();
     expect(parseCodexConfigModel('')).toBeNull();
   });
+
+  it('does not read a model line inside a multi-line string', () => {
+    const SQ = "'".repeat(3);
+    const DQ = '"'.repeat(3);
+    const toml = `instructions = ${SQ}\nmodel = "inside"\n${SQ}\nmodel = "real"\n`;
+    expect(parseCodexConfigModel(toml)).toBe('real');
+    const basic = `notes = ${DQ}\nmodel = "inside"\nmore\n${DQ}\nmodel = "real-2" # comment\n`;
+    expect(parseCodexConfigModel(basic)).toBe('real-2');
+    expect(parseCodexConfigModel(`x = ${SQ}a${SQ}\nmodel = 'one-line'\n`)).toBe('one-line');
+    expect(parseCodexConfigModel(`x = ${SQ}\nmodel = "inside"\n${SQ}\n`)).toBeNull();
+  });
 });
 
 describe('the review gate files are always risky', () => {
