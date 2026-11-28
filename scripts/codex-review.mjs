@@ -77,6 +77,7 @@ import os from 'node:os';
 import { claudeReviewText, runClaudeReviewer, runCodexReviewer } from './lib/review-commands.mjs';
 import { createGate } from './lib/codex-review-run.mjs';
 import { parseClaudeUsage } from './lib/review-metrics.mjs';
+import { isReviewGateFile } from './lib/review-tier.mjs';
 import {
   activeWaivers,
   checkWaivers,
@@ -257,6 +258,8 @@ const EXCLUDE_PATTERNS = [
 ];
 
 function isInScope(file) {
+  // The gate's own files are always reviewed, whatever the exclusions below say.
+  if (isReviewGateFile(file)) return true;
   if (EXCLUDE_PATTERNS.some((p) => p.test(file))) return false;
   return SONAR_SOURCES.some((src) => file.startsWith(src + '/') || file.startsWith(src));
 }

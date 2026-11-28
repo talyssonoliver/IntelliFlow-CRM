@@ -12,6 +12,7 @@ import {
   classifyDiff,
   classifyFile,
   isCommentOnlyDiff,
+  isReviewGateFile,
   modelForTier,
   parseCodexConfigModel,
   parseModelCache,
@@ -34,7 +35,8 @@ describe('classifyFile', () => {
     ['pnpm-lock.yaml', 'generated'],
     ['apps/project-tracker/docs/metrics/_global/Sprint_plan.csv', 'generated'],
     ['artifacts/x/y.json', 'generated'],
-    ['scripts/pre-ship.mjs', 'tooling'],
+    ['scripts/lib/coverage-floor.mjs', 'tooling'],
+    ['scripts/pre-ship.mjs', 'code'],
     ['.github/workflows/ci.yml', 'tooling'],
     ['apps/web/src/app/page.tsx', 'code'],
     ['packages/db/prisma/schema.prisma', 'code'],
@@ -373,5 +375,46 @@ describe('parseCodexConfigModel', () => {
     expect(parseCodexConfigModel('[profiles.x]\nmodel = "inner"\n')).toBeNull();
     expect(parseCodexConfigModel('approval = "never"\n')).toBeNull();
     expect(parseCodexConfigModel('')).toBeNull();
+  });
+});
+
+describe('the review gate files are always risky', () => {
+  const gateFiles = [
+    'scripts/codex-review.mjs',
+    'scripts/codex-review-metrics.mjs',
+    'scripts/lib/review-tier.mjs',
+    'scripts/lib/review-policy.mjs',
+    'scripts/lib/codex-review-run.mjs',
+    'scripts/pre-ship.mjs',
+    'scripts/lib/preship-gate.mjs',
+    'tools/audit/codex-review-waivers.yaml',
+  ];
+
+  it.each(gateFiles)('%s is reviewable code in the review-gate risk area', (file) => {
+    expect(isReviewGateFile(file)).toBe(true);
+    expect(classifyFile(file)).toBe('code');
+    expect(riskArea(file)).toBe('review-gate');
+  });
+
+  it.each(gateFiles)('a one-line diff of %s is the strong tier, never skip or light', (file) => {
+    const r = classifyDiff([stat(file, 1, 0)], [], { scoped: [file] });
+    expect(r).toMatchObject({ tier: 'strong', risky: true, riskyAreas: ['review-gate'] });
+  });
+
+  it('a comment-only change to a gate file is still reviewed', () => {
+    const file = 'scripts/lib/review-tier.mjs';
+    const text = `diff --git a/${file} b/${file}\n--- a/${file}\n+++ b/${file}\n@@ -1 +1 @@\n-// a\n+// b\n`;
+    expect(classifyDiff([stat(file, 1, 1)], [{ file, text }], { scoped: [file] }).tier).toBe(
+      'strong'
+    );
+  });
+
+  it('their tests and unrelated scripts keep their kinds', () => {
+    expect(riskArea('scripts/__tests__/review-tier.test.ts')).toBeNull();
+    expect(classifyFile('scripts/__tests__/review-tier.test.ts')).toBe('test');
+    expect(isReviewGateFile('scripts/lib/coverage-floor.mjs')).toBe(false);
+    expect(classifyFile('scripts/lib/coverage-floor.mjs')).toBe('tooling');
+    expect(isReviewGateFile('docs/codex-review.md')).toBe(false);
+    expect(classifyDiff([stat('scripts/lib/coverage-floor.mjs')]).tier).toBe('skip');
   });
 });

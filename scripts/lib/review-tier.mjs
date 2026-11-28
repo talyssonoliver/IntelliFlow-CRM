@@ -47,12 +47,26 @@ const GENERATED_RE =
   /(pnpm-lock\.yaml$|package-lock\.json$|\.lock$|\.snap$|\.generated\.|__generated__|\.min\.(js|css)$|^artifacts\/|(^|\/)(dist|coverage|\.next)\/|^apps\/project-tracker\/docs\/metrics\/|(^|\/)Sprint_plan[^/]*\.(csv|json)$|^\.specify\/)/;
 const TOOLING_RE = /^(scripts|tools|infra|\.github|\.husky|\.claude)\//;
 
+/**
+ * The review gate's own files, the pre-ship gate and the waivers file. A change to them can switch
+ * a review off, so they are never "tooling": they are reviewable code and always risky (strong tier,
+ * never skip or light). Tests under __tests__ stay tests.
+ */
+const GATE_FILE_RE =
+  /^(scripts\/(codex-review[^/]*\.mjs|pre-ship\.mjs|lib\/(review-[^/]*|codex-review-[^/]*|preship-[^/]*)\.mjs)|tools\/audit\/codex-review-waivers\.yaml)$/;
+
+/** True for a file of the review gate, the pre-ship gate or the codex review waivers. */
+export function isReviewGateFile(file) {
+  return GATE_FILE_RE.test(normalize(file));
+}
+
 /** 'docs' | 'test' | 'generated' | 'tooling' | 'code' for one changed path. */
 export function classifyFile(file) {
   const f = normalize(file);
   if (GENERATED_RE.test(f)) return 'generated';
   if (DOC_RE.test(f)) return 'docs';
   if (TEST_RE.test(f)) return 'test';
+  if (GATE_FILE_RE.test(f)) return 'code';
   if (TOOLING_RE.test(f)) return 'tooling';
   return 'code';
 }
@@ -81,6 +95,7 @@ export function riskArea(file) {
   const f = normalize(file);
   const kind = classifyFile(f);
   if (kind === 'docs' || kind === 'test' || kind === 'generated') return null;
+  if (GATE_FILE_RE.test(f)) return 'review-gate';
   // Migrations and the prisma schema are risky wherever they live; tooling paths are not reviewed.
   for (const [area, re] of RISK_RULES) {
     if ((area === 'migration' || area === 'prisma-schema') && re.test(f)) return area;
