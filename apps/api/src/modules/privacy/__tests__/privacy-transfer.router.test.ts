@@ -188,6 +188,29 @@ describe('createTransfer', () => {
     expect(result.transfer).toMatchObject({ id: TRANSFER, state: 'ACTIVE', events: [] });
   });
 
+  it('still returns the link when the audit write fails, retrying once and logging the class only', async () => {
+    const link = `https://app.example.invalid/dsar/transfer#t=${TOKEN}`;
+    service.create.mockResolvedValue({
+      outcome: 'OK',
+      transfer: view(),
+      delivered: false,
+      manualLink: link,
+    });
+    auditLog.mockRejectedValue(new Error('audit store down for privacy@jones.example.invalid'));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const result = await adminCaller().createTransfer(CREATE_INPUT);
+    expect(result).toMatchObject({ delivered: false, manualLink: link });
+    expect(auditLog).toHaveBeenCalledTimes(2);
+    expect(error).toHaveBeenCalledWith('[privacy] Transfer audit row not written', {
+      requestId: REQUEST,
+      tenantId: TENANT,
+      transferId: TRANSFER,
+      error: 'Error',
+    });
+    expect(JSON.stringify(error.mock.calls)).not.toContain('jones');
+    error.mockRestore();
+  });
+
   it('maps a request that cannot be transferred to a plain message', async () => {
     service.create.mockResolvedValue({ outcome: 'INVALID', field: 'transferNotAllowed' });
     await expect(adminCaller().createTransfer(CREATE_INPUT)).rejects.toMatchObject({

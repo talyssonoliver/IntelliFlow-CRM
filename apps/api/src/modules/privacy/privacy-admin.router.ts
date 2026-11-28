@@ -441,13 +441,24 @@ export const privacyAdminRouter = createTRPCRouter({
       });
       assertOk(result);
       // The recipient's name and address stay on the transfer row, not in the audit metadata.
-      await audit(
-        ctx,
-        'CREATE',
-        input.id,
-        { change: 'TRANSFER_CREATED', transferId: result.transfer.id, delivered: result.delivered },
-        true
-      );
+      // The transfer is stored and maybe emailed already, and a manual link cannot be shown again:
+      // a failed audit write must not turn this into an error. Retried once, then logged (ids and
+      // the error class only), as the staff export does.
+      const metadata = {
+        change: 'TRANSFER_CREATED',
+        transferId: result.transfer.id,
+        delivered: result.delivered,
+      };
+      await audit(ctx, 'CREATE', input.id, metadata, true)
+        .catch(() => audit(ctx, 'CREATE', input.id, metadata, true))
+        .catch((error: unknown) => {
+          console.error('[privacy] Transfer audit row not written', {
+            requestId: input.id,
+            tenantId: ctx.tenant.tenantId,
+            transferId: result.transfer.id,
+            error: error instanceof Error ? error.name : 'unknown',
+          });
+        });
       // The transfer exists now, and a manual link cannot be shown again: a failed re-read must
       // not lose it. Fall back to the record the service just made (the admin's list refetches).
       const listed = await service

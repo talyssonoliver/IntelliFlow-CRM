@@ -234,9 +234,9 @@ export function TransferDialog({
   const listQuery = trpc.privacy.admin.transfers.useQuery({ id: request.id }, { retry: false });
   // Returned, so react-query waits for the refetch before it settles the mutation.
   const refresh = () => utils.privacy.admin.transfers.invalidate({ id: request.id });
-  const create = trpc.privacy.admin.createTransfer.useMutation({ onSuccess: refresh });
-  const markSent = trpc.privacy.admin.markTransferSent.useMutation({ onSuccess: refresh });
-  const revoke = trpc.privacy.admin.revokeTransfer.useMutation({ onSuccess: refresh });
+  const create = trpc.privacy.admin.createTransfer.useMutation({ onSettled: refresh });
+  const markSent = trpc.privacy.admin.markTransferSent.useMutation({ onSettled: refresh });
+  const revoke = trpc.privacy.admin.revokeTransfer.useMutation({ onSettled: refresh });
 
   const [draft, setDraft] = useState<TransferDraft>(EMPTY_DRAFT);
   const [problem, setProblem] = useState<TransferProblem | null>(null);
@@ -281,6 +281,7 @@ export function TransferDialog({
   };
 
   const recordSent = async (id: string) => {
+    setProblem(null);
     setError(null);
     try {
       await markSent.mutateAsync({ id });
@@ -292,6 +293,7 @@ export function TransferDialog({
   };
 
   const revokeTransfer = async (transfer: DsarTransferDto) => {
+    setProblem(null);
     setError(null);
     try {
       await revoke.mutateAsync({ id: transfer.id });

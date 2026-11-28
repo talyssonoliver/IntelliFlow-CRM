@@ -423,6 +423,40 @@ describe('TransferDialog', () => {
     expect(await within(dialog).findByText('Please try again.')).toBeTruthy();
   });
 
+  it('shows a failed revoke, not an old form message, and the list refreshes after any outcome', async () => {
+    h.list.data = [transfer()];
+    h.revoke.mutateAsync.mockRejectedValue(new Error('This request has changed.'));
+    render(<TransferDialog request={REQUEST} onClose={vi.fn()} />);
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Create transfer and send link' }));
+    expect(await within(dialog).findByText(/Enter the name of the organisation/)).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Revoke the link/ }));
+    expect(await within(dialog).findByText('This request has changed.')).toBeTruthy();
+    expect(within(dialog).queryByText(/Enter the name of the organisation/)).toBeNull();
+  });
+
+  it('refreshes the list when a mutation settles, failed or not (onSettled, not onSuccess)', async () => {
+    const options: Array<Record<string, unknown>> = [];
+    h.create = { ...h.create };
+    // The mock hook ignores its options; read them through the module under test's call.
+    const trpcModule = await import('@/lib/trpc');
+    const admin = (trpcModule.trpc as any).privacy.admin;
+    for (const name of ['createTransfer', 'markTransferSent', 'revokeTransfer']) {
+      const original = admin[name].useMutation;
+      admin[name].useMutation = (opts: Record<string, unknown>) => {
+        options.push(opts);
+        return original();
+      };
+    }
+    render(<TransferDialog request={REQUEST} onClose={vi.fn()} />);
+    await screen.findByRole('dialog');
+    expect(options).toHaveLength(3);
+    for (const opts of options) {
+      expect(opts).toHaveProperty('onSettled');
+      expect(opts).not.toHaveProperty('onSuccess');
+    }
+  });
+
   it('says so when the list cannot be loaded', async () => {
     h.list = { data: undefined, isLoading: false, isError: true };
     render(<TransferDialog request={REQUEST} onClose={vi.fn()} />);
