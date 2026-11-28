@@ -165,7 +165,11 @@ export default function AnalyticsPerformancePage() {
             labelHint={
               <MetricDefinition label="Pipeline created" definition={DEFINITIONS.pipeline} />
             }
-            footer={<VsPrevious comparison={m.kpis.pipeline} format={money} />}
+            footer={
+              <span className="text-xs text-muted-foreground">
+                Still open today. Not compared: older deals have had longer to close.
+              </span>
+            }
           />
         </div>
 

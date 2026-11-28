@@ -33,7 +33,6 @@ export interface PerformanceKpis {
   revenue: Comparison | null;
   winRate: Comparison | null;
   cycle: Comparison | null;
-  pipeline: Comparison | null;
 }
 
 function pairOrNull(
@@ -52,7 +51,9 @@ export function winRateOf(figures: SalesFigures | undefined): number | null {
   return closed > 0 ? figures.winRate : null;
 }
 
-/** The four KPI comparisons; null where either period has no figure. */
+/** The KPI comparisons; null where either period has no figure. Pipeline created is not compared:
+ *  it counts only deals still open today, so an older period has had longer to lose its closed
+ *  deals and the two figures are not like for like (codex 28/11). */
 export function performanceKpis(
   now: SalesFigures | undefined,
   before: SalesFigures | undefined
@@ -62,7 +63,6 @@ export function performanceKpis(
     // No closed deals means no win rate, not 0% (codex 27/11): such a period is not compared.
     winRate: pairOrNull(winRateOf(now), winRateOf(before)),
     cycle: pairOrNull(now?.avgSalesCycleDays, before?.avgSalesCycleDays, 'lower'),
-    pipeline: pairOrNull(now?.pipelineValue, before?.pipelineValue),
   };
 }
 
@@ -92,7 +92,6 @@ export function performanceChanges(
     { label: 'Booked revenue', comparison: kpis.revenue, unit: '%' as const, format: money },
     { label: 'Win rate', comparison: kpis.winRate, unit: 'pp' as const, format: pct },
     { label: 'Sales cycle', comparison: kpis.cycle, unit: '%' as const, format: days },
-    { label: 'Pipeline created', comparison: kpis.pipeline, unit: '%' as const, format: money },
   ];
   return materialChanges(
     rows.flatMap((r) => (r.comparison ? [{ ...r, comparison: r.comparison }] : []))

@@ -80,4 +80,17 @@ describe('materialChanges', () => {
   it('says nothing when no metric moved materially', () => {
     expect(materialChanges([metrics[2]])).toEqual([]);
   });
+
+  it('counts a move from a zero base as material and ranks it first (codex 28/11)', () => {
+    const fromZero = {
+      label: 'Pipeline',
+      comparison: compare(50000, 0),
+      unit: '%' as const,
+      format: money,
+    };
+    const changes = materialChanges([metrics[0], fromZero]);
+    expect(changes.map((c) => c.label)).toEqual(['Pipeline', 'Revenue']);
+    expect(changes[0].summary).toBe('Pipeline rose from £0 in the previous period');
+    expect(materialChanges([{ ...fromZero, comparison: compare(0, 0) }])).toEqual([]);
+  });
 });

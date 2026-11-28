@@ -83,3 +83,26 @@ describe('performanceChanges', () => {
     expect(changes.map((c) => c.label)).toEqual(['Booked revenue']);
   });
 });
+
+describe('pipeline created is not compared (codex 28/11: the older cohort lost its closed deals)', () => {
+  it('never appears as a comparison or a change, however far it moved', () => {
+    const k = performanceKpis(figures({ pipelineValue: 90000 }), figures({ pipelineValue: 1000 }));
+    expect(k).not.toHaveProperty('pipeline');
+    expect(performanceChanges(k, (v) => `£${v}`).map((c) => c.label)).not.toContain(
+      'Pipeline created'
+    );
+  });
+});
+
+describe('a rise from £0 is a change (codex 28/11)', () => {
+  it('reports booked revenue that rose from nothing', () => {
+    const k = performanceKpis(figures({ totalRevenue: 50000 }), figures({ totalRevenue: 0 }));
+    const changes = performanceChanges(k, (v) => `£${v}`);
+    expect(changes[0]).toMatchObject({
+      label: 'Booked revenue',
+      summary: 'Booked revenue rose from £0 in the previous period',
+      evidence: '£50000 now, £0 before',
+      tone: 'good',
+    });
+  });
+});

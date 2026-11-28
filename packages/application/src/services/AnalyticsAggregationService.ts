@@ -714,18 +714,10 @@ export class AnalyticsAggregationService {
         range: { startDate: new Date(current), endDate: effectiveEnd },
       });
 
-      switch (granularity) {
-        case 'day':
-          current.setUTCDate(current.getUTCDate() + 1);
-          break;
-        case 'week':
-          current.setUTCDate(current.getUTCDate() + 7);
-          break;
-        case 'month':
-          current.setUTCMonth(current.getUTCMonth() + 1);
-          current.setUTCDate(1);
-          break;
-      }
+      // The next bucket starts right after this one ends. Only the first keeps the range's own
+      // start time: stepping the start by whole days kept its time of day, so a range starting at
+      // 15:00 skipped 00:00 to 15:00 of every later day (codex 28/11, revenue missing from the chart).
+      current.setTime(bucketEnd.getTime() + 1);
     }
 
     return buckets;

@@ -82,14 +82,22 @@ export interface MaterialChange {
 const MATERIAL_PERCENT = 10;
 const MATERIAL_POINTS = 5;
 
+/** A move from a zero base has no percentage, but it is a change (codex 28/11: "£0 to £50,000"
+ *  was reported as nothing moving). It ranks first, as the largest relative change there is. */
+function fromZero(m: MetricForChanges): boolean {
+  return m.unit === '%' && m.comparison.percent === null && m.comparison.direction !== 'flat';
+}
+
 function size(m: MetricForChanges): number {
   if (m.unit === 'pp') return Math.abs(m.comparison.delta);
+  if (fromZero(m)) return Number.POSITIVE_INFINITY;
   return Math.abs(m.comparison.percent ?? 0);
 }
 
 function isMaterial(m: MetricForChanges): boolean {
   if (m.comparison.direction === 'flat') return false;
   if (m.unit === 'pp') return Math.abs(m.comparison.delta) >= MATERIAL_POINTS;
+  if (fromZero(m)) return true;
   return m.comparison.percent !== null && Math.abs(m.comparison.percent) >= MATERIAL_PERCENT;
 }
 
@@ -109,9 +117,12 @@ export function materialChanges(metrics: readonly MetricForChanges[], limit = 3)
         m.unit === 'pp'
           ? `${Math.abs(Math.round(m.comparison.delta * 10) / 10)} pp`
           : `${Math.abs(Math.round(m.comparison.percent ?? 0))}%`;
+      const summary = fromZero(m)
+        ? `${m.label} ${verb} from ${m.format(0)} in the previous period`
+        : `${m.label} ${verb} ${amount} against the previous period`;
       return {
         label: m.label,
-        summary: `${m.label} ${verb} ${amount} against the previous period`,
+        summary,
         evidence: `${m.format(m.comparison.current)} now, ${m.format(m.comparison.previous)} before`,
         tone: m.comparison.tone === 'good' ? 'good' : 'bad',
       };
