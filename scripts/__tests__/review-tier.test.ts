@@ -3,6 +3,8 @@
  * No model is called anywhere here.
  */
 import { describe, it, expect, vi } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 import {
   DEFAULT_MODELS,
   PREFERRED_MODELS,
@@ -349,12 +351,14 @@ describe('catalog fallback models', () => {
     });
   });
 
-  it('drops an effort the cached model lacks, and returns null when none is listed', () => {
+  it('picks an explicit supported effort, never null, and returns null when none is listed', () => {
     const lowOnly = [{ slug: 'gpt-6.1-sol', efforts: ['low'] }];
     expect(catalogFallbackFor('strong', lowOnly, {})).toEqual({
       model: 'gpt-6.1-sol',
-      effort: null,
+      effort: 'low',
     });
+    const mid = [{ slug: 'gpt-6.1-sol', efforts: ['low', 'medium'] }];
+    expect(catalogFallbackFor('strong', mid, {})?.effort).toBe('medium');
     expect(catalogFallbackFor('strong', [{ slug: 'other', efforts: null }], {})).toBeNull();
     expect(catalogFallbackFor('strong', null, {})).toBeNull();
     expect(catalogFallbackFor('skip', [{ slug: 'gpt-6.1-sol', efforts: null }], {})).toBeNull();
@@ -385,6 +389,11 @@ describe('the review gate files are always risky', () => {
     'scripts/lib/review-tier.mjs',
     'scripts/lib/review-policy.mjs',
     'scripts/lib/codex-review-run.mjs',
+    'scripts/lib/codex-chunk-review.mjs',
+    'scripts/lib/codex-diff.mjs',
+    'scripts/lib/codex-fingerprint.mjs',
+    'scripts/lib/review-commands.mjs',
+    'scripts/lib/review-rounds.mjs',
     'scripts/pre-ship.mjs',
     'scripts/lib/preship-gate.mjs',
     'tools/audit/codex-review-waivers.yaml',
@@ -416,5 +425,21 @@ describe('the review gate files are always risky', () => {
     expect(classifyFile('scripts/lib/coverage-floor.mjs')).toBe('tooling');
     expect(isReviewGateFile('docs/codex-review.md')).toBe(false);
     expect(classifyDiff([stat('scripts/lib/coverage-floor.mjs')]).tier).toBe('skip');
+  });
+});
+
+describe('every module the review gate imports is a gate file', () => {
+  it('covers each relative .mjs import of the gate, run and chunk modules', () => {
+    const root = path.resolve(__dirname, '..');
+    const files = ['codex-review.mjs', 'lib/codex-review-run.mjs', 'lib/codex-chunk-review.mjs'];
+    const imported = new Set<string>();
+    for (const f of files) {
+      const src = fs.readFileSync(path.join(root, f), 'utf8');
+      for (const m of src.matchAll(/from '(\.{1,2}\/(?:lib\/)?[\w.-]+\.mjs)'/g)) {
+        imported.add(path.posix.join(path.posix.dirname(`scripts/${f}`), m[1]));
+      }
+    }
+    expect(imported.size).toBeGreaterThan(8);
+    for (const rel of imported) expect(isReviewGateFile(rel), rel).toBe(true);
   });
 });

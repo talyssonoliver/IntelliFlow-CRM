@@ -53,7 +53,7 @@ const TOOLING_RE = /^(scripts|tools|infra|\.github|\.husky|\.claude)\//;
  * never skip or light). Tests under __tests__ stay tests.
  */
 const GATE_FILE_RE =
-  /^(scripts\/(codex-review[^/]*\.mjs|pre-ship\.mjs|lib\/(review-[^/]*|codex-review-[^/]*|preship-[^/]*)\.mjs)|tools\/audit\/codex-review-waivers\.yaml)$/;
+  /^(scripts\/(codex-review[^/]*\.mjs|pre-ship\.mjs|lib\/(review-[^/]*|codex-[^/]*|preship-[^/]*)\.mjs)|tools\/audit\/codex-review-waivers\.yaml)$/;
 
 /** True for a file of the review gate, the pre-ship gate or the codex review waivers. */
 export function isReviewGateFile(file) {
@@ -276,9 +276,12 @@ export function parseCodexConfigModel(text) {
 
 /**
  * The first model of the tier's preference list that the plan's catalog lists, with the tier's
- * effort (null when that model's cached efforts lack it), or null when none is available.
+ * effort (or, when that model's cached efforts lack it, the best one it lists), or null when none
+ * is available.
  * `available` is parseModelCatalog output (or slugs).
  */
+const EFFORT_ORDER = ['high', 'medium', 'low', 'minimal'];
+
 export function catalogFallbackFor(tier, available, env = process.env) {
   if (tier === 'skip' || !available || available.length === 0) return null;
   const key = tier === 'light' ? 'LIGHT' : 'STRONG';
@@ -292,8 +295,11 @@ export function catalogFallbackFor(tier, available, env = process.env) {
     const entry = available.find((m) => (typeof m === 'string' ? m : m.slug) === slug);
     if (!entry) continue;
     const efforts = typeof entry === 'string' ? null : entry.efforts;
-    const ok = !efforts || efforts.length === 0 || efforts.includes(effort);
-    return { model: slug, effort: ok ? effort : null };
+    if (!efforts || efforts.length === 0 || efforts.includes(effort))
+      return { model: slug, effort };
+    // An explicit supported effort: null would inherit the config effort, which may be unsupported.
+    const best = EFFORT_ORDER.find((e) => efforts.includes(e)) ?? efforts[0];
+    return { model: slug, effort: best };
   }
   return null;
 }
