@@ -196,6 +196,8 @@ ev AS (SELECT * FROM act_ev UNION ALL SELECT * FROM rec_ev),
 last_out AS (
   SELECT grp, max(etime) AS etime FROM ev WHERE dir = 'outbound' GROUP BY grp
 ),
+-- The whole history, with no read window: everyone this lists is dismissable, because
+-- waiting.dismiss looks the person up through this same statement (loadWaitingPage).
 open_in AS (
   SELECT ev.* FROM ev LEFT JOIN last_out lo ON lo.grp = ev.grp
   WHERE ev.dir = 'inbound' AND (lo.etime IS NULL OR ev.etime > lo.etime)
