@@ -1,7 +1,7 @@
 # IntelliFlow CRM - Information Architecture
 
 > **Location**: `docs/design/information-architecture.md` **Last Updated**:
-> 2026-05-02 **Total Pages**: 224 | **Total Flows**: 48 | **API Routers**: 85
+> 2026-05-02 **Total Pages**: 225 | **Total Flows**: 48 | **API Routers**: 85
 > (381 procedures) | **Ghost Links**: 0
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
@@ -235,6 +235,7 @@ verification or export link, never from in-app navigation).
 | `/pricing`                 | `(public)/pricing/page.tsx`                 | —       | FLOW-010 | N/A               | H IP       | Implemented | --     |
 | `/security`                | `(public)/security/page.tsx`                | —       | —        | N/A               | IP         | Implemented | --     |
 | `/status`                  | `(public)/status/page.tsx`                  | —       | —        | N/A               | IP         | Implemented | --     |
+| `/feedback/[token]`        | `(public)/feedback/[token]/page.tsx`        | —       | —        | `publicSurvey.*`  | IP         | Implemented | --     |
 | `/book/[handle]/[slug]`    | `(public)/book/[handle]/[slug]/page.tsx`    | PG-203  | FLOW-019 | `publicBooking.*` | EXT        | Implemented | --     |
 | `/dsar/[handle]`           | `(public)/dsar/[handle]/page.tsx`           | PG-203  | FLOW-040 | `privacy.*`       | EXT        | Implemented | --     |
 | `/dsar/[handle]/verify`    | `(public)/dsar/[handle]/verify/page.tsx`    | PG-203  | FLOW-040 | `privacy.*`       | EXT        | Implemented | --     |
@@ -541,8 +542,8 @@ Four distinct layout patterns used across modules.
 
 | Category        | Count |
 | --------------- | ----- |
-| **Total Pages** | 224   |
-| Public Pages    | 37    |
+| **Total Pages** | 225   |
+| Public Pages    | 38    |
 | Developer Pages | 14    |
 | Protected Pages | 173   |
 
