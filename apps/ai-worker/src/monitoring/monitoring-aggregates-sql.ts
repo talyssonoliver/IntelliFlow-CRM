@@ -9,8 +9,9 @@
  *
  * The rules are the ones the JavaScript used, line for line:
  *  - the window is the tenant's newest `cap` events of the five snapshot types by recordedAt
- *    (the old per-tenant `take` + `slice`); `cutoff` is the recordedAt of the cap-th one when the
- *    tenant has more than `cap`, so the rows read next can use the very same window;
+ *    (the old per-tenant `take` + `slice`), ties broken by id so the window is deterministic;
+ *    `cutoff` is the (recordedAt, id) of the cap-th one when the tenant has more than `cap`, so
+ *    the rows read next can use the very same window, not one row more when events tie;
  *  - a null value counts as 0 and a null flag as "not flagged" (`e.value ?? 0`, `!e.flagged`);
  *  - the p-th percentile of the sorted values is the value at 1-based position ceil(n * p / 100),
  *    written as (n * p + 99) / 100 in integer maths, the same rule AIMonitoringService uses;
@@ -53,12 +54,17 @@ export interface RoiAggregate {
   valueSum: number;
 }
 
+export interface WindowCutoff {
+  recordedAt: Date;
+  id: string;
+}
+
 export interface WindowAggregates {
   /** null when the window holds no latency event. */
   latency: LatencyAggregate | null;
   roi: RoiAggregate;
-  /** recordedAt of the cap-th newest event, only when the tenant has more than `cap` events. */
-  cutoff: Date | null;
+  /** The cap-th newest event, only when the tenant has more than `cap` events. */
+  cutoff: WindowCutoff | null;
 }
 
 interface AggregateRow {
@@ -79,6 +85,7 @@ interface AggregateRow {
   value_n: number | bigint | null;
   value_sum: number | null;
   cutoff: Date | string | null;
+  cutoff_id: string | null;
 }
 
 const num = (v: unknown): number => {
@@ -108,8 +115,8 @@ export async function fetchWindowAggregates(
   // Values, in order: since, tenant (twice), cap. Keep that order: the unit-test stub reads it.
   const rows = await db.$queryRaw`
     WITH ranked AS (
-      SELECT "eventType" AS t, "recordedAt" AS r, value, flagged,
-             row_number() OVER (ORDER BY "recordedAt" DESC) AS rk
+      SELECT id, "eventType" AS t, "recordedAt" AS r, value, flagged,
+             row_number() OVER (ORDER BY "recordedAt" DESC, id DESC) AS rk
       FROM ai_monitoring_events
       WHERE "recordedAt" >= (to_timestamp(${sinceMs}::double precision / 1000.0) AT TIME ZONE 'UTC')
         AND ("tenantId" = ${tenantId}::text OR (${tenantId}::text IS NULL AND "tenantId" IS NULL))
@@ -143,9 +150,9 @@ export async function fetchWindowAggregates(
         (COALESCE(sum(COALESCE(value, 0)) FILTER (WHERE t = 'roi_value'), 0))::float8 AS value_sum
       FROM capped
     )
-    SELECT latsum.*, roi.*,
-           (SELECT r FROM ranked WHERE rk = ${cap}::int) AS cutoff
-    FROM latsum, roi`;
+    SELECT latsum.*, roi.*, c.r AS cutoff, c.id AS cutoff_id
+    FROM latsum, roi
+    LEFT JOIN (SELECT r, id FROM ranked WHERE rk = ${cap}::int) c ON true`;
 
   const row = rows[0];
   const count = num(row?.n);
@@ -174,6 +181,7 @@ export async function fetchWindowAggregates(
       valueCount: num(row?.value_n),
       valueSum: num(row?.value_sum),
     },
-    cutoff: row?.cutoff ? asDate(row.cutoff) : null,
+    cutoff:
+      row?.cutoff && row.cutoff_id ? { recordedAt: asDate(row.cutoff), id: row.cutoff_id } : null,
   };
 }

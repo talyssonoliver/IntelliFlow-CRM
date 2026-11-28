@@ -27,7 +27,11 @@
 
 import pino from 'pino';
 import type { PrismaClient } from '@intelliflow/db';
-import { fetchWindowAggregates, type WindowAggregates } from './monitoring-aggregates-sql';
+import {
+  fetchWindowAggregates,
+  type WindowAggregates,
+  type WindowCutoff,
+} from './monitoring-aggregates-sql';
 
 const logger = pino({
   name: 'redis-monitoring-publisher',
@@ -337,17 +341,27 @@ export class RedisMonitoringPublisher {
   private async fetchEventsForTenant(
     since: Date,
     tenantId: string | null,
-    cutoff: Date | null
+    cutoff: WindowCutoff | null
   ): Promise<AIMonitoringEventRow[]> {
     const db = this.prisma as unknown as {
       aIMonitoringEvent: {
         findMany: (args: unknown) => Promise<AIMonitoringEventRow[]>;
       };
     };
-    const from = cutoff && cutoff > since ? cutoff : since;
+    // Same window as the aggregates: events at or after the cap-th newest one, ordered by
+    // (recordedAt, id), so events that share the boundary timestamp are cut exactly like SQL did.
+    const inWindow = cutoff
+      ? {
+          OR: [
+            { recordedAt: { gt: cutoff.recordedAt } },
+            { recordedAt: cutoff.recordedAt, id: { gte: cutoff.id } },
+          ],
+        }
+      : {};
     return db.aIMonitoringEvent.findMany({
       where: {
-        recordedAt: { gte: from },
+        recordedAt: { gte: since },
+        ...inWindow,
         tenantId,
         eventType: { in: tenantId === null ? ['drift'] : PAYLOAD_EVENT_TYPES },
       },
@@ -362,7 +376,7 @@ export class RedisMonitoringPublisher {
         model: true,
         payload: true,
       },
-      orderBy: { recordedAt: 'desc' },
+      orderBy: [{ recordedAt: 'desc' }, { id: 'desc' }],
       take: this.cap,
     });
   }

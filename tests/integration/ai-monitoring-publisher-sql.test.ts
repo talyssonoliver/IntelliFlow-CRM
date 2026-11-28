@@ -453,6 +453,51 @@ describeDb('monitoring publisher: SQL aggregates equal the old Node computation'
     });
   });
 
+  it('events that share the boundary timestamp are cut exactly at the cap, rows and aggregates alike', async () => {
+    // Tenant C has nothing else in the window. Cap 5 newest: 3 latency events, then 4 drift
+    // events with ONE timestamp. Two of the four fit; the same two (highest id) must feed the
+    // aggregates and the listed rows, not all four.
+    const tie = 600;
+    const seeds: Seed[] = [
+      ...[1, 2, 3].map((m) => ({
+        tenant: 'c' as const,
+        eventType: 'latency',
+        value: m * 10,
+        minutesAgo: m,
+      })),
+      ...[0, 1, 2, 3].map((i) => ({
+        tenant: 'c' as const,
+        eventType: 'drift',
+        value: i,
+        flagged: true,
+        severity: 'high',
+        minutesAgo: tie,
+        payload: { pValue: i / 100 },
+      })),
+    ];
+    await withSeededTenants(seeds, async (tx, ids) => {
+      const out = fakeRedis();
+      await new RedisMonitoringPublisher(out.redis, tx, {
+        lookbackMs: LOOKBACK_MS,
+        eventsPerTenantCap: 5,
+      }).tick();
+      const drift = out.written.get(`ai-mon:v1:${ids.c}:drift`) as any;
+      const latency = out.written.get(`ai-mon:v1:${ids.c}:latency`) as any;
+      const tied = await tx.aIMonitoringEvent.findMany({
+        where: { tenantId: ids.c, eventType: 'drift', recordedAt: new Date(NOW - tie * MIN) },
+        orderBy: { id: 'desc' },
+        take: 2,
+        select: { payload: true },
+      });
+      expect(drift.history).toHaveLength(2);
+      expect(drift.status.trackedMetrics).toBe(2);
+      expect(latency.stats.sampleCount).toBe(3);
+      expect(drift.history.map((h: { pValue: number }) => h.pValue).sort()).toEqual(
+        tied.map((r: { payload: { pValue: number } }) => r.payload.pValue).sort()
+      );
+    });
+  });
+
   it('latency and ROI rows no longer leave the database: aggregate-sized results', async () => {
     // One tenant with the shape measured on prod: ~190 rows, mostly latency and ROI.
     const f: Seed[] = [];
