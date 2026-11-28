@@ -4,8 +4,8 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-const loadWaiting = vi.hoisted(() => vi.fn());
-vi.mock('../waiting-load', () => ({ loadWaiting }));
+const loadWaitingPage = vi.hoisted(() => vi.fn());
+vi.mock('../waiting-sql', () => ({ loadWaitingPage }));
 
 import { waitingRouter } from '../waiting.router';
 import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
@@ -29,7 +29,7 @@ const item = (over = {}) => ({
 
 describe('waiting.dismiss', () => {
   beforeEach(() => {
-    loadWaiting.mockReset().mockResolvedValue([item()]);
+    loadWaitingPage.mockReset().mockResolvedValue({ items: [item()] });
     mocks.waitingDismissal.upsert.mockReset().mockResolvedValue({});
   });
 
@@ -52,6 +52,12 @@ describe('waiting.dismiss', () => {
       latestAt: LATEST,
     });
     expect(arg.update).toMatchObject({ since: SINCE, unanswered: 2, latestAt: LATEST });
+  });
+
+  it('looks the person up in the same full-history SQL the list shows, with no page limit', async () => {
+    await caller().dismiss({ kind: 'lead', id: 'lead-1' });
+    expect(loadWaitingPage).toHaveBeenCalledTimes(1);
+    expect(loadWaitingPage.mock.calls[0]).toHaveLength(2);
   });
 
   it('refuses a person nobody is waiting on, and writes nothing', async () => {

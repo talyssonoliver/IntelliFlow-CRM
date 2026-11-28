@@ -1,14 +1,15 @@
 /**
  * MVP-014 "Who is waiting": the dashboard card reads this. The leads list filter
- * "Waiting for reply" uses the same loader (see lead.list), so the two always agree.
+ * "Waiting for reply" reads the same rows through waiting-load.ts (see lead.list); waiting-sql.ts
+ * is proven equal to it, and the list and the dismissal both use that SQL.
  */
 
 import { z } from 'zod';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
-import { createTenantWhereClause, getTenantContext } from '../../security/tenant-context';
+import { getTenantContext } from '../../security/tenant-context';
 import { mailViewerOf } from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
-import { loadWaiting } from './waiting-load';
+import { loadWaitingPage } from './waiting-sql';
 import { personKey } from './waiting-for-reply';
 
 export const waitingRouter = createTRPCRouter({
@@ -17,18 +18,11 @@ export const waitingRouter = createTRPCRouter({
     .input(z.object({ limit: z.number().int().min(1).max(100).default(5) }).optional())
     .query(async ({ ctx, input }) => {
       const typed = getTenantContext(ctx);
-      const all = await loadWaiting(
-        typed.prismaWithTenant,
-        mailViewerOf(typed.tenant),
-        createTenantWhereClause(typed.tenant),
-        createTenantWhereClause(typed.tenant)
-      );
-      return {
-        items: all.slice(0, input?.limit ?? 5),
-        total: all.length,
-        leadTotal: all.filter((i) => i.kind === 'lead').length,
-        contactTotal: all.filter((i) => i.kind === 'contact').length,
-      };
+      // Decided in SQL (waiting-sql.ts): only the `limit` people to show and the counts come back,
+      // not the tenant's mail. The tenant and the viewer's owner scope are in the statement.
+      return loadWaitingPage(typed.prismaWithTenant, mailViewerOf(typed.tenant), {
+        limit: input?.limit ?? 5,
+      });
     }),
 
   /**
@@ -39,11 +33,10 @@ export const waitingRouter = createTRPCRouter({
     .input(z.object({ kind: z.enum(['lead', 'contact']), id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       const typed = getTenantContext(ctx);
-      const all = await loadWaiting(
+      // The same SQL as the list, over the full history, so anyone the list shows can be dismissed.
+      const { items: all } = await loadWaitingPage(
         typed.prismaWithTenant,
-        mailViewerOf(typed.tenant),
-        createTenantWhereClause(typed.tenant),
-        createTenantWhereClause(typed.tenant)
+        mailViewerOf(typed.tenant)
       );
       const item = all.find((i) => i.kind === input.kind && i.id === input.id);
       if (!item) {
