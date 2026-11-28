@@ -215,9 +215,11 @@ export function makeReviewer({
           };
           log.err(`[codex-review] WARN: ${state.modelFallback.reason}.\n`);
           opts = { model: alt.model, effort: alt.effort };
+          // Kept before the attempt: a capped attempt that succeeds after the reset below must
+          // still be the model the next chunks start on.
+          state.fallbackOpts = opts;
           a = tryCodex(prompt, opts, 'retry on the first catalog-listed preferred model');
           if (a.parsed) {
-            state.fallbackOpts = opts;
             return {
               parsed: a.parsed,
               reviewer: 'codex',
@@ -278,6 +280,7 @@ export function makeReviewer({
               ...opts,
               tokens: b.r.tokens ?? null,
               attempts,
+              modelFallback: state.modelFallback,
             };
           }
           attempts.push({
