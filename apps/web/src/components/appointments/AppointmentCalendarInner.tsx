@@ -8,6 +8,7 @@ import { useNextCalendarApp, ScheduleXCalendar } from '@schedule-x/react';
 import { createViewDay, createViewWeek, createViewMonthGrid } from '@schedule-x/calendar';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls';
+import { desktopMonthGridOptions } from './month-grid-options';
 import {
   getTypeConfig,
   getStatusConfig,
@@ -412,6 +413,7 @@ export function AppointmentCalendarInner({
     events: [...mapAppointmentsToEvents(appointments), ...mapTasksToEvents(tasks)],
     plugins: [eventsService, calendarControls],
     dayBoundaries: { start: '07:00', end: '19:00' },
+    ...desktopMonthGridOptions(),
     weekOptions: {
       gridHeight: WEEK_GRID_HEIGHT,
       nDays: 7,

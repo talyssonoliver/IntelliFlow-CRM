@@ -27,8 +27,38 @@ export function isCalendarSettingsPage(pathname: string): boolean {
   return SETTINGS_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
-const VIEW_SECTIONS: SidebarConfig['sections'] = [
-  {
+/** Minimal shape of a tenant event type needed to build the "By Type" list. */
+export interface CalendarTypeSource {
+  id: string;
+  name: string;
+  appointmentType: string;
+}
+
+function humanizeType(value: string): string {
+  const lower = value.toLowerCase().replaceAll('_', ' ');
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
+/**
+ * "By Type" items come from the tenant's own configured event types, never a fixed
+ * vertical list. Event types that share an appointment type collapse into one entry
+ * (the filter works on appointment type); a lone event type keeps its own name.
+ */
+export function buildCalendarTypeItems(eventTypes: readonly CalendarTypeSource[]): SidebarItem[] {
+  const byType = new Map<string, CalendarTypeSource[]>();
+  for (const et of eventTypes) {
+    byType.set(et.appointmentType, [...(byType.get(et.appointmentType) ?? []), et]);
+  }
+  return [...byType.entries()].map(([type, group]) => ({
+    id: `type-${type.toLowerCase()}`,
+    label: group.length === 1 ? group[0].name : humanizeType(type),
+    icon: 'category',
+    href: `/calendar?type=${encodeURIComponent(type)}`,
+  }));
+}
+
+function buildViewSections(typeItems: SidebarItem[]): SidebarConfig['sections'] {
+  const views: SidebarConfig['sections'][number] = {
     id: 'views',
     title: 'Calendar Views',
     items: [
@@ -43,30 +73,16 @@ const VIEW_SECTIONS: SidebarConfig['sections'] = [
         href: '/calendar?view=conflicts',
       },
     ],
-  },
-  {
-    id: 'type',
-    title: 'By Type',
-    items: [
-      { id: 'hearings', label: 'Hearings', icon: 'gavel', href: '/calendar?type=HEARING' },
-      {
-        id: 'consultations',
-        label: 'Consultations',
-        icon: 'forum',
-        href: '/calendar?type=CONSULTATION',
-      },
-      {
-        id: 'depositions',
-        label: 'Depositions',
-        icon: 'description',
-        href: '/calendar?type=DEPOSITION',
-      },
-    ],
-  },
-];
+  };
+  if (typeItems.length === 0) return [views];
+  return [views, { id: 'type', title: 'By Type', items: typeItems }];
+}
 
 /** Calendar grid mode — filters inline + Module Settings button + calendar toggles */
-export function createCalendarSidebarConfig(onSettingsClick: () => void): SidebarConfig {
+export function createCalendarSidebarConfig(
+  onSettingsClick: () => void,
+  typeItems: SidebarItem[] = []
+): SidebarConfig {
   return {
     moduleId: 'calendar',
     moduleTitle: 'Calendar',
@@ -74,13 +90,14 @@ export function createCalendarSidebarConfig(onSettingsClick: () => void): Sideba
     onSettingsClick,
     showSettings: true,
     afterContent: CalendarTogglesSection,
-    sections: VIEW_SECTIONS,
+    sections: buildViewSections(typeItems),
   };
 }
 
 /** Settings mode — settings items inline at top, views & types below, calendar toggles at bottom */
 export function createCalendarSettingsSidebarConfig(
-  beforeContent: SidebarConfig['beforeContent']
+  beforeContent: SidebarConfig['beforeContent'],
+  typeItems: SidebarItem[] = []
 ): SidebarConfig {
   return {
     moduleId: 'calendar',
@@ -89,6 +106,6 @@ export function createCalendarSettingsSidebarConfig(
     showSettings: false,
     beforeContent,
     afterContent: CalendarTogglesSection,
-    sections: VIEW_SECTIONS,
+    sections: buildViewSections(typeItems),
   };
 }
