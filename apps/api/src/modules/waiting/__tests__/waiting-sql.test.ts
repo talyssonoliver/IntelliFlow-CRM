@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import type { Prisma } from '@intelliflow/db';
-import { loadWaitingPage, waitingSql } from '../waiting-sql';
+import { ZONE_SUFFIX, loadWaitingPage, waitingSql } from '../waiting-sql';
 import { waitingRouter } from '../waiting.router';
 import { prismaMock, createAdminContext, TEST_UUIDS } from '../../../test/setup';
 
@@ -155,6 +155,27 @@ describe('loadWaitingPage', () => {
     );
     expect(page.items[0]?.unanswered).toBe(3);
     expect([page.total, page.leadTotal, page.contactTotal]).toEqual([4, 3, 1]);
+  });
+});
+
+describe('ZONE_SUFFIX', () => {
+  it.each([
+    '2026-10-10T09:00:00Z',
+    '2026-10-10T09:00:00z',
+    '2026-10-10T10:00:00+01',
+    '2026-10-10 10:00:00+0100',
+    '2026-10-10T04:00:00-05:30',
+  ])('sees the zone at the end of %s', (v) => expect(ZONE_SUFFIX.test(v)).toBe(true));
+
+  it.each(['2026-10-10T09:00:00', '2026-10-10 09:00:00', '2026-10-10 09:00:00.123'])(
+    'sees no zone in %s',
+    (v) => expect(ZONE_SUFFIX.test(v)).toBe(false)
+  );
+
+  it('anchors every alternative: a Z or an offset in the middle is not a zone', () => {
+    expect(ZONE_SUFFIX.test('Z2026-10-10T09:00:00')).toBe(false);
+    expect(ZONE_SUFFIX.test('2026-10-10Z09:00:00')).toBe(false);
+    expect(ZONE_SUFFIX.test('2026-10-10T09:00:00+01:00 later')).toBe(false);
   });
 });
 

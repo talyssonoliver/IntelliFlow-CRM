@@ -250,9 +250,12 @@ interface Row {
 }
 
 /** A timestamp column back as a Date: `timestamp(3)` holds UTC without a zone marker. */
+/** A trailing zone: `Z`, or an offset such as +01, +0100 or -05:30. The anchor covers both. */
+export const ZONE_SUFFIX = /(?:[zZ]|[+-]\d\d(?::?\d\d)?)$/;
+
 function asDate(v: Date | string): Date {
   if (v instanceof Date) return v;
-  return new Date(/[zZ]|[+-]\d\d(:?\d\d)?$/.test(v) ? v : `${v.replace(' ', 'T')}Z`);
+  return new Date(ZONE_SUFFIX.test(v) ? v : `${v.replace(' ', 'T')}Z`);
 }
 
 /**
