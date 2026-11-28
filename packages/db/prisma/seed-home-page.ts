@@ -19,9 +19,12 @@ import {
   UserRole,
   Prisma,
 } from '../generated/prisma/client';
+import { assertHostedDbAllowed } from '../src/hosted-db-guard';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { SEED_IDS } from '../src/seed-ids';
 
+// Refuse a hosted Supabase DATABASE_URL outside a deployed runtime (incident 2026-11-27).
+assertHostedDbAllowed(process.env.DATABASE_URL, { variableName: 'DATABASE_URL' });
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 const LEGACY_HOME_PAGE_TASK_IDS = ['home-task-1', 'home-task-2', 'home-task-3'] as const;
