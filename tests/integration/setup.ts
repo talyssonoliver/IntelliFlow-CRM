@@ -4,17 +4,21 @@
  * Uses testcontainers to automatically spin up PostgreSQL for integration tests.
  * Falls back to existing DATABASE_URL if containers are not available.
  *
- * GRACEFUL DEGRADATION: If infrastructure is not available (Docker, Prisma),
- * tests are skipped with clear alerts instead of failing.
+ * FAILS LOUDLY: If the setup cannot load (Prisma client, a Node version that cannot
+ * import the workspace TypeScript) or cannot connect, beforeAll throws with the Node
+ * version and the required one. It never skips: a skipped integration run looks green
+ * while verifying nothing (issue #1600).
  *
  * @module tests/integration/setup
  */
 
 import { beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import path from 'node:path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { resolveTestDatabaseUrl } from './db-url-guard';
+import { integrationSetupFailure, requiredNodeMajor } from './node-guard';
 
 const execAsync = promisify(exec);
 
@@ -23,6 +27,17 @@ const execAsync = promisify(exec);
  */
 export let isInfrastructureAvailable = false;
 export let infrastructureUnavailableReason = '';
+
+/** Throws the loud failure for the current Node, naming the version the repo requires. */
+function failLoudly(cause: string): never {
+  throw new Error(
+    integrationSetupFailure(
+      cause,
+      process.version,
+      requiredNodeMajor(path.resolve(__dirname, '../..'))
+    )
+  );
+}
 
 // Lazy-loaded modules (may not be available)
 
@@ -53,6 +68,12 @@ try {
   }
 }
 
+// Fail at import, not in beforeAll: vitest does not run beforeAll for a file whose tests are all
+// skipped, which is how an unloadable setup used to report green with nothing executed.
+if (!isInfrastructureAvailable) {
+  failLoudly(infrastructureUnavailableReason || 'the database client could not be loaded');
+}
+
 // Prisma 7 requires a driver adapter — @prisma/adapter-pg is statically imported
 // at the top (it is a first-class dependency). The legacy Prisma-5
 // `datasources.db.url` constructor throws at runtime under engineType="client"
@@ -64,29 +85,6 @@ let postgresContainer: any = null;
 
 let testPrismaClient: any = null;
 let databaseUrl: string | null = null;
-
-/**
- * Alert banner for skipped infrastructure tests
- */
-let alertDisplayed = false;
-
-function displayInfrastructureAlert(reason: string): void {
-  if (alertDisplayed) return;
-  alertDisplayed = true;
-
-  console.log('\n' + '='.repeat(80));
-  console.log('⚠️  INTEGRATION TESTS SKIPPED');
-  console.log('='.repeat(80));
-  console.log(`Reason: ${reason}`);
-  console.log('');
-  console.log('To run integration tests:');
-  console.log('  1. Generate Prisma client: pnpm run db:generate');
-  console.log('  2. Install Docker for testcontainers');
-  console.log('  3. Or set DATABASE_URL environment variable');
-  console.log('');
-  console.log('Coverage is NOT affected by skipped infrastructure tests.');
-  console.log('='.repeat(80) + '\n');
-}
 
 /**
  * Check if Docker is available for testcontainers
@@ -408,20 +406,12 @@ beforeAll(async () => {
   console.log('🧪 Integration Test Suite Starting...');
   process.env.NODE_ENV = 'test';
 
-  // Check infrastructure availability first
-  if (!isInfrastructureAvailable) {
-    displayInfrastructureAlert(infrastructureUnavailableReason);
-    setupSucceeded = false;
-    return;
-  }
-
   try {
     await setupTestDatabase();
     setupSucceeded = true;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    displayInfrastructureAlert(`Database setup failed: ${errorMessage}`);
     setupSucceeded = false;
+    failLoudly(`database setup failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 });
 

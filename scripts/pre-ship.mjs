@@ -115,6 +115,12 @@ import {
   finalLine,
 } from './lib/preship-report.mjs';
 import { integrationInfraMissing } from './lib/preship-integration-infra.mjs';
+import {
+  listIntegrationTestFiles,
+  nodeMismatch,
+  pinnedNodeMajor,
+  zeroExecuted,
+} from './lib/preship-integration-run.mjs';
 import { FULL_DB_ENV, resolveDbScope } from './lib/preship-db-scope.mjs';
 import { reusableResult } from './lib/preship-cache.mjs';
 import {
@@ -125,11 +131,7 @@ import {
 } from './lib/preship-run-metrics.mjs';
 import { testStepEnv } from './lib/preship-build.mjs';
 import { AFFECTED_ENV, resolveAffected } from './lib/preship-affected.mjs';
-import {
-  ciGuardLine,
-  localBuildIsCiOnly,
-  localFullSuiteIsCiOnly,
-} from './lib/preship-ci-only.mjs';
+import { ciGuardLine, localBuildIsCiOnly, localFullSuiteIsCiOnly } from './lib/preship-ci-only.mjs';
 
 // Throwaway stub credentials for the build-time env mirror below (never a real DB).
 const STUB_DB_USER = 'stub';
@@ -553,6 +555,11 @@ const STEPS = [
       ? 'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.'
       : NOT_AFFECTED_REMEDIATION,
     required: DB_SCOPE.needed,
+    // #1600: a run on the wrong Node major, or one that executed 0 tests, is a FAIL
+    // ("integration tests did not run"), never a pass and never excused by ALLOW_MISSING.
+    preflight: () => nodeMismatch(process.version, pinnedNodeMajor(REPO_ROOT)),
+    verify: (logText) =>
+      zeroExecuted({ logText, fileCount: listIntegrationTestFiles(REPO_ROOT).length }),
   },
   {
     id: 'coverage',
@@ -1089,6 +1096,24 @@ async function runStep(step, prev) {
     };
   }
 
+  // A step may refuse to run at all (wrong Node major): a FAIL with the reason in its log.
+  const refusal = step.preflight ? step.preflight() : null;
+  if (refusal) {
+    fs.mkdirSync(path.dirname(logPath), { recursive: true });
+    fs.writeFileSync(logPath, `${refusal}\n`);
+    return {
+      id: step.id,
+      description: step.description,
+      cmd: step.cmd.join(' '),
+      duration_ms: 0,
+      exit_code: -1,
+      verdict: 'FAIL',
+      required: step.required !== false,
+      log_path: path.relative(REPO_ROOT, logPath),
+      failure_reason: refusal,
+    };
+  }
+
   const cached = reusableResult(step.id, prev);
   if (cached) {
     // Display 0ms for cached results so the printed timing isn't
@@ -1124,7 +1149,20 @@ async function runStep(step, prev) {
   });
   const duration_ms = Date.now() - start;
 
-  const failed = r.status !== 0;
+  // A step that exited 0 may still not have run what it claims (0 tests executed).
+  let failure_reason;
+  if (r.status === 0 && step.verify) {
+    let logText = '';
+    try {
+      logText = fs.readFileSync(logPath, 'utf8');
+    } catch {
+      // unreadable log: counts as 0 executed
+    }
+    failure_reason = step.verify(logText) || undefined;
+    if (failure_reason) fs.appendFileSync(logPath, `\n${failure_reason}\n`);
+  }
+
+  const failed = r.status !== 0 || failure_reason !== undefined;
   return {
     id: step.id,
     description: step.description,
@@ -1134,6 +1172,7 @@ async function runStep(step, prev) {
     verdict: failed ? 'FAIL' : 'PASS',
     required: step.required !== false,
     log_path: path.relative(REPO_ROOT, logPath),
+    ...(failure_reason ? { failure_reason } : {}),
   };
 }
 
