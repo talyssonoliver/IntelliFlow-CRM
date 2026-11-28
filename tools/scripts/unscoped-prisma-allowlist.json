@@ -21,6 +21,10 @@
       "max": 12,
       "reason": "Public booking pages have no session: the event type and its tenant are resolved from the booking handle, and the writes and host lookup use that tenant and event type."
     },
+    "apps/api/src/modules/feedback/publicSurvey.router.ts": {
+      "max": 2,
+      "reason": "Public survey answer page has no session: the survey and its tenant are found by the hashed one-time token, and the answer is written with that survey id, tenant and token."
+    },
     "apps/api/src/modules/partner/partner.router.ts": {
       "max": 3,
       "reason": "Partner operations act on client tenants by design; loadPartnerTenant checks the partner owns the tenant first."

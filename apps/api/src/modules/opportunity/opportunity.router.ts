@@ -31,6 +31,7 @@ import {
   bulkDeleteDealsSchema,
 } from '@intelliflow/validators/opportunity';
 import { executeMoveStage } from './move-stage';
+import { queueSurveyForWonDeal, type SurveyDb } from '../feedback/survey-service';
 import {
   performDealReassign,
   emitDealReassignSideEffects,
@@ -1158,6 +1159,16 @@ export const opportunityRouter = createTRPCRouter({
 
     // IFC-281 audit row plus the deal's activity entry (#31); never fails the move itself.
     await recordStageMove(ctx, result.value, previousStage, input.targetStage, typedCtx.tenant);
+
+    // MVP-012: a won deal queues a satisfaction survey (tenant switch, one per contact per 30 days).
+    if (input.targetStage === 'CLOSED_WON' && previousStage !== 'CLOSED_WON') {
+      queueSurveyForWonDeal(
+        ctx.prismaWithTenant as unknown as SurveyDb,
+        ctx.adapters?.notificationService,
+        typedCtx.tenant.tenantId,
+        input.id
+      ).catch((err) => console.error('[opportunity.router] Survey queue failed:', err));
+    }
 
     return mapOpportunityToResponse(result.value);
   }),

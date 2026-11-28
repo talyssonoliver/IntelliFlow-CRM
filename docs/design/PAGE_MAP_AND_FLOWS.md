@@ -35,8 +35,8 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category                                        | Count |
 | ----------------------------------------------- | ----- |
-| Total Pages                                     | 224   |
-| Public Pages                                    | 37    |
+| Total Pages                                     | 225   |
+| Public Pages                                    | 38    |
 | Developer Pages                                 | 14    |
 | Protected Pages                                 | 173   |
 | Next.js API handlers (excluded from page total) | 19    |
@@ -83,6 +83,7 @@ Located in `(public)` route group. Accessible without login.
 | `/press`                   | Press                    | Press releases                                                                                                                                                                                          |
 | `/press/[id]`              | Press Release Detail     | Individual press release with full body, quotes, boilerplate                                                                                                                                            |
 | `/status`                  | Status                   | System status page                                                                                                                                                                                      |
+| `/feedback/[token]`        | Survey answer            | Customer answers an NPS/CSAT/CES survey from an email link (no sign-in, noindex)                                                                                                                        |
 | `/404`                     | 404 Not Found            | Direct system-page route for missing URLs; excluded from sitemap indexing                                                                                                                               |
 | `/500`                     | 500 Server Error         | Direct system-page route for internal errors; excluded from sitemap indexing                                                                                                                            |
 | `/maintenance`             | Maintenance              | Env-driven maintenance window page with ETA, affected services, and status updates; excluded from sitemap indexing                                                                                      |

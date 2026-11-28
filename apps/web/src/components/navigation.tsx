@@ -42,6 +42,8 @@ export const PUBLIC_ROUTES = [
   '/book/',
   // PG-203 DSAR: the data request pages, likewise.
   '/dsar/',
+  // MVP-012: the survey answer page, likewise.
+  '/feedback/',
 ];
 
 /**

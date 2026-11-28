@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-27T19:25:04.353Z",
+  "timestamp": "2026-11-28T05:44:22.795Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 85,
-    "total_endpoints": 629,
-    "total_queries": 270,
-    "total_mutations": 359,
+    "total_routers": 86,
+    "total_endpoints": 633,
+    "total_queries": 271,
+    "total_mutations": 362,
     "routers": [
       {
         "name": "contact",
@@ -1291,6 +1291,12 @@
         "mutations": 3
       },
       {
+        "name": "feedbackSurvey",
+        "endpoints": 6,
+        "queries": 4,
+        "mutations": 2
+      },
+      {
         "name": "integrations",
         "endpoints": 6,
         "queries": 4,
@@ -1349,12 +1355,6 @@
         "endpoints": 4,
         "queries": 1,
         "mutations": 3
-      },
-      {
-        "name": "feedbackSurvey",
-        "endpoints": 4,
-        "queries": 4,
-        "mutations": 0
       },
       {
         "name": "subscription",
@@ -1436,6 +1436,12 @@
       },
       {
         "name": "upload",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
+        "name": "publicSurvey",
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
@@ -1533,16 +1539,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 222,
-    "total_fields": 3320,
-    "total_indexes": 977,
-    "total_relations": 326,
+    "total_tables": 223,
+    "total_fields": 3334,
+    "total_indexes": 981,
+    "total_relations": 327,
     "tables_with_embeddings": 4,
     "enums": 86,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 199,
+        "fields": 200,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -1667,6 +1673,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "FeedbackSurvey",
+        "fields": 28,
+        "indexes": 8,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "Notification",
         "fields": 28,
         "indexes": 10,
@@ -1720,13 +1733,6 @@
         "fields": 23,
         "indexes": 6,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "FeedbackSurvey",
-        "fields": 22,
-        "indexes": 6,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -2990,6 +2996,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "FeedbackSurveySetting",
+        "fields": 7,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "HealthCheck",
         "fields": 7,
         "indexes": 4,
@@ -3460,11 +3473,11 @@
   },
   "validators_inventory": {
     "total_validators": 75,
-    "total_schemas": 697,
+    "total_schemas": 700,
     "by_complexity": {
       "complex": 39,
-      "moderate": 27,
-      "simple": 9
+      "moderate": 28,
+      "simple": 8
     },
     "validators": [
       {
@@ -3708,6 +3721,12 @@
         "complexity": "complex"
       },
       {
+        "name": "feedback-survey",
+        "file": "feedback-survey.ts",
+        "schemas": 6,
+        "complexity": "moderate"
+      },
+      {
         "name": "report-templates",
         "file": "report-templates.ts",
         "schemas": 6,
@@ -3794,12 +3813,6 @@
       {
         "name": "email",
         "file": "email.ts",
-        "schemas": 3,
-        "complexity": "simple"
-      },
-      {
-        "name": "feedback-survey",
-        "file": "feedback-survey.ts",
         "schemas": 3,
         "complexity": "simple"
       },
@@ -5584,6 +5597,28 @@
         "name": "feedbackSurvey.exportData",
         "method": "GET",
         "description": "Export data"
+      },
+      {
+        "name": "feedbackSurvey.send",
+        "method": "POST",
+        "description": "Send"
+      },
+      {
+        "name": "feedbackSurvey.getSettings",
+        "method": "POST",
+        "description": "Get settings"
+      }
+    ],
+    "publicSurvey": [
+      {
+        "name": "publicSurvey.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "publicSurvey.submit",
+        "method": "POST",
+        "description": "Submit"
       }
     ],
     "helpArticle": [

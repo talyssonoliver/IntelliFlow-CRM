@@ -2,8 +2,8 @@
 
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
-> Guide Components **Total Pages**: 224 implemented **Total Flows**: 42 **API
-> Routers**: 85 (472 procedures)
+> Guide Components **Total Pages**: 225 implemented **Total Flows**: 42 **API
+> Routers**: 86 (477 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -702,7 +702,7 @@ data
 | ------------------------ | ---------------------------- | ----------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Acesso e Identidade      | FLOW-001 to FLOW-004         | `/login`, `/admin/users`, `/settings/devices`   | card, input, btn-primary           | `auth` (18)                                                                                                  |
 | Comercial Core           | FLOW-005 to FLOW-010         | `/leads/*`, `/deals/*`, `/tasks/*`              | pipeline-kanban, data-table, badge | `lead` (18), `opportunity` (12), `billing` (16), `task` (12)                                                 |
-| Relacionamento e Suporte | FLOW-011 to FLOW-015         | `/tickets/*`, `/cases/*`, `/analytics/feedback` | sla-countdown, timeline            | `ticket` (15), `contact` (17), `cases` (12), `feedbackSurvey` (4)                                            |
+| Relacionamento e Suporte | FLOW-011 to FLOW-015         | `/tickets/*`, `/cases/*`, `/analytics/feedback` | sla-countdown, timeline            | `ticket` (15), `contact` (17), `cases` (12), `feedbackSurvey` (7), `publicSurvey` (2)                        |
 | Comunicação              | FLOW-016 to FLOW-022         | `/contacts/[id]/*`, `/email/*`, `/calendar/*`   | email-composer, timeline           | `email` (12), `timeline` (8), `appointments` (19), `notifications` (8)                                       |
 | Analytics e Insights     | FLOW-023 to FLOW-028         | `/analytics/*`, `/reports/*`                    | metric-card, chart-widgets         | `analytics` (13)                                                                                             |
 | Segurança e Compliance   | FLOW-029 to FLOW-033         | `/admin/*`, `/governance/*`                     | permission-matrix, audit-log       | `audit` (5)                                                                                                  |
@@ -763,7 +763,7 @@ data
 | `activityFeed`               | 2          | Activity feed (IFC-069)                                                                                    | ✅ Active         |
 | `moduleAccess`               | 3          | Module access control (IFC-209)                                                                            | ✅ Active         |
 | `routing`                    | 11         | `/settings/routing`, lead routing (PG-132)                                                                 | ✅ Active         |
-| `feedbackSurvey`             | 4          | `/analytics/feedback` (IFC-068)                                                                            | ✅ Active         |
+| `feedbackSurvey`             | 7          | `/analytics/feedback` (IFC-068)                                                                            | ✅ Active         |
 | `inbound`                    | 1          | Cross-repo intake (`inbound.createLead`)                                                                   | ✅ Active         |
 | `termsAcceptance`            | 2          | `/terms` (server-side ToS acceptance audit, IFC-309)                                                       | ✅ Active         |
 | `accountTiers`               | 3          | `/accounts/account-tiers` (PG-196)                                                                         | ✅ Active         |
@@ -777,8 +777,9 @@ data
 | `taskAutomation`             | 17         | `/tasks/automation` (PG-208)                                                                               | ✅ Active         |
 | `calendar.eventTypes`        | 6          | `/calendar/event-types`, `/calendar/new` (PG-203)                                                          | ✅ Active         |
 | `publicBooking`              | 3          | `/book/[handle]/[slug]` (PG-203, public)                                                                   | ✅ Active         |
+| `publicSurvey`               | 2          | `/feedback/[token]` (MVP-012, public)                                                                      | ✅ Active         |
 | `privacy`                    | 17         | `/dsar/[handle]/*` (public), `/settings/privacy-requests` (admin), lead and contact detail banner (PG-203) | ✅ Active         |
-| **Total**                    | **472**    | **60 routers**                                                                                             |                   |
+| **Total**                    | **477**    | **61 routers**                                                                                             |                   |
 
 ---
 

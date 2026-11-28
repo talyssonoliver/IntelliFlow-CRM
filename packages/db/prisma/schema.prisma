@@ -183,6 +183,7 @@ model Tenant {
   dealRequiredFields     DealRequiredField[]      @ignore
   dealTags               DealTag[]                @ignore
   dealAutomationSettings DealAutomationSetting[]  @ignore
+  feedbackSurveySettings FeedbackSurveySetting[]  @ignore
   ticketDuplicateRules   TicketDuplicateRule[]    @ignore
   ticketRequiredFields   TicketRequiredField[]    @ignore
   ticketTags             TicketTag[]              @ignore
@@ -5133,18 +5134,43 @@ model FeedbackSurvey {
   followUpAt  DateTime?
   followUpBy  String?
   followUpNote String? @db.Text
+  /// MVP-012 — SHA-256 hex of the single-use answer link token. The token itself is never stored.
+  tokenHash   String?  @unique
+  /// MVP-012 — the link stops working at this time (14 days after sending).
+  tokenExpiresAt DateTime?
+  /// MVP-012 — set once, atomically, when the answer is stored; a second answer is refused.
+  tokenUsedAt DateTime?
+  accountId   String?
+  /// MVP-012 — what queued the survey: MANUAL, DEAL_WON or TICKET_RESOLVED.
+  trigger     String   @default("MANUAL")
+  sentById    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, contactId, createdAt])
   @@index([tenantId, createdAt])
   @@index([tenantId, type])
   @@index([tenantId, type, createdAt])
   @@index([tenantId, status])
   @@index([contactId])
   @@map("feedback_surveys")
+}
+
+/// MVP-012 — per-tenant switches for the automatic surveys. No row = both ON (owner rule: defaults on).
+model FeedbackSurveySetting {
+  id                       String   @id @default(cuid())
+  autoSendOnDealWon        Boolean  @default(true)
+  autoSendOnTicketResolved Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  tenantId String @unique
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("feedback_survey_settings")
 }
 
 enum FeedbackType {

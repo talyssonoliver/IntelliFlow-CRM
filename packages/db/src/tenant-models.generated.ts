@@ -127,6 +127,7 @@ export const TENANT_MODELS: Readonly<Record<string, TenantModelInfo>> = {
   EventType: { nullable: false, defaulted: false, relation: 'tenant' },
   Experiment: { nullable: false, defaulted: false, relation: 'tenant' },
   FeedbackSurvey: { nullable: false, defaulted: false, relation: 'tenant' },
+  FeedbackSurveySetting: { nullable: false, defaulted: false, relation: 'tenant' },
   GrowthMetric: { nullable: false, defaulted: false, relation: 'tenant' },
   HelpArticle: { nullable: false, defaulted: false, relation: 'tenant' },
   HelpArticleAnalyticsDedup: { nullable: false, defaulted: false, relation: 'tenant' },

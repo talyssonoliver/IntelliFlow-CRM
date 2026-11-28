@@ -9,6 +9,7 @@
  * - SLA tracking
  */
 
+import { queueSurveyForResolvedTicket, type SurveyDb } from '../feedback/survey-service';
 import { z } from 'zod';
 import { tenantUserWhere } from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
@@ -442,6 +443,44 @@ function dispatchTicketPostCreateSideEffects(
   }
 }
 
+/**
+ * MVP-012: after a bulk change, survey the contacts of the tickets that ended up resolved or closed.
+ * Runs one ticket at a time in the background, so two tickets of one contact cannot both pass the
+ * 30-day throttle, and never delays or fails the bulk call.
+ */
+function queueSurveysForBulk(ctx: Context, tenantId: string, ids: string[]): void {
+  (async () => {
+    for (const id of ids) {
+      await queueSurveyForResolvedTicket(
+        ctx.prismaWithTenant as unknown as SurveyDb,
+        ctx.adapters?.notificationService,
+        tenantId,
+        id
+      );
+    }
+  })().catch((err) => console.error('[ticket.router] Bulk survey queue failed:', err));
+}
+
+/**
+ * MVP-012: sets one ticket's status in a bulk call and says whether it should be surveyed: only
+ * when it moved into RESOLVED or CLOSED. A ticket already in that status (closed months ago, say)
+ * is updated but never surveyed again, as the single update does. Throws when the update fails.
+ */
+type TicketService = ReturnType<typeof getTicketService>;
+type TicketStatusUpdate = NonNullable<Parameters<TicketService['update']>[1]['status']>;
+
+async function setStatusForBulk(
+  ticketService: TicketService,
+  ticketId: string,
+  status: TicketStatusUpdate
+): Promise<boolean> {
+  const before = await ticketService.findById(ticketId).catch(() => null);
+  await ticketService.update(ticketId, { status });
+  return (
+    (status === 'RESOLVED' || status === 'CLOSED') && before != null && before.status !== status
+  );
+}
+
 export const ticketRouter = createTRPCRouter({
   /**
    * Create a new ticket
@@ -589,6 +628,20 @@ export const ticketRouter = createTRPCRouter({
           (args) =>
             createNotification(ctx.prismaWithTenant, args, ctx.services?.notificationOrchestrator)
         ).catch(() => {});
+      }
+
+      // MVP-012: a resolved or closed ticket queues a CSAT survey (tenant switch, 30-day throttle).
+      if (
+        before &&
+        before.status !== ticket.status &&
+        (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED')
+      ) {
+        queueSurveyForResolvedTicket(
+          ctx.prismaWithTenant as unknown as SurveyDb,
+          ctx.adapters?.notificationService,
+          tenantId,
+          ticket.id
+        ).catch((err) => console.error('[ticket.router] Survey queue failed:', err));
       }
 
       // PG-185: existing escalation notification — now gated on
@@ -757,14 +810,18 @@ export const ticketRouter = createTRPCRouter({
       const { ticketIds, status } = input;
 
       let successCount = 0;
+      const surveyIds: string[] = [];
       for (const ticketId of ticketIds) {
         try {
-          await ticketService.update(ticketId, { status });
+          const survey = await setStatusForBulk(ticketService, ticketId, status);
           successCount++;
+          if (survey) surveyIds.push(ticketId);
         } catch {
           // Continue with other tickets
         }
       }
+
+      queueSurveysForBulk(ctx, ctx.tenant.tenantId, surveyIds);
 
       return { success: true, updated: successCount };
     }),
@@ -783,14 +840,18 @@ export const ticketRouter = createTRPCRouter({
       const { ticketIds } = input;
 
       let successCount = 0;
+      const surveyIds: string[] = [];
       for (const ticketId of ticketIds) {
         try {
-          await ticketService.update(ticketId, { status: 'RESOLVED' });
+          const survey = await setStatusForBulk(ticketService, ticketId, 'RESOLVED');
           successCount++;
+          if (survey) surveyIds.push(ticketId);
         } catch {
           // Continue with other tickets
         }
       }
+
+      queueSurveysForBulk(ctx, ctx.tenant.tenantId, surveyIds);
 
       return { success: true, updated: successCount };
     }),
@@ -835,14 +896,18 @@ export const ticketRouter = createTRPCRouter({
       const { ticketIds } = input;
 
       let successCount = 0;
+      const surveyIds: string[] = [];
       for (const ticketId of ticketIds) {
         try {
-          await ticketService.update(ticketId, { status: 'CLOSED' });
+          const survey = await setStatusForBulk(ticketService, ticketId, 'CLOSED');
           successCount++;
+          if (survey) surveyIds.push(ticketId);
         } catch {
           // Continue with other tickets
         }
       }
+
+      queueSurveysForBulk(ctx, ctx.tenant.tenantId, surveyIds);
 
       return { success: true, updated: successCount };
     }),

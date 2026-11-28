@@ -55,6 +55,9 @@ export const EXPLICIT_SECRET_DENYLIST: Readonly<Record<string, readonly string[]
 export const EXPORTED_COLUMN_EXCLUSIONS: Readonly<Record<string, readonly string[]>> = {
   // A recording link can be a pre-signed URL; the customer's call log keeps duration/outcome.
   CallRecord: ['recordingUrl'],
+  // A survey's answer-link token (MVP-012): the hash would let anyone holding the archive test
+  // tokens, and the expiry and use times only describe that link. The answers are exported.
+  FeedbackSurvey: ['tokenHash', 'tokenExpiresAt', 'tokenUsedAt'],
   // The customer's own automation rules are theirs; only the webhook credentials stay out.
   TaskAutomationRule: [
     'webhookTokenHash',

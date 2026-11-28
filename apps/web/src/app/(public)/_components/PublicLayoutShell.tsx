@@ -44,6 +44,8 @@ const AUTH_PAGES_NO_CHROME = [
   '/book/',
   // PG-203 DSAR: a firm's data request pages, same reason.
   '/dsar/',
+  // MVP-012: a customer survey answer page is the firm own page, no marketing chrome.
+  '/feedback/',
 ];
 
 export function PublicLayoutShell({

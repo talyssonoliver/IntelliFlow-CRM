@@ -9,7 +9,7 @@ const REPO_ROOT = resolve(__dirname, '../../../..');
 const AUDIT_PATH = resolve(REPO_ROOT, 'artifacts/reports/content-audit-results.json');
 // Public routes in the committed audit (PG-203 /book; PG-203 DSAR: +3 public /dsar pages; MVP-007:
 // +1, the signed-in home route, with / now in the public (landing) group). TC-04 and TC-05 use it.
-const PUBLIC_ROUTE_COUNT = 37;
+const PUBLIC_ROUTE_COUNT = 38;
 
 interface MetadataField {
   value: string | null;

@@ -208,12 +208,14 @@ export class PrismaFeedbackSurveyRepository implements FeedbackSurveyRepositoryP
 
     for (const row of result) {
       const count = Number(row.count);
-      switch (row.sentiment) {
-        case 'positive':
-          positive = count;
+      // The column is the Prisma enum Sentiment (POSITIVE, NEUTRAL, NEGATIVE); upper-casing keeps
+      // any older lowercase rows counted too.
+      switch (row.sentiment?.toUpperCase()) {
+        case 'POSITIVE':
+          positive += count;
           break;
-        case 'negative':
-          negative = count;
+        case 'NEGATIVE':
+          negative += count;
           break;
         default:
           neutral += count;
@@ -230,7 +232,8 @@ export class PrismaFeedbackSurveyRepository implements FeedbackSurveyRepositoryP
     >`
       SELECT
         type,
-        COUNT(*) AS total_sent,
+        -- A row whose email failed stays PENDING with no sentAt: it was never sent.
+        COUNT(*) FILTER (WHERE "sentAt" IS NOT NULL) AS total_sent,
         COUNT(*) FILTER (WHERE status IN ('RESPONDED', 'FOLLOWED_UP', 'CLOSED')) AS total_responded
       FROM "feedback_surveys"
       WHERE "tenantId" = ${tenantId}

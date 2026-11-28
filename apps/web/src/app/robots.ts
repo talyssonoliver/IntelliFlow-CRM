@@ -45,6 +45,8 @@ export default function robots(): MetadataRoute.Robots {
           '/book/',
           // Data request pages: per-firm, and the confirm/export links carry tokens (PG-203)
           '/dsar/',
+          // Survey answer links carry a single-use token (MVP-012)
+          '/feedback/',
           // API routes
           '/api/',
         ],
