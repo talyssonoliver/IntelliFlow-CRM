@@ -19,6 +19,7 @@ const wiring = vi.hoisted(() => ({
   leadServiceArgs: [] as unknown[],
   contactServiceArgs: [] as unknown[],
   dsarServiceDeps: null as Record<string, unknown> | null,
+  dsarTransferDeps: null as Record<string, unknown> | null,
 }));
 
 // Mock PrismaClient as a class constructor
@@ -51,6 +52,11 @@ vi.mock('@intelliflow/adapters', () => ({
   PrismaDsarRepository: class {
     constructor() {
       return { name: 'dsarRepo', adminEmails: async () => [] };
+    }
+  },
+  PrismaDsarTransferRepository: class {
+    constructor() {
+      return { name: 'dsarTransferRepo' };
     }
   },
   PrismaProcessingRestrictionRepository: class {
@@ -333,6 +339,12 @@ vi.mock('@intelliflow/application', () => ({
     constructor(deps: Record<string, unknown>) {
       wiring.dsarServiceDeps = deps;
       return { name: 'dataSubjectRequestService' };
+    }
+  },
+  DsarTransferService: class {
+    constructor(deps: Record<string, unknown>) {
+      wiring.dsarTransferDeps = deps;
+      return { name: 'dsarTransferService' };
     }
   },
   ContactService: class {
@@ -765,6 +777,7 @@ describe('Container', () => {
         'experimentRepository',
         'appointmentRepository',
         'dsarRepository',
+        'dsarTransferRepository',
         'processingRestrictionRepository',
         'subjectDataRepository',
         'quotaRepository',
@@ -801,6 +814,19 @@ describe('Container', () => {
       expect(typeof (deps.notifications as { send: unknown }).send).toBe('function');
       expect(typeof (deps.tokens as { issue: unknown }).issue).toBe('function');
       expect((deps.appUrl as () => string)()).toMatch(/^https?:\/\//);
+    });
+
+    it('wires the Art 20(2) transfer service to the same notifier, tokens and app URL (IFC-317)', () => {
+      const deps = wiring.dsarTransferDeps!;
+      const dsar = wiring.dsarServiceDeps!;
+      expect(deps.requests).toEqual(expect.objectContaining({ name: 'dsarRepo' }));
+      expect(deps.transfers).toEqual({ name: 'dsarTransferRepo' });
+      // The same notifier and token port as the request service: one email path, one key.
+      expect(deps.notifications).toBe(dsar.notifications);
+      expect(deps.tokens).toBe(dsar.tokens);
+      expect(deps.appUrl).toBe(dsar.appUrl);
+      // Exports come from the request service, so a transfer sends exactly the person's file.
+      expect(deps.exports).toEqual({ name: 'dataSubjectRequestService' });
     });
 
     it('should have all security services defined', () => {

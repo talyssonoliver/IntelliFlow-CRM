@@ -9,6 +9,7 @@ import { describe, it, expect } from 'vitest';
 import {
   dsarCompleteAccessSchema,
   dsarCompleteSchema,
+  dsarCreateTransferSchema,
   dsarExtendSchema,
   dsarFirmLookupSchema,
   dsarLiftRestrictionSchema,
@@ -17,6 +18,8 @@ import {
   dsarRejectSchema,
   dsarSubmitSchema,
   dsarTokenInputSchema,
+  dsarTransferDownloadSchema,
+  dsarTransferIdSchema,
   restrictionForSchema,
 } from '../dsar';
 
@@ -220,5 +223,61 @@ describe('admin schemas', () => {
     expect(restrictionForSchema.safeParse({ entity: 'lead', email: 'a@b.invalid' }).success).toBe(
       false
     );
+  });
+});
+
+describe('IFC-317 transfer schemas (Art 20(2))', () => {
+  const create = {
+    id: CUID,
+    recipientName: '  Jones & Co ',
+    recipientEmail: ' Privacy@Jones.example.invalid ',
+    basis: 'Asked by email on 3 November',
+    confirmed: true as const,
+  };
+
+  it('normalises the recipient and trims the free text', () => {
+    expect(dsarCreateTransferSchema.parse(create)).toEqual({
+      ...create,
+      recipientName: 'Jones & Co',
+      recipientEmail: 'privacy@jones.example.invalid',
+    });
+  });
+
+  it('requires the confirmation that the person asked, a valid address and a recorded basis', () => {
+    expect(dsarCreateTransferSchema.safeParse({ ...create, confirmed: false }).success).toBe(false);
+    const { confirmed: _omit, ...unconfirmed } = create;
+    expect(dsarCreateTransferSchema.safeParse(unconfirmed).success).toBe(false);
+    expect(dsarCreateTransferSchema.safeParse({ ...create, recipientEmail: 'nope' }).success).toBe(
+      false
+    );
+    expect(dsarCreateTransferSchema.safeParse({ ...create, basis: 'short' }).success).toBe(false);
+    expect(dsarCreateTransferSchema.safeParse({ ...create, recipientName: '  ' }).success).toBe(
+      false
+    );
+    expect(dsarCreateTransferSchema.safeParse({ ...create, basis: 'x'.repeat(501) }).success).toBe(
+      false
+    );
+    expect(
+      dsarCreateTransferSchema.safeParse({ ...create, recipientName: 'x'.repeat(201) }).success
+    ).toBe(false);
+  });
+
+  it('is strict: no tenant, expiry or token can be supplied', () => {
+    for (const extra of [{ tenantId: 't' }, { expiresAt: 'x' }, { token: TOKEN }]) {
+      expect(dsarCreateTransferSchema.safeParse({ ...create, ...extra }).success).toBe(false);
+    }
+    expect(dsarTransferIdSchema.safeParse({ id: CUID, tenantId: 't' }).success).toBe(false);
+    expect(dsarTransferIdSchema.parse({ id: CUID })).toEqual({ id: CUID });
+  });
+
+  it('takes only a token on the public route, of any shape (a bad one is just not found)', () => {
+    expect(dsarTransferDownloadSchema.parse({ token: TOKEN })).toEqual({ token: TOKEN });
+    expect(dsarTransferDownloadSchema.safeParse({ token: 'short' }).success).toBe(true);
+    expect(dsarTransferDownloadSchema.safeParse({ token: '' }).success).toBe(false);
+    expect(dsarTransferDownloadSchema.safeParse({ token: 'x'.repeat(201) }).success).toBe(false);
+    expect(dsarTransferDownloadSchema.safeParse({ token: TOKEN, tenantId: 't' }).success).toBe(
+      false
+    );
+    expect(dsarTransferDownloadSchema.safeParse({}).success).toBe(false);
   });
 });

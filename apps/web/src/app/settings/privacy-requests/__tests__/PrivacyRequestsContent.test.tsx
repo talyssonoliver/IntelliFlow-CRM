@@ -21,6 +21,19 @@ const h = vi.hoisted(() => ({
   toast: vi.fn(),
 }));
 
+// The transfer dialog has its own test (TransferDialog.test.tsx); here only its entry point.
+vi.mock('../components/TransferDialog', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../components/TransferDialog')>()),
+  TransferDialog: ({ request, onClose }: { request: { id: string }; onClose: () => void }) => (
+    <dialog open aria-label="Transfer dialog">
+      <span>{`transfer for ${request.id}`}</span>
+      <button type="button" onClick={onClose}>
+        Close transfer
+      </button>
+    </dialog>
+  ),
+}));
+
 // The workspace export card has its own test (WorkspaceExportCard.test.tsx).
 vi.mock('../components/WorkspaceExportCard', () => ({ WorkspaceExportCard: () => null }));
 
@@ -114,6 +127,29 @@ beforeEach(() => {
 });
 
 describe('PrivacyRequestsContent', () => {
+  it('offers "Send to another controller" on a confirmed portability request only (IFC-317)', () => {
+    h.list.data = [
+      request({ id: 'clhportability00000', type: 'PORTABILITY' }),
+      request({ id: 'clhaccess0000000000', type: 'ACCESS' }),
+      request({ id: 'clhpending000000000', type: 'PORTABILITY', status: 'PENDING_VERIFICATION' }),
+      request({ id: 'clhdoneport00000000', type: 'PORTABILITY', status: 'COMPLETED' }),
+    ];
+    render(<PrivacyRequestsContent />);
+    // The confirmed one, in the open list, and the completed one, in the closed list.
+    expect(screen.getAllByRole('button', { name: /^Send to another controller:/ })).toHaveLength(2);
+  });
+
+  it('opens the transfer dialog for that request and closes it again', async () => {
+    h.list.data = [request({ id: 'clhportability00000', type: 'PORTABILITY' })];
+    render(<PrivacyRequestsContent />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /^Send to another controller:/ }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('transfer for clhportability00000')).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close transfer' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
   it('lists open requests with their deadline and no accessibility violations', async () => {
     h.list.data = [
       request({ overdue: true }),

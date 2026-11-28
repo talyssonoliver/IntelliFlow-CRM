@@ -62,6 +62,7 @@ vi.mock('@intelliflow/adapters', () => {
     OAuthMailboxClient: named('oauthMailboxClient'),
     PrismaAnalyticsRepository: named('analyticsRepository'),
     PrismaDsarRepository: named('dsarRepository'),
+    PrismaDsarTransferRepository: named('dsarTransferRepository'),
     PrismaProcessingRestrictionRepository: named('processingRestrictionRepository'),
     PrismaSubjectDataRepository: named('subjectDataRepository'),
     PrismaTransactionManager: class {
@@ -161,6 +162,7 @@ vi.mock('@intelliflow/application', () => {
   return {
     LeadService: named('leadService'),
     DataSubjectRequestService: named('dataSubjectRequestService'),
+    DsarTransferService: named('dsarTransferService'),
     QuotaService: named('quotaService'),
     ContactService: named('contactService'),
     AccountService: named('accountService'),

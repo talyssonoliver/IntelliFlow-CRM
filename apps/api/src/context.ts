@@ -88,6 +88,8 @@ export type Services = {
   lead: Container['leadService'];
   // PG-203: data subject requests
   dsar: Container['dataSubjectRequestService'];
+  // IFC-317: Art 20(2) transfer to another controller
+  dsarTransfer: Container['dsarTransferService'];
   contact: Container['contactService'];
   account: Container['accountService'];
   opportunity: Container['opportunityService'];
@@ -245,6 +247,7 @@ function buildServicesFromContainer(): Services {
   return {
     lead: container.leadService,
     dsar: container.dataSubjectRequestService,
+    dsarTransfer: container.dsarTransferService,
     contact: container.contactService,
     account: container.accountService,
     opportunity: container.opportunityService,

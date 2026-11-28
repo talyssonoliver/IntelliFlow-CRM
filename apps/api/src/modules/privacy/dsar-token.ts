@@ -29,6 +29,10 @@ export function createDsarTokenPort(salt: () => string = getBookingSalt): DsarTo
       return { token, hash: hmacHex(key(), token) };
     },
 
+    hash(token: string): string {
+      return hmacHex(key(), token);
+    },
+
     matches(token: string, storedHash: string | null): boolean {
       const k = key();
       const presented = Buffer.from(hmacHex(k, token), 'hex');

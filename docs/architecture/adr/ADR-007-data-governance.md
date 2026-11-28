@@ -735,9 +735,9 @@ It takes `pg_try_advisory_xact_lock`, so one replica runs each tick.
 
 ### Out of scope (tracked)
 
-- Automated erasure of communications and stored files, a CSV export with
-  Article 20(2) direct transfer, and Article 19 recipient notification: IFC-316,
-  IFC-317 and IFC-318.
+- Automated erasure of communications and stored files (IFC-316, built) and
+  Article 19 recipient notification (IFC-318). The CSV export and the Article
+  20(2) direct transfer (IFC-317) are built: see the addendum below.
 - A legal-hold registry: none exists, so an admin confirms instead (#1019).
 - #1007: a rejected restriction can survive on an address changed during the
   rejection (it fails safe: one extra restriction).
@@ -747,3 +747,97 @@ It takes `pg_try_advisory_xact_lock`, so one replica runs each tick.
   admin.
 - #1015: conversations and messages carry no person key, so RAG, export and
   erasure cannot reach them.
+
+## Addendum (2026-11-28, IFC-317): Article 20(2) direct transfer
+
+The portability export was already available as JSON and, since #1365, as CSV
+(one file per category in a zip, built in the browser from the same download).
+IFC-317 adds the other half of Article 20: sending the data straight to another
+controller, "where technically feasible".
+
+### Decision
+
+The firm does not push data to an address on its own. An ADMIN approves a
+transfer on a confirmed portability request, naming the recipient and recording
+how the person asked. The recipient then **pulls** the export through a
+single-use, expiring link. We chose a pull link over a push (an attachment, or a
+call to the recipient's system) for these reasons:
+
+- Nothing personal travels in the email, and nothing is stored with the
+  recipient by us. The email holds the firm name and the expiry only.
+- The link is a capability we can end: it is spent by the first download, ends
+  after 7 days, and an admin can revoke it. A pushed file cannot be recalled.
+- No new integration or email provider is needed, and the recipient's technical
+  capacity is not assumed. "Where technically feasible" is met by a link any
+  controller can open.
+
+Rejected: attaching the file to the email (cannot be revoked, sits in
+mailboxes), and a recipient API (not feasible for most recipients; each would
+need its own integration).
+
+### Design
+
+**Tables** (migration `20261128100000_dsar_transfers`, Class A: two new tables,
+no existing column, constraint, trigger or row is touched; no new enum):
+
+- `dsar_transfers`: one row per transfer: the request, the recipient (name,
+  normalised email), the admin's record of how the person asked (`basis`), the
+  token **hash** (`tokenHash`, unique, `CHAR(64)` hex by CHECK), `expiresAt`,
+  `usedAt` and `revokedAt` (never both: CHECK). A composite FK
+  `(tenantId, requestId)` to `dsar_requests(tenantId, id)` keeps a transfer in
+  its request's firm, and deleting a request deletes its transfers.
+- `dsar_transfer_events`: one row per step (`CREATED`, `SENT`, `DOWNLOADED`,
+  `EXPIRED`, `REVOKED`; CHECK), unique per `(transferId, kind)`, with the actor
+  type (`ADMIN`, `RECIPIENT`, `SYSTEM`), the admin id where there is one, how it
+  was sent (`EMAIL`, `MANUAL`: only on `SENT`, by CHECK) and when. Ids and times
+  only. A composite FK keeps an event in its transfer's firm.
+- Both tables have RLS (`USING` and `WITH CHECK` on the tenant setting) and a
+  tenant FK with cascade. User FKs are `ON DELETE SET NULL`.
+
+**Token.** 32 random bytes, base64url (43 characters). Only its HMAC-SHA256 is
+stored, under the key already used for DSAR tokens (derived from the booking
+salt), so the stored value is useless without the salt and a rotation kills
+every link. The public lookup is by hash (`DsarTokenPort.hash`).
+
+**Single use and expiry.** Using the link is one conditional UPDATE: `usedAt` is
+set only where the row is unused, not revoked and `expiresAt > now`, and the
+`DOWNLOADED` event is written in the same transaction. Two simultaneous
+downloads give one winner. The export is built first and the link spent second,
+so a build failure does not burn it. Expiry is evaluated on the server at the
+stored time. An `EXPIRED` event, stamped with the expiry time, is written once
+when expiry is first noticed (the admin opens the transfers, or someone tries
+the link): there is no timer job and no polling.
+
+**Public route.** `privacy.downloadTransfer` takes the token and nothing else.
+The page is `/dsar/transfer#t=<token>`: the token is in the URL fragment (never
+sent to a server, stripped on load), so the URL holds no tenant, request or
+person. The route is rate limited per client (the booking submit limiter). Every
+bad link (unknown, used, revoked, expired, request refused afterwards,
+malformed) answers `NOT_FOUND` with one fixed message. `transfer` is a reserved
+booking handle, so no firm's page can sit at that path. The page does no server
+work of its own (no `force-dynamic`, no data fetch: the browser calls the route
+only when the visitor presses the button), so it adds nothing to the site's
+function runs, and the existing `/dsar/:path*` headers send no Referer and
+forbid caching.
+
+**Delivery.** The link goes to the recipient through the existing DSAR email
+path (a `TRANSFER_LINK` notice, fixed text, recipient only). If that path does
+not accept it, the raw link is returned once to the admin to send, and the admin
+records that they did. The server cannot show it again.
+
+**Authorisation and record.** `privacy.admin.createTransfer`, `transfers`,
+`markTransferSent` and `revokeTransfer` are ADMIN only and act on the context
+tenant; another firm's request or transfer is `NOT_FOUND`. The admin must tick
+that the person asked for the transfer and give how, so the firm can show the
+request was the person's (Article 20(2) is "at the request of"). Each step is a
+row on the request and an audit log row.
+
+### Limits (tracked in the process document)
+
+- The file is the same export as the person's, with the same withheld free text:
+  an admin who sends it before completing the request sends the "withheld" note
+  too. The dialog says so.
+- If the recipient's browser closes before saving, the link is spent and the
+  admin makes a new one.
+- The recipient's identity is the admin's check, recorded on the transfer: the
+  link proves possession, not identity.

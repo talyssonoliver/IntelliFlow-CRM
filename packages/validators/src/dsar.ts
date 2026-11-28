@@ -15,12 +15,17 @@ import {
   DSAR_REQUEST_TYPES,
   DSAR_STATUSES,
   DSAR_WITHHELD_CATEGORIES,
+  DSAR_TRANSFER_LIMITS,
   EVENT_TYPE_LIMITS,
   type DsarIdentityMethod,
   type DsarObjectionScope,
   type DsarRequestType,
   type DsarSource,
   type DsarStatus,
+  type DsarTransferActorType,
+  type DsarTransferDeliveryMethod,
+  type DsarTransferEventKind,
+  type DsarTransferState,
   type DsarWithheldCategory,
 } from '@intelliflow/domain';
 import { idSchema } from './common';
@@ -87,6 +92,13 @@ export const dsarTokenInputSchema = z
   .strict();
 export type DsarTokenInput = z.infer<typeof dsarTokenInputSchema>;
 
+/**
+ * IFC-317 (Art 20(2)): the public download of a transfer. The token is the only input and any
+ * string is accepted here, so a malformed token gets the same NOT_FOUND as an unknown one.
+ */
+export const dsarTransferDownloadSchema = z.object({ token: z.string().min(1).max(200) }).strict();
+export type DsarTransferDownloadInput = z.infer<typeof dsarTransferDownloadSchema>;
+
 // ─── Admin ──────────────────────────────────────────────────────────────────────
 
 export const dsarListSchema = z.object({ status: dsarStatusSchema.optional() }).strict();
@@ -120,6 +132,23 @@ export const dsarLogRequestSchema = z
     }
   });
 export type DsarLogRequestInput = z.infer<typeof dsarLogRequestSchema>;
+
+/** IFC-317: send a portability export to another controller (Art 20(2)). `id` is the request. */
+export const dsarCreateTransferSchema = z
+  .object({
+    id: idSchema,
+    recipientName: cleanText(1, DSAR_TRANSFER_LIMITS.recipientNameMax),
+    recipientEmail: subjectEmailSchema,
+    /** How the person asked for it, in the admin's words (Art 20(2) is "at the request of"). */
+    basis: cleanText(DSAR_TRANSFER_LIMITS.basisMin, DSAR_TRANSFER_LIMITS.basisMax),
+    /** The admin confirms the person asked for this transfer. */
+    confirmed: z.literal(true),
+  })
+  .strict();
+export type DsarCreateTransferInput = z.infer<typeof dsarCreateTransferSchema>;
+
+/** A transfer by its own id (mark sent, revoke). */
+export const dsarTransferIdSchema = z.object({ id: idSchema }).strict();
 
 export const dsarCompleteSchema = z
   .object({
@@ -258,4 +287,37 @@ export interface DsarExportDto {
   };
   data: Record<string, Array<Record<string, unknown>>>;
   withheld: Array<{ category: DsarWithheldCategory; count: number; note: string }>;
+}
+
+// --- IFC-317 transfer output contracts ---------------------------------------------
+
+export interface DsarTransferEventDto {
+  kind: DsarTransferEventKind;
+  actorType: DsarTransferActorType;
+  /** The administrator's name; null for the recipient and the system. */
+  actorLabel: string | null;
+  via: DsarTransferDeliveryMethod | null;
+  occurredAt: string;
+}
+
+export interface DsarTransferDto {
+  id: string;
+  recipientName: string;
+  recipientEmail: string;
+  basis: string;
+  state: DsarTransferState;
+  expiresAt: string;
+  createdAt: string;
+  /** Every step, oldest first: created, sent, downloaded, expired, revoked. */
+  events: DsarTransferEventDto[];
+  /** A live link nobody has recorded sending yet: the admin must send it (or revoke it). */
+  awaitingSend: boolean;
+}
+
+export interface DsarCreateTransferResultDto {
+  transfer: DsarTransferDto;
+  /** The link was emailed to the recipient. */
+  delivered: boolean;
+  /** Present only when it was not: shown once, so the admin can send it. Never stored. */
+  manualLink: string | null;
 }

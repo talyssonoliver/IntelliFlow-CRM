@@ -210,6 +210,7 @@ afterAll(() => {
 export const mockServices = {
   lead: mockDeep<any>(),
   dsar: mockDeep<any>(), // PG-203
+  dsarTransfer: mockDeep<any>(), // IFC-317
   contact: mockDeep<any>(),
   account: mockDeep<any>(),
   opportunity: mockDeep<any>(),
@@ -332,6 +333,7 @@ export const mockAdapters = {
   appointmentRepository: mockDeep<any>(),
   // PG-203 DSAR
   dsarRepository: mockDeep<any>(),
+  dsarTransferRepository: mockDeep<any>(),
   processingRestrictionRepository: mockDeep<any>(),
   subjectDataRepository: mockDeep<any>(),
   quotaRepository: mockDeep<any>(),

@@ -13,6 +13,7 @@ import {
   dsarFirmLookupSchema,
   dsarSubmitSchema,
   dsarTokenInputSchema,
+  dsarTransferDownloadSchema,
   type DsarExportDto,
   type DsarFirmDto,
   type DsarSubmitResultDto,
@@ -33,6 +34,7 @@ const NOT_AVAILABLE = 'This page is not available.';
 const TOO_MANY = 'Too many requests. Please try again later.';
 const INVALID_LINK = 'This link is invalid or has expired.';
 const DOWNLOAD_LIMIT = 'This download link has been used too many times. Contact the firm.';
+const NO_SUCH_TRANSFER = 'This link is not available.';
 const UNAVAILABLE = 'Data requests are temporarily unavailable.';
 
 interface PublicFirm {
@@ -91,6 +93,33 @@ async function auditExportDownload(ctx: Context, requestId: string): Promise<voi
     });
   } catch (error) {
     console.error('[privacy] Export download audit row not written', {
+      error: error instanceof Error ? error.name : 'unknown',
+    });
+  }
+}
+
+/**
+ * IFC-317: the other controller's download of a transfer is recorded on the request's audit
+ * trail. The actor is the system (the recipient is known by the link alone); no address, token
+ * or IP is stored. Never fails a download that has already happened.
+ */
+async function auditTransferDownload(
+  ctx: Context,
+  found: { tenantId: string; requestId: string; transferId: string }
+): Promise<void> {
+  try {
+    await getAuditLogger(ctx.prisma).logAction(
+      'EXPORT',
+      'dsar_request',
+      found.requestId,
+      found.tenantId,
+      {
+        actorType: 'SYSTEM',
+        metadata: { change: 'EXPORT_DOWNLOADED_BY_RECIPIENT', transferId: found.transferId },
+      }
+    );
+  } catch (error) {
+    console.error('[privacy] Transfer download audit row not written', {
       error: error instanceof Error ? error.name : 'unknown',
     });
   }
@@ -185,6 +214,28 @@ export const privacyPublicProcedures = {
           throw new TRPCError({ code: 'BAD_REQUEST', message: INVALID_LINK });
         }
         await auditExportDownload(ctx, input.requestId);
+        return result.export;
+      })
+  ),
+
+  /**
+   * IFC-317 (Art 20(2)): the other controller downloads the export once, by the link alone.
+   * An unknown, used, revoked or expired token all answer NOT_FOUND with one fixed message.
+   */
+  downloadTransfer: publicProcedure.input(dsarTransferDownloadSchema).mutation(
+    ({ ctx, input }): Promise<DsarExportDto> =>
+      publicly(async () => {
+        bookingSubmitLimiter.check(clientIpHash(ctx, getBookingSalt()));
+        const service = ctx.services?.dsarTransfer;
+        if (!service) {
+          console.error('[privacy] DsarTransferService is not wired');
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: UNAVAILABLE });
+        }
+        const result = await service.download({ token: input.token, now: new Date() });
+        if (result.outcome !== 'OK') {
+          throw new TRPCError({ code: 'NOT_FOUND', message: NO_SUCH_TRANSFER });
+        }
+        await auditTransferDownload(ctx, result);
         return result.export;
       })
   ),

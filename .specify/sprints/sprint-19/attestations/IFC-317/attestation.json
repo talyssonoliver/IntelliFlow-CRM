@@ -1,0 +1,205 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-317",
+  "run_id": "ifc-317-2026-11-28",
+  "attestor": "Claude Code (claude-sonnet-5-5), feat/ifc-317-direct-transfer",
+  "attestation_timestamp": "2026-11-28T07:38:23Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "packages/application/src/services/DsarTransferService.ts",
+        "sha256": "8e6478ff14b952812ef9f5d239d460a1dd71fc287293769d16be45d8ac612066"
+      },
+      {
+        "path": "packages/adapters/src/repositories/PrismaDsarTransferRepository.ts",
+        "sha256": "ba943edc86c60ea9c35c7712a8e2a2eeb84d9c6d1ba9df36193c0ed0aee236e4"
+      },
+      {
+        "path": "packages/db/prisma/migrations/20261128100000_dsar_transfers/migration.sql",
+        "sha256": "1e9c35d579f3c22eee23534064b8b30b05130fb0f94a8fe23f0c426b17b5d20b"
+      },
+      {
+        "path": "apps/api/src/modules/privacy/privacy-public.router.ts",
+        "sha256": "25df9276913638e2e0b95990e5069688a1c97b9972e07cdb404cd87f1e131868"
+      },
+      {
+        "path": "apps/api/src/modules/privacy/privacy-admin.router.ts",
+        "sha256": "bf110ae78fa0eadf6207fc3a2c5bdf13c260bd3087562964013bc908ff20b307"
+      },
+      {
+        "path": "apps/web/src/app/settings/privacy-requests/components/TransferDialog.tsx",
+        "sha256": "175fdfde0a62d89dda760963b489a6b81b43a42775915e814ed31a2a1e368fbe"
+      },
+      {
+        "path": "apps/web/src/app/(public)/dsar/transfer/DsarTransferContent.tsx",
+        "sha256": "9938c79dd41560b4da76a7234f3bc18de0f12db6a528d42d8fe281f84c95dbc4"
+      },
+      {
+        "path": "tests/integration/dsar-transfer.test.ts",
+        "sha256": "6d78cfab019aca74aa3274f4f91f088205186abc8a70edb5f719c007bda4ee84"
+      }
+    ],
+    "invariants_acknowledged": [
+      "See context_ack.json. SCOPE: IFC-317 has two halves. The CSV portability export (Art 20(1)) was merged in #1365 (a CSV zip built in the browser from the same download as the JSON, formula-safe). This task adds the other half: Art 20(2) direct transfer to another controller."
+    ],
+    "acknowledged_at": "2026-11-28T07:38:23Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 8,
+    "validations_passed": 10,
+    "validations_failed": 0,
+    "gates_passed": 6,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "Domain: transfer rules and reserved handle",
+      "command": "pnpm exec vitest run src/legal/privacy src/legal/appointments (packages/domain)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-28T07:18:15Z"
+    },
+    {
+      "name": "Application: transfer service and request service",
+      "command": "pnpm exec vitest run src/services/__tests__/DsarTransferService.test.ts src/services/__tests__/DataSubjectRequestService.test.ts (packages/application)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-28T07:18:17Z"
+    },
+    {
+      "name": "Adapters: transfer repository and DSAR adapters",
+      "command": "pnpm exec vitest run src/repositories/__tests__/PrismaDsarTransferRepository.test.ts src/repositories/__tests__/PrismaDsarAdapters.test.ts (packages/adapters)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-28T07:19:05Z"
+    },
+    {
+      "name": "Validators: DSAR schemas",
+      "command": "pnpm exec vitest run src/__tests__/dsar.test.ts (packages/validators)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-28T07:19:20Z"
+    },
+    {
+      "name": "API: privacy module and container wiring (169 tests)",
+      "command": "pnpm exec vitest run src/modules/privacy src/__tests__/container.test.ts src/__tests__/container.ai-provider-baseurl.lazy.test.ts (apps/api)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-28T07:17:31Z"
+    },
+    {
+      "name": "Web: privacy requests page, transfer dialog and DSAR pages (incl. the new /dsar/transfer page)",
+      "command": "pnpm exec vitest run src/app/settings/privacy-requests \"src/app/(public)/dsar\" (apps/web)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-28T07:19:23Z"
+    },
+    {
+      "name": "Real-database integration on Node 24 (21 transfer tests plus the 43-test DSAR suite), through the test slot, on a fresh database with every migration applied",
+      "command": "node with-slot.mjs -- pnpm exec vitest run --project integration tests/integration/dsar-transfer.test.ts tests/integration/dsar.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-28T07:25:00Z"
+    },
+    {
+      "name": "Typecheck, domain, validators, application, adapters, api, web",
+      "command": "pnpm exec tsc --noEmit -p tsconfig.json (each package)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-28T07:21:00Z"
+    },
+    {
+      "name": "Lint and format (changed files)",
+      "command": "pnpm exec eslint --max-warnings=0 <changed files> && pnpm exec prettier --check <changed files>",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-28T07:26:00Z"
+    },
+    {
+      "name": "Build, api and web (/dsar/transfer is in the route list)",
+      "command": "pnpm --filter @intelliflow/api build && pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-28T07:27:48Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "transfer-link-single-use",
+      "passed": true
+    },
+    {
+      "gate_id": "transfer-link-expiring",
+      "passed": true
+    },
+    {
+      "gate_id": "transfer-token-stored-hashed",
+      "passed": true
+    },
+    {
+      "gate_id": "transfer-wrong-tenant-refused",
+      "passed": true
+    },
+    {
+      "gate_id": "transfer-audit-trail",
+      "passed": true
+    },
+    {
+      "gate_id": "csv-export-matches-json-categories",
+      "passed": true
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "CSV export covers 100% of JSON export categories",
+      "target": "100%",
+      "actual": "Met by #1365: exportCsvFiles writes one CSV per exported category plus processing-information.csv and withheld.csv, from the same download as the JSON (apps/web/src/lib/dsar/export-csv.ts and its tests). The Art 20(2) page of this pull request reuses the same saveExportCsv, so a transferred file has the same CSV.",
+      "met": true
+    },
+    {
+      "kpi": "Transfer link single-use and expiring",
+      "target": "single-use and expiring, proven",
+      "actual": "Proven against a real database (tests/integration/dsar-transfer.test.ts): the second download is NOT_FOUND, five simultaneous downloads give exactly one export, the link works one millisecond before its stored expiry and not at it, and a mutation that drops the usedAt condition from the claim is caught by the concurrency test. this pull request.",
+      "met": true
+    },
+    {
+      "kpi": "Coverage >=90%",
+      "target": ">=90% on changed code",
+      "actual": "Measured with vitest coverage on the new files: domain dsar-transfer.ts 100% statements and branches; DsarTransferService.ts 96.2% statements, 97.1% branches; PrismaDsarTransferRepository.ts 100% statements, 95.5% branches; privacy-admin and privacy-public routers 95.6% and 97.3% statements; TransferDialog.tsx 94.8% statements, 96.8% lines, 89.9% branches. The package-wide figure is measured by the pre-ship coverage step.",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Portability requests can download the export as CSV (one file per category, zipped) as well as JSON",
+      "met": true,
+      "evidence": "Merged in #1365 (apps/web/src/lib/dsar/export-csv.ts, \"Save as spreadsheets (CSV)\" on /dsar/[handle]/export); also offered on the new /dsar/transfer page."
+    },
+    {
+      "criterion": "Where technically feasible the person can ask for the data to be sent to another controller (Art 20(2))",
+      "met": true,
+      "evidence": "An admin approves a transfer on a confirmed portability request (privacy.admin.createTransfer, the \"Send to another controller\" dialog in /settings/privacy-requests), recording how the person asked. The recipient pulls the export through a single-use link. this pull request."
+    },
+    {
+      "criterion": "Through an admin-approved transfer with an expiring link",
+      "met": true,
+      "evidence": "ADMIN-only, own firm only (another firm gets NOT_FOUND, proven on a real database). Link valid for 7 days, expiry enforced on the server."
+    },
+    {
+      "criterion": "Recorded on the request",
+      "met": true,
+      "evidence": "dsar_transfer_events holds created, sent, downloaded, expired and revoked steps with who and when, shown in the admin dialog, plus audit log rows."
+    },
+    {
+      "criterion": "Transfer link single-use and expiring (test)",
+      "met": true,
+      "evidence": "tests/integration/dsar-transfer.test.ts (real database), DsarTransferService.test.ts and PrismaDsarTransferRepository.test.ts."
+    }
+  ],
+  "notes": "Two halves: the CSV export (#1365) and the Art 20(2) transfer (this pull request). Migration 20261128100000_dsar_transfers is Class A and additive (two new tables). Not verified in a real browser at phone width: the admin dialog and the public page were tested with jsdom and axe only. /dsar/transfer is a dynamic route like every other (public) page, because the shared (public) layout reads the auth cookie; the page itself does no server work."
+}

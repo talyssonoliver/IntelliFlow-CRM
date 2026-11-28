@@ -103,6 +103,10 @@ describe('isReservedBookingHandle', () => {
     );
   });
 
+  it('reserves the public Art 20(2) transfer page path, /dsar/transfer (IFC-317)', () => {
+    expect(isReservedBookingHandle('transfer')).toBe(true);
+  });
+
   it('allows ordinary firm handles', () => {
     expect(isReservedBookingHandle('smith-law')).toBe(false);
     expect(isReservedBookingHandle('booking')).toBe(false);

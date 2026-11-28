@@ -61,3 +61,4 @@ export * from './FeedbackService';
 // Domain events (IFC-310 duplicate-detection runtime)
 export * from './events';
 export * from './DataSubjectRequestService'; // PG-203 DSAR
+export * from './DsarTransferService'; // IFC-317 Art 20(2)

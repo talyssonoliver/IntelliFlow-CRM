@@ -132,6 +132,19 @@ export function buildDsarEmail(
         ],
         { label: 'Download my data', url: notice.link }
       );
+    case 'TRANSFER_LINK':
+      // To another controller (Art 20(2)), not the person: it names the firm and the expiry only.
+      return message(
+        to,
+        `Personal data sent to you by ${firm}`,
+        [
+          `${firm} has been asked, by the person the data is about, to send their personal data to you (UK GDPR Article 20(2)).`,
+          `The link below works once and expires on ${formatDateTime(notice.expiresAt)} (UTC). The first download uses it up, so save the file straight away.`,
+          'The file holds personal data. Keep this email and the file private: anyone with the link can download it until it is used.',
+          `Once you hold it, you are responsible for it as a controller. If this email is not meant for you, ignore it and tell ${firm}.`,
+        ],
+        { label: 'Download the data', url: notice.link }
+      );
     case 'EXTENDED':
       return message(to, `${firm} needs more time for your data request`, [
         `${firm} has extended the time to respond to your request for ${TYPE_LABELS[notice.type]}, as the law allows for complex or numerous requests.`,

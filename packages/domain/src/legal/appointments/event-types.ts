@@ -48,6 +48,8 @@ export const BOOKING_RESERVED_HANDLES = [
   'login',
   'signup',
   'settings',
+  // /dsar/transfer is the public Art 20(2) transfer page (IFC-317), not a firm's page.
+  'transfer',
 ] as const;
 
 export function isReservedBookingHandle(handle: string): boolean {

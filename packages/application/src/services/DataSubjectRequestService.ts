@@ -737,6 +737,11 @@ export class DataSubjectRequestService {
     return true;
   }
 
+  /** The export as the person's own link gives it; IFC-317 transfers send exactly this. */
+  exportForRecord(record: DsarRecord, now: Date): Promise<DsarExport> {
+    return this.buildExport(record, now);
+  }
+
   private async buildExport(record: DsarRecord, now: Date): Promise<DsarExport> {
     const firm = await this.deps.repo.findFirm(record.tenantId);
     const snapshot = await this.deps.subjectData.buildExport(record.tenantId, record.subjectEmail);
