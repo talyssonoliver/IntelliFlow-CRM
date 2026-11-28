@@ -53,8 +53,8 @@ interface IORedisClient extends RedisLike {
   disconnect(): void;
 }
 
-// Publisher's only DB seam. Stub handles BOTH the distinct-tenants probe and the
-// per-tenant fetch — same shape as redis-monitoring-publisher.test.ts.
+// Publisher's only DB seam. Stub handles the distinct-tenants probe, the per-tenant row fetch
+// and the latency/ROI aggregate query ($queryRaw) — same shape as redis-monitoring-publisher.test.ts.
 interface FixtureEvent {
   tenantId: string | null;
   eventType: string;
@@ -87,7 +87,40 @@ function makePrismaWithEvents(events: FixtureEvent[]) {
     const types = args?.where?.eventType?.in;
     return events.filter((e) => e.tenantId === want && (!types || types.includes(e.eventType)));
   };
-  return { aIMonitoringEvent: { findMany } };
+  // $queryRaw(strings, since, tenantId, tenantId, cap, cap): the one aggregate row Postgres returns
+  // (the SQL itself is held equal to the old Node maths by ai-monitoring-publisher-sql.test.ts).
+  const $queryRaw = async (_strings: unknown, ...values: unknown[]): Promise<unknown[]> => {
+    const win = events.filter((e) => e.tenantId === values[1]);
+    const lat = win.filter((e) => e.eventType === 'latency');
+    const v = lat.map((e) => e.value ?? 0).sort((a, b) => a - b);
+    const at = (p: number) => v[Math.ceil((v.length * p) / 100) - 1] ?? null;
+    const sum = (t: string) =>
+      win.filter((e) => e.eventType === t).reduce((s, e) => s + (e.value ?? 0), 0);
+    const count = (t: string) => win.filter((e) => e.eventType === t).length;
+    const times = lat.map((e) => +e.recordedAt);
+    return [
+      {
+        n: lat.length || null,
+        ok: lat.length ? lat.filter((e) => !e.flagged).length : null,
+        mean: lat.length ? v.reduce((a, b) => a + b, 0) / v.length : null,
+        min: lat.length ? v[0] : null,
+        max: lat.length ? v[v.length - 1] : null,
+        p50: at(50),
+        p75: at(75),
+        p90: at(90),
+        p95: at(95),
+        p99: at(99),
+        oldest: lat.length ? new Date(Math.min(...times)) : null,
+        newest: lat.length ? new Date(Math.max(...times)) : null,
+        cost_n: count('roi_cost'),
+        cost_sum: sum('roi_cost'),
+        value_n: count('roi_value'),
+        value_sum: sum('roi_value'),
+        cutoff: null,
+      },
+    ];
+  };
+  return { aIMonitoringEvent: { findMany }, $queryRaw };
 }
 
 const baseEvent = (over: Partial<FixtureEvent>): FixtureEvent => ({
