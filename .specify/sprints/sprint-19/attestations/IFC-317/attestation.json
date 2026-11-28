@@ -4,7 +4,7 @@
   "task_id": "IFC-317",
   "run_id": "ifc-317-2026-11-28",
   "attestor": "Claude Code (claude-sonnet-5-5), feat/ifc-317-direct-transfer",
-  "attestation_timestamp": "2026-11-28T08:13:02Z",
+  "attestation_timestamp": "2026-11-28T08:20:24Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
     "files_read": [
@@ -44,7 +44,7 @@
     "invariants_acknowledged": [
       "See context_ack.json. SCOPE: IFC-317 has two halves. The CSV portability export (Art 20(1)) was merged in #1365 (a CSV zip built in the browser from the same download as the JSON, formula-safe). This task adds the other half: Art 20(2) direct transfer to another controller."
     ],
-    "acknowledged_at": "2026-11-28T08:13:02Z"
+    "acknowledged_at": "2026-11-28T08:20:24Z"
   },
   "evidence_summary": {
     "artifacts_verified": 8,
@@ -158,13 +158,13 @@
     {
       "kpi": "CSV export covers 100% of JSON export categories",
       "target": "100%",
-      "actual": "Met by #1365: exportCsvFiles writes one CSV per exported category plus processing-information.csv and withheld.csv, from the same download as the JSON (apps/web/src/lib/dsar/export-csv.ts and its tests). The Art 20(2) page of this pull request reuses the same saveExportCsv, so a transferred file has the same CSV.",
+      "actual": "Met by #1365: exportCsvFiles writes one CSV per exported category plus processing-information.csv and withheld.csv, from the same download as the JSON (apps/web/src/lib/dsar/export-csv.ts and its tests). The Art 20(2) page of #1605 reuses the same saveExportCsv, so a transferred file has the same CSV.",
       "met": true
     },
     {
       "kpi": "Transfer link single-use and expiring",
       "target": "single-use and expiring, proven",
-      "actual": "Proven against a real database (tests/integration/dsar-transfer.test.ts): the second download is NOT_FOUND, five simultaneous downloads give exactly one export, the link works one millisecond before its stored expiry and not at it, and a mutation that drops the usedAt condition from the claim is caught by the concurrency test. this pull request.",
+      "actual": "Proven against a real database (tests/integration/dsar-transfer.test.ts): the second download is NOT_FOUND, five simultaneous downloads give exactly one export, the link works one millisecond before its stored expiry and not at it, and a mutation that drops the usedAt condition from the claim is caught by the concurrency test. #1605.",
       "met": true
     },
     {
@@ -183,7 +183,7 @@
     {
       "criterion": "Where technically feasible the person can ask for the data to be sent to another controller (Art 20(2))",
       "met": true,
-      "evidence": "An admin approves a transfer on a confirmed portability request (privacy.admin.createTransfer, the \"Send to another controller\" dialog in /settings/privacy-requests), recording how the person asked. The recipient pulls the export through a single-use link. this pull request."
+      "evidence": "An admin approves a transfer on a confirmed portability request (privacy.admin.createTransfer, the \"Send to another controller\" dialog in /settings/privacy-requests), recording how the person asked. The recipient pulls the export through a single-use link. #1605."
     },
     {
       "criterion": "Through an admin-approved transfer with an expiring link",
@@ -201,5 +201,5 @@
       "evidence": "tests/integration/dsar-transfer.test.ts (real database), DsarTransferService.test.ts and PrismaDsarTransferRepository.test.ts."
     }
   ],
-  "notes": "Two halves: the CSV export (#1365) and the Art 20(2) transfer (this pull request). Migration 20261128100000_dsar_transfers is Class A and additive (two new tables). Not verified in a real browser at phone width: the admin dialog and the public page were tested with jsdom and axe only. /dsar/transfer is a dynamic route like every other (public) page, because the shared (public) layout reads the auth cookie; the page itself does no server work."
+  "notes": "Two halves: the CSV export (#1365) and the Art 20(2) transfer (#1605). Migration 20261128100000_dsar_transfers is Class A and additive (two new tables). Not verified in a real browser at phone width: the admin dialog and the public page were tested with jsdom and axe only. /dsar/transfer is a dynamic route like every other (public) page, because the shared (public) layout reads the auth cookie; the page itself does no server work."
 }
