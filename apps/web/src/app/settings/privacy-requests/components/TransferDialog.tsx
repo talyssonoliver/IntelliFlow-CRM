@@ -225,9 +225,8 @@ export function TransferDialog({
 }>) {
   const utils = trpc.useUtils();
   const listQuery = trpc.privacy.admin.transfers.useQuery({ id: request.id }, { retry: false });
-  const refresh = () => {
-    void utils.privacy.admin.transfers.invalidate({ id: request.id });
-  };
+  // Returned, so react-query waits for the refetch before it settles the mutation.
+  const refresh = () => utils.privacy.admin.transfers.invalidate({ id: request.id });
   const create = trpc.privacy.admin.createTransfer.useMutation({ onSuccess: refresh });
   const markSent = trpc.privacy.admin.markTransferSent.useMutation({ onSuccess: refresh });
   const revoke = trpc.privacy.admin.revokeTransfer.useMutation({ onSuccess: refresh });

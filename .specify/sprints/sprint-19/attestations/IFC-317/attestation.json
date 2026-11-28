@@ -4,7 +4,7 @@
   "task_id": "IFC-317",
   "run_id": "ifc-317-2026-11-28",
   "attestor": "Claude Code (claude-sonnet-5-5), feat/ifc-317-direct-transfer",
-  "attestation_timestamp": "2026-11-28T07:38:23Z",
+  "attestation_timestamp": "2026-11-28T07:44:26Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
     "files_read": [
@@ -30,7 +30,7 @@
       },
       {
         "path": "apps/web/src/app/settings/privacy-requests/components/TransferDialog.tsx",
-        "sha256": "175fdfde0a62d89dda760963b489a6b81b43a42775915e814ed31a2a1e368fbe"
+        "sha256": "1a60cf5b99ceda5a94470a4e86b3ff7d82e695f54b854dd3c7abc8763cdad10e"
       },
       {
         "path": "apps/web/src/app/(public)/dsar/transfer/DsarTransferContent.tsx",
@@ -44,7 +44,7 @@
     "invariants_acknowledged": [
       "See context_ack.json. SCOPE: IFC-317 has two halves. The CSV portability export (Art 20(1)) was merged in #1365 (a CSV zip built in the browser from the same download as the JSON, formula-safe). This task adds the other half: Art 20(2) direct transfer to another controller."
     ],
-    "acknowledged_at": "2026-11-28T07:38:23Z"
+    "acknowledged_at": "2026-11-28T07:44:26Z"
   },
   "evidence_summary": {
     "artifacts_verified": 8,
